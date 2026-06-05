@@ -1,0 +1,23 @@
+// Prisma — fuente de verdad del esquema de la base de datos (Postgres de Supabase).
+// Solo el código del servidor (src/server, src/app/api) accede a la DB.
+// Los devs de backend definen aquí los modelos y corren: npm run prisma:migrate
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL") // pooled (puerto 6543, ?pgbouncer=true)
+  directUrl = env("DIRECT_URL")   // directa (puerto 5432) para migraciones
+}
+
+// Modelo de EJEMPLO — borrar o ampliar según el negocio. Solo demuestra la capa.
+model Project {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  ownerId     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
