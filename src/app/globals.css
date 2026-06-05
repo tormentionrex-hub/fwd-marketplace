@@ -1,10 +1,27 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/*
+  Sistema de diseño FWD · Costa Rica
+  Paleta oficial (Libro de Marca, pág. 8) + navy de soporte.
+  Tipografías: Figtree (display) / Outfit (texto).
+*/
+@theme {
+  /* Paleta de marca */
+  --color-fwd-blue: #008fd4;
+  --color-fwd-purple: #662d91;
+  --color-fwd-teal: #20bec6;
+  --color-fwd-yellow: #ffcb05;
+  --color-fwd-orange: #f7901e;
+  --color-fwd-magenta: #ec008c;
+
+  /* Neutrales de soporte */
+  --color-fwd-navy: #0b1437;
+  --color-fwd-navy-700: #16205a;
+  --color-fwd-ink: #1a1633;
+  --color-fwd-mist: #f3f5fb;
 }
 
+/* Las fuentes se inyectan en runtime vía next/font (variables CSS) */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -21,15 +38,18 @@
   --color-fwd-magenta: #ec008c;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+:root {
+  --background: #ffffff;
+  --foreground: #1a1633;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Titulares: Figtree con tracking ceñido al estilo del manual */
+.font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
 }
