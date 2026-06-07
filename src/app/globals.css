@@ -2,25 +2,40 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #0e1628;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* FWD Brand Colors */
+  --color-fwd-blue: #008fd4;
+  --color-fwd-purple: #662d91;
+  --color-fwd-turquoise: #20bec6;
+  --color-fwd-yellow: #ffcb05;
+  --color-fwd-orange: #f7901e;
+  --color-fwd-magenta: #ec008c;
+  --color-fwd-navy: #0e1628;
+  --color-fwd-navy-light: #1a2744;
+
+  /* FWD Brand Fonts */
+  --font-heading: var(--font-figtree), sans-serif;
+  --font-body: var(--font-outfit), sans-serif;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-body);
+}
+
+@keyframes fwd-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.fwd-spin {
+  animation: fwd-spin 18s linear infinite;
 }
