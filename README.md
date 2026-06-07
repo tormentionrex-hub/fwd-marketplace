@@ -42,15 +42,13 @@ cd fwd-marketplace
 npm install     # corre `prisma generate` automaticamente via postinstall
 ```
 
-### 2. Configurar variables de entorno
+### 2. Configurar variables de entorno (`.env`)
 
-Copiá el ejemplo y pedile las claves al equipo:
+El archivo `.env` con las credenciales reales **se compartió en el grupo como documento**. Descargalo y colocalo en la raíz del proyecto (`fwd-marketplace/.env`).
 
-```bash
-cp .env.example .env
-```
+> **¿No lo encontrás?** Pedíselo a un compañero del equipo — ahí está el acceso a la base de datos. El `.env` **nunca** se sube al repo (está en `.gitignore`).
 
-Estructura del `.env` (sin valores reales):
+Si querés ver qué variables lleva, mirá `.env.example` (mismos nombres, sin valores). Estructura de referencia:
 
 ```bash
 # SUPABASE
@@ -88,7 +86,22 @@ GITHUB_CLIENT_SECRET=
 
 **Importante sobre el host del pooler (`aws-N`):** ver la sección [Troubleshooting Supabase](#troubleshooting-supabase) más abajo. **No copiar la cadena de la documentación**, copiarla del modal "Connect" del Dashboard.
 
-### 3. Arrancar
+### 3. Sincronizar Prisma con la base de datos
+
+Con el `.env` ya colocado, dejá el cliente de Prisma listo para que el backend
+pueda hablar con la base de datos. Si nunca tocaste Prisma, simplemente corré
+estos dos comandos **en orden**:
+
+```bash
+npx prisma db pull    # trae el esquema actual de la BD a prisma/schema.prisma
+npx prisma generate   # genera el cliente Prisma que usa el backend
+```
+
+> `db pull` usa `DIRECT_URL` (viene en el `.env`). Si falla con `tenant/user not found`, mirá [Troubleshooting Supabase](#troubleshooting-supabase). Si el backend tira `@prisma/client did not initialize yet`, te faltó `npx prisma generate`.
+
+Guía detallada del backend: [docs/configuracion-backend.md](docs/configuracion-backend.md).
+
+### 4. Arrancar
 
 ```bash
 node test-db.js       # smoke test de conexión a la DB
