@@ -42,7 +42,7 @@ export function RegisterForm() {
         localStorage.setItem("fwd_perfil", JSON.stringify(data.perfil));
       }
 
-      router.push("/empresario");
+      router.push(data?.redirectTo ?? "/empresario");
       router.refresh();
     } catch {
       setError("Error de red. Intentá de nuevo.");
