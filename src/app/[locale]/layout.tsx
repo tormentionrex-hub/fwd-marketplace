@@ -4,6 +4,7 @@ import { NextIntlClientProvider, hasLocale } from 'next-intl';
 import { setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
+import { RoleBadge } from '@/components/layout/role-badge';
 import '../globals.css';
 
 // Figtree — titulares y destacados (pesos 400 / 600 / 700 / 900)
@@ -49,6 +50,7 @@ export default async function LocaleLayout({
     >
       <body className="min-h-full flex flex-col font-sans">
         <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        <RoleBadge />
       </body>
     </html>
   );

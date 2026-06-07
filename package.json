@@ -17,6 +17,9 @@
   "lint-staged": {
     "*.{ts,tsx,js,jsx,mjs}": "eslint --fix --no-warn-ignored"
   },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
   "dependencies": {
     "@prisma/client": "^6.19.3",
     "@supabase/ssr": "^0.10.3",

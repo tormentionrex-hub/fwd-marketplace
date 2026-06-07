@@ -1,18 +1,49 @@
 "use client";
 
 import { useState } from "react";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { TextField } from "@/components/ui/text-field";
 
 export function LoginForm() {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
-    // TODO: conectar con Supabase Auth (signInWithPassword)
-    await new Promise((r) => setTimeout(r, 700));
-    setLoading(false);
+    setError(null);
+
+    const formData = new FormData(e.currentTarget);
+    const email = String(formData.get("email") ?? "");
+    const password = String(formData.get("password") ?? "");
+
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        setError(data?.error ?? "No se pudo iniciar sesión");
+        return;
+      }
+
+      // Perfil público (nombre, foto) -> localStorage. Lo privado va en la cookie.
+      if (data?.perfil) {
+        localStorage.setItem("fwd_perfil", JSON.stringify(data.perfil));
+      }
+
+      router.push("/");
+      router.refresh();
+    } catch {
+      setError("Error de red. Intentá de nuevo.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -27,6 +58,15 @@ export function LoginForm() {
       </header>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        {error && (
+          <p
+            role="alert"
+            className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+          >
+            {error}
+          </p>
+        )}
+
         <TextField
           id="email"
           name="email"
