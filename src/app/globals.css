@@ -12,6 +12,7 @@
   --color-fwd-blue: #008fd4;
   --color-fwd-purple: #662d91;
   --color-fwd-teal: #20bec6;
+  --color-fwd-turquoise: #20bec6;
   --color-fwd-yellow: #ffcb05;
   --color-fwd-orange: #f7901e;
   --color-fwd-magenta: #ec008c;
@@ -19,6 +20,7 @@
   /* Neutrales de soporte */
   --color-fwd-navy: #0b1437;
   --color-fwd-navy-700: #16205a;
+  --color-fwd-navy-light: #1a2744;
   --color-fwd-ink: #1a1633;
   --color-fwd-mist: #f3f5fb;
 }
@@ -32,6 +34,10 @@
   --color-ring: var(--ring);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Tipografías de marca (Figtree titulares / Outfit texto) */
+  --font-heading: var(--font-figtree), sans-serif;
+  --font-body: var(--font-outfit), sans-serif;
 
   /* Paleta de marca FWD Costa Rica (Libro de Marca · 05 · Color).
      Genera utilidades como bg-fwd-azul, text-fwd-magenta, etc. */
@@ -72,4 +78,15 @@ body {
   html {
     @apply font-sans;
   }
+}
+
+/* Logo giratorio del Navbar (rediseño homepage) */
+@keyframes fwd-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.fwd-spin {
+  animation: fwd-spin 18s linear infinite;
 }
