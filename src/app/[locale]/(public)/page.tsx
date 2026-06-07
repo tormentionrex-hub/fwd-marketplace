@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import StudentCarousel from "@/components/StudentCarousel";
@@ -82,14 +82,14 @@ export default function Home() {
 
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link
-                  href="/auth/registro"
+                  href="/register"
                   className="inline-flex items-center justify-center gap-2 bg-[#FFCB05] text-fwd-navy font-bold px-8 py-4 rounded-xl transition-all duration-300 text-base hover:scale-105 hover:brightness-110 active:scale-95"
                   style={{ boxShadow: "0 4px 25px #FFCB0566, 0 10px 40px #FFCB0533" }}
                 >
                   Publicar un proyecto <span aria-hidden="true">▶</span>
                 </Link>
                 <Link
-                  href="/proyectos"
+                  href="/marketplace"
                   className="inline-flex items-center justify-center gap-2 border-2 border-[#FFCB05] text-[#FFCB05] font-bold px-8 py-4 rounded-xl transition-all duration-300 text-base hover:scale-105 hover:bg-[#FFCB05] hover:text-fwd-navy active:scale-95"
                 >
                   Explorar proyectos
@@ -146,7 +146,7 @@ export default function Home() {
 
               <div className="mt-10">
                 <Link
-                  href="/auth/registro?tipo=empresa"
+                  href="/register?tipo=empresa"
                   className="block w-full text-center bg-[#008FD5] hover:bg-[#008FD5]/90 text-white font-black py-4 rounded-2xl transition-all duration-200 hover:scale-105 active:scale-95 text-base tracking-wide"
                 >
                   Empezar como Empresa
@@ -183,7 +183,7 @@ export default function Home() {
 
               <div className="mt-10">
                 <Link
-                  href="/auth/registro?tipo=estudiante"
+                  href="/register?tipo=estudiante"
                   className="block w-full text-center bg-[#662E91] hover:bg-[#662E91]/90 text-white font-black py-4 rounded-2xl transition-all duration-200 hover:scale-105 active:scale-95 text-base tracking-wide"
                 >
                   Empezar como Estudiante
@@ -209,7 +209,7 @@ export default function Home() {
               </h2>
             </div>
             <Link
-              href="/proyectos"
+              href="/marketplace"
               className="hidden sm:inline-flex items-center gap-2 border border-white/20 hover:border-[#FFCB05] text-white hover:text-[#FFCB05] font-semibold text-sm px-5 py-2.5 rounded-full transition-all duration-200"
             >
               Ver todos →
@@ -259,7 +259,7 @@ export default function Home() {
           </div>
 
           <div className="text-center mt-10 sm:hidden">
-            <Link href="/proyectos" className="text-[#FFCB05] font-semibold text-sm">
+            <Link href="/marketplace" className="text-[#FFCB05] font-semibold text-sm">
               Ver todos los proyectos →
             </Link>
           </div>
