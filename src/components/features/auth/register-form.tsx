@@ -1,21 +1,54 @@
 "use client";
 
 import { useState } from "react";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { TextField } from "@/components/ui/text-field";
 
 type StudentStatus = "en_curso" | "ex_estudiante";
 
 export function RegisterForm() {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [studentStatus, setStudentStatus] = useState<StudentStatus>("en_curso");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
-    // TODO: conectar con Supabase Auth (signUp)
-    await new Promise((r) => setTimeout(r, 700));
-    setLoading(false);
+    setError(null);
+
+    const formData = new FormData(e.currentTarget);
+    const firstName = String(formData.get("firstName") ?? "");
+    const lastName = String(formData.get("lastName") ?? "");
+    const email = String(formData.get("email") ?? "");
+    const password = String(formData.get("password") ?? "");
+
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ firstName, lastName, email, password }),
+      });
+
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        setError(data?.error ?? "No se pudo crear la cuenta");
+        return;
+      }
+
+      // Perfil público (nombre, foto) -> localStorage. Lo privado va en la cookie.
+      if (data?.perfil) {
+        localStorage.setItem("fwd_perfil", JSON.stringify(data.perfil));
+      }
+
+      router.push("/empresario");
+      router.refresh();
+    } catch {
+      setError("Error de red. Intentá de nuevo.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -30,6 +63,15 @@ export function RegisterForm() {
       </header>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        {error && (
+          <p
+            role="alert"
+            className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+          >
+            {error}
+          </p>
+        )}
+
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <TextField
             id="firstName"
