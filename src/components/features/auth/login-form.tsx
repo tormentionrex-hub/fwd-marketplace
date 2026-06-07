@@ -37,7 +37,7 @@ export function LoginForm() {
         localStorage.setItem("fwd_perfil", JSON.stringify(data.perfil));
       }
 
-      router.push("/");
+      router.push(data?.redirectTo ?? "/");
       router.refresh();
     } catch {
       setError("Error de red. Intentá de nuevo.");
