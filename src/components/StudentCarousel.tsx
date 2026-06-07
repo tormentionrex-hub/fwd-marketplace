@@ -89,7 +89,7 @@ export default function StudentCarousel() {
   }, [next]);
 
   const visible = [0, 1, 2].map(
-    (offset) => estudiantes[(current + offset) % total]
+    (offset) => estudiantes[(current + offset) % total]!
   );
 
   return (
