@@ -17,10 +17,18 @@ export async function POST(request: Request) {
   }
 
   const resultado = await login(email, password);
-  if (!resultado) {
+
+  if (resultado === null) {
     return NextResponse.json(
       { error: 'Correo o contraseña incorrectos' },
       { status: 401 }
+    );
+  }
+
+  if (resultado === 'pendiente') {
+    return NextResponse.json(
+      { error: 'Tu cuenta está pendiente de aprobación por un administrador. Te avisaremos por email cuando esté lista.' },
+      { status: 403 }
     );
   }
 
