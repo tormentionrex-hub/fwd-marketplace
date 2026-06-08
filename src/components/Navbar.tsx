@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import Image from "next/image";
 import { useState } from "react";
 import SettingsPanel from "@/components/SettingsPanel";
@@ -26,7 +26,7 @@ export default function Navbar() {
           </div>
           <div className="hidden sm:block bg-white rounded-lg px-2 py-1">
             <Image
-              src="/imagenes/logo-FWD.png"
+              src="/imagenes/logo-FWD-removebg-preview.png"
               alt="FWD Costa Rica"
               width={100}
               height={36}
@@ -44,13 +44,13 @@ export default function Navbar() {
             Inicio
           </Link>
           <Link
-            href="/proyectos"
+            href="/marketplace"
             className="text-white/80 hover:text-[#20BEC7] text-base font-semibold transition-colors duration-200"
           >
             Proyectos
           </Link>
           <Link
-            href="/auth/login"
+            href="/login"
             className="text-white/80 hover:text-[#20BEC7] text-base font-semibold transition-colors duration-200"
           >
             Iniciar sesión
@@ -61,7 +61,7 @@ export default function Navbar() {
         <div className="hidden md:flex items-center gap-3 flex-shrink-0">
           <SettingsPanel />
           <Link
-            href="/auth/registro"
+            href="/register"
             className="bg-[#FFCB05] hover:bg-[#FFCB05]/90 text-[#0e1628] text-base font-black px-8 py-3 rounded-full transition-all duration-200 hover:scale-105 active:scale-95 shadow-md"
           >
             Registrarse
@@ -86,14 +86,14 @@ export default function Navbar() {
           <Link href="/" className="text-white/80 text-base font-semibold py-1 hover:text-[#20BEC7] transition-colors" onClick={() => setMenuOpen(false)}>
             Inicio
           </Link>
-          <Link href="/proyectos" className="text-white/80 text-base font-semibold py-1 hover:text-[#20BEC7] transition-colors" onClick={() => setMenuOpen(false)}>
+          <Link href="/marketplace" className="text-white/80 text-base font-semibold py-1 hover:text-[#20BEC7] transition-colors" onClick={() => setMenuOpen(false)}>
             Proyectos
           </Link>
-          <Link href="/auth/login" className="text-white/80 text-base font-semibold py-1 hover:text-[#20BEC7] transition-colors" onClick={() => setMenuOpen(false)}>
+          <Link href="/login" className="text-white/80 text-base font-semibold py-1 hover:text-[#20BEC7] transition-colors" onClick={() => setMenuOpen(false)}>
             Iniciar sesión
           </Link>
           <Link
-            href="/auth/registro"
+            href="/register"
             className="bg-[#FFCB05] text-[#0e1628] text-base font-black px-5 py-3 rounded-full text-center hover:bg-[#FFCB05]/90 transition-all"
             onClick={() => setMenuOpen(false)}
           >
