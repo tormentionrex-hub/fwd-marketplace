@@ -168,7 +168,7 @@ export default function WelcomeOnboarding() {
           {!videoError && (
             <video
               ref={videoRef}
-              src="/videos/welcome.mp4"
+              src="/videos/fwd.mp4"
               autoPlay
               muted={muted}
               playsInline
