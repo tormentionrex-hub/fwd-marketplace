@@ -32,7 +32,7 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --font-sans: var(--font-sans);
+  --font-sans: var(--font-outfit), sans-serif;
   --font-mono: var(--font-geist-mono);
 
   /* Tipografías de marca (Figtree titulares / Outfit texto) */
@@ -64,7 +64,7 @@ body {
 
 /* Titulares: Figtree con tracking ceñido al estilo del manual */
 .font-display {
-  font-family: var(--font-display);
+  font-family: var(--font-figtree), sans-serif;
   letter-spacing: -0.02em;
 }
 
@@ -89,4 +89,55 @@ body {
 
 .fwd-spin {
   animation: fwd-spin 18s linear infinite;
+}
+
+/* ── Custom cursor ───────────────────────────────── */
+@media (pointer: fine) {
+  * { cursor: none !important; }
+}
+
+.cursor-dot {
+  position: fixed;
+  top: 0; left: 0;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #20BEC6;
+  pointer-events: none;
+  z-index: 9999;
+  transition: width 0.2s, height 0.2s, background 0.2s;
+  box-shadow: 0 0 10px #20BEC6, 0 0 20px #20BEC688;
+}
+
+.cursor-ring {
+  position: fixed;
+  top: 0; left: 0;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: 2px solid #20BEC699;
+  pointer-events: none;
+  z-index: 9998;
+  transition: width 0.25s, height 0.25s, border-color 0.25s;
+}
+
+.cursor-dot.cursor-hover {
+  width: 12px; height: 12px;
+  background: #FFCB05;
+  box-shadow: 0 0 14px #FFCB05, 0 0 30px #FFCB0566;
+}
+
+.cursor-ring.cursor-hover {
+  width: 52px; height: 52px;
+  border-color: #FFCB0588;
+}
+
+/* ── GSAP initial states ─────────────────────────── */
+[data-hero="badge"],
+[data-hero="title"],
+[data-hero="desc"],
+[data-hero="cta"] > * {
+  will-change: transform, opacity;
+}
+
+[data-reveal] {
+  will-change: transform, opacity;
 }
