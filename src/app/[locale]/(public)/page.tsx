@@ -58,43 +58,43 @@ export default function Home() {
       <Navbar />
 
       {/* ── HERO ─────────────────────────────────── */}
-      <section className="relative overflow-hidden flex-1">
+      <section className="relative overflow-hidden flex-1 bg-[#0e1628]">
         <HeroCarousel />
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-16 md:pt-36 md:pb-24">
           <div className="max-w-3xl">
-              <span className="inline-flex items-center gap-2 text-fwd-turquoise text-xs font-semibold uppercase tracking-widest mb-6">
-                <span className="text-fwd-blue">▶▶</span> Plataforma de
-                innovación · FWD Costa Rica
-              </span>
+            <span data-hero="badge" className="inline-flex items-center gap-2 text-fwd-turquoise text-xs font-semibold uppercase tracking-widest mb-6">
+              <span className="text-fwd-blue">▶▶</span> Plataforma de
+              innovación · FWD Costa Rica
+            </span>
 
-              <h1 className="font-heading font-black text-4xl md:text-5xl lg:text-6xl text-white leading-tight mb-6">
-                Conectamos empresarios con{" "}
-                <span className="text-[#ED008C]">talento tecnológico</span> de
-                FWD Costa Rica
-              </h1>
+            <h1 data-hero="title" className="font-heading font-black text-4xl md:text-5xl lg:text-6xl text-white leading-tight mb-6">
+              Conectamos empresarios con{" "}
+              <span className="text-[#ED008C]">talento tecnológico</span> de
+              FWD Costa Rica
+            </h1>
 
-              <p className="text-gray-300 text-lg md:text-xl leading-relaxed mb-10 font-light">
-                Publicá tu proyecto, recibí prototipos de estudiantes
-                verificados y elegí la mejor solución. Sin riesgo, con
-                resultados reales.
-              </p>
+            <p data-hero="desc" className="text-gray-300 text-lg md:text-xl leading-relaxed mb-10 font-light">
+              Publicá tu proyecto, recibí prototipos de estudiantes
+              verificados y elegí la mejor solución. Sin riesgo, con
+              resultados reales.
+            </p>
 
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Link
-                  href="/auth/registro"
-                  className="inline-flex items-center justify-center gap-2 bg-[#FFCB05] text-fwd-navy font-bold px-8 py-4 rounded-xl transition-all duration-300 text-base hover:scale-105 hover:brightness-110 active:scale-95"
-                  style={{ boxShadow: "0 4px 25px #FFCB0566, 0 10px 40px #FFCB0533" }}
-                >
-                  Publicar un proyecto <span aria-hidden="true">▶</span>
-                </Link>
-                <Link
-                  href="/proyectos"
-                  className="inline-flex items-center justify-center gap-2 border-2 border-[#FFCB05] text-[#FFCB05] font-bold px-8 py-4 rounded-xl transition-all duration-300 text-base hover:scale-105 hover:bg-[#FFCB05] hover:text-fwd-navy active:scale-95"
-                >
-                  Explorar proyectos
-                </Link>
-              </div>
+            <div data-hero="cta" className="flex flex-col sm:flex-row gap-4">
+              <Link
+                href="/auth/registro"
+                className="inline-flex items-center justify-center gap-2 bg-[#FFCB05] text-fwd-navy font-bold px-8 py-4 rounded-xl transition-all duration-300 text-base hover:scale-105 hover:brightness-110 active:scale-95"
+                style={{ boxShadow: "0 4px 25px #FFCB0566, 0 10px 40px #FFCB0533" }}
+              >
+                Publicar un proyecto <span aria-hidden="true">▶</span>
+              </Link>
+              <Link
+                href="/proyectos"
+                className="inline-flex items-center justify-center gap-2 border-2 border-[#FFCB05] text-[#FFCB05] font-bold px-8 py-4 rounded-xl transition-all duration-300 text-base hover:scale-105 hover:bg-[#FFCB05] hover:text-fwd-navy active:scale-95"
+              >
+                Explorar proyectos
+              </Link>
+            </div>
           </div>
         </div>
       </section>
@@ -103,21 +103,19 @@ export default function Home() {
       <section className="bg-white py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-          {/* Header */}
           <div className="text-center mb-16">
-            <h2 className="font-heading font-black text-5xl md:text-6xl text-fwd-navy mb-4">
+            <h2 data-reveal="heading" className="font-heading font-black text-5xl md:text-6xl text-fwd-navy mb-4">
               ¿Cómo funciona?
             </h2>
-            <p className="text-gray-500 text-xl max-w-xl mx-auto">
+            <p data-reveal="fade-up" className="text-gray-500 text-xl max-w-xl mx-auto">
               Un proceso simple para conectar ideas con talento.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8">
+          <div data-reveal="stagger" className="grid md:grid-cols-2 gap-8">
 
             {/* ── Empresario */}
             <div className="bg-gray-50 rounded-3xl p-10 border border-gray-100 flex flex-col">
-              {/* Badge + icon */}
               <div className="flex items-center gap-4 mb-10">
                 <div className="w-12 h-12 rounded-2xl bg-[#008FD5] flex items-center justify-center shadow-sm">
                   <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden="true">
@@ -127,28 +125,18 @@ export default function Home() {
                     <line x1="10" y1="14" x2="14" y2="14" />
                   </svg>
                 </div>
-                <span className="font-heading font-black text-2xl text-fwd-navy tracking-tight">
-                  Empresario
-                </span>
+                <span className="font-heading font-black text-2xl text-fwd-navy tracking-tight">Empresario</span>
               </div>
-
-              {/* Steps */}
               <ol className="flex flex-col gap-6 flex-1">
                 {pasosEmpresario.map((texto, i) => (
                   <li key={i} className="flex items-start gap-4">
-                    <span className="flex-shrink-0 w-9 h-9 rounded-full bg-[#008FD5] text-white text-sm font-black flex items-center justify-center shadow-sm">
-                      {i + 1}
-                    </span>
+                    <span className="flex-shrink-0 w-9 h-9 rounded-full bg-[#008FD5] text-white text-sm font-black flex items-center justify-center shadow-sm">{i + 1}</span>
                     <p className="text-gray-600 font-medium text-base pt-1.5 leading-snug">{texto}</p>
                   </li>
                 ))}
               </ol>
-
               <div className="mt-10">
-                <Link
-                  href="/auth/registro?tipo=empresa"
-                  className="block w-full text-center bg-[#008FD5] hover:bg-[#008FD5]/90 text-white font-black py-4 rounded-2xl transition-all duration-200 hover:scale-105 active:scale-95 text-base tracking-wide"
-                >
+                <Link href="/auth/registro?tipo=empresa" className="block w-full text-center bg-[#008FD5] hover:bg-[#008FD5]/90 text-white font-black py-4 rounded-2xl transition-all duration-200 hover:scale-105 active:scale-95 text-base tracking-wide">
                   Empezar como Empresa
                 </Link>
               </div>
@@ -156,7 +144,6 @@ export default function Home() {
 
             {/* ── Estudiante */}
             <div className="bg-gray-50 rounded-3xl p-10 border border-gray-100 flex flex-col">
-              {/* Badge + icon */}
               <div className="flex items-center gap-4 mb-10">
                 <div className="w-12 h-12 rounded-2xl bg-[#662E91] flex items-center justify-center shadow-sm">
                   <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden="true">
@@ -164,28 +151,18 @@ export default function Home() {
                     <path d="M6 12v5c3 3 9 3 12 0v-5" />
                   </svg>
                 </div>
-                <span className="font-heading font-black text-2xl text-fwd-navy tracking-tight">
-                  Estudiante
-                </span>
+                <span className="font-heading font-black text-2xl text-fwd-navy tracking-tight">Estudiante</span>
               </div>
-
-              {/* Steps */}
               <ol className="flex flex-col gap-6 flex-1">
                 {pasosEstudiante.map((texto, i) => (
                   <li key={i} className="flex items-start gap-4">
-                    <span className="flex-shrink-0 w-9 h-9 rounded-full bg-[#662E91] text-white text-sm font-black flex items-center justify-center shadow-sm">
-                      {i + 1}
-                    </span>
+                    <span className="flex-shrink-0 w-9 h-9 rounded-full bg-[#662E91] text-white text-sm font-black flex items-center justify-center shadow-sm">{i + 1}</span>
                     <p className="text-gray-600 font-medium text-base pt-1.5 leading-snug">{texto}</p>
                   </li>
                 ))}
               </ol>
-
               <div className="mt-10">
-                <Link
-                  href="/auth/registro?tipo=estudiante"
-                  className="block w-full text-center bg-[#662E91] hover:bg-[#662E91]/90 text-white font-black py-4 rounded-2xl transition-all duration-200 hover:scale-105 active:scale-95 text-base tracking-wide"
-                >
+                <Link href="/auth/registro?tipo=estudiante" className="block w-full text-center bg-[#662E91] hover:bg-[#662E91]/90 text-white font-black py-4 rounded-2xl transition-all duration-200 hover:scale-105 active:scale-95 text-base tracking-wide">
                   Empezar como Estudiante
                 </Link>
               </div>
@@ -201,14 +178,13 @@ export default function Home() {
 
           <div className="flex items-center justify-between mb-14">
             <div>
-              <p className="text-[#20BEC7] text-xs font-semibold uppercase tracking-widest mb-2">
-                En curso
-              </p>
-              <h2 className="font-heading font-black text-4xl md:text-5xl text-white">
+              <p data-reveal="fade-left" className="text-[#20BEC7] text-xs font-semibold uppercase tracking-widest mb-2">En curso</p>
+              <h2 data-reveal="heading" className="font-heading font-black text-4xl md:text-5xl text-white">
                 Proyectos disponibles
               </h2>
             </div>
             <Link
+              data-reveal="fade-right"
               href="/proyectos"
               className="hidden sm:inline-flex items-center gap-2 border border-white/20 hover:border-[#FFCB05] text-white hover:text-[#FFCB05] font-semibold text-sm px-5 py-2.5 rounded-full transition-all duration-200"
             >
@@ -216,52 +192,30 @@ export default function Home() {
             </Link>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <div data-reveal="stagger" className="grid md:grid-cols-3 gap-6">
             {proyectos.map((p) => (
               <article
                 key={p.id}
                 className="rounded-3xl p-7 flex flex-col hover:scale-105 transition-transform duration-300 shadow-lg"
                 style={{ backgroundColor: p.color }}
               >
-                {/* Área */}
-                <span className="text-xs font-bold text-white/70 uppercase tracking-widest mb-3">
-                  {p.area}
-                </span>
-
-                {/* Título */}
-                <h3 className="font-heading font-black text-white text-xl leading-snug mb-5 flex-1">
-                  {p.titulo}
-                </h3>
-
-                {/* Tech chips */}
+                <span className="text-xs font-bold text-white/70 uppercase tracking-widest mb-3">{p.area}</span>
+                <h3 className="font-heading font-black text-white text-xl leading-snug mb-5 flex-1">{p.titulo}</h3>
                 <div className="flex flex-wrap gap-2 mb-6">
                   {p.tecnologias.map((tech) => (
-                    <span
-                      key={tech}
-                      className="bg-white/20 text-white text-xs font-semibold px-3 py-1 rounded-full"
-                    >
-                      {tech}
-                    </span>
+                    <span key={tech} className="bg-white/20 text-white text-xs font-semibold px-3 py-1 rounded-full">{tech}</span>
                   ))}
                 </div>
-
-                {/* Footer */}
                 <div className="flex items-center justify-between pt-4 border-t border-white/20">
-                  <span className="text-white/80 text-sm">
-                    por <span className="font-bold text-white">{p.empresario}</span>
-                  </span>
-                  <span className="bg-[#FFCB05] text-[#0e1628] text-xs font-black px-3 py-1 rounded-full">
-                    {p.diasRestantes}d restantes
-                  </span>
+                  <span className="text-white/80 text-sm">por <span className="font-bold text-white">{p.empresario}</span></span>
+                  <span className="bg-[#FFCB05] text-[#0e1628] text-xs font-black px-3 py-1 rounded-full">{p.diasRestantes}d restantes</span>
                 </div>
               </article>
             ))}
           </div>
 
           <div className="text-center mt-10 sm:hidden">
-            <Link href="/proyectos" className="text-[#FFCB05] font-semibold text-sm">
-              Ver todos los proyectos →
-            </Link>
+            <Link href="/proyectos" className="text-[#FFCB05] font-semibold text-sm">Ver todos los proyectos →</Link>
           </div>
         </div>
       </section>
@@ -269,9 +223,8 @@ export default function Home() {
       {/* ── CARACTERÍSTICAS ──────────────────────── */}
       <section className="bg-gray-50 py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-3 gap-6">
+          <div data-reveal="stagger" className="grid md:grid-cols-3 gap-6">
 
-            {/* Rápido */}
             <div className="flex flex-col items-center text-center p-10 rounded-2xl hover:scale-105 transition-transform duration-300 shadow-md bg-[#008FD5]">
               <div className="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center mb-5">
                 <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden="true">
@@ -279,12 +232,9 @@ export default function Home() {
                 </svg>
               </div>
               <h3 className="font-heading font-black text-white text-2xl mb-3">Rápido</h3>
-              <p className="text-white/80 text-sm leading-relaxed">
-                De la idea al prototipo en días, no meses.
-              </p>
+              <p className="text-white/80 text-sm leading-relaxed">De la idea al prototipo en días, no meses.</p>
             </div>
 
-            {/* Seguro */}
             <div className="flex flex-col items-center text-center p-10 rounded-2xl hover:scale-105 transition-transform duration-300 shadow-md bg-[#ED008C]">
               <div className="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center mb-5">
                 <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden="true">
@@ -293,12 +243,9 @@ export default function Home() {
                 </svg>
               </div>
               <h3 className="font-heading font-black text-white text-2xl mb-3">Seguro</h3>
-              <p className="text-white/80 text-sm leading-relaxed">
-                Contratos inteligentes y revisión de IA.
-              </p>
+              <p className="text-white/80 text-sm leading-relaxed">Contratos inteligentes y revisión de IA.</p>
             </div>
 
-            {/* Colaborativo */}
             <div className="flex flex-col items-center text-center p-10 rounded-2xl hover:scale-105 transition-transform duration-300 shadow-md bg-[#662E91]">
               <div className="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center mb-5">
                 <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden="true">
@@ -309,9 +256,7 @@ export default function Home() {
                 </svg>
               </div>
               <h3 className="font-heading font-black text-white text-2xl mb-3">Colaborativo</h3>
-              <p className="text-white/80 text-sm leading-relaxed">
-                Talento joven guiado por expertos locales.
-              </p>
+              <p className="text-white/80 text-sm leading-relaxed">Talento joven guiado por expertos locales.</p>
             </div>
 
           </div>
