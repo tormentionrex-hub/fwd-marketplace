@@ -31,8 +31,9 @@ export function AlertaGlobal() {
       return;
     }
 
-    if (codigo && MENSAJES[codigo]) {
-      setAlerta(MENSAJES[codigo]);
+    const mensaje = codigo ? MENSAJES[codigo] : undefined;
+    if (mensaje) {
+      setAlerta(mensaje);
       try {
         sessionStorage.removeItem("fwd_alerta");
       } catch {
