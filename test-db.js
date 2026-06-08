@@ -5,7 +5,6 @@ const prisma = new PrismaClient();
 
 async function test() {
   try {
-    // Intentar conectarse
     await prisma.$queryRaw`SELECT 1`;
     console.log('✅ Conexión exitosa a Supabase');
     process.exit(0);
