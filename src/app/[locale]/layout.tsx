@@ -7,6 +7,9 @@ import { routing } from '@/i18n/routing';
 import { RoleBadge } from '@/components/layout/role-badge';
 import { AlertaGlobal } from '@/components/layout/alerta-global';
 import WhatsAppButton from '@/components/WhatsAppButton';
+import SmoothScroll from '@/components/SmoothScroll';
+import AnimationsInit from '@/components/AnimationsInit';
+import CursorGlow from '@/components/CursorGlow';
 import '../globals.css';
 
 // Figtree — titulares y destacados (pesos 400 / 600 / 700 / 900)
@@ -51,6 +54,9 @@ export default async function LocaleLayout({
       className={`${figtree.variable} ${outfit.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans">
+        <SmoothScroll />
+        <AnimationsInit />
+        <CursorGlow />
         <NextIntlClientProvider>
           {children}
           <RoleBadge />

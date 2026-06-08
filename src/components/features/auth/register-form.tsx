@@ -4,7 +4,29 @@ import { useState } from "react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { TextField } from "@/components/ui/text-field";
 
-type StudentStatus = "en_curso" | "ex_estudiante";
+type Role = "estudiante" | "empresario";
+
+/** Reglas de validación de la contraseña: se marcan con check al cumplirse. */
+const PASSWORD_RULES = [
+  { id: "len", label: "Mínimo 8 caracteres", test: (v: string) => v.length >= 8 },
+  { id: "upper", label: "Una mayúscula", test: (v: string) => /[A-Z]/.test(v) },
+  { id: "lower", label: "Una minúscula", test: (v: string) => /[a-z]/.test(v) },
+  { id: "num", label: "Un número", test: (v: string) => /[0-9]/.test(v) },
+] as const;
+
+function CheckIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" className={className} aria-hidden>
+      <path
+        d="M5 10.5l3.5 3.5L15 7"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
 
 export function RegisterForm() {
   const router = useRouter();
@@ -14,6 +36,7 @@ export function RegisterForm() {
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (!canSubmit) return;
     setLoading(true);
     setError(null);
 
@@ -124,16 +147,16 @@ export function RegisterForm() {
 
         <fieldset className="flex flex-col gap-1.5">
           <legend className="mb-1.5 text-sm font-medium text-fwd-ink/80">
-            Condición estudiantil
+            Quiero registrarme como
           </legend>
           <div className="grid grid-cols-2 gap-2 rounded-xl bg-fwd-mist/60 p-1">
             {(
               [
-                { value: "en_curso", label: "Estudiante en curso" },
-                { value: "ex_estudiante", label: "Ex-Estudiante" },
+                { value: "estudiante", label: "Soy Estudiante" },
+                { value: "empresario", label: "Soy Empresario" },
               ] as const
             ).map((opt) => {
-              const active = studentStatus === opt.value;
+              const active = role === opt.value;
               return (
                 <label
                   key={opt.value}
@@ -145,10 +168,10 @@ export function RegisterForm() {
                 >
                   <input
                     type="radio"
-                    name="studentStatus"
+                    name="role"
                     value={opt.value}
                     checked={active}
-                    onChange={() => setStudentStatus(opt.value)}
+                    onChange={() => setRole(opt.value)}
                     className="sr-only"
                   />
                   {opt.label}
@@ -168,31 +191,77 @@ export function RegisterForm() {
           required
         />
 
-        <TextField
-          id="password"
-          name="password"
-          type="password"
-          label="Contraseña"
-          placeholder="Mínimo 8 caracteres"
-          autoComplete="new-password"
-          minLength={8}
-          required
-        />
+        {/* Contraseña con validación en vivo y check al ser válida */}
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="password" className="text-sm font-medium text-fwd-ink/80">
+            Contraseña
+          </label>
+          <div className="relative">
+            <input
+              id="password"
+              name="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Mínimo 8 caracteres"
+              autoComplete="new-password"
+              required
+              aria-invalid={password.length > 0 && !passwordValid}
+              className={`w-full rounded-xl border bg-fwd-mist/40 px-4 py-3 pr-11 text-[0.95rem] text-fwd-ink outline-none transition placeholder:text-fwd-ink/35 focus:bg-white focus:ring-4 ${
+                passwordValid
+                  ? "border-green-500 focus:border-green-500 focus:ring-green-500/15"
+                  : "border-fwd-ink/12 focus:border-fwd-blue focus:ring-fwd-blue/15"
+              }`}
+            />
+            {passwordValid ? (
+              <span
+                className="absolute right-3 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full bg-green-500 text-white"
+                aria-label="Contraseña válida"
+              >
+                <CheckIcon className="h-4 w-4" />
+              </span>
+            ) : null}
+          </div>
+
+          <ul className="mt-1.5 grid grid-cols-2 gap-x-3 gap-y-1">
+            {PASSWORD_RULES.map((rule) => {
+              const ok = rule.test(password);
+              return (
+                <li
+                  key={rule.id}
+                  className={`flex items-center gap-1.5 text-xs transition-colors ${
+                    ok ? "text-green-600" : "text-fwd-ink/45"
+                  }`}
+                >
+                  <span
+                    className={`flex h-3.5 w-3.5 items-center justify-center rounded-full ${
+                      ok ? "bg-green-500 text-white" : "bg-fwd-ink/15 text-transparent"
+                    }`}
+                  >
+                    <CheckIcon className="h-2.5 w-2.5" />
+                  </span>
+                  {rule.label}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
 
         <label className="flex items-start gap-2.5 text-sm text-fwd-ink/70">
           <input
             type="checkbox"
+            checked={terms}
+            onChange={(e) => setTerms(e.target.checked)}
             required
             className="mt-0.5 h-4 w-4 rounded border-fwd-ink/25 accent-fwd-blue"
           />
           <span>
             Acepto los{" "}
-            <Link href="#" className="font-medium text-fwd-blue hover:text-fwd-purple">
-              Términos
-            </Link>{" "}
-            y la{" "}
-            <Link href="#" className="font-medium text-fwd-blue hover:text-fwd-purple">
-              Política de privacidad
+            <Link
+              href="/terminos"
+              className="font-medium text-fwd-blue hover:text-fwd-purple"
+            >
+              Términos y Condiciones
             </Link>
             .
           </span>
@@ -200,8 +269,12 @@ export function RegisterForm() {
 
         <button
           type="submit"
-          disabled={loading}
-          className="group mt-1 flex h-12 items-center justify-center gap-2 rounded-full bg-fwd-blue px-6 font-semibold text-white shadow-sm transition hover:bg-fwd-purple disabled:opacity-60"
+          disabled={!canSubmit}
+          className={`group mt-1 flex h-12 items-center justify-center gap-2 rounded-full px-6 font-semibold text-white shadow-sm transition ${
+            canSubmit
+              ? "bg-fwd-blue hover:bg-fwd-purple"
+              : "cursor-not-allowed bg-fwd-ink/25"
+          }`}
         >
           {loading ? "Avanzando…" : "Crear cuenta"}
           <span className="transition-transform group-hover:translate-x-1">▶</span>
