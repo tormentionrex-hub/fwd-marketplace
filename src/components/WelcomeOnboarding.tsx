@@ -34,13 +34,6 @@ const IconSoundOff = () => (
   </svg>
 );
 
-const IconWave = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-    strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-    <path d="M2 12c1.5-3 3-4.5 4.5-4.5S9 9 10.5 9 13.5 6 15 6s3 3 4.5 3S22 9 22 12" />
-    <path d="M2 17c1.5-3 3-4.5 4.5-4.5S9 14 10.5 14 13.5 11 15 11s3 3 4.5 3S22 14 22 17" />
-  </svg>
-);
 
 const IconRepeat = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
@@ -60,12 +53,15 @@ const IconCheck = () => (
 
 /* ── Componente principal ──────────────────────────── */
 export default function WelcomeOnboarding() {
-  const [phase, setPhase]           = useState<Phase>("done");
-  const [muted, setMuted]           = useState(true);
+  const [phase, setPhase]               = useState<Phase>("done");
+  const [muted, setMuted]               = useState(true);
   const [videoOpacity, setVideoOpacity] = useState(1);
-  const [alertIn, setAlertIn]       = useState(false);
+  const [alertIn, setAlertIn]           = useState(false);
+  const [videoError, setVideoError]     = useState(false);
+  const [progress, setProgress]         = useState(0);
   const videoRef  = useRef<HTMLVideoElement>(null);
   const ttsRef    = useRef<((e: MouseEvent) => void) | null>(null);
+  const timerRef  = useRef<ReturnType<typeof setInterval> | null>(null);
 
   /* ── Init: comprobar contador ─────────────────── */
   useEffect(() => {
@@ -76,6 +72,23 @@ export default function WelcomeOnboarding() {
       setVideoOpacity(1);
     }
   }, []);
+
+  /* ── Fallback: barra de progreso cuando no hay video ── */
+  useEffect(() => {
+    if (phase === "video" && videoError) {
+      setProgress(0);
+      let p = 0;
+      timerRef.current = setInterval(() => {
+        p += 1;
+        setProgress(p);
+        if (p >= 100) {
+          clearInterval(timerRef.current!);
+          handleVideoEnded();
+        }
+      }, 40); // 4 segundos
+    }
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [videoError, phase]); // eslint-disable-line
 
   /* ── TTS preview sobre el modal ──────────────── */
   const speakText = useCallback((text: string) => {
@@ -148,19 +161,78 @@ export default function WelcomeOnboarding() {
       {/* ══ FASE 1: VIDEO ══════════════════════════ */}
       {phase === "video" && (
         <div
-          className="fixed inset-0 z-[9999] bg-black flex items-center justify-center"
-          style={{ transition: "opacity 0.55s ease", opacity: videoOpacity }}
+          className="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden"
+          style={{ transition: "opacity 0.55s ease", opacity: videoOpacity, background: "#07101f" }}
         >
-          <video
-            ref={videoRef}
-            src="/videos/welcome.mp4"
-            autoPlay
-            muted={muted}
-            playsInline
-            loop={false}
-            onEnded={handleVideoEnded}
-            className="w-full h-full object-cover"
-          />
+          {/* Video real — oculto si da error */}
+          {!videoError && (
+            <video
+              ref={videoRef}
+              src="/videos/welcome.mp4"
+              autoPlay
+              muted={muted}
+              playsInline
+              loop={false}
+              onEnded={handleVideoEnded}
+              onError={() => setVideoError(true)}
+              className="w-full h-full object-cover"
+            />
+          )}
+
+          {/* ── Pantalla de marca cuando no hay video ── */}
+          {videoError && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center"
+              style={{ background: "radial-gradient(ellipse at 50% 40%, #1a0a3e 0%, #07101f 70%)" }}>
+
+              {/* Triángulos decorativos animados */}
+              <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                {[
+                  { t:"8%",  l:"5%",  s:60, c:"#20BEC6", op:0.3, delay:"0s"   },
+                  { t:"15%", l:"85%", s:45, c:"#ED008C", op:0.25, delay:"0.5s" },
+                  { t:"70%", l:"3%",  s:50, c:"#662D91", op:0.25, delay:"1s"   },
+                  { t:"75%", l:"88%", s:55, c:"#FFCB05", op:0.2,  delay:"0.3s" },
+                  { t:"45%", l:"92%", s:35, c:"#20BEC6", op:0.2,  delay:"0.8s" },
+                  { t:"40%", l:"1%",  s:40, c:"#ED008C", op:0.2,  delay:"1.2s" },
+                ].map((t, i) => (
+                  <svg key={i} width={t.s} height={t.s * 0.87} viewBox={`0 0 ${t.s} ${t.s * 0.87}`}
+                    style={{ position:"absolute", top:t.t, left:t.l, opacity:t.op,
+                      animation:`floatTri 5s ease-in-out infinite`, animationDelay:t.delay }}>
+                    <polygon points={`0,0 ${t.s},${(t.s*0.87)/2} 0,${t.s*0.87}`} fill={t.c} />
+                  </svg>
+                ))}
+              </div>
+
+              {/* Logo giratorio */}
+              <div className="fwd-spin mb-8" style={{ filter:"drop-shadow(0 0 30px #20BEC688)" }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/imagenes/logo-removebg-preview.png" alt="FWD" width={120} height={120} />
+              </div>
+
+              {/* Texto bienvenida */}
+              <div className="mb-2">
+                <span className="text-[#20BEC6] text-xs font-semibold uppercase tracking-[0.3em]">
+                  ▶▶ Plataforma de innovación
+                </span>
+              </div>
+              <h1 className="text-white font-black text-3xl md:text-5xl leading-tight mb-3"
+                style={{ fontFamily:"var(--font-figtree), sans-serif" }}>
+                Bienvenido a{" "}
+                <span style={{ background:"linear-gradient(90deg,#20BEC6,#ED008C)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>
+                  FWD Costa Rica
+                </span>
+              </h1>
+              <p className="text-white/50 text-sm max-w-xs leading-relaxed">
+                Conectamos empresarios con talento tecnológico
+              </p>
+
+              {/* Barra de progreso */}
+              <div className="mt-10 w-48 h-1 bg-white/10 rounded-full overflow-hidden">
+                <div className="h-full rounded-full transition-none"
+                  style={{ width:`${progress}%`, background:"linear-gradient(90deg,#20BEC6,#ED008C)" }} />
+              </div>
+              <p className="text-white/25 text-xs mt-2">Cargando experiencia…</p>
+            </div>
+          )}
 
           {/* Gradiente inferior */}
           <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
