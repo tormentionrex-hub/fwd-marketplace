@@ -62,9 +62,11 @@ export default function Navbar() {
           <SettingsPanel />
           <Link
             href="/register"
-            className="bg-[#FFCB05] hover:bg-[#FFCB05]/90 text-[#0e1628] text-base font-black px-8 py-3 rounded-full transition-all duration-200 hover:scale-105 active:scale-95 shadow-md"
+            className="group relative overflow-hidden text-white text-base font-black px-8 py-3 rounded-full transition-all duration-300 hover:scale-105 hover:shadow-[0_6px_28px_#662E9155] active:scale-95"
+            style={{ background: "linear-gradient(90deg,#4a1a6e,#662E91,#ED008C)" }}
           >
-            Registrarse
+            <span className="relative z-10">Registrarse</span>
+            <span className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] bg-white/20 skew-x-[-20deg] transition-transform duration-700" />
           </Link>
         </div>
 
@@ -94,10 +96,12 @@ export default function Navbar() {
           </Link>
           <Link
             href="/register"
-            className="bg-[#FFCB05] text-[#0e1628] text-base font-black px-5 py-3 rounded-full text-center hover:bg-[#FFCB05]/90 transition-all"
+            className="group relative overflow-hidden text-white text-base font-black px-5 py-3 rounded-full text-center transition-all hover:scale-105 active:scale-95"
+            style={{ background: "linear-gradient(90deg,#4a1a6e,#662E91,#ED008C)" }}
             onClick={() => setMenuOpen(false)}
           >
-            Registrarse
+            <span className="relative z-10">Registrarse</span>
+            <span className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] bg-white/20 skew-x-[-20deg] transition-transform duration-700" />
           </Link>
         </div>
       )}
