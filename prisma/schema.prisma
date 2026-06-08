@@ -10,7 +10,7 @@ datasource db {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model chats {
-  id                  String              @id(map: "pk_chats") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id                  String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   id_proyecto         String              @db.Uuid
   id_estudiante       String              @db.Uuid
   id_empresario       String              @db.Uuid
@@ -27,7 +27,7 @@ model chats {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model conversaciones_ia {
-  id                  String              @id(map: "pk_conversaciones_ia") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id                  String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   id_empresario       String              @db.Uuid
   id_proyecto         String              @db.Uuid
   historial           Json?
@@ -39,7 +39,7 @@ model conversaciones_ia {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model entregables {
-  id                  String              @id(map: "pk_entregables") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id                  String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   id_proyecto         String              @db.Uuid
   id_estudiante       String              @db.Uuid
   tipo                String?             @db.VarChar(100)
@@ -61,13 +61,13 @@ model estudiantes_habilidades {
   perfiles_estudiante perfiles_estudiante @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade, map: "fk_estudiantes_habilidades_estudiante")
   habilidades         habilidades         @relation(fields: [id_habilidad], references: [id], onDelete: Cascade, map: "fk_estudiantes_habilidades_habilidad")
 
-  @@id([id_usuario, id_habilidad], map: "pk_estudiantes_habilidades")
+  @@id([id_usuario, id_habilidad])
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model evaluaciones {
-  id                  String              @id(map: "pk_evaluaciones") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id                  String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   id_proyecto         String              @db.Uuid
   id_estudiante       String              @db.Uuid
   id_empresario       String              @db.Uuid
@@ -84,7 +84,7 @@ model evaluaciones {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model habilidades {
-  id                      BigInt                    @id(map: "pk_habilidades") @default(autoincrement())
+  id                      BigInt                    @id @default(autoincrement())
   nombre                  String                    @db.VarChar(150)
   categoria               String?                   @db.VarChar(100)
   estudiantes_habilidades estudiantes_habilidades[]
@@ -93,8 +93,8 @@ model habilidades {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model mejoras {
-  id               BigInt             @id(map: "pk_mejoras") @default(autoincrement())
-  codigo           String             @unique(map: "unique_mejoras_codigo") @db.VarChar(100)
+  id               BigInt             @id @default(autoincrement())
+  codigo           String             @unique @db.VarChar(100)
   nombre           String             @db.VarChar(150)
   descripcion      String?
   precio           Decimal            @default(0) @db.Decimal(10, 2)
@@ -107,7 +107,7 @@ model mejoras {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model mensajes {
-  id           String   @id(map: "pk_mensajes") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   id_chat      String   @db.Uuid
   id_remitente String   @db.Uuid
   contenido    String?
@@ -123,7 +123,7 @@ model mensajes {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model notificaciones {
-  id         String   @id(map: "pk_notificaciones") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   id_usuario String   @db.Uuid
   tipo       String   @db.VarChar(100)
   mensaje    String
@@ -137,7 +137,7 @@ model notificaciones {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model ofertas {
-  id                  String              @id(map: "pk_ofertas") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id                  String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   id_proyecto         String              @db.Uuid
   id_estudiante       String              @db.Uuid
   propuesta           String
@@ -155,7 +155,7 @@ model ofertas {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model perfiles_empresario {
-  id_usuario        String              @id(map: "pk_perfiles_empresario") @db.Uuid
+  id_usuario        String              @id @db.Uuid
   tipo              String?             @db.VarChar(100)
   sector            String?             @db.VarChar(150)
   descripcion       String?
@@ -168,7 +168,7 @@ model perfiles_empresario {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model perfiles_estudiante {
-  id_usuario              String                    @id(map: "pk_perfiles_estudiante") @db.Uuid
+  id_usuario              String                    @id @db.Uuid
   titulo_profesional      String?                   @db.VarChar(150)
   estado_verificacion     String?                   @db.VarChar(50)
   reputacion              Int                       @default(0)
@@ -188,7 +188,7 @@ model perfiles_estudiante {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model proyecto_mejoras {
-  id            String    @id(map: "pk_proyecto_mejoras") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   id_proyecto   String    @db.Uuid
   id_mejora     BigInt
   precio_pagado Decimal   @default(0) @db.Decimal(10, 2)
@@ -203,7 +203,7 @@ model proyecto_mejoras {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model proyectos {
-  id                    String                  @id(map: "pk_proyectos") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id                    String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   id_empresario         String                  @db.Uuid
   titulo                String                  @db.VarChar(200)
   descripcion           String
@@ -234,28 +234,28 @@ model proyectos_tecnologias {
   proyectos     proyectos   @relation(fields: [id_proyecto], references: [id], onDelete: Cascade, map: "fk_proyectos_tecnologias_proyecto")
   tecnologias   tecnologias @relation(fields: [id_tecnologia], references: [id], onDelete: Cascade, map: "fk_proyectos_tecnologias_tecnologia")
 
-  @@id([id_proyecto, id_tecnologia], map: "pk_proyectos_tecnologias")
+  @@id([id_proyecto, id_tecnologia])
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model roles {
-  id       BigInt     @id(map: "pk_roles") @default(autoincrement())
-  nombre   String     @unique(map: "unique_roles_nombre") @db.VarChar(100)
+  id       BigInt     @id @default(autoincrement())
+  nombre   String     @unique @db.VarChar(100)
   usuarios usuarios[]
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model tecnologias {
-  id                    BigInt                  @id(map: "pk_tecnologias") @default(autoincrement())
-  nombre                String                  @unique(map: "unique_tecnologias_nombre") @db.VarChar(150)
+  id                    BigInt                  @id @default(autoincrement())
+  nombre                String                  @unique @db.VarChar(150)
   proyectos_tecnologias proyectos_tecnologias[]
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model usuarios {
-  id                  String               @id(map: "pk_usuarios") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id                  String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   nombre              String               @db.VarChar(150)
-  correo              String               @unique(map: "unique_usuarios_correo") @db.VarChar(255)
+  correo              String               @unique @db.VarChar(255)
   hash_contrasena     String
   image_url           String?
   estado              String               @default("activo") @db.VarChar(50)
