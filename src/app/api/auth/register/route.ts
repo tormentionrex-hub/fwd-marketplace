@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { registrarEmpresario } from '@/server/services/auth.service';
 import { crearCookieSesion } from '@/server/auth/session';
+import { rutaPorRol } from '@/server/auth/rutas';
 
 // Registro principal: SOLO crea empresarios. El alta de estudiantes irá luego
 // por el panel admin.
@@ -47,5 +48,6 @@ export async function POST(request: Request) {
       nombre: resultado.usuario.nombre,
       image_url: resultado.usuario.image_url,
     },
+    redirectTo: rutaPorRol(resultado.usuario.rol),
   });
 }

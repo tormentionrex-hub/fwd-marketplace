@@ -5,6 +5,7 @@ import { setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import { RoleBadge } from '@/components/layout/role-badge';
+import { AlertaGlobal } from '@/components/layout/alerta-global';
 import WhatsAppButton from '@/components/WhatsAppButton';
 import '../globals.css';
 
@@ -50,8 +51,11 @@ export default async function LocaleLayout({
       className={`${figtree.variable} ${outfit.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans">
-        <NextIntlClientProvider>{children}</NextIntlClientProvider>
-        <RoleBadge />
+        <NextIntlClientProvider>
+          {children}
+          <RoleBadge />
+          <AlertaGlobal />
+        </NextIntlClientProvider>
         <WhatsAppButton />
       </body>
     </html>

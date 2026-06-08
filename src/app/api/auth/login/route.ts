@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { login } from '@/server/services/auth.service';
 import { crearCookieSesion } from '@/server/auth/session';
+import { rutaPorRol } from '@/server/auth/rutas';
 
 export async function POST(request: Request) {
   let body: { email?: string; password?: string };
@@ -32,11 +33,13 @@ export async function POST(request: Request) {
   });
 
   // Lo público (nombre, foto) vuelve en el body para que el cliente lo guarde
-  // en localStorage.
+  // en localStorage. redirectTo se calcula acá según el rol, así el cliente sabe
+  // a dónde ir sin conocer el rol (que es privado).
   return NextResponse.json({
     perfil: {
       nombre: resultado.usuario.nombre,
       image_url: resultado.usuario.image_url,
     },
+    redirectTo: rutaPorRol(resultado.usuario.rol),
   });
 }
