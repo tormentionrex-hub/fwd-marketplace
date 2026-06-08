@@ -105,6 +105,7 @@ model mejoras {
   proyecto_mejoras proyecto_mejoras[]
 }
 
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model mensajes {
   id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -151,6 +152,21 @@ model ofertas {
   @@index([estado], map: "idx_ofertas_estado")
   @@index([id_estudiante], map: "idx_ofertas_id_estudiante")
   @@index([id_proyecto], map: "idx_ofertas_id_proyecto")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pending_verifications {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id_usuario String?   @db.Uuid
+  email      String    @unique(map: "pending_verifications_email_unique") @db.VarChar(255)
+  pending    Boolean   @default(true)
+  solicitado DateTime  @default(now()) @db.Timestamptz(6)
+  resuelto   DateTime? @db.Timestamptz(6)
+  tipo       String    @default("invitacion") @db.VarChar(20)
+
+  @@index([id_usuario], map: "idx_pending_verifications_id_usuario")
+  @@index([pending], map: "idx_pending_verifications_pending")
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
