@@ -162,16 +162,10 @@ export default function Home() {
               <ol className="flex flex-col gap-5 flex-1">
                 {pasosEmpresario.map((texto, i) => (
                   <li key={i} className="flex items-center gap-4">
-                    {/* Indicador triangular */}
-                    <div className="relative flex-shrink-0 w-10 h-9">
-                      <svg viewBox="0 0 40 35" width={40} height={35}>
-                        <polygon points="0,0 40,17.5 0,35" fill="#008FD5" />
-                      </svg>
-                      <span className="absolute inset-0 flex items-center justify-center text-white text-xs font-black pl-2">
-                        {i + 1}
-                      </span>
-                    </div>
-                    <p className="text-gray-700 text-base leading-snug">{texto}</p>
+                    <span className="flex-shrink-0 w-8 h-8 rounded-full border-2 border-[#008FD5] text-[#008FD5] text-sm font-bold flex items-center justify-center">
+                      {i + 1}
+                    </span>
+                    <p className="text-gray-700 text-base font-normal leading-snug">{texto}</p>
                   </li>
                 ))}
               </ol>
@@ -179,9 +173,12 @@ export default function Home() {
               <div className="mt-8">
                 <Link
                   href="/auth/registro?tipo=empresa"
-                  className="flex items-center justify-center gap-3 w-full bg-[#008FD5] hover:bg-[#0080bf] text-white font-bold py-4 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 uppercase tracking-widest text-sm"
+                  className="btn-empresa group relative flex items-center justify-center gap-3 w-full text-white font-bold py-4 rounded-xl overflow-hidden uppercase tracking-widest text-sm transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_8px_30px_#008FD566] active:scale-95"
+                  style={{ background: "linear-gradient(90deg,#008FD5,#20BEC6)" }}
                 >
-                  Empezar como Empresa <span className="text-base">→</span>
+                  <span className="relative z-10">Empezar como Empresa</span>
+                  <span className="relative z-10 text-base transition-transform duration-300 group-hover:translate-x-1">→</span>
+                  <span className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] bg-white/20 skew-x-[-20deg] transition-transform duration-700" />
                 </Link>
               </div>
             </div>
@@ -200,15 +197,10 @@ export default function Home() {
               <ol className="flex flex-col gap-5 flex-1">
                 {pasosEstudiante.map((texto, i) => (
                   <li key={i} className="flex items-center gap-4">
-                    <div className="relative flex-shrink-0 w-10 h-9">
-                      <svg viewBox="0 0 40 35" width={40} height={35}>
-                        <polygon points="0,0 40,17.5 0,35" fill="#662E91" />
-                      </svg>
-                      <span className="absolute inset-0 flex items-center justify-center text-white text-xs font-black pl-2">
-                        {i + 1}
-                      </span>
-                    </div>
-                    <p className="text-gray-700 text-base leading-snug">{texto}</p>
+                    <span className="flex-shrink-0 w-8 h-8 rounded-full border-2 border-[#662E91] text-[#662E91] text-sm font-bold flex items-center justify-center">
+                      {i + 1}
+                    </span>
+                    <p className="text-gray-700 text-base font-normal leading-snug">{texto}</p>
                   </li>
                 ))}
               </ol>
@@ -216,9 +208,12 @@ export default function Home() {
               <div className="mt-8">
                 <Link
                   href="/auth/registro?tipo=estudiante"
-                  className="flex items-center justify-center gap-3 w-full bg-[#662E91] hover:bg-[#5a2680] text-white font-bold py-4 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 uppercase tracking-widest text-sm"
+                  className="group relative flex items-center justify-center gap-3 w-full text-white font-bold py-4 rounded-xl overflow-hidden uppercase tracking-widest text-sm transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_8px_30px_#662E9166] active:scale-95"
+                  style={{ background: "linear-gradient(90deg,#662E91,#ED008C)" }}
                 >
-                  Empezar como Estudiante <span className="text-base">→</span>
+                  <span className="relative z-10">Empezar como Estudiante</span>
+                  <span className="relative z-10 text-base transition-transform duration-300 group-hover:translate-x-1">→</span>
+                  <span className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] bg-white/20 skew-x-[-20deg] transition-transform duration-700" />
                 </Link>
               </div>
             </div>
