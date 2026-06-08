@@ -103,7 +103,7 @@ body {
   border-radius: 50%;
   background: #20BEC6;
   pointer-events: none;
-  z-index: 9999;
+  z-index: 99999;
   transition: width 0.2s, height 0.2s, background 0.2s;
   box-shadow: 0 0 10px #20BEC6, 0 0 20px #20BEC688;
 }
@@ -115,7 +115,7 @@ body {
   border-radius: 50%;
   border: 2px solid #20BEC699;
   pointer-events: none;
-  z-index: 9998;
+  z-index: 99998;
   transition: width 0.25s, height 0.25s, border-color 0.25s;
 }
 

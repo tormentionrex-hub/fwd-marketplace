@@ -171,19 +171,23 @@ export default function WelcomeOnboarding() {
           className="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden"
           style={{ transition: "opacity 0.55s ease", opacity: videoOpacity, background: "#07101f" }}
         >
-          {/* Video real — oculto si da error */}
+          {/* Video real en ventana centrada */}
           {!videoError && (
-            <video
-              ref={videoRef}
-              src="/videos/fwd.mp4"
-              autoPlay
-              muted={muted}
-              playsInline
-              loop={false}
-              onEnded={handleVideoEnded}
-              onError={() => setVideoError(true)}
-              className="w-full h-full object-cover"
-            />
+            <div className="relative w-full max-w-3xl mx-6 rounded-2xl overflow-hidden shadow-2xl"
+              style={{ boxShadow: "0 30px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.08)" }}>
+              <video
+                ref={videoRef}
+                src="/videos/fwd.mp4"
+                autoPlay
+                muted={muted}
+                playsInline
+                loop={false}
+                onEnded={handleVideoEnded}
+                onError={() => setVideoError(true)}
+                className="w-full h-auto block"
+                style={{ maxHeight: "75vh", objectFit: "contain" }}
+              />
+            </div>
           )}
 
           {/* ── Pantalla de marca cuando no hay video ── */}
