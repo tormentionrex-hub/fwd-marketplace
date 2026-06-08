@@ -11,7 +11,7 @@ export default function Navbar() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 px-6 py-4">
       {/* Pill */}
-      <div className="max-w-6xl mx-auto rounded-full px-7 py-4 flex items-center justify-between bg-[#0e1628] shadow-lg">
+      <div className="max-w-6xl mx-auto rounded-full px-7 py-4 flex items-center justify-between shadow-lg" style={{ background: "linear-gradient(90deg,#0e1628 0%,#2a1060 55%,#7b1fa2 85%,#ED008C 100%)" }}>
 
         {/* Logo */}
         <Link href="/" className="flex items-center gap-3 flex-shrink-0">
@@ -62,11 +62,9 @@ export default function Navbar() {
           <SettingsPanel />
           <Link
             href="/register"
-            className="group relative overflow-hidden text-white text-base font-black px-8 py-3 rounded-full transition-all duration-300 hover:scale-105 hover:shadow-[0_6px_28px_#662E9155] active:scale-95"
-            style={{ background: "linear-gradient(90deg,#4a1a6e,#662E91,#ED008C)" }}
+            className="bg-[#FFCB05] hover:bg-[#FFCB05]/90 text-[#0e1628] text-base font-black px-8 py-3 rounded-full transition-all duration-200 hover:scale-105 active:scale-95 shadow-md"
           >
-            <span className="relative z-10">Registrarse</span>
-            <span className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] bg-white/20 skew-x-[-20deg] transition-transform duration-700" />
+            Registrarse
           </Link>
         </div>
 
@@ -96,12 +94,10 @@ export default function Navbar() {
           </Link>
           <Link
             href="/register"
-            className="group relative overflow-hidden text-white text-base font-black px-5 py-3 rounded-full text-center transition-all hover:scale-105 active:scale-95"
-            style={{ background: "linear-gradient(90deg,#4a1a6e,#662E91,#ED008C)" }}
+            className="bg-[#FFCB05] text-[#0e1628] text-base font-black px-5 py-3 rounded-full text-center hover:bg-[#FFCB05]/90 transition-all"
             onClick={() => setMenuOpen(false)}
           >
-            <span className="relative z-10">Registrarse</span>
-            <span className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] bg-white/20 skew-x-[-20deg] transition-transform duration-700" />
+            Registrarse
           </Link>
         </div>
       )}
