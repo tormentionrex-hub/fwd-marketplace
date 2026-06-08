@@ -10,7 +10,6 @@ import WhatsAppButton from '@/components/WhatsAppButton';
 import SmoothScroll from '@/components/SmoothScroll';
 import AnimationsInit from '@/components/AnimationsInit';
 import CursorGlow from '@/components/CursorGlow';
-import FloatingTriangles from '@/components/FloatingTriangles';
 import '../globals.css';
 
 // Figtree — titulares y destacados (pesos 400 / 600 / 700 / 900)
@@ -58,7 +57,6 @@ export default async function LocaleLayout({
         <SmoothScroll />
         <AnimationsInit />
         <CursorGlow />
-        <FloatingTriangles />
         <NextIntlClientProvider>
           {children}
           <RoleBadge />

@@ -3,6 +3,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import StudentCarousel from "@/components/StudentCarousel";
 import HeroCarousel from "@/components/HeroCarousel";
+import FloatingTriangles from "@/components/FloatingTriangles";
 
 /* ─── Hardcoded data ─────────────────────────────── */
 
@@ -54,7 +55,8 @@ const pasosEstudiante = [
 
 export default function Home() {
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen relative overflow-hidden">
+      <FloatingTriangles />
       <Navbar />
 
       {/* ── HERO ─────────────────────────────────── */}
