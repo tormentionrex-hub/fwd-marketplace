@@ -4,6 +4,7 @@ import Footer from "@/components/Footer";
 import StudentCarousel from "@/components/StudentCarousel";
 import HeroCarousel from "@/components/HeroCarousel";
 import FloatingTriangles from "@/components/FloatingTriangles";
+import WaveFunciona from "@/components/WaveFunciona";
 
 /* ─── Hardcoded data ─────────────────────────────── */
 
@@ -137,9 +138,9 @@ export default function Home() {
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
 
           <div className="text-center mb-16">
-            <h2 data-reveal="heading" className="font-heading font-black text-5xl md:text-6xl text-[#1a1a2e] mb-4">
-              ¿Cómo funciona?
-            </h2>
+            <div data-reveal="heading" className="flex justify-center mb-4">
+              <WaveFunciona />
+            </div>
             <p data-reveal="fade-up" className="text-gray-500 text-lg max-w-md mx-auto">
               Un proceso simple para conectar ideas con talento.
             </p>
