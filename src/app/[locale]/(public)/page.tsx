@@ -3,6 +3,8 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import StudentCarousel from "@/components/StudentCarousel";
 import HeroCarousel from "@/components/HeroCarousel";
+import FloatingTriangles from "@/components/FloatingTriangles";
+import WaveFunciona from "@/components/WaveFunciona";
 
 /* ─── Hardcoded data ─────────────────────────────── */
 
@@ -54,7 +56,8 @@ const pasosEstudiante = [
 
 export default function Home() {
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen relative overflow-hidden">
+      <FloatingTriangles />
       <Navbar />
 
       {/* ── HERO ─────────────────────────────────── */}
@@ -100,70 +103,118 @@ export default function Home() {
       </section>
 
       {/* ── CÓMO FUNCIONA ────────────────────────── */}
-      <section className="bg-white py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="relative py-28 overflow-hidden" style={{ background: "#f7f6f4" }}>
+
+        {/* Triángulos decorativos pastel */}
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+          {[
+            { t:"4%",  l:"-1%",  s:110, c:"#20BEC6", o:0.18, r:0   },
+            { t:"2%",  l:"6%",   s:70,  c:"#20BEC6", o:0.12, r:0   },
+            { t:"18%", l:"0%",   s:55,  c:"#FFCB05", o:0.2,  r:0   },
+            { t:"0%",  l:"58%",  s:80,  c:"#ED008C", o:0.15, r:-30 },
+            { t:"0%",  l:"66%",  s:55,  c:"#FFCB05", o:0.2,  r:20  },
+            { t:"0%",  l:"74%",  s:40,  c:"#662D91", o:0.15, r:0   },
+            { t:"72%", l:"3%",   s:55,  c:"#ED008C", o:0.18, r:180 },
+            { t:"78%", l:"9%",   s:35,  c:"#20BEC6", o:0.2,  r:90  },
+            { t:"78%", l:"18%",  s:45,  c:"#FFCB05", o:0.2,  r:0   },
+            { t:"78%", l:"28%",  s:38,  c:"#ED008C", o:0.15, r:180 },
+            { t:"80%", l:"37%",  s:42,  c:"#20BEC6", o:0.18, r:0   },
+            { t:"76%", l:"46%",  s:30,  c:"#662D91", o:0.18, r:90  },
+            { t:"80%", l:"54%",  s:44,  c:"#FFCB05", o:0.2,  r:0   },
+            { t:"76%", l:"63%",  s:36,  c:"#20BEC6", o:0.15, r:180 },
+            { t:"80%", l:"72%",  s:48,  c:"#662D91", o:0.18, r:0   },
+            { t:"76%", l:"82%",  s:34,  c:"#FFCB05", o:0.2,  r:90  },
+            { t:"80%", l:"90%",  s:44,  c:"#20BEC6", o:0.18, r:0   },
+            { t:"20%", l:"92%",  s:80,  c:"#662D91", o:0.15, r:0   },
+            { t:"50%", l:"94%",  s:55,  c:"#FFCB05", o:0.18, r:-20 },
+          ].map((tri, i) => (
+            <svg key={i} width={tri.s} height={tri.s * 0.87} viewBox={`0 0 ${tri.s} ${tri.s * 0.87}`}
+              style={{ position:"absolute", top:tri.t, left:tri.l, opacity:tri.o, transform:`rotate(${tri.r}deg)` }}>
+              <polygon points={`0,0 ${tri.s},${(tri.s*0.87)/2} 0,${tri.s*0.87}`} fill={tri.c} />
+            </svg>
+          ))}
+        </div>
+
+        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
 
           <div className="text-center mb-16">
-            <h2 data-reveal="heading" className="font-heading font-black text-5xl md:text-6xl text-fwd-navy mb-4">
-              ¿Cómo funciona?
-            </h2>
-            <p data-reveal="fade-up" className="text-gray-500 text-xl max-w-xl mx-auto">
+            <div data-reveal="heading" className="flex justify-center mb-4">
+              <WaveFunciona />
+            </div>
+            <p data-reveal="fade-up" className="text-gray-500 text-lg max-w-md mx-auto">
               Un proceso simple para conectar ideas con talento.
             </p>
           </div>
 
-          <div data-reveal="stagger" className="grid md:grid-cols-2 gap-8">
+          <div data-reveal="stagger" className="grid md:grid-cols-2 gap-6">
 
             {/* ── Empresario */}
-            <div className="bg-gray-50 rounded-3xl p-10 border border-gray-100 flex flex-col">
-              <div className="flex items-center gap-4 mb-10">
-                <div className="w-12 h-12 rounded-2xl bg-[#008FD5] flex items-center justify-center shadow-sm">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden="true">
-                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
-                    <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
-                    <line x1="12" y1="12" x2="12" y2="16" />
-                    <line x1="10" y1="14" x2="14" y2="14" />
+            <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 flex flex-col">
+              <div className="flex items-center gap-3 mb-8">
+                <div className="w-12 h-12 rounded-xl bg-[#008FD5] flex items-center justify-center shadow-sm flex-shrink-0">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                    <rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
+                    <line x1="12" y1="12" x2="12" y2="16" /><line x1="10" y1="14" x2="14" y2="14" />
                   </svg>
                 </div>
-                <span className="font-heading font-black text-2xl text-fwd-navy tracking-tight">Empresario</span>
+                <span className="font-heading font-black text-2xl text-[#008FD5]">Empresario</span>
               </div>
-              <ol className="flex flex-col gap-6 flex-1">
+
+              <ol className="flex flex-col gap-5 flex-1">
                 {pasosEmpresario.map((texto, i) => (
-                  <li key={i} className="flex items-start gap-4">
-                    <span className="flex-shrink-0 w-9 h-9 rounded-full bg-[#008FD5] text-white text-sm font-black flex items-center justify-center shadow-sm">{i + 1}</span>
-                    <p className="text-gray-600 font-medium text-base pt-1.5 leading-snug">{texto}</p>
+                  <li key={i} className="flex items-center gap-4">
+                    <span className="flex-shrink-0 w-8 h-8 rounded-full border-2 border-[#008FD5] text-[#008FD5] text-sm font-bold flex items-center justify-center">
+                      {i + 1}
+                    </span>
+                    <p className="text-gray-700 text-base font-normal leading-snug">{texto}</p>
                   </li>
                 ))}
               </ol>
-              <div className="mt-10">
-                <Link href="/auth/registro?tipo=empresa" className="block w-full text-center bg-[#008FD5] hover:bg-[#008FD5]/90 text-white font-black py-4 rounded-2xl transition-all duration-200 hover:scale-105 active:scale-95 text-base tracking-wide">
-                  Empezar como Empresa
+
+              <div className="mt-8">
+                <Link
+                  href="/auth/registro?tipo=empresa"
+                  className="btn-empresa group relative flex items-center justify-center gap-3 w-full text-white font-bold py-4 rounded-xl overflow-hidden uppercase tracking-widest text-sm transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_8px_30px_#008FD566] active:scale-95"
+                  style={{ background: "linear-gradient(90deg,#008FD5,#20BEC6)" }}
+                >
+                  <span className="relative z-10">Empezar como Empresa</span>
+                  <span className="relative z-10 text-base transition-transform duration-300 group-hover:translate-x-1">→</span>
+                  <span className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] bg-white/20 skew-x-[-20deg] transition-transform duration-700" />
                 </Link>
               </div>
             </div>
 
             {/* ── Estudiante */}
-            <div className="bg-gray-50 rounded-3xl p-10 border border-gray-100 flex flex-col">
-              <div className="flex items-center gap-4 mb-10">
-                <div className="w-12 h-12 rounded-2xl bg-[#662E91] flex items-center justify-center shadow-sm">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-                    <path d="M6 12v5c3 3 9 3 12 0v-5" />
+            <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 flex flex-col">
+              <div className="flex items-center gap-3 mb-8">
+                <div className="w-12 h-12 rounded-xl bg-[#662E91] flex items-center justify-center shadow-sm flex-shrink-0">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                    <path d="M22 10v6M2 10l10-5 10 5-10 5z" /><path d="M6 12v5c3 3 9 3 12 0v-5" />
                   </svg>
                 </div>
-                <span className="font-heading font-black text-2xl text-fwd-navy tracking-tight">Estudiante</span>
+                <span className="font-heading font-black text-2xl text-[#662E91]">Estudiante</span>
               </div>
-              <ol className="flex flex-col gap-6 flex-1">
+
+              <ol className="flex flex-col gap-5 flex-1">
                 {pasosEstudiante.map((texto, i) => (
-                  <li key={i} className="flex items-start gap-4">
-                    <span className="flex-shrink-0 w-9 h-9 rounded-full bg-[#662E91] text-white text-sm font-black flex items-center justify-center shadow-sm">{i + 1}</span>
-                    <p className="text-gray-600 font-medium text-base pt-1.5 leading-snug">{texto}</p>
+                  <li key={i} className="flex items-center gap-4">
+                    <span className="flex-shrink-0 w-8 h-8 rounded-full border-2 border-[#662E91] text-[#662E91] text-sm font-bold flex items-center justify-center">
+                      {i + 1}
+                    </span>
+                    <p className="text-gray-700 text-base font-normal leading-snug">{texto}</p>
                   </li>
                 ))}
               </ol>
-              <div className="mt-10">
-                <Link href="/auth/registro?tipo=estudiante" className="block w-full text-center bg-[#662E91] hover:bg-[#662E91]/90 text-white font-black py-4 rounded-2xl transition-all duration-200 hover:scale-105 active:scale-95 text-base tracking-wide">
-                  Empezar como Estudiante
+
+              <div className="mt-8">
+                <Link
+                  href="/auth/registro?tipo=estudiante"
+                  className="group relative flex items-center justify-center gap-3 w-full text-white font-bold py-4 rounded-xl overflow-hidden uppercase tracking-widest text-sm transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_8px_30px_#662E9166] active:scale-95"
+                  style={{ background: "linear-gradient(90deg,#662E91,#ED008C)" }}
+                >
+                  <span className="relative z-10">Empezar como Estudiante</span>
+                  <span className="relative z-10 text-base transition-transform duration-300 group-hover:translate-x-1">→</span>
+                  <span className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] bg-white/20 skew-x-[-20deg] transition-transform duration-700" />
                 </Link>
               </div>
             </div>
