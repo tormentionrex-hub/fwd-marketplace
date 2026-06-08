@@ -65,6 +65,13 @@ export default function WelcomeOnboarding() {
 
   /* ── Init: comprobar contador ─────────────────── */
   useEffect(() => {
+    const isDev = process.env.NODE_ENV === "development";
+    if (isDev) {
+      // En desarrollo siempre muestra para facilitar pruebas
+      setPhase("video");
+      setVideoOpacity(1);
+      return;
+    }
     const count = parseInt(localStorage.getItem(STORAGE_KEY) ?? "0", 10);
     if (count < MAX_SHOWS) {
       localStorage.setItem(STORAGE_KEY, String(count + 1));
