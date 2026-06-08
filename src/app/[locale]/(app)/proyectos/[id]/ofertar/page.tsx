@@ -1,18 +1,20 @@
+import { notFound } from 'next/navigation';
+import { getProyectoById, getOfertaDeEstudiante, ESTUDIANTE_ACTUAL_ID } from '@/lib/mocks';
+import FormularioOferta from '@/components/features/applications/FormularioOferta';
+
 export default async function OfertarProyectoPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ locale: string; id: string }>;
 }) {
-  const { id } = await params;
+  const { locale, id } = await params;
+
+  const proyecto = getProyectoById(id);
+  if (!proyecto) notFound();
+
+  const ofertaExistente = getOfertaDeEstudiante(id, ESTUDIANTE_ACTUAL_ID);
 
   return (
-    <main className="p-6">
-      <h1 className="text-2xl font-bold">
-        Página 10 — Enviar oferta (estudiante) (placeholder)
-      </h1>
-      <p className="mt-2">Proyecto: {id}</p>
-
-      {/* Aquí va el diseño de Stitch */}
-    </main>
+    <FormularioOferta proyecto={proyecto} ofertaExistente={ofertaExistente} locale={locale} />
   );
 }
