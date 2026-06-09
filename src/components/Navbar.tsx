@@ -11,9 +11,9 @@ export default function Navbar() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 px-6 py-4">
       {/* Pill */}
-      <div className="group relative overflow-hidden max-w-6xl mx-auto rounded-full px-7 py-4 flex items-center justify-between shadow-lg" style={{ background: "linear-gradient(90deg,#0e1628 0%,#2a1060 55%,#7b1fa2 85%,#ED008C 100%)" }}>
-        {/* Shine sweep */}
-        <span className="pointer-events-none absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] bg-white/10 skew-x-[-20deg] transition-transform duration-700 z-0" />
+      <div className="group relative max-w-6xl mx-auto rounded-full px-7 py-4 flex items-center justify-between shadow-lg" style={{ background: "linear-gradient(90deg,#0e1628 0%,#2a1060 55%,#7b1fa2 85%,#ED008C 100%)" }}>
+        {/* Shine sweep — clipPath para no necesitar overflow-hidden */}
+        <span className="pointer-events-none absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] bg-white/10 skew-x-[-20deg] transition-transform duration-700 z-0 rounded-full" style={{ clipPath: "inset(0 round 9999px)" }} />
 
         {/* Logo */}
         <Link href="/" className="flex items-center gap-3 flex-shrink-0">
