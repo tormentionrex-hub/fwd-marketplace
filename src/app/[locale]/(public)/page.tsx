@@ -6,6 +6,7 @@ import HeroCarousel from "@/components/HeroCarousel";
 import FloatingTriangles from "@/components/FloatingTriangles";
 import WaveFunciona from "@/components/WaveFunciona";
 import AnimatedProjectsTitle from "@/components/AnimatedProjectsTitle";
+import AnimatedHeroTitle from "@/components/AnimatedHeroTitle";
 
 /* ─── Hardcoded data ─────────────────────────────── */
 
@@ -72,13 +73,9 @@ export default function Home() {
               innovación · FWD Costa Rica
             </span>
 
-            <h1 data-hero="title" className="font-heading font-black text-4xl md:text-5xl lg:text-6xl text-white leading-tight mb-6">
-              Conectamos empresarios con{" "}
-              <span className="text-[#ED008C]">talento tecnológico</span> de
-              FWD Costa Rica
-            </h1>
+            <AnimatedHeroTitle />
 
-            <p data-hero="desc" className="text-gray-300 text-lg md:text-xl leading-relaxed mb-10 font-light">
+            <p data-hero="desc" className="text-gray-200 text-xl md:text-2xl leading-relaxed mb-10 font-light">
               Publicá tu proyecto, recibí prototipos de estudiantes
               verificados y elegí la mejor solución. Sin riesgo, con
               resultados reales.
