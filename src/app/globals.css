@@ -103,7 +103,7 @@ body {
   border-radius: 50%;
   background: #20BEC6;
   pointer-events: none;
-  z-index: 9999;
+  z-index: 99999;
   transition: width 0.2s, height 0.2s, background 0.2s;
   box-shadow: 0 0 10px #20BEC6, 0 0 20px #20BEC688;
 }
@@ -115,7 +115,7 @@ body {
   border-radius: 50%;
   border: 2px solid #20BEC699;
   pointer-events: none;
-  z-index: 9998;
+  z-index: 99998;
   transition: width 0.25s, height 0.25s, border-color 0.25s;
 }
 
@@ -140,4 +140,21 @@ body {
 
 [data-reveal] {
   will-change: transform, opacity;
+}
+
+/* Shine sweep en TiltCard */
+.shine-sweep {
+  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.18) 50%, transparent 60%);
+  background-size: 200% 100%;
+  background-position: 200% center;
+  transition: background-position 0s;
+}
+div:hover > .shine-sweep {
+  background-position: -200% center;
+  transition: background-position 0.6s ease;
+}
+
+@keyframes floatTri {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50%       { transform: translateY(-14px) rotate(8deg); }
 }
