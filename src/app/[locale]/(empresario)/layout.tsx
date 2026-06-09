@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
-import Sidebar from '@/components/layout/Sidebar';
+import { redirect } from 'next/navigation';
 import { getUser } from '@/server/auth/get-user';
+import { SinPermiso } from '@/components/layout/sin-permiso';
+import Sidebar from '@/components/layout/Sidebar';
 
 // Design system FWD (portado del prototipo), scoped a .fwd-app para no tocar
 // globals.css ni el layout global del Carril B. Variables, sidebar, topbar,
@@ -103,9 +105,25 @@ const FWD_CSS = `
   }
 `;
 
-// Layout del grupo empresario: monta el Sidebar FWD una sola vez junto a {children}.
-export default async function EmpresarioLayout({ children }: { children: ReactNode }) {
+// Layout del grupo empresario: monta el Sidebar FWD una sola vez junto a {children},
+// de modo que las páginas 12 y 14 (y futuras) lo comparten sin repetir markup.
+// Guard: requiere sesión y rol 'empresario' (sin sesión -> /login).
+export default async function EmpresarioLayout({
+  children,
+  params,
+}: {
+  children: ReactNode;
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+
   const user = await getUser();
+  if (!user) {
+    redirect(`/${locale}/login`);
+  }
+  if (user.roles.nombre !== 'empresario') {
+    return <SinPermiso locale={locale} />;
+  }
 
   return (
     <div className="fwd-app">

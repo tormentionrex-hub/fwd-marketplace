@@ -1,53 +1,93 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { LogoutButton } from "@/components/layout/logout-button";
+import { usePathname, useRouter } from "next/navigation";
+import type { ComponentType, SVGProps } from "react";
+import {
+  IconBriefcase,
+  IconFile,
+  IconHome,
+  IconLogout,
+  IconUser,
+} from "@/components/ui/icons";
+import ThemeToggle from "@/components/theme/ThemeToggle";
+import { cn } from "@/lib/utils/cn";
 
-// Menú lateral del estudiante (Sefora · Página 08).
-// Se repite en TODAS las páginas del estudiante a través del layout
-// (app)/dashboard/estudiante/layout.tsx. Resalta el enlace activo.
-export default function SidebarEstudiante({ locale }: { locale: string }) {
+
+interface SidebarEstudianteProps {
+  locale: string;
+}
+
+interface EnlaceSidebar {
+  href: string;
+  label: string;
+  Icon: ComponentType<SVGProps<SVGSVGElement>>;
+  exact?: boolean;
+}
+
+export default function SidebarEstudiante({ locale }: SidebarEstudianteProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const base = `/${locale}/dashboard/estudiante`;
 
-  const enlaces = [
-    { href: base, label: "Inicio" },
-    { href: `${base}/perfil`, label: "Mi perfil" },
-    { href: `${base}/ofertas`, label: "Mis ofertas" },
-    { href: `${base}/proyecto-activo`, label: "Proyecto activo" },
-    { href: `${base}/notificaciones`, label: "Notificaciones" },
+  async function cerrarSesion() {
+    await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
+    localStorage.removeItem("fwd_perfil");
+    router.push(`/${locale}/login`);
+    router.refresh();
+  }
+
+  const enlaces: EnlaceSidebar[] = [
+    { href: base, label: "Inicio", Icon: IconHome, exact: true },
+    { href: `${base}/perfil`, label: "Mi perfil", Icon: IconUser },
+    { href: `/${locale}/mis-ofertas`, label: "Mis ofertas", Icon: IconFile },
+    { href: `${base}/proyecto-activo`, label: "Proyecto activo", Icon: IconBriefcase },
   ];
 
   return (
-    <aside className="flex shrink-0 flex-col gap-1 sm:w-56">
-      <nav className="flex flex-col gap-1">
-        {enlaces.map((enlace) => {
-          // "Inicio" solo se marca activo en la ruta exacta; el resto admite
-          // sub-rutas para que también se resalten sus pantallas internas.
-          const activo =
-            enlace.href === base
-              ? pathname === base
-              : pathname.startsWith(enlace.href);
+    <aside className="lg:sticky lg:top-6 lg:h-fit lg:w-64 lg:shrink-0">
+      <div className="glass flex flex-col gap-2 rounded-2xl p-3 shadow-sm">
+        <Link
+          href={`/${locale}`}
+          className="hidden px-2 py-2 font-display text-lg font-extrabold tracking-tight text-text lg:block"
+        >
+          FWD<span className="text-fwd-azul"> Marketplace</span>
+        </Link>
 
-          return (
-            <Link
-              key={enlace.href}
-              href={enlace.href}
-              className={`rounded-md px-3 py-2 text-sm transition-colors ${
-                activo
-                  ? "bg-fwd-azul/10 font-medium text-fwd-azul"
-                  : "text-zinc-600 hover:bg-black/[.04] dark:text-zinc-300 dark:hover:bg-white/[.06]"
-              }`}
-            >
-              {enlace.label}
-            </Link>
-          );
-        })}
-      </nav>
+        <nav className="flex gap-1 overflow-x-auto lg:flex-col lg:overflow-visible">
+          {enlaces.map(({ href, label, Icon, exact }) => {
+            const activo = exact ? pathname === href : pathname.startsWith(href);
+            return (
+              <Link
+                key={href}
+                href={href}
+                aria-current={activo ? "page" : undefined}
+                className={cn(
+                  "inline-flex shrink-0 items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+                  activo
+                    ? "bg-fwd-azul/10 text-fwd-azul"
+                    : "text-text-muted hover:bg-surface-2 hover:text-text",
+                )}
+              >
+                <Icon width={18} height={18} />
+                <span className="whitespace-nowrap">{label}</span>
+              </Link>
+            );
+          })}
+        </nav>
 
-      {/* Cerrar sesión */}
-      <LogoutButton className="mt-2 rounded-md px-3 py-2 text-left text-sm text-fwd-magenta transition-colors hover:bg-fwd-magenta/10 disabled:opacity-60" />
+        <div className="hidden items-center justify-between gap-2 border-t border-border pt-2 lg:flex">
+          <button
+            type="button"
+            onClick={cerrarSesion}
+            className="inline-flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-red-500 transition-colors hover:bg-red-500/10"
+          >
+            <IconLogout width={18} height={18} />
+            <span>Cerrar sesión</span>
+          </button>
+          <ThemeToggle />
+        </div>
+      </div>
     </aside>
   );
 }

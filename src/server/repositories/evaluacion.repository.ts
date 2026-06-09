@@ -1,21 +1,11 @@
 import 'server-only';
 import { db } from '@/lib/db';
 
-// Capa de datos (Prisma puro) sobre el modelo evaluaciones.
-// Aquí vive la calificación final del estudiante (no en proyectos).
+// Capa de datos: queries Prisma sobre el modelo evaluaciones (calificación final
+// que el empresario le da al estudiante al cerrar el proyecto).
 
-export function buscarEvaluacion(idProyecto: string, idEstudiante: string, idEmpresario: string) {
-  return db.evaluaciones.findUnique({
-    where: {
-      id_proyecto_id_estudiante_id_empresario: {
-        id_proyecto: idProyecto,
-        id_estudiante: idEstudiante,
-        id_empresario: idEmpresario,
-      },
-    },
-  });
-}
-
+// Crea o actualiza la evaluación. La unique key compuesta del schema se expone
+// en Prisma como id_proyecto_id_estudiante_id_empresario.
 export function upsertEvaluacion(datos: {
   idProyecto: string;
   idEstudiante: string;
@@ -23,22 +13,41 @@ export function upsertEvaluacion(datos: {
   puntuacion: number;
   comentario?: string | null;
 }) {
-  const where = {
-    id_proyecto_id_estudiante_id_empresario: {
-      id_proyecto: datos.idProyecto,
-      id_estudiante: datos.idEstudiante,
-      id_empresario: datos.idEmpresario,
-    },
-  };
   return db.evaluaciones.upsert({
-    where,
-    update: { puntuacion: datos.puntuacion, comentario: datos.comentario ?? null },
+    where: {
+      id_proyecto_id_estudiante_id_empresario: {
+        id_proyecto: datos.idProyecto,
+        id_estudiante: datos.idEstudiante,
+        id_empresario: datos.idEmpresario,
+      },
+    },
     create: {
       id_proyecto: datos.idProyecto,
       id_estudiante: datos.idEstudiante,
       id_empresario: datos.idEmpresario,
       puntuacion: datos.puntuacion,
       comentario: datos.comentario ?? null,
+    },
+    update: {
+      puntuacion: datos.puntuacion,
+      comentario: datos.comentario ?? null,
+    },
+  });
+}
+
+// Busca la evaluación existente de un (proyecto, estudiante, empresario).
+export function buscarEvaluacion(
+  idProyecto: string,
+  idEstudiante: string,
+  idEmpresario: string,
+) {
+  return db.evaluaciones.findUnique({
+    where: {
+      id_proyecto_id_estudiante_id_empresario: {
+        id_proyecto: idProyecto,
+        id_estudiante: idEstudiante,
+        id_empresario: idEmpresario,
+      },
     },
   });
 }

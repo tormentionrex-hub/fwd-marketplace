@@ -14,7 +14,7 @@ import PageLoader from '@/components/PageLoader';
 
 export const metadata: Metadata = {
   title: 'FWD · Costa Rica — Marketplace',
-  description: 'Avancemos hacia el futuro juntos.',
+  description: 'Conectamos talento, innovación, emprendimiento y tecnología para construir el futuro de Costa Rica.',
 };
 
 export function generateStaticParams() {
