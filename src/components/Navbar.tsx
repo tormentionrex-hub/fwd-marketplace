@@ -19,24 +19,23 @@ export default function Navbar() {
 
         {/* Logo */}
         <Link href="/" className="flex items-center gap-3 flex-shrink-0">
-          <div className="w-10 h-10 flex-shrink-0 fwd-spin">
+          <div className="w-14 h-14 flex-shrink-0 fwd-spin">
             <Image
               src="/imagenes/logo-removebg-preview.png"
               alt="FWD Costa Rica"
-              width={40}
-              height={40}
+              width={56}
+              height={56}
               className="w-full h-full object-contain"
             />
           </div>
-          <div className="hidden sm:block bg-white rounded-lg px-2 py-1">
-            <Image
-              src="/imagenes/logo-FWD-removebg-preview.png"
-              alt="FWD Costa Rica"
-              width={100}
-              height={36}
-              className="h-7 w-auto object-contain"
-            />
-          </div>
+          <Image
+            src="/imagenes/fwd-marketplace.png"
+            alt="FWD Marketplace"
+            width={1412}
+            height={1114}
+            priority
+            className="h-16 w-auto object-contain"
+          />
         </Link>
 
         {/* Desktop links */}

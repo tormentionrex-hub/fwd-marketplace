@@ -15,6 +15,10 @@ const CONFIG: Record<Tipo, Record<string, { label: string; cls: string; dot: str
     retirada: { label: 'Retirada', cls: 'bg-slate-100 text-slate-600', dot: 'bg-slate-400' },
     adjudicada: { label: 'Adjudicada', cls: 'bg-green-100 text-green-700', dot: 'bg-green-500' },
     rechazada: { label: 'Rechazada', cls: 'bg-red-100 text-red-700', dot: 'bg-red-500' },
+    // Estados reales de la DB (oferta).
+    pendiente: { label: 'Enviada', cls: 'bg-[#008FD4]/10 text-[#008FD4]', dot: 'bg-[#008FD4]' },
+    en_revision: { label: 'En revisión', cls: 'bg-orange-100 text-orange-600', dot: 'bg-orange-500' },
+    no_seleccionada: { label: 'No seleccionada', cls: 'bg-slate-100 text-slate-600', dot: 'bg-slate-400' },
   },
   entregable: {
     enviado: { label: 'Enviado', cls: 'bg-[#008FD4]/10 text-[#008FD4]', dot: 'bg-[#008FD4]' },

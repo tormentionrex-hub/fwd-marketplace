@@ -43,4 +43,13 @@ export default function StarRating({
       )}
     </span>
   );
+
+  if (!showValue) return estrellas;
+
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      {estrellas}
+      <span className="text-sm font-semibold">{value.toFixed(1)}</span>
+    </span>
+  );
 }
