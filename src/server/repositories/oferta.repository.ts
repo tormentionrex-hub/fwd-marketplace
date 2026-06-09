@@ -51,6 +51,64 @@ export function crearOferta(datos: {
   });
 }
 
+// Lista las ofertas de UN estudiante con su proyecto, empresario y tecnologías.
+// Ownership: filtra estrictamente por id_estudiante — cada quien ve solo lo suyo.
+export function listarOfertasDeEstudiante(idEstudiante: string) {
+  return db.ofertas.findMany({
+    where: { id_estudiante: idEstudiante },
+    orderBy: { enviado: 'desc' },
+    select: {
+      id: true,
+      propuesta: true,
+      estado: true,
+      enviado: true,
+      proyectos: {
+        select: {
+          id: true,
+          titulo: true,
+          area_negocio: true,
+          estado: true,
+          cierre: true,
+          perfiles_empresario: {
+            select: { sector: true, usuarios: { select: { nombre: true } } },
+          },
+          proyectos_tecnologias: {
+            select: { tecnologias: { select: { nombre: true } } },
+          },
+        },
+      },
+    },
+  });
+}
+
+// Busca el proyecto "activo" del estudiante: su oferta adjudicada/aceptada más
+// reciente, con los datos del proyecto y del empresario. Ownership por id_estudiante.
+export function buscarProyectoActivoDeEstudiante(idEstudiante: string) {
+  return db.ofertas.findFirst({
+    where: {
+      id_estudiante: idEstudiante,
+      estado: { in: ['adjudicada', 'aceptada', 'aceptado'] },
+    },
+    orderBy: { enviado: 'desc' },
+    select: {
+      id: true,
+      estado: true,
+      proyectos: {
+        select: {
+          id: true,
+          titulo: true,
+          estado: true,
+          publicado: true,
+          cierre: true,
+          perfiles_empresario: {
+            select: { sector: true, usuarios: { select: { nombre: true } } },
+          },
+        },
+      },
+    },
+  });
+}
+
 // Retira (elimina) una oferta. Verifica pertenencia y estado antes de borrar.
 export async function retirarOferta(
   idOferta: string,

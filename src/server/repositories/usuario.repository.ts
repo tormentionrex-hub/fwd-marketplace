@@ -79,6 +79,16 @@ export function crearEstudiante(datos: {
   });
 }
 
+// Actualiza el hash de contraseña de un usuario. Lo usa el flujo de recuperación
+// tras verificar el código OTP. Devuelve id + correo para el correo de confirmación.
+export function actualizarHashContrasena(id: string, hashContrasena: string) {
+  return db.usuarios.update({
+    where: { id },
+    data: { hash_contrasena: hashContrasena },
+    select: { id: true, correo: true },
+  });
+}
+
 // Activa un usuario cambiando su estado a 'activo'. Lo llama el admin al aprobar.
 export function activarUsuario(id: string) {
   return db.usuarios.update({

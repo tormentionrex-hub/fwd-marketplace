@@ -3,20 +3,30 @@ import {
   buscarProyectoParaOferta,
   buscarOfertaExistente,
   crearOferta,
+  listarOfertasDeEstudiante,
   retirarOferta as retirarOfertaRepo,
   listarOfertasDeEstudiante,
 } from '@/server/repositories/oferta.repository';
+import { obtenerVerificacionEstudiante } from '@/server/services/verificacion.service';
+import { mapearEstadoProyecto } from '@/server/services/proyecto.service';
 import { normalizarEstadoOferta, type EstadoOfertaDetalle } from '@/lib/oferta-estado';
 import { calcularEstadisticas } from '@/lib/oferta-estadisticas';
-import { mapearEstadoProyecto } from '@/server/services/proyecto.service';
-import type { MiOfertaDTO, EstadisticasOfertas, EstadoBadgeOferta } from '@/types/oferta';
+import type { EstadisticasOfertas, MiOfertaDTO } from '@/types/oferta';
 
 export type ResultadoEnviarOferta =
   | { ok: true; ofertaId: string }
+  | 'no_verificado'
   | 'proyecto_no_encontrado'
   | 'proyecto_cerrado'
   | 'ya_oferto'
   | 'sin_prototipo';
+
+// Estados de oferta que siguen "vivos" (sin resolución final del empresario).
+const ESTADOS_ACTIVOS: ReadonlySet<EstadoOfertaDetalle> = new Set([
+  'enviada',
+  'en_revision',
+  'preseleccionado',
+]);
 
 // Lógica de negocio para enviar una oferta:
 // 1. Verifica que el proyecto existe y está abierto
@@ -30,6 +40,10 @@ export async function enviarOferta(datos: {
   prototipoUrl?: string | null;
   documentacionUrl?: string | null;
 }): Promise<ResultadoEnviarOferta> {
+  // Enforcement de verificación FWD en el servidor (no confiar en la UI).
+  const verif = await obtenerVerificacionEstudiante(datos.idEstudiante);
+  if (!verif.verificado) return 'no_verificado';
+
   const proyecto = await buscarProyectoParaOferta(datos.idProyecto);
   if (!proyecto) return 'proyecto_no_encontrado';
 
@@ -54,28 +68,25 @@ export async function retirarOfertaService(
   return retirarOfertaRepo(idOferta, idEstudiante);
 }
 
-// ── Dashboard "Mis ofertas" del estudiante ──────────────────────────────────
-
-// Lista las ofertas del estudiante mapeadas al DTO que consume la vista, con el
-// estado de oferta normalizado y el badge derivado (proyecto cerrado/vencido).
+// Lista las ofertas del estudiante autenticado mapeadas al DTO de "Mis Ofertas".
+// El estado de la oferta se normaliza; el badge añade "proyecto_cerrado" cuando
+// el proyecto se cerró/venció mientras la oferta seguía activa.
 export async function listarMisOfertas(idEstudiante: string): Promise<MiOfertaDTO[]> {
   const filas = await listarOfertasDeEstudiante(idEstudiante);
+
   return filas.map((o) => {
+    const estado = normalizarEstadoOferta(o.estado);
     const p = o.proyectos;
-    const estadoOferta = normalizarEstadoOferta(o.estado);
-    const { estado: estadoProyecto, vencido } = mapearEstadoProyecto(p.estado, p.cierre);
-    const ofertaActiva =
-      estadoOferta === 'enviada' ||
-      estadoOferta === 'en_revision' ||
-      estadoOferta === 'preseleccionado';
-    const badge: EstadoBadgeOferta =
-      ofertaActiva && (estadoProyecto === 'cerrado' || vencido) ? 'proyecto_cerrado' : estadoOferta;
+    const { estado: estadoProyecto } = mapearEstadoProyecto(p.estado, p.cierre);
+    const badge =
+      ESTADOS_ACTIVOS.has(estado) && estadoProyecto === 'cerrado' ? 'proyecto_cerrado' : estado;
+
     return {
       id: o.id,
-      estado: estadoOferta,
+      estado,
       badge,
       propuesta: o.propuesta,
-      monto: null,
+      monto: null, // el schema actual no almacena monto (pendiente Fase de datos)
       fechaEnvio: o.enviado.toISOString(),
       proyecto: {
         id: p.id,
@@ -91,13 +102,14 @@ export async function listarMisOfertas(idEstudiante: string): Promise<MiOfertaDT
   });
 }
 
-// Contadores de "Mis ofertas". Reutiliza la lista para que coincidan con la UI.
+// Contadores de "Mis Ofertas". Reutiliza la misma lista + el cálculo puro para
+// que los números coincidan exactamente con lo que se muestra en la vista.
 export async function estadisticasMisOfertas(idEstudiante: string): Promise<EstadisticasOfertas> {
   const ofertas = await listarMisOfertas(idEstudiante);
   return calcularEstadisticas(ofertas);
 }
 
-// Indica si el estudiante ya ofertó a un proyecto y, de ser así, el estado.
+// Indica si el estudiante ya ofertó a un proyecto y, de ser así, su estado.
 export async function estadoOfertaDeEstudiante(
   idProyecto: string,
   idEstudiante: string,

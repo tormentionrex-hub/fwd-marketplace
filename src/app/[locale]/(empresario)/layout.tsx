@@ -1,8 +1,12 @@
 import type { ReactNode } from 'react';
+import { redirect } from 'next/navigation';
+import { getUser } from '@/server/auth/get-user';
+import { SinPermiso } from '@/components/layout/sin-permiso';
 import Sidebar from '@/components/layout/Sidebar';
 
 // Layout del grupo empresario: monta el Sidebar una sola vez junto a {children},
 // de modo que las páginas 12 y 14 (y futuras) lo comparten sin repetir markup.
+// Guard: requiere sesión y rol 'empresario' (sin sesión -> /login).
 export default async function EmpresarioLayout({
   children,
   params,
@@ -11,6 +15,14 @@ export default async function EmpresarioLayout({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+
+  const user = await getUser();
+  if (!user) {
+    redirect(`/${locale}/login`);
+  }
+  if (user.roles.nombre !== 'empresario') {
+    return <SinPermiso locale={locale} />;
+  }
 
   return (
     <div className="empresario-scope flex min-h-screen bg-[#f8f9ff] text-[#0b1c30]">

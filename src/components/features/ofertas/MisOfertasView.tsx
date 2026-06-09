@@ -22,7 +22,7 @@ import type { MiOfertaDTO } from "@/types/oferta";
 // Datos de demostración: si el estudiante aún no tiene ofertas reales en la DB,
 // se muestran estos para poder ver la interfaz completa. Poné USAR_DEMO=false
 // para ver el estado vacío real con datos en producción.
-const USAR_DEMO = true;
+const USAR_DEMO = false;
 const DEMO_OFERTAS: MiOfertaDTO[] = [
   {
     id: "demo-1",
