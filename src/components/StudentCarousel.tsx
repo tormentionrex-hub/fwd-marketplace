@@ -69,8 +69,8 @@ const estudiantes: Estudiante[] = [
 /* ── Palabras con colores de marca ─────────────────── */
 const TITLE_WORDS: { word: string; color: string }[] = [
   { word: "Estudiantes", color: "#008FD5" },
-  { word: "que",         color: "#0e1628" },
-  { word: "ya",          color: "#0e1628" },
+  { word: "que",         color: "#F7901E" },
+  { word: "ya",          color: "#FFCB05" },
   { word: "están",       color: "#662E91" },
   { word: "haciendo",    color: "#ED008C" },
   { word: "historia",    color: "#20BEC6" },
