@@ -185,3 +185,25 @@ div:hover > .shine-sweep {
   0%, 100% { transform: translateY(0) rotate(0deg); }
   50%       { transform: translateY(-14px) rotate(8deg); }
 }
+
+@keyframes footerWave {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.footer-wave {
+  animation: footerWave 9s linear infinite;
+}
+
+.footer-wave-2 {
+  animation: footerWave 6s linear infinite reverse;
+  opacity: 0.4;
+}
+
+.footer-wave-wrap:hover .footer-wave {
+  animation-duration: 2s;
+}
+
+.footer-wave-wrap:hover .footer-wave-2 {
+  animation-duration: 1.2s;
+}

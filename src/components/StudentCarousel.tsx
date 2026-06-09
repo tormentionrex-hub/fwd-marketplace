@@ -229,15 +229,20 @@ export default function StudentCarousel() {
 
         {/* Navigation */}
         <div className="flex items-center justify-center gap-6 mt-10">
+          {/* Botón anterior */}
           <button
             onClick={prev}
-            className="w-10 h-10 rounded-full border-2 border-gray-200 flex items-center justify-center text-gray-500 hover:border-fwd-purple hover:text-fwd-purple transition-colors font-bold"
             aria-label="Anterior"
+            className="group relative w-11 h-11 rounded-full flex items-center justify-center shadow-md transition-all duration-300 hover:scale-110 active:scale-95 hover:shadow-lg"
+            style={{ background: "linear-gradient(135deg, #1a0a40, #662D91)" }}
           >
-            ←
+            <svg className="w-4 h-4 text-white transition-transform duration-200 group-hover:-translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
           </button>
 
-          <div className="flex gap-2">
+          {/* Dots */}
+          <div className="flex items-center gap-2">
             {estudiantes.map((_, i) => (
               <button
                 key={i}
@@ -245,20 +250,27 @@ export default function StudentCarousel() {
                 aria-label={`Ir al estudiante ${i + 1}`}
                 className="rounded-full transition-all duration-300"
                 style={{
-                  width: i === current ? "24px" : "8px",
+                  width:  i === current ? "28px" : "8px",
                   height: "8px",
-                  backgroundColor: i === current ? "#662D91" : "#D1D5DB",
+                  background: i === current
+                    ? "linear-gradient(90deg, #20BEC6, #662D91)"
+                    : "#D1D5DB",
+                  boxShadow: i === current ? "0 0 10px #20BEC688, 0 0 20px #662D9144" : "none",
                 }}
               />
             ))}
           </div>
 
+          {/* Botón siguiente */}
           <button
             onClick={next}
-            className="w-10 h-10 rounded-full border-2 border-gray-200 flex items-center justify-center text-gray-500 hover:border-fwd-purple hover:text-fwd-purple transition-colors font-bold"
             aria-label="Siguiente"
+            className="group relative w-11 h-11 rounded-full flex items-center justify-center shadow-md transition-all duration-300 hover:scale-110 active:scale-95 hover:shadow-lg"
+            style={{ background: "linear-gradient(135deg, #662D91, #ED008C)" }}
           >
-            →
+            <svg className="w-4 h-4 text-white transition-transform duration-200 group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+              <path d="M9 18l6-6-6-6" />
+            </svg>
           </button>
         </div>
       </div>
