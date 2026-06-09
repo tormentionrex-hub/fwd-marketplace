@@ -29,3 +29,29 @@ export function obtenerProyectoConDetalle(id: string) {
     },
   });
 }
+
+// ── Páginas 11 y 14 (proyecto adjudicado / gestión) ─────────────────────────
+
+// Trae lo mínimo para validar acceso y mostrar la cabecera del proyecto.
+export function buscarProyectoActivo(id: string) {
+  return db.proyectos.findUnique({
+    where: { id },
+    select: { id: true, titulo: true, estado: true, id_empresario: true },
+  });
+}
+
+// El estudiante adjudicado se deriva de la oferta 'adjudicada' del proyecto.
+export function buscarEstudianteAdjudicado(idProyecto: string) {
+  return db.ofertas.findFirst({
+    where: { id_proyecto: idProyecto, estado: 'adjudicada' },
+    select: { id_estudiante: true },
+  });
+}
+
+// Cierra el proyecto: estado 'cerrado' y marca la fecha de cierre.
+export function cerrarProyectoRepo(idProyecto: string) {
+  return db.proyectos.update({
+    where: { id: idProyecto },
+    data: { estado: 'cerrado', cierre: new Date() },
+  });
+}
