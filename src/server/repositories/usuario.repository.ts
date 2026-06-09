@@ -110,3 +110,11 @@ export function listarUsuarios() {
     },
   });
 }
+
+// Actualiza el hash de la contraseña de un usuario
+export function actualizarHashContrasena(id: string, hash: string) {
+  return db.usuarios.update({
+    where: { id },
+    data: { hash_contrasena: hash },
+  });
+}

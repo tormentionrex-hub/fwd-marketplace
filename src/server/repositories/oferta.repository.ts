@@ -68,3 +68,37 @@ export async function retirarOferta(
   await db.ofertas.delete({ where: { id: idOferta } });
   return 'ok';
 }
+
+// Lista todas las ofertas de un estudiante, incluyendo el detalle de sus proyectos, tecnologías y empresarios.
+export function listarOfertasDeEstudiante(idEstudiante: string) {
+  return db.ofertas.findMany({
+    where: { id_estudiante: idEstudiante },
+    orderBy: { enviado: 'desc' },
+    select: {
+      id: true,
+      estado: true,
+      propuesta: true,
+      enviado: true,
+      proyectos: {
+        select: {
+          id: true,
+          titulo: true,
+          area_negocio: true,
+          estado: true,
+          cierre: true,
+          perfiles_empresario: {
+            select: {
+              sector: true,
+              usuarios: { select: { nombre: true } },
+            },
+          },
+          proyectos_tecnologias: {
+            select: {
+              tecnologias: { select: { nombre: true } },
+            },
+          },
+        },
+      },
+    },
+  });
+}
