@@ -71,28 +71,34 @@ function AnimatedWord({ word, baseColor, index }: WordProps) {
   );
 }
 
-export default function AnimatedHeroTitle() {
+interface HeroTitleProps {
+  title1: string;
+  titleHighlight: string;
+  title2: string;
+}
+
+export default function AnimatedHeroTitle({ title1, titleHighlight, title2 }: HeroTitleProps) {
   const containerRef = useRef<HTMLHeadingElement>(null);
 
-  /* Segmentos: [text, color] */
+  /* Construir segmentos dinámicamente desde props */
   const segments: [string, string][] = [
-    ["Conectamos", "#ffffff"],
+    ...title1.split(" ").flatMap((w, i, arr) => {
+      const pair: [string, string][] = [[w, "#ffffff"]];
+      if (i < arr.length - 1) pair.push([" ", "#ffffff"]);
+      return pair;
+    }),
     [" ", "#ffffff"],
-    ["empresarios", "#ffffff"],
+    ...titleHighlight.split(" ").flatMap((w, i, arr) => {
+      const pair: [string, string][] = [[w, "#ED008C"]];
+      if (i < arr.length - 1) pair.push([" ", "#ED008C"]);
+      return pair;
+    }),
     [" ", "#ffffff"],
-    ["con", "#ffffff"],
-    [" ", "#ffffff"],
-    ["talento", "#ED008C"],
-    [" ", "#ED008C"],
-    ["tecnológico", "#ED008C"],
-    [" ", "#ffffff"],
-    ["de", "#ffffff"],
-    [" ", "#ffffff"],
-    ["FWD", "#ffffff"],
-    [" ", "#ffffff"],
-    ["Costa", "#ffffff"],
-    [" ", "#ffffff"],
-    ["Rica", "#ffffff"],
+    ...title2.split(" ").flatMap((w, i, arr) => {
+      const pair: [string, string][] = [[w, "#ffffff"]];
+      if (i < arr.length - 1) pair.push([" ", "#ffffff"]);
+      return pair;
+    }),
   ];
 
   useEffect(() => {
