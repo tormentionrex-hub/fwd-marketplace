@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter, usePathname } from "@/i18n/navigation";
 
 type Lang = "es" | "en" | "pt";
 
@@ -100,7 +100,9 @@ export default function SettingsPanel() {
   const [darkMode, setDarkMode] = useState(false);
   const [fontSize, setFontSize] = useState(100);
   const [showA11y, setShowA11y] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const ref      = useRef<HTMLDivElement>(null);
+  const router   = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
@@ -183,7 +185,11 @@ export default function SettingsPanel() {
                   {languages.map((l) => (
                     <button
                       key={l.code}
-                      onClick={() => setLang(l.code)}
+                      onClick={() => {
+                        setLang(l.code);
+                        router.replace(pathname, { locale: l.code });
+                        close();
+                      }}
                       className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-left w-full transition-all duration-150
                         ${lang === l.code
                           ? "bg-[#20BEC6]/10 ring-1 ring-[#20BEC6]"
