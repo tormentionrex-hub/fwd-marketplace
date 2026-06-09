@@ -1,22 +1,23 @@
+import type { ReactNode } from "react";
 import SidebarEstudiante from "@/components/layout/SidebarEstudiante";
 
-// Layout del área del estudiante (Sefora · Página 08).
-// Coloca el menú lateral a la izquierda y el contenido de cada página
-// a la derecha. Envuelve a /dashboard/estudiante y sus sub-rutas
-// (Mi perfil, Mis ofertas, etc.).
+interface DashboardEstudianteLayoutProps {
+  children: ReactNode;
+  params: Promise<{ locale: string }>;
+}
+
 export default async function DashboardEstudianteLayout({
   children,
   params,
-}: {
-  children: React.ReactNode;
-  params: Promise<{ locale: string }>;
-}) {
+}: DashboardEstudianteLayoutProps) {
   const { locale } = await params;
 
   return (
-    <div className="flex flex-col gap-8 sm:flex-row">
-      <SidebarEstudiante locale={locale} />
-      <div className="min-w-0 flex-1">{children}</div>
+    <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
+        <SidebarEstudiante locale={locale} />
+        <div className="min-w-0 flex-1">{children}</div>
+      </div>
     </div>
   );
 }
