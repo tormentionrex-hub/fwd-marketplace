@@ -3,12 +3,11 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
 
-type Lang = "es" | "en" | "pt";
+type Lang = "es" | "en";
 
 const languages: { code: Lang; label: string; country: string; flagCode: string }[] = [
-  { code: "es", label: "Español",   country: "Costa Rica", flagCode: "cr" },
-  { code: "en", label: "English",   country: "United States", flagCode: "us" },
-  { code: "pt", label: "Português", country: "Portugal",   flagCode: "pt" },
+  { code: "es", label: "Español", country: "Costa Rica",    flagCode: "cr" },
+  { code: "en", label: "English", country: "United States", flagCode: "us" },
 ];
 
 /* ── Iconos SVG profesionales ────────────────────── */
