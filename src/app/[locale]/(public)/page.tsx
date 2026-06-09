@@ -5,6 +5,7 @@ import StudentCarousel from "@/components/StudentCarousel";
 import HeroCarousel from "@/components/HeroCarousel";
 import FloatingTriangles from "@/components/FloatingTriangles";
 import WaveFunciona from "@/components/WaveFunciona";
+import AnimatedProjectsTitle from "@/components/AnimatedProjectsTitle";
 
 /* ─── Hardcoded data ─────────────────────────────── */
 
@@ -230,9 +231,7 @@ export default function Home() {
           <div className="flex items-center justify-between mb-14">
             <div>
               <p data-reveal="fade-left" className="text-[#20BEC7] text-xs font-semibold uppercase tracking-widest mb-2">En curso</p>
-              <h2 data-reveal="heading" className="font-heading font-black text-4xl md:text-5xl text-white">
-                Proyectos disponibles
-              </h2>
+              <AnimatedProjectsTitle text="Proyectos disponibles" />
             </div>
             <Link
               data-reveal="fade-right"
