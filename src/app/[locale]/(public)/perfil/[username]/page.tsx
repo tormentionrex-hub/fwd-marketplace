@@ -1,208 +1,213 @@
-// Perfil público de un estudiante (Sefora · Página 04).
-// URL: /es/perfil/jdoe  ->  params.username === "jdoe"
-//
-// Visible para cualquier persona SIN login. Los empresarios la consultan
-// al revisar las ofertas recibidas en sus proyectos.
+import type { Metadata } from "next";
+import Badge from "@/components/ui/Badge";
+import StatCard from "@/components/ui/StatCard";
+import SectionHeading from "@/components/ui/SectionHeading";
+import { Reveal } from "@/components/ui/motion";
+import ProfileHeader from "@/components/features/perfil/ProfileHeader";
+import ProfileSidebar from "@/components/features/perfil/ProfileSidebar";
+import SkillBars from "@/components/features/perfil/SkillBars";
+import ProjectShowcaseCard from "@/components/features/perfil/ProjectShowcaseCard";
+import Timeline from "@/components/features/perfil/Timeline";
+import Certifications from "@/components/features/perfil/Certifications";
+import Achievements from "@/components/features/perfil/Achievements";
+import ProfileLinks from "@/components/features/perfil/ProfileLinks";
+import {
+  IconAward,
+  IconBolt,
+  IconBriefcase,
+  IconCpu,
+  IconStar,
+} from "@/components/ui/icons";
+import { getPerfilPublico } from "@/lib/perfil-data";
 
-// Niveles posibles de una habilidad técnica.
-type Nivel = "básico" | "intermedio" | "avanzado";
-
-// Pinta la reputación promedio como 5 estrellas (rellenas / vacías).
-function Estrellas({ valor }: { valor: number }) {
-  return (
-    <span
-      className="inline-flex items-center gap-0.5"
-      aria-label={`Reputación ${valor} de 5`}
-    >
-      {Array.from({ length: 5 }).map((_, i) => (
-        <span
-          key={i}
-          className={
-            i < Math.round(valor) ? "text-fwd-amarillo" : "text-zinc-300"
-          }
-        >
-          ★
-        </span>
-      ))}
-      <span className="ml-1 text-sm text-zinc-500">{valor.toFixed(1)}</span>
-    </span>
-  );
+interface PerfilPublicoPageProps {
+  params: Promise<{ locale: string; username: string }>;
 }
 
-export default async function PerfilPublicoPage({
+export async function generateMetadata({
   params,
-}: {
-  params: Promise<{ locale: string; username: string }>;
-}) {
+}: PerfilPublicoPageProps): Promise<Metadata> {
   const { username } = await params;
+  const perfil = getPerfilPublico(username);
+  const title = `${perfil.nombre} (@${perfil.username}) · FWD Marketplace`;
+  const description = perfil.resumen.slice(0, 160);
 
-  // --- Datos de ejemplo. Aquí más adelante consultarás Supabase. ---
-  const estudiante = {
-    username,
-    nombre: "Juan Pérez",
-    correo: "juan.perez@ejemplo.com",
-    mostrarCorreo: true, // El usuario decide si su correo es público
-    fotoUrl: "", // Más adelante: imagen servida desde Cloudinary
-    resumen:
-      "Desarrollador web full-stack egresado de FWD Costa Rica. Me apasiona " +
-      "construir productos accesibles con React y Next.js.",
-    reputacion: 4.6,
-    verificadoFwd: true,
-    habilidades: [
-      { nombre: "React", nivel: "avanzado" as Nivel },
-      { nombre: "TypeScript", nivel: "intermedio" as Nivel },
-      { nombre: "Node.js", nivel: "intermedio" as Nivel },
-      { nombre: "SQL", nivel: "básico" as Nivel },
-    ],
-    proyectos: [
-      {
-        id: "p1",
-        titulo: "Tienda en línea para artesanos",
-        tecnologias: ["Next.js", "Supabase", "Stripe"],
-        calificacion: 5,
-        repoUrl: "https://github.com/ejemplo/tienda-artesanos",
-        demoUrl: "https://tienda-artesanos.vercel.app",
-      },
-      {
-        id: "p2",
-        titulo: "Dashboard de métricas internas",
-        tecnologias: ["React", "Tailwind CSS"],
-        calificacion: 4,
-        repoUrl: "https://github.com/ejemplo/dashboard-metricas",
-        demoUrl: "",
-      },
-    ],
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "profile",
+      siteName: "FWD Marketplace Costa Rica",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+    },
   };
+}
 
-  // Color del chip según el nivel de la habilidad.
-  const colorNivel: Record<Nivel, string> = {
-    básico: "border-fwd-turquesa/40 bg-fwd-turquesa/10 text-fwd-turquesa",
-    intermedio: "border-fwd-azul/40 bg-fwd-azul/10 text-fwd-azul",
-    avanzado: "border-fwd-morado/40 bg-fwd-morado/10 text-fwd-morado",
+export default async function PerfilPublicoPage({ params }: PerfilPublicoPageProps) {
+  const { locale, username } = await params;
+  const perfil = getPerfilPublico(username);
+
+  // Proyectos ordenados por relevancia: calificación ponderada por nº de evaluaciones.
+  const proyectosOrdenados = [...perfil.proyectos].sort(
+    (a, b) =>
+      b.calificacion * (b.evaluaciones ?? 1) - a.calificacion * (a.evaluaciones ?? 1),
+  );
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    name: perfil.nombre,
+    alternateName: `@${perfil.username}`,
+    jobTitle: perfil.rol,
+    url: `/${locale}/perfil/${perfil.username}`,
+    address: { "@type": "PostalAddress", addressLocality: perfil.ubicacion, addressCountry: "CR" },
+    knowsAbout: perfil.skills.flatMap((g) => g.skills.map((s) => s.nombre)),
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: perfil.reputacion,
+      reviewCount: perfil.evaluaciones,
+      bestRating: 5,
+    },
   };
 
   return (
-    <section className="flex flex-col gap-10">
-      {/* ---------- DATOS PERSONALES ---------- */}
-      <header className="flex flex-col items-start gap-5 sm:flex-row sm:items-center">
-        {/* Foto de perfil (placeholder con iniciales si no hay imagen) */}
-        <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full bg-fwd-azul/10 text-2xl font-semibold text-fwd-azul">
-          {estudiante.fotoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={estudiante.fotoUrl}
-              alt={`Foto de ${estudiante.nombre}`}
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            estudiante.nombre
-              .split(" ")
-              .map((n) => n[0])
-              .join("")
-              .slice(0, 2)
-          )}
-        </div>
+    <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
 
-        <div className="flex flex-col gap-2">
-          <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-2xl font-semibold tracking-tight">
-              {estudiante.nombre}
-            </h1>
-            {/* Indicador de verificación FWD Costa Rica */}
-            {estudiante.verificadoFwd && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-fwd-magenta/10 px-3 py-1 text-xs font-semibold text-fwd-magenta">
-                ✓ Verificado FWD Costa Rica
-              </span>
-            )}
-          </div>
+      <ProfileHeader perfil={perfil} profilePath={`/${locale}/perfil/${perfil.username}`} />
 
-          {/* Correo solo si el usuario lo habilitó */}
-          {estudiante.mostrarCorreo && (
-            <p className="text-sm text-zinc-500">{estudiante.correo}</p>
-          )}
+      <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_20rem]">
+        <main className="flex min-w-0 flex-col gap-14">
+          {/* Acerca de mí */}
+          <Reveal>
+            <section>
+              <SectionHeading eyebrow="Perfil" title="Acerca de mí" />
+              <p className="mt-4 max-w-2xl leading-relaxed text-text-muted">{perfil.resumen}</p>
+              <p className="mt-4 max-w-2xl leading-relaxed text-text-muted">
+                <span className="font-semibold text-text">Objetivo profesional:</span>{" "}
+                {perfil.objetivos}
+              </p>
 
-          {/* Reputación promedio en estrellas */}
-          <Estrellas valor={estudiante.reputacion} />
-        </div>
-      </header>
-
-      {/* Resumen profesional */}
-      <p className="max-w-2xl leading-relaxed text-zinc-600 dark:text-zinc-400">
-        {estudiante.resumen}
-      </p>
-
-      {/* ---------- HABILIDADES ---------- */}
-      <div className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">Habilidades técnicas</h2>
-        <ul className="flex flex-wrap gap-2">
-          {estudiante.habilidades.map((hab) => (
-            <li
-              key={hab.nombre}
-              className={`rounded-full border px-3 py-1 text-sm ${colorNivel[hab.nivel]}`}
-            >
-              {hab.nombre}
-              <span className="ml-1 opacity-70">· {hab.nivel}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* ---------- PORTAFOLIO ---------- */}
-      <div className="flex flex-col gap-4">
-        <h2 className="text-lg font-semibold">Proyectos completados</h2>
-        <ul className="grid gap-4 sm:grid-cols-2">
-          {estudiante.proyectos.map((proyecto) => (
-            <li
-              key={proyecto.id}
-              className="flex flex-col gap-3 rounded-xl border border-black/[.08] p-5 dark:border-white/[.145]"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <h3 className="font-medium">{proyecto.titulo}</h3>
-                {/* Calificación recibida en ese proyecto */}
-                <span className="shrink-0 text-sm text-fwd-amarillo">
-                  {"★".repeat(proyecto.calificacion)}
-                </span>
+              <div className="mt-6 grid gap-6 sm:grid-cols-2">
+                <div>
+                  <h3 className="text-sm font-semibold uppercase tracking-wide text-text-muted">
+                    Especialidades
+                  </h3>
+                  <ul className="mt-3 flex flex-wrap gap-2">
+                    {perfil.especialidades.map((e) => (
+                      <li key={e}>
+                        <Badge variant="brand">{e}</Badge>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold uppercase tracking-wide text-text-muted">
+                    Intereses tecnológicos
+                  </h3>
+                  <ul className="mt-3 flex flex-wrap gap-2">
+                    {perfil.intereses.map((i) => (
+                      <li key={i}>
+                        <Badge variant="accent">{i}</Badge>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
+            </section>
+          </Reveal>
 
-              {/* Tecnologías usadas */}
-              <ul className="flex flex-wrap gap-1.5">
-                {proyecto.tecnologias.map((tech) => (
-                  <li
-                    key={tech}
-                    className="rounded bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600 dark:bg-white/[.06] dark:text-zinc-300"
-                  >
-                    {tech}
-                  </li>
+          {/* Estadísticas profesionales */}
+          <Reveal>
+            <section>
+              <SectionHeading eyebrow="Dashboard" title="Estadísticas profesionales" />
+              <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+                <StatCard label="Proyectos" value={perfil.proyectosCompletados} icon={<IconBriefcase width={20} height={20} />} color="#008fd4" />
+                <StatCard label="Reputación" value={perfil.reputacion.toFixed(1)} icon={<IconStar width={20} height={20} />} color="#f7901e" />
+                <StatCard label="Tecnologías" value={perfil.estadisticas.tecnologiasDominadas} icon={<IconCpu width={20} height={20} />} color="#662d91" />
+                <StatCard label="Empresas" value={perfil.estadisticas.empresasAtendidas} icon={<IconAward width={20} height={20} />} color="#20bec6" />
+                <StatCard label="Participaciones" value={perfil.estadisticas.participaciones} icon={<IconBolt width={20} height={20} />} color="#ec008c" />
+              </div>
+            </section>
+          </Reveal>
+
+          {/* Habilidades técnicas */}
+          <Reveal>
+            <section>
+              <SectionHeading
+                eyebrow="Skills"
+                title="Habilidades técnicas"
+                description="Nivel de dominio por categoría."
+              />
+              <div className="mt-6">
+                <SkillBars grupos={perfil.skills} />
+              </div>
+            </section>
+          </Reveal>
+
+          {/* Proyectos completados */}
+          <Reveal>
+            <section>
+              <SectionHeading
+                eyebrow="Portafolio"
+                title="Proyectos completados"
+                description="Trabajos reales realizados dentro del ecosistema FWD."
+              />
+              <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
+                {proyectosOrdenados.map((proyecto) => (
+                  <ProjectShowcaseCard key={proyecto.id} proyecto={proyecto} />
                 ))}
-              </ul>
-
-              {/* Enlaces a repositorio Git y demo en vivo */}
-              <div className="flex gap-4 text-sm">
-                {proyecto.repoUrl && (
-                  <a
-                    href={proyecto.repoUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-fwd-azul hover:underline"
-                  >
-                    Repositorio →
-                  </a>
-                )}
-                {proyecto.demoUrl && (
-                  <a
-                    href={proyecto.demoUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-fwd-azul hover:underline"
-                  >
-                    Demo en vivo →
-                  </a>
-                )}
               </div>
-            </li>
-          ))}
-        </ul>
+            </section>
+          </Reveal>
+
+          {/* Enlaces profesionales */}
+          <Reveal>
+            <ProfileLinks contacto={perfil.contacto} proyectos={perfil.proyectos} />
+          </Reveal>
+
+          {/* Timeline */}
+          <Reveal>
+            <section>
+              <SectionHeading eyebrow="Trayectoria" title="Cronología profesional" />
+              <div className="mt-6">
+                <Timeline items={perfil.timeline} />
+              </div>
+            </section>
+          </Reveal>
+
+          {/* Certificaciones */}
+          <Reveal>
+            <section>
+              <SectionHeading eyebrow="Credenciales" title="Certificaciones" />
+              <div className="mt-6">
+                <Certifications items={perfil.certificaciones} />
+              </div>
+            </section>
+          </Reveal>
+
+          {/* Logros */}
+          <Reveal>
+            <section>
+              <SectionHeading eyebrow="Reconocimientos" title="Logros y reconocimientos" />
+              <div className="mt-6">
+                <Achievements items={perfil.logros} />
+              </div>
+            </section>
+          </Reveal>
+        </main>
+
+        <ProfileSidebar perfil={perfil} />
       </div>
-    </section>
+    </div>
   );
 }

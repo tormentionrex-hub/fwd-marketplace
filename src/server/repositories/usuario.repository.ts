@@ -52,6 +52,15 @@ export function crearEmpresario(datos: {
   });
 }
 
+// Actualiza el hash de contraseña de un usuario (usado por el flujo de recuperación).
+export function actualizarHashContrasena(idUsuario: string, hash: string) {
+  return db.usuarios.update({
+    where: { id: idUsuario },
+    data: { hash_contrasena: hash },
+    select: { id: true, correo: true },
+  });
+}
+
 // Busca el id (BigInt) de un rol por su nombre único. Evita hardcodear ids.
 export async function buscarRolIdPorNombre(nombre: string): Promise<bigint | null> {
   const rol = await db.roles.findUnique({

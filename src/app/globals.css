@@ -1,6 +1,32 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "shadcn/tailwind.css";
+
+/* Dark mode por clase (toggle), no por preferencia del SO. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ---- Tokens de superficie dependientes del tema ---- */
+:root {
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #f8fafc; /* slate-50 */
+  --border: #e2e8f0; /* slate-200 */
+  --text: #0f172a; /* slate-900 */
+  --text-muted: #64748b; /* slate-500 */
+  --ring: #008fd4;
+  --background: var(--bg);
+  --foreground: var(--text);
+  --input: oklch(0.922 0 0);
+}
+
+.dark {
+  --bg: #0b1120; /* slate-950-ish, identidad FWD oscura */
+  --surface: #0f172a; /* slate-900 */
+  --surface-2: #1e293b; /* slate-800 */
+  --border: #1e293b; /* slate-800 */
+  --text: #f1f5f9; /* slate-100 */
+  --text-muted: #94a3b8; /* slate-400 */
+  --ring: #20bec6;
+}
 
 /*
   Sistema de diseño FWD · Costa Rica
@@ -39,8 +65,17 @@
   --font-heading: var(--font-figtree), sans-serif;
   --font-body: var(--font-outfit), sans-serif;
 
-  /* Paleta de marca FWD Costa Rica (Libro de Marca · 05 · Color).
-     Genera utilidades como bg-fwd-azul, text-fwd-magenta, etc. */
+  /* Superficies semánticas */
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+
+  /* Tipografía */
+  --font-inter: var(--font-inter);
+  --font-space-grotesk: var(--font-space-grotesk);
+  --font-display: var(--font-space-grotesk);
   --color-fwd-azul: #008fd4;
   --color-fwd-morado: #662d91;
   --color-fwd-turquesa: #20bec6;
@@ -49,17 +84,9 @@
   --color-fwd-magenta: #ec008c;
 }
 
-:root {
-  --background: #ffffff;
-  --foreground: #1a1633;
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-}
-
 body {
-  background: var(--background);
-  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
 /* Titulares: Figtree con tracking ceñido al estilo del manual */
@@ -140,4 +167,100 @@ body {
 
 [data-reveal] {
   will-change: transform, opacity;
+}
+
+/* ---- Utilidades de marca ---- */
+.text-gradient-fwd {
+  background-image: linear-gradient(100deg, #008fd4, #662d91 55%, #ec008c);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.bg-gradient-fwd {
+  background-image: linear-gradient(100deg, #008fd4, #662d91 55%, #ec008c);
+}
+
+.bg-gradient-fwd-soft {
+  background-image: linear-gradient(135deg, #008fd4, #20bec6);
+}
+
+/* Glassmorphism sutil, theme-aware */
+.glass {
+  background-color: color-mix(in srgb, var(--surface) 72%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+}
+
+/* Borde con degradado (tarjetas premium) */
+.gradient-border {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid transparent;
+  background-clip: padding-box;
+}
+.gradient-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, #008fd4, #662d91, #ec008c);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* ---- Animaciones del hero / fondo ---- */
+@keyframes fwd-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+}
+
+@keyframes fwd-drift {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(16px);
+  }
+}
+
+@keyframes fwd-aurora {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translate(24px, -18px) scale(1.12);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.7;
+  }
+}
+
+.animate-aurora {
+  animation: fwd-aurora 14s ease-in-out infinite;
+}
+
+/* Respeto a quienes prefieren menos movimiento */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }

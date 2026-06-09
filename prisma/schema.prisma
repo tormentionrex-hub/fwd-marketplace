@@ -251,6 +251,22 @@ model tecnologias {
   proyectos_tecnologias proyectos_tecnologias[]
 }
 
+/// Códigos OTP de recuperación de contraseña. El código se guarda hasheado (scrypt).
+/// Migración SQL en prisma/sql/password_resets.sql (aplicar en Supabase).
+model password_resets {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id_usuario  String   @db.Uuid
+  codigo_hash String
+  expira      DateTime @db.Timestamptz(6)
+  intentos    Int      @default(0)
+  verificado  Boolean  @default(false)
+  usado       Boolean  @default(false)
+  creado      DateTime @default(now()) @db.Timestamptz(6)
+  usuarios    usuarios @relation(fields: [id_usuario], references: [id], onDelete: Cascade, map: "fk_password_resets_usuario")
+
+  @@index([id_usuario], map: "idx_password_resets_id_usuario")
+}
+
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model usuarios {
   id                  String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -264,6 +280,7 @@ model usuarios {
   creado              DateTime             @default(now()) @db.Timestamptz(6)
   mensajes            mensajes[]
   notificaciones      notificaciones[]
+  password_resets     password_resets[]
   perfiles_empresario perfiles_empresario?
   perfiles_estudiante perfiles_estudiante?
   roles               roles                @relation(fields: [id_rol], references: [id], map: "fk_usuarios_roles")

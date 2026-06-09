@@ -32,7 +32,12 @@ export function RegisterForm() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [studentStatus, setStudentStatus] = useState<StudentStatus>("en_curso");
+  const [role, setRole] = useState<Role>("estudiante");
+  const [password, setPassword] = useState("");
+  const [terms, setTerms] = useState(false);
+
+  const passwordValid = PASSWORD_RULES.every((rule) => rule.test(password));
+  const canSubmit = !loading && passwordValid && terms;
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();

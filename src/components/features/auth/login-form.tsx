@@ -83,7 +83,7 @@ export function LoginForm() {
               Contraseña
             </label>
             <Link
-              href="#"
+              href="/recuperar"
               className="text-sm font-medium text-fwd-blue hover:text-fwd-purple transition"
             >
               ¿La olvidaste?
