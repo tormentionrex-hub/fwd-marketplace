@@ -1,18 +1,21 @@
 import type { PerfilPublico } from "@/types/perfil";
+import { generarAvatar } from "@/lib/avatar";
 
 // Genera un perfil de ejemplo. Más adelante vendrá de Supabase por username.
 export function getPerfilPublico(username: string): PerfilPublico {
-  const nombre = username
-    .split("-")
-    .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
-    .join(" ");
+  const nombre =
+    username
+      .split("-")
+      .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
+      .join(" ") || "Yarled Vargas";
 
   return {
     username,
-    nombre: nombre || "Yarled Vargas",
+    nombre,
     rol: "Desarrollador Full-Stack",
     ubicacion: "San José, Costa Rica",
-    fotoUrl: "",
+    // Foto de marca generada (avatar SVG determinista por nombre).
+    fotoUrl: generarAvatar(nombre),
     verificadoFwd: true,
     reputacion: 4.8,
     evaluaciones: 23,
