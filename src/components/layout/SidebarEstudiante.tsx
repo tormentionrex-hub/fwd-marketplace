@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import type { ComponentType, SVGProps } from "react";
 import {
-  IconBell,
   IconBriefcase,
   IconFile,
   IconHome,
@@ -41,9 +40,8 @@ export default function SidebarEstudiante({ locale }: SidebarEstudianteProps) {
   const enlaces: EnlaceSidebar[] = [
     { href: base, label: "Inicio", Icon: IconHome, exact: true },
     { href: `${base}/perfil`, label: "Mi perfil", Icon: IconUser },
-    { href: `${base}/ofertas`, label: "Mis ofertas", Icon: IconFile },
+    { href: `/${locale}/mis-ofertas`, label: "Mis ofertas", Icon: IconFile },
     { href: `${base}/proyecto-activo`, label: "Proyecto activo", Icon: IconBriefcase },
-    { href: `${base}/notificaciones`, label: "Notificaciones", Icon: IconBell },
   ];
 
   return (

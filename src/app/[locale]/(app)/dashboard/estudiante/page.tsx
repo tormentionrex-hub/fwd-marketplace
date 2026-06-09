@@ -15,6 +15,8 @@ import {
   IconStar,
 } from "@/components/ui/icons";
 import { EVENTOS, PROYECTOS } from "@/lib/marketplace-data";
+import { getUser } from "@/server/auth/get-user";
+import { obtenerVerificacionEstudiante } from "@/server/services/verificacion.service";
 import type { EstadoOferta, Oferta, ResumenDashboard } from "@/types/sefora";
 
 const estadoConfig: Record<EstadoOferta, { label: string; variant: BadgeVariant }> = {
@@ -31,8 +33,13 @@ export default async function DashboardEstudiantePage({
 }) {
   const { locale } = await params;
 
-  const verificado = true;
-  const nombre = "Juan";
+  // El layout ya garantiza sesión + rol 'estudiante'; aquí derivamos la
+  // verificación FWD desde la DB (no un flag hardcodeado).
+  const user = await getUser();
+  const verif = user
+    ? await obtenerVerificacionEstudiante(user.id)
+    : { verificado: false, estado: null, solicitado: null };
+  const nombre = user?.nombre?.trim().split(/\s+/)[0] ?? "Estudiante";
 
   const resumen: ResumenDashboard = {
     totalOfertas: 12,
@@ -55,18 +62,41 @@ export default async function DashboardEstudiantePage({
     "Nuevo proyecto de TI que coincide con tus habilidades.",
   ];
 
-  if (!verificado) {
+  if (!verif.verificado) {
+    const solicitado = verif.solicitado
+      ? new Date(verif.solicitado).toLocaleDateString("es-CR", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        })
+      : "—";
     return (
-      <Card className="flex flex-col items-center gap-4 p-10 text-center">
+      <Card className="mx-auto flex max-w-lg flex-col items-center gap-4 p-10 text-center">
         <span className="grid h-14 w-14 place-items-center rounded-full bg-fwd-naranja/10 text-fwd-naranja">
           <IconShieldCheck width={28} height={28} />
         </span>
-        <h1 className="font-display text-xl font-bold text-text">Verificación pendiente</h1>
+        <h1 className="font-display text-xl font-bold text-text">
+          Cuenta pendiente de verificación
+        </h1>
         <p className="max-w-md text-sm text-text-muted">
-          Tu cuenta aún no ha sido verificada como egresado de FWD Costa Rica. Cuando se confirme
-          podrás acceder a tu dashboard y enviar ofertas.
+          Tu cuenta aún está siendo revisada por FWD Costa Rica. Cuando la verificación sea
+          aprobada podrás enviar ofertas, aplicar a proyectos, participar en adjudicaciones y
+          acceder al dashboard completo.
         </p>
-        <Badge variant="warning">Estado: pendiente</Badge>
+        <dl className="mt-1 grid w-full max-w-sm grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+          <div className="rounded-xl bg-surface-2 px-4 py-3 text-left">
+            <dt className="text-xs uppercase tracking-wide text-text-muted">Estado</dt>
+            <dd className="font-semibold capitalize text-text">{verif.estado ?? "pendiente"}</dd>
+          </div>
+          <div className="rounded-xl bg-surface-2 px-4 py-3 text-left">
+            <dt className="text-xs uppercase tracking-wide text-text-muted">Fecha de envío</dt>
+            <dd className="font-semibold text-text">{solicitado}</dd>
+          </div>
+        </dl>
+        <p className="text-xs text-text-muted">
+          Tiempo estimado de revisión: 24–72 horas hábiles.
+        </p>
+        <Button href={`/${locale}/dashboard/estudiante/perfil`}>Actualizar información</Button>
       </Card>
     );
   }
