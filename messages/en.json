@@ -1,5 +1,79 @@
 {
-  "Common": {
-    "appName": "FWD Marketplace"
+  "Common": { "appName": "FWD Marketplace" },
+  "Nav": {
+    "inicio": "Home",
+    "proyectos": "Projects",
+    "iniciarSesion": "Sign in",
+    "registrarse": "Sign up"
+  },
+  "Hero": {
+    "badge": "Innovation platform · FWD Costa Rica",
+    "title1": "We connect entrepreneurs with",
+    "titleHighlight": "tech talent",
+    "title2": "from FWD Costa Rica",
+    "desc": "Post your project, receive prototypes from verified students and choose the best solution. No risk, real results.",
+    "ctaPublicar": "Post a project",
+    "ctaExplorar": "Explore projects"
+  },
+  "HowItWorks": {
+    "title": "How does it work?",
+    "subtitle": "A simple process to connect ideas with talent.",
+    "empresario": "Entrepreneur",
+    "estudiante": "Student",
+    "paso1Emp": "Describe your idea to the AI agent",
+    "paso2Emp": "The agent generates the requirements",
+    "paso3Emp": "Publish your project",
+    "paso4Emp": "Receive prototypes and choose the best one",
+    "paso1Est": "Explore available projects",
+    "paso2Est": "Submit your proposal and prototype",
+    "paso3Est": "If selected, develop the solution",
+    "paso4Est": "Gain reputation and real experience",
+    "ctaEmpresa": "Start as a Business",
+    "ctaEstudiante": "Start as a Student"
+  },
+  "Projects": {
+    "badge": "In progress",
+    "title": "Available projects",
+    "verTodos": "See all →",
+    "restantes": "d left"
+  },
+  "Features": {
+    "rapidoTitle": "Fast",
+    "rapidoDesc": "From idea to prototype in days, not months.",
+    "seguroTitle": "Secure",
+    "seguroDesc": "Smart contracts and AI review.",
+    "colaborativoTitle": "Collaborative",
+    "colaborativoDesc": "Young talent guided by local experts."
+  },
+  "Students": {
+    "badge": "FWD Community",
+    "w1": "Students",
+    "w2": "who",
+    "w3": "are",
+    "w4": "already",
+    "w5": "making",
+    "w6": "history",
+    "subtitle": "Meet the talent that transforms ideas into real solutions.",
+    "anterior": "Previous",
+    "siguiente": "Next"
+  },
+  "Settings": {
+    "titulo": "Settings",
+    "accesibilidad": "Accessibility",
+    "idioma": "Language",
+    "apariencia": "Appearance & Inclusion",
+    "modoOscuro": "Dark Mode",
+    "modoOscuroDesc": "Change the visual theme",
+    "a11y": "Accessibility",
+    "a11yDesc": "Inclusion settings",
+    "legal": "Legal & Support",
+    "terminos": "Terms and Conditions",
+    "terminosDesc": "Usage policies",
+    "tamano": "Text size",
+    "tamanoDesc": "Adjust the font size",
+    "reducir": "Reduce motion",
+    "reducirDesc": "Disable animations",
+    "contraste": "High contrast",
+    "contrasteDesc": "Improve visibility"
   }
 }

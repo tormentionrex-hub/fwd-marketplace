@@ -1,5 +1,10 @@
-import EmptyState from "@/components/ui/EmptyState";
-import { IconBriefcase } from "@/components/ui/icons";
+import { notFound } from 'next/navigation';
+import {
+  getProyectoById,
+  getOfertasByProyecto,
+  getEntregablesByProyecto,
+} from '@/lib/mocks';
+import GestionProyecto from '@/components/features/marketplace/GestionProyecto';
 
 export default async function GestionProyectoPage({
   params,
@@ -8,20 +13,19 @@ export default async function GestionProyectoPage({
 }) {
   const { id } = await params;
 
-  return (
-    <div className="mx-auto w-full max-w-5xl px-6 py-12 sm:px-8">
-      <header className="mb-8">
-        <h1 className="font-display text-3xl font-bold tracking-tight text-text">
-          Gestión del proyecto
-        </h1>
-        <p className="mt-1 text-text-muted">Proyecto #{id}</p>
-      </header>
+  const proyecto = getProyectoById(id);
+  if (!proyecto) notFound();
 
-      <EmptyState
-        icon={<IconBriefcase width={28} height={28} />}
-        title="Gestión en construcción"
-        description="Aquí podrás revisar ofertas recibidas, seleccionar talento y dar seguimiento al proyecto."
+  const ofertas = getOfertasByProyecto(id);
+  const entregables = getEntregablesByProyecto(id);
+
+  return (
+    <main className="p-10">
+      <GestionProyecto
+        proyecto={proyecto}
+        ofertasIniciales={ofertas}
+        entregablesIniciales={entregables}
       />
-    </div>
+    </main>
   );
 }

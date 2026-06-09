@@ -1,41 +1,65 @@
-import Link from "next/link";
-import { IconArrowLeft } from "@/components/ui/icons";
-import FormularioOferta from "@/components/features/proyectos/FormularioOferta";
-import { obtenerDetalleProyecto } from "@/server/services/proyecto.service";
+import { redirect } from 'next/navigation';
+import { getUser } from '@/server/auth/get-user';
+import {
+  buscarProyectoParaOferta,
+  buscarOfertaExistente,
+} from '@/server/repositories/oferta.repository';
+import { FormularioOferta } from '@/components/features/marketplace/FormularioOferta';
 
 export default async function OfertarProyectoPage({
   params,
 }: {
-  params: Promise<{ locale: string; id: string }>;
+  params: Promise<{ id: string; locale: string }>;
 }) {
-  const { locale, id } = await params;
+  const { id, locale } = await params;
 
-  // Título del proyecto para contextualizar el formulario; si la DB no está
-  // disponible o el proyecto no existe, se muestra un texto genérico.
-  let titulo = `Proyecto #${id}`;
-  try {
-    const proyecto = await obtenerDetalleProyecto(id);
-    if (proyecto) titulo = proyecto.titulo;
-  } catch {
-    // Sin DB / sin datos sembrados: se conserva el texto genérico.
+  const user = await getUser();
+  if (!user) {
+    redirect(`/${locale}/login`);
+  }
+  if (user.roles.nombre !== 'estudiante') {
+    redirect(`/${locale}/dashboard/estudiante`);
   }
 
+  const proyecto = await buscarProyectoParaOferta(id);
+  if (!proyecto) {
+    redirect(`/${locale}/marketplace`);
+  }
+
+  let diasRestantes: number | null = null;
+  if (proyecto.cierre) {
+    const diff = proyecto.cierre.getTime() - Date.now();
+    diasRestantes = Math.ceil(diff / (1000 * 60 * 60 * 24));
+  } else if (proyecto.publicado && proyecto.plazo_dias) {
+    const cierre = new Date(proyecto.publicado.getTime() + proyecto.plazo_dias * 86400000);
+    const diff = cierre.getTime() - Date.now();
+    diasRestantes = Math.ceil(diff / (1000 * 60 * 60 * 24));
+  }
+
+  const vencido = diasRestantes !== null && diasRestantes <= 0;
+  const cerrado = proyecto.estado === 'cerrado' || vencido;
+
+  const ofertaExistente = await buscarOfertaExistente(id, user.id);
+
   return (
-    <div className="mx-auto w-full max-w-3xl px-6 py-10 sm:px-8">
-      <Link
-        href={`/${locale}/proyectos/${id}`}
-        className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-text-muted transition-colors hover:text-fwd-azul"
-      >
-        <IconArrowLeft width={16} height={16} />
-        Volver al proyecto
-      </Link>
-
-      <header className="mb-8 mt-6">
-        <h1 className="font-display text-3xl font-bold tracking-tight text-text">Enviar oferta</h1>
-        <p className="mt-1 text-text-muted">{titulo}</p>
-      </header>
-
-      <FormularioOferta proyectoId={id} />
-    </div>
+    <main className="mx-auto max-w-2xl px-4 py-8">
+      <FormularioOferta
+        proyecto={{
+          id: proyecto.id,
+          titulo: proyecto.titulo,
+          diasRestantes,
+          cerrado,
+        }}
+        ofertaExistente={
+          ofertaExistente
+            ? {
+                id: ofertaExistente.id,
+                propuesta: ofertaExistente.propuesta,
+                estado: ofertaExistente.estado,
+              }
+            : null
+        }
+      />
+    </main>
   );
 }

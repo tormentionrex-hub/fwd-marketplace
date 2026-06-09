@@ -105,6 +105,7 @@ model mejoras {
   proyecto_mejoras proyecto_mejoras[]
 }
 
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model mensajes {
   id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -144,6 +145,7 @@ model ofertas {
   prototipo_url       String?
   estado              String              @default("pendiente") @db.VarChar(50)
   enviado             DateTime            @default(now()) @db.Timestamptz(6)
+  documentacion_url   String?
   perfiles_estudiante perfiles_estudiante @relation(fields: [id_estudiante], references: [id_usuario], onDelete: Cascade, map: "fk_ofertas_estudiante")
   proyectos           proyectos           @relation(fields: [id_proyecto], references: [id], onDelete: Cascade, map: "fk_ofertas_proyecto")
 
@@ -151,6 +153,21 @@ model ofertas {
   @@index([estado], map: "idx_ofertas_estado")
   @@index([id_estudiante], map: "idx_ofertas_id_estudiante")
   @@index([id_proyecto], map: "idx_ofertas_id_proyecto")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pending_verifications {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id_usuario String?   @db.Uuid
+  email      String    @unique(map: "pending_verifications_email_unique") @db.VarChar(255)
+  pending    Boolean   @default(true)
+  solicitado DateTime  @default(now()) @db.Timestamptz(6)
+  resuelto   DateTime? @db.Timestamptz(6)
+  tipo       String    @default("invitacion") @db.VarChar(20)
+
+  @@index([id_usuario], map: "idx_pending_verifications_id_usuario")
+  @@index([pending], map: "idx_pending_verifications_pending")
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -287,4 +304,19 @@ model usuarios {
 
   @@index([estado], map: "idx_usuarios_estado")
   @@index([id_rol], map: "idx_usuarios_id_rol")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model password_resets {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id_usuario  String   @db.Uuid
+  codigo_hash String
+  expira      DateTime @db.Timestamptz(6)
+  intentos    Int      @default(0)
+  verificado  Boolean  @default(false)
+  usado       Boolean  @default(false)
+  creado      DateTime @default(now()) @db.Timestamptz(6)
+  usuarios    usuarios @relation(fields: [id_usuario], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([id_usuario], map: "idx_password_resets_id_usuario")
 }

@@ -3,23 +3,104 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "@/i18n/navigation";
 
-type Lang = "es" | "en" | "pt";
+type Lang = "es" | "en";
 
-const languages: { code: Lang; label: string; flag: string }[] = [
-  { code: "es", label: "Español",   flag: "🇨🇷" },
-  { code: "en", label: "English",   flag: "🇺🇸" },
-  { code: "pt", label: "Português", flag: "🇵🇹" },
+const languages: { code: Lang; label: string; country: string; flagCode: string }[] = [
+  { code: "es", label: "Español", country: "Costa Rica",    flagCode: "cr" },
+  { code: "en", label: "English", country: "United States", flagCode: "us" },
 ];
 
+/* ── Iconos SVG profesionales ────────────────────── */
+const IconGear = () => (
+  <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8"
+    strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="3" />
+    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65
+      1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9
+      19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0
+      4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65
+      1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68
+      a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65
+      0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65
+      1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+  </svg>
+);
+
+const IconMoon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.8"
+    strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+  </svg>
+);
+
+const IconA11y = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.8"
+    strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+    <circle cx="12" cy="4" r="1.5" />
+    <path d="M6 8h12M9 21l1.5-6M15 21l-1.5-6M9 13l-2 4M15 13l2 4" />
+    <path d="M12 8v5" />
+  </svg>
+);
+
+const IconDocument = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.8"
+    strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+    <polyline points="14 2 14 8 20 8" />
+    <line x1="16" y1="13" x2="8" y2="13" />
+    <line x1="16" y1="17" x2="8" y2="17" />
+    <polyline points="10 9 9 9 8 9" />
+  </svg>
+);
+
+const IconChevron = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2"
+    strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+    <polyline points="9 18 15 12 9 6" />
+  </svg>
+);
+
+const IconBack = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2"
+    strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+    <polyline points="15 18 9 12 15 6" />
+  </svg>
+);
+
+const IconCheck = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5"
+    strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+    <polyline points="20 6 9 17 4 12" />
+  </svg>
+);
+
+/* ── Toggle switch ───────────────────────────────── */
+function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
+  return (
+    <button
+      onClick={onToggle}
+      role="switch"
+      aria-checked={on}
+      className="relative flex-shrink-0 w-12 h-6 rounded-full transition-colors duration-300"
+      style={{ background: on ? "#20BEC6" : "#e5e7eb" }}
+    >
+      <span
+        className="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-300"
+        style={{ transform: on ? "translateX(24px)" : "translateX(0)" }}
+      />
+    </button>
+  );
+}
+
+/* ── Componente principal ────────────────────────── */
 export default function SettingsPanel() {
   const [open, setOpen]         = useState(false);
   const [lang, setLang]         = useState<Lang>("es");
   const [darkMode, setDarkMode] = useState(false);
   const [fontSize, setFontSize] = useState(100);
   const [showA11y, setShowA11y] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const ref      = useRef<HTMLDivElement>(null);
 
-  /* Cierra al click afuera */
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) {
@@ -31,216 +112,228 @@ export default function SettingsPanel() {
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, [open]);
 
-  /* Modo oscuro */
   useEffect(() => {
     document.documentElement.classList.toggle("dark", darkMode);
   }, [darkMode]);
 
-  /* Tamaño de fuente */
   useEffect(() => {
     document.documentElement.style.fontSize = `${fontSize}%`;
   }, [fontSize]);
 
-  const GearIcon = () => (
-    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2"
-      strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="3" />
-      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65
-        1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9
-        19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0
-        4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65
-        0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65
-        0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06
-        -.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2
-        2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-    </svg>
-  );
+  const close = () => { setOpen(false); setShowA11y(false); };
 
   return (
     <div className="relative" ref={ref}>
 
-      {/* Botón engranaje */}
+      {/* ── Botón engranaje ── */}
       <button
         onClick={() => { setOpen(!open); setShowA11y(false); }}
         aria-label="Ajustes"
         className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all duration-200
-          ${open ? "border-[#20BEC6] text-[#20BEC6] bg-[#20BEC6]/10" : "border-white/20 text-white hover:border-[#20BEC6] hover:text-[#20BEC6]"}`}
+          ${open
+            ? "border-[#20BEC6] text-[#20BEC6] bg-[#20BEC6]/10"
+            : "border-white/25 text-white hover:border-[#20BEC6] hover:text-[#20BEC6] hover:bg-white/10"}`}
       >
-        <GearIcon />
+        <IconGear />
       </button>
 
-      {/* Panel */}
+      {/* ── Panel ── */}
       {open && (
-        <div className="absolute right-0 top-14 w-72 bg-white rounded-2xl shadow-2xl z-50 overflow-hidden border border-gray-100"
-          style={{ animation: "fadeDown .18s ease" }}>
+        <div
+          className="absolute right-0 top-14 w-80 rounded-2xl shadow-2xl z-50 border border-gray-100 overflow-hidden"
+          style={{
+            background: "#fff",
+            animation: "fadeDown .18s ease",
+            boxShadow: "0 20px 60px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05)",
+          }}
+        >
+          {/* Barra superior degradada */}
+          <div className="h-1" style={{ background: "linear-gradient(90deg,#20BEC6,#008FD5,#662D91,#ED008C)" }} />
 
           {/* Header */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-            <span className="flex items-center gap-2 font-bold text-gray-800 text-base">
-              <span className="text-gray-400"><GearIcon /></span>
-              {showA11y ? "Accesibilidad" : "Ajustes"}
-            </span>
-            <button onClick={() => { setOpen(false); setShowA11y(false); }}
-              className="text-gray-400 hover:text-gray-700 transition-colors text-lg leading-none">
+            <div className="flex items-center gap-2.5">
+              {showA11y && (
+                <button onClick={() => setShowA11y(false)}
+                  className="w-7 h-7 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-500 transition-colors">
+                  <IconBack />
+                </button>
+              )}
+              <span className="text-gray-400"><IconGear /></span>
+              <span className="font-bold text-gray-800 text-base">
+                {showA11y ? "Accesibilidad" : "Ajustes"}
+              </span>
+            </div>
+            <button onClick={close}
+              className="w-7 h-7 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors text-lg leading-none">
               ✕
             </button>
           </div>
 
-          {/* ── Vista principal */}
+          {/* ══ VISTA PRINCIPAL ══ */}
           {!showA11y && (
             <>
               {/* Idioma */}
-              <div className="px-4 py-4 border-b border-gray-100">
-                <p className="font-bold text-gray-800 mb-3 px-1">Idioma</p>
+              <div className="px-4 pt-4 pb-3">
+                <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-gray-400 px-1 mb-2">
+                  Idioma
+                </p>
                 <div className="flex flex-col gap-1">
                   {languages.map((l) => (
                     <button
                       key={l.code}
-                      onClick={() => setLang(l.code)}
-                      className={`flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors w-full
-                        ${lang === l.code ? "bg-[#20BEC6]/10 border border-[#20BEC6]" : "hover:bg-gray-50"}`}
+                      onClick={() => {
+                        setLang(l.code);
+                        const currentPath = window.location.pathname;
+                        const withoutLocale = currentPath.replace(/^\/(es|en)/, "") || "/";
+                        window.location.href = `/${l.code}${withoutLocale}`;
+                        close();
+                      }}
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-left w-full transition-all duration-150
+                        ${lang === l.code
+                          ? "bg-[#20BEC6]/10 ring-1 ring-[#20BEC6]"
+                          : "hover:bg-gray-50"}`}
                     >
-                      <span className="text-xl">{l.flag}</span>
-                      <span className={`font-semibold text-sm ${lang === l.code ? "text-[#0a1a4e]" : "text-gray-600"}`}>
-                        {l.label}
-                      </span>
+                      {/* Bandera real */}
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={`https://flagcdn.com/w40/${l.flagCode}.png`}
+                        alt={l.country}
+                        width={28}
+                        height={20}
+                        className="rounded-sm object-cover flex-shrink-0"
+                        style={{ width: 28, height: 20 }}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className={`font-semibold text-sm leading-tight ${lang === l.code ? "text-[#0e1628]" : "text-gray-700"}`}>
+                          {l.label}
+                        </p>
+                        <p className="text-[11px] text-gray-400">{l.country}</p>
+                      </div>
                       {lang === l.code && (
-                        <span className="ml-auto text-[#20BEC6] font-bold">✓</span>
+                        <span className="text-[#20BEC6] flex-shrink-0"><IconCheck /></span>
                       )}
                     </button>
                   ))}
                 </div>
               </div>
 
+              <div className="mx-4 border-t border-gray-100" />
+
               {/* Apariencia e Inclusión */}
-              <div className="px-4 py-4 border-b border-gray-100">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3 px-1">
+              <div className="px-4 pt-3 pb-3">
+                <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-gray-400 px-1 mb-2">
                   Apariencia e Inclusión
                 </p>
 
                 {/* Modo oscuro */}
-                <div className="flex items-center gap-3 px-2 py-2.5 rounded-xl hover:bg-gray-50 transition-colors">
-                  <div className="w-9 h-9 rounded-xl bg-[#20BEC6]/10 flex items-center justify-center text-lg flex-shrink-0">
-                    🌙
+                <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors">
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{ background: "linear-gradient(135deg,#1a1a3e,#3730a3)" }}>
+                    <span className="text-white"><IconMoon /></span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-gray-800 text-sm">Modo Oscuro</p>
-                    <p className="text-xs text-gray-400">Cambia el tema visual</p>
+                    <p className="font-semibold text-gray-800 text-sm leading-tight">Modo Oscuro</p>
+                    <p className="text-[11px] text-gray-400">Cambia el tema visual</p>
                   </div>
-                  <button
-                    onClick={() => setDarkMode(!darkMode)}
-                    role="switch"
-                    aria-checked={darkMode}
-                    className={`relative w-11 h-6 rounded-full transition-colors duration-300 flex-shrink-0 ${darkMode ? "bg-[#20BEC6]" : "bg-gray-200"}`}
-                  >
-                    <span
-                      className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-300 ${darkMode ? "translate-x-5" : "translate-x-0"}`}
-                    />
-                  </button>
+                  <Toggle on={darkMode} onToggle={() => setDarkMode(!darkMode)} />
                 </div>
 
                 {/* Accesibilidad */}
                 <button
                   onClick={() => setShowA11y(true)}
-                  className="flex items-center gap-3 px-2 py-2.5 rounded-xl hover:bg-gray-50 transition-colors w-full mt-1"
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors w-full mt-1"
                 >
-                  <div className="w-9 h-9 rounded-xl bg-[#20BEC6]/10 flex items-center justify-center text-lg flex-shrink-0">
-                    ♿
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{ background: "linear-gradient(135deg,#20BEC6,#008FD5)" }}>
+                    <span className="text-white"><IconA11y /></span>
                   </div>
                   <div className="flex-1 text-left min-w-0">
-                    <p className="font-semibold text-gray-800 text-sm">Accesibilidad</p>
-                    <p className="text-xs text-gray-400">Ajustes de inclusión</p>
+                    <p className="font-semibold text-gray-800 text-sm leading-tight">Accesibilidad</p>
+                    <p className="text-[11px] text-gray-400">Ajustes de inclusión</p>
                   </div>
-                  <span className="text-gray-400 text-lg">›</span>
+                  <span className="text-gray-400"><IconChevron /></span>
                 </button>
               </div>
 
+              <div className="mx-4 border-t border-gray-100" />
+
               {/* Legal */}
-              <div className="px-4 py-4">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3 px-1">
+              <div className="px-4 pt-3 pb-4">
+                <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-gray-400 px-1 mb-2">
                   Legal y Soporte
                 </p>
                 <Link
                   href="/terminos"
-                  onClick={() => setOpen(false)}
-                  className="flex items-center gap-3 px-2 py-2.5 rounded-xl hover:bg-gray-50 transition-colors"
+                  onClick={close}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors"
                 >
-                  <div className="w-9 h-9 rounded-xl bg-[#20BEC6]/10 flex items-center justify-center text-lg flex-shrink-0">
-                    📄
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{ background: "linear-gradient(135deg,#662D91,#ED008C)" }}>
+                    <span className="text-white"><IconDocument /></span>
                   </div>
-                  <span className="font-semibold text-gray-800 text-sm">Términos y Condiciones</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-gray-800 text-sm leading-tight">Términos y Condiciones</p>
+                    <p className="text-[11px] text-gray-400">Políticas de uso</p>
+                  </div>
+                  <span className="text-gray-400"><IconChevron /></span>
                 </Link>
               </div>
             </>
           )}
 
-          {/* ── Vista Accesibilidad */}
+          {/* ══ VISTA ACCESIBILIDAD ══ */}
           {showA11y && (
             <div className="px-4 py-4 flex flex-col gap-3">
-              <button onClick={() => setShowA11y(false)}
-                className="flex items-center gap-1 text-sm text-[#20BEC6] font-semibold mb-1 hover:underline">
-                ‹ Volver
-              </button>
 
               {/* Tamaño de fuente */}
               <div className="bg-gray-50 rounded-2xl p-4">
-                <p className="font-bold text-gray-800 text-sm mb-1">Tamaño de texto</p>
-                <p className="text-xs text-gray-400 mb-3">Ajusta el tamaño de la letra</p>
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <p className="font-bold text-gray-800 text-sm">Tamaño de texto</p>
+                    <p className="text-[11px] text-gray-400">Ajusta el tamaño de la letra</p>
+                  </div>
+                  <span className="text-xs font-bold text-[#20BEC6] bg-[#20BEC6]/10 px-2 py-1 rounded-full">
+                    {fontSize}%
+                  </span>
+                </div>
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => setFontSize((f) => Math.max(80, f - 10))}
-                    className="w-9 h-9 rounded-full bg-gray-200 hover:bg-[#20BEC6] hover:text-white font-bold text-lg transition-colors flex items-center justify-center"
-                  >
-                    A−
-                  </button>
+                    className="w-9 h-9 rounded-full bg-white border border-gray-200 hover:border-[#20BEC6] hover:text-[#20BEC6] font-bold text-sm transition-colors flex items-center justify-center shadow-sm"
+                  >A−</button>
                   <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-[#20BEC6] rounded-full transition-all"
-                      style={{ width: `${((fontSize - 80) / 60) * 100}%` }}
-                    />
+                    <div className="h-full rounded-full transition-all"
+                      style={{ width: `${((fontSize - 80) / 60) * 100}%`, background: "linear-gradient(90deg,#20BEC6,#008FD5)" }} />
                   </div>
                   <button
                     onClick={() => setFontSize((f) => Math.min(140, f + 10))}
-                    className="w-9 h-9 rounded-full bg-gray-200 hover:bg-[#20BEC6] hover:text-white font-bold text-lg transition-colors flex items-center justify-center"
-                  >
-                    A+
-                  </button>
+                    className="w-9 h-9 rounded-full bg-white border border-gray-200 hover:border-[#20BEC6] hover:text-[#20BEC6] font-bold text-sm transition-colors flex items-center justify-center shadow-sm"
+                  >A+</button>
                 </div>
-                <p className="text-center text-xs text-gray-400 mt-2">{fontSize}%</p>
               </div>
 
               {/* Reducir movimiento */}
               <div className="bg-gray-50 rounded-2xl p-4 flex items-center gap-3">
                 <div className="flex-1">
                   <p className="font-bold text-gray-800 text-sm">Reducir movimiento</p>
-                  <p className="text-xs text-gray-400">Desactiva animaciones</p>
+                  <p className="text-[11px] text-gray-400">Desactiva animaciones</p>
                 </div>
-                <button
-                  onClick={() => {
-                    document.documentElement.style.setProperty(
-                      "--reduce-motion",
-                      document.documentElement.style.getPropertyValue("--reduce-motion") === "1" ? "0" : "1"
-                    );
-                  }}
-                  className="relative w-11 h-6 rounded-full bg-gray-200 transition-colors duration-300"
-                >
-                  <span className="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-300" />
-                </button>
+                <Toggle on={false} onToggle={() => {
+                  document.documentElement.style.setProperty("--reduce-motion",
+                    document.documentElement.style.getPropertyValue("--reduce-motion") === "1" ? "0" : "1");
+                }} />
               </div>
 
-              {/* Contraste alto */}
+              {/* Alto contraste */}
               <div className="bg-gray-50 rounded-2xl p-4 flex items-center gap-3">
                 <div className="flex-1">
                   <p className="font-bold text-gray-800 text-sm">Alto contraste</p>
-                  <p className="text-xs text-gray-400">Mejora la visibilidad</p>
+                  <p className="text-[11px] text-gray-400">Mejora la visibilidad</p>
                 </div>
-                <button
-                  onClick={() => document.documentElement.classList.toggle("high-contrast")}
-                  className="relative w-11 h-6 rounded-full bg-gray-200 transition-colors duration-300"
-                >
-                  <span className="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-300" />
-                </button>
+                <Toggle on={false} onToggle={() => document.documentElement.classList.toggle("high-contrast")} />
               </div>
+
             </div>
           )}
 
@@ -249,8 +342,8 @@ export default function SettingsPanel() {
 
       <style>{`
         @keyframes fadeDown {
-          from { opacity: 0; transform: translateY(-8px); }
-          to   { opacity: 1; transform: translateY(0); }
+          from { opacity: 0; transform: translateY(-10px) scale(0.97); }
+          to   { opacity: 1; transform: translateY(0)    scale(1); }
         }
       `}</style>
     </div>

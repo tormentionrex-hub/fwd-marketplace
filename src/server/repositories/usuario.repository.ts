@@ -52,12 +52,38 @@ export function crearEmpresario(datos: {
   });
 }
 
-// Actualiza el hash de contraseña de un usuario (usado por el flujo de recuperación).
-export function actualizarHashContrasena(idUsuario: string, hash: string) {
+// Crea un estudiante: fila en usuarios (rol estudiante, estado 'pendiente') y su
+// perfil vacío, en una sola operación atómica. El estado 'pendiente' bloquea el
+// login hasta que el admin apruebe la cuenta en pending_verifications.
+export function crearEstudiante(datos: {
+  nombre: string;
+  correo: string;
+  hash: string;
+  idRol: bigint;
+}) {
+  return db.usuarios.create({
+    data: {
+      nombre: datos.nombre,
+      correo: datos.correo,
+      hash_contrasena: datos.hash,
+      id_rol: datos.idRol,
+      estado: 'activo', // ya fue pre-aprobado por el admin al enviarlo la invitación
+      perfiles_estudiante: { create: {} },
+    },
+    select: {
+      id: true,
+      nombre: true,
+      correo: true,
+      image_url: true,
+    },
+  });
+}
+
+// Activa un usuario cambiando su estado a 'activo'. Lo llama el admin al aprobar.
+export function activarUsuario(id: string) {
   return db.usuarios.update({
-    where: { id: idUsuario },
-    data: { hash_contrasena: hash },
-    select: { id: true, correo: true },
+    where: { id },
+    data: { estado: 'activo' },
   });
 }
 

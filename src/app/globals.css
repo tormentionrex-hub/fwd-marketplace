@@ -58,7 +58,7 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --font-sans: var(--font-sans);
+  --font-sans: var(--font-outfit), sans-serif;
   --font-mono: var(--font-geist-mono);
 
   /* Tipografías de marca (Figtree titulares / Outfit texto) */
@@ -91,7 +91,7 @@ body {
 
 /* Titulares: Figtree con tracking ceñido al estilo del manual */
 .font-display {
-  font-family: var(--font-display);
+  font-family: var(--font-figtree), sans-serif;
   letter-spacing: -0.02em;
 }
 
@@ -130,7 +130,7 @@ body {
   border-radius: 50%;
   background: #20BEC6;
   pointer-events: none;
-  z-index: 9999;
+  z-index: 99999;
   transition: width 0.2s, height 0.2s, background 0.2s;
   box-shadow: 0 0 10px #20BEC6, 0 0 20px #20BEC688;
 }
@@ -142,7 +142,7 @@ body {
   border-radius: 50%;
   border: 2px solid #20BEC699;
   pointer-events: none;
-  z-index: 9998;
+  z-index: 99998;
   transition: width 0.25s, height 0.25s, border-color 0.25s;
 }
 
@@ -169,98 +169,19 @@ body {
   will-change: transform, opacity;
 }
 
-/* ---- Utilidades de marca ---- */
-.text-gradient-fwd {
-  background-image: linear-gradient(100deg, #008fd4, #662d91 55%, #ec008c);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+/* Shine sweep en TiltCard */
+.shine-sweep {
+  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.18) 50%, transparent 60%);
+  background-size: 200% 100%;
+  background-position: 200% center;
+  transition: background-position 0s;
+}
+div:hover > .shine-sweep {
+  background-position: -200% center;
+  transition: background-position 0.6s ease;
 }
 
-.bg-gradient-fwd {
-  background-image: linear-gradient(100deg, #008fd4, #662d91 55%, #ec008c);
-}
-
-.bg-gradient-fwd-soft {
-  background-image: linear-gradient(135deg, #008fd4, #20bec6);
-}
-
-/* Glassmorphism sutil, theme-aware */
-.glass {
-  background-color: color-mix(in srgb, var(--surface) 72%, transparent);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
-}
-
-/* Borde con degradado (tarjetas premium) */
-.gradient-border {
-  position: relative;
-  background: var(--surface);
-  border: 1px solid transparent;
-  background-clip: padding-box;
-}
-.gradient-border::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(135deg, #008fd4, #662d91, #ec008c);
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
-}
-
-/* ---- Animaciones del hero / fondo ---- */
-@keyframes fwd-float {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-14px);
-  }
-}
-
-@keyframes fwd-drift {
-  0%,
-  100% {
-    transform: translateX(0);
-  }
-  50% {
-    transform: translateX(16px);
-  }
-}
-
-@keyframes fwd-aurora {
-  0% {
-    transform: translate(0, 0) scale(1);
-    opacity: 0.7;
-  }
-  50% {
-    transform: translate(24px, -18px) scale(1.12);
-    opacity: 1;
-  }
-  100% {
-    transform: translate(0, 0) scale(1);
-    opacity: 0.7;
-  }
-}
-
-.animate-aurora {
-  animation: fwd-aurora 14s ease-in-out infinite;
-}
-
-/* Respeto a quienes prefieren menos movimiento */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
-    scroll-behavior: auto !important;
-  }
+@keyframes floatTri {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50%       { transform: translateY(-14px) rotate(8deg); }
 }

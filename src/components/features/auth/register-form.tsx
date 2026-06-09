@@ -3,8 +3,10 @@
 import { useState } from "react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { TextField } from "@/components/ui/text-field";
+import { SocialAuthButtons } from "@/components/features/auth/social-auth-buttons";
 
 type Role = "estudiante" | "empresario";
+type StudentStatus = "en_curso" | "graduado" | "otro";
 
 /** Reglas de validación de la contraseña: se marcan con check al cumplirse. */
 const PASSWORD_RULES = [
@@ -30,14 +32,15 @@ function CheckIcon({ className }: { className?: string }) {
 
 export function RegisterForm() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [role, setRole] = useState<Role>("estudiante");
-  const [password, setPassword] = useState("");
-  const [terms, setTerms] = useState(false);
+  const [loading, setLoading]             = useState(false);
+  const [error, setError]                 = useState<string | null>(null);
+  const [role, setRole]                   = useState<Role>("estudiante");
+  const [password, setPassword]           = useState("");
+  const [terms, setTerms]                 = useState(false);
+  const [studentStatus, setStudentStatus] = useState<StudentStatus>("en_curso");
 
-  const passwordValid = PASSWORD_RULES.every((rule) => rule.test(password));
-  const canSubmit = !loading && passwordValid && terms;
+  const passwordValid = PASSWORD_RULES.every((r) => r.test(password));
+  const canSubmit     = passwordValid && terms && !loading;
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -285,6 +288,10 @@ export function RegisterForm() {
           <span className="transition-transform group-hover:translate-x-1">▶</span>
         </button>
       </form>
+
+      <div className="mt-6">
+        <SocialAuthButtons />
+      </div>
 
       <p className="mt-8 text-center text-sm text-fwd-ink/60">
         ¿Ya tienes cuenta?{" "}

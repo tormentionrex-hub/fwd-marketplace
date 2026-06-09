@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
-import { Figtree, Outfit, Inter, Space_Grotesk, Geist_Mono } from 'next/font/google';
 import { NextIntlClientProvider, hasLocale } from 'next-intl';
-import { setRequestLocale } from 'next-intl/server';
+import { setRequestLocale, getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import { RoleBadge } from '@/components/layout/role-badge';
@@ -10,23 +9,8 @@ import WhatsAppButton from '@/components/WhatsAppButton';
 import SmoothScroll from '@/components/SmoothScroll';
 import AnimationsInit from '@/components/AnimationsInit';
 import CursorGlow from '@/components/CursorGlow';
-import { ThemeProvider } from '@/components/theme/ThemeProvider';
-import ThemeToggle from '@/components/theme/ThemeToggle';
-import '../globals.css';
-
-// Figtree — titulares y destacados (pesos 400 / 600 / 700 / 900)
-const figtree = Figtree({
-  variable: '--font-figtree',
-  subsets: ['latin'],
-  weight: ['400', '600', '700', '900'],
-});
-
-// Outfit — texto y párrafos (pesos 300 / 400 / 500 / 700)
-const outfit = Outfit({
-  variable: '--font-outfit',
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '700'],
-});
+import WelcomeOnboarding from '@/components/WelcomeOnboarding';
+import PageLoader from '@/components/PageLoader';
 
 const inter = Inter({
   variable: '--font-inter',
@@ -66,27 +50,21 @@ export default async function LocaleLayout({
     notFound();
   }
   setRequestLocale(locale);
+  const messages = await getMessages();
 
   return (
-    <html
-      lang={locale}
-      suppressHydrationWarning
-      className={`${figtree.variable} ${outfit.variable} ${inter.variable} ${spaceGrotesk.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col font-sans bg-bg text-text">
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-          <SmoothScroll />
-          <AnimationsInit />
-          <CursorGlow />
-          <NextIntlClientProvider>
-            {children}
-            <RoleBadge />
-            <AlertaGlobal />
-          </NextIntlClientProvider>
-          <WhatsAppButton />
-          <ThemeToggle variant="floating" />
-        </ThemeProvider>
-      </body>
-    </html>
+    <>
+      <PageLoader />
+      <SmoothScroll />
+      <AnimationsInit />
+      <CursorGlow />
+      <WelcomeOnboarding />
+      <NextIntlClientProvider messages={messages}>
+        {children}
+        <RoleBadge />
+        <AlertaGlobal />
+      </NextIntlClientProvider>
+      <WhatsAppButton />
+    </>
   );
 }
