@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { TextField } from "@/components/ui/text-field";
+import { SocialAuthButtons } from "@/components/features/auth/social-auth-buttons";
 
 type Role = "estudiante" | "empresario";
 type StudentStatus = "en_curso" | "graduado" | "otro";
@@ -287,6 +288,10 @@ export function RegisterForm() {
           <span className="transition-transform group-hover:translate-x-1">▶</span>
         </button>
       </form>
+
+      <div className="mt-6">
+        <SocialAuthButtons />
+      </div>
 
       <p className="mt-8 text-center text-sm text-fwd-ink/60">
         ¿Ya tienes cuenta?{" "}
