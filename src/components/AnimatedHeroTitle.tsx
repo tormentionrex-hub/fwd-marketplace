@@ -25,7 +25,7 @@ function AnimatedWord({ word, baseColor, index }: WordProps) {
       gsap.to(letters, {
         y: -8,
         color: baseColor === "#ffffff"
-          ? FWD_COLORS[index % FWD_COLORS.length]
+          ? (FWD_COLORS[index % FWD_COLORS.length] ?? "#20BEC7")
           : baseColor,
         stagger: 0.03,
         duration: 0.2,

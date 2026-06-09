@@ -86,6 +86,6 @@ export default function AnimatedProjectsTitle({ text, className = "" }: Props) {
 }
 
 const COLORS = ["#20BEC7", "#FFCB05", "#ED008C", "#008FD5", "#662E91", "#F7901E"];
-function getRandomColor() {
-  return COLORS[Math.floor(Math.random() * COLORS.length)];
+function getRandomColor(): string {
+  return COLORS[Math.floor(Math.random() * COLORS.length)] ?? "#20BEC7";
 }
