@@ -32,7 +32,7 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --font-sans: var(--font-sans);
+  --font-sans: var(--font-outfit), sans-serif;
   --font-mono: var(--font-geist-mono);
 
   /* Tipografías de marca (Figtree titulares / Outfit texto) */
@@ -64,7 +64,7 @@ body {
 
 /* Titulares: Figtree con tracking ceñido al estilo del manual */
 .font-display {
-  font-family: var(--font-display);
+  font-family: var(--font-figtree), sans-serif;
   letter-spacing: -0.02em;
 }
 
