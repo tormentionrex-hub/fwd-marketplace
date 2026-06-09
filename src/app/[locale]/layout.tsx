@@ -11,6 +11,7 @@ import SmoothScroll from '@/components/SmoothScroll';
 import AnimationsInit from '@/components/AnimationsInit';
 import CursorGlow from '@/components/CursorGlow';
 import WelcomeOnboarding from '@/components/WelcomeOnboarding';
+import PageLoader from '@/components/PageLoader';
 import '../globals.css';
 
 // Figtree — titulares y destacados (pesos 400 / 600 / 700 / 900)
@@ -55,6 +56,7 @@ export default async function LocaleLayout({
       className={`${figtree.variable} ${outfit.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-body">
+        <PageLoader />
         <SmoothScroll />
         <AnimationsInit />
         <CursorGlow />
