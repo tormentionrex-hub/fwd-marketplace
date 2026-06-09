@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 interface Estudiante {
   nombre: string;
@@ -64,6 +66,57 @@ const estudiantes: Estudiante[] = [
   },
 ];
 
+/* ── Palabras con colores de marca ─────────────────── */
+const TITLE_WORDS: { word: string; color: string }[] = [
+  { word: "Estudiantes", color: "#008FD5" },
+  { word: "que",         color: "#20BEC6" },
+  { word: "ya",          color: "#008FD5" },
+  { word: "están",       color: "#662E91" },
+  { word: "haciendo",    color: "#ED008C" },
+  { word: "historia",    color: "#20BEC6" },
+];
+
+function AnimatedStudentsTitle() {
+  const ref = useRef<HTMLHeadingElement>(null);
+
+  useEffect(() => {
+    gsap.registerPlugin(ScrollTrigger);
+    const el = ref.current;
+    if (!el) return;
+    const words = el.querySelectorAll<HTMLSpanElement>(".sw");
+    gsap.from(words, {
+      opacity: 0, y: 45, rotateX: -70, stagger: 0.09,
+      duration: 0.65, ease: "back.out(1.4)",
+      scrollTrigger: { trigger: el, start: "top 88%", toggleActions: "play none none none" },
+    });
+    words.forEach((w, i) => {
+      const base = TITLE_WORDS[i]?.color ?? "#0e1628";
+      w.addEventListener("mouseenter", () =>
+        gsap.to(w, { y: -8, scale: 1.07, duration: 0.2, ease: "power2.out" })
+      );
+      w.addEventListener("mouseleave", () =>
+        gsap.to(w, { y: 0, scale: 1, color: base, duration: 0.4, ease: "elastic.out(1,0.5)" })
+      );
+    });
+    return () => ScrollTrigger.getAll().forEach((t) => t.kill());
+  }, []);
+
+  return (
+    <h2
+      ref={ref}
+      className="font-heading font-black text-4xl md:text-5xl lg:text-[3.5rem] mt-2 mb-4 leading-tight"
+      style={{ perspective: "500px" }}
+    >
+      {TITLE_WORDS.map(({ word, color }, i) => (
+        <span key={i} className="sw inline-block mr-[0.28em] cursor-default"
+          style={{ color, transformOrigin: "center bottom" }}>
+          {word}
+        </span>
+      ))}
+    </h2>
+  );
+}
+
 export default function StudentCarousel() {
   const [current, setCurrent] = useState(0);
   const [animating, setAnimating] = useState(false);
@@ -100,9 +153,7 @@ export default function StudentCarousel() {
           <span className="text-fwd-turquoise text-xs font-semibold uppercase tracking-widest">
             Comunidad FWD
           </span>
-          <h2 className="font-heading font-bold text-3xl md:text-4xl text-fwd-navy mt-2 mb-3">
-            Estudiantes que ya están haciendo historia
-          </h2>
+          <AnimatedStudentsTitle />
           <p className="text-gray-500 text-lg max-w-xl mx-auto">
             Conocé a los talentos que transforman ideas en soluciones reales.
           </p>

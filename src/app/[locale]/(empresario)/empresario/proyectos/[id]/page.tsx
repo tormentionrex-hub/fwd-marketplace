@@ -1,18 +1,31 @@
+import { notFound } from 'next/navigation';
+import {
+  getProyectoById,
+  getOfertasByProyecto,
+  getEntregablesByProyecto,
+} from '@/lib/mocks';
+import GestionProyecto from '@/components/features/marketplace/GestionProyecto';
+
 export default async function GestionProyectoPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ locale: string; id: string }>;
 }) {
   const { id } = await params;
 
-  return (
-    <main className="p-6">
-      <h1 className="text-2xl font-bold">
-        Página 14 — Gestión del proyecto (placeholder)
-      </h1>
-      <p className="mt-2">Proyecto: {id}</p>
+  const proyecto = getProyectoById(id);
+  if (!proyecto) notFound();
 
-      {/* Aquí va el diseño de Stitch */}
+  const ofertas = getOfertasByProyecto(id);
+  const entregables = getEntregablesByProyecto(id);
+
+  return (
+    <main className="p-10">
+      <GestionProyecto
+        proyecto={proyecto}
+        ofertasIniciales={ofertas}
+        entregablesIniciales={entregables}
+      />
     </main>
   );
 }

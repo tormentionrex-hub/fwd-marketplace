@@ -1,6 +1,32 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "shadcn/tailwind.css";
+
+/* Dark mode por clase (toggle), no por preferencia del SO. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ---- Tokens de superficie dependientes del tema ---- */
+:root {
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #f8fafc; /* slate-50 */
+  --border: #e2e8f0; /* slate-200 */
+  --text: #0f172a; /* slate-900 */
+  --text-muted: #64748b; /* slate-500 */
+  --ring: #008fd4;
+  --background: var(--bg);
+  --foreground: var(--text);
+  --input: oklch(0.922 0 0);
+}
+
+.dark {
+  --bg: #0b1120; /* slate-950-ish, identidad FWD oscura */
+  --surface: #0f172a; /* slate-900 */
+  --surface-2: #1e293b; /* slate-800 */
+  --border: #1e293b; /* slate-800 */
+  --text: #f1f5f9; /* slate-100 */
+  --text-muted: #94a3b8; /* slate-400 */
+  --ring: #20bec6;
+}
 
 /*
   Sistema de diseño FWD · Costa Rica
@@ -39,8 +65,17 @@
   --font-heading: var(--font-figtree), sans-serif;
   --font-body: var(--font-outfit), sans-serif;
 
-  /* Paleta de marca FWD Costa Rica (Libro de Marca · 05 · Color).
-     Genera utilidades como bg-fwd-azul, text-fwd-magenta, etc. */
+  /* Superficies semánticas */
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+
+  /* Tipografía */
+  --font-inter: var(--font-inter);
+  --font-space-grotesk: var(--font-space-grotesk);
+  --font-display: var(--font-space-grotesk);
   --color-fwd-azul: #008fd4;
   --color-fwd-morado: #662d91;
   --color-fwd-turquesa: #20bec6;
@@ -49,17 +84,9 @@
   --color-fwd-magenta: #ec008c;
 }
 
-:root {
-  --background: #ffffff;
-  --foreground: #1a1633;
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-}
-
 body {
-  background: var(--background);
-  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
 /* Titulares: Figtree con tracking ceñido al estilo del manual */
@@ -103,7 +130,7 @@ body {
   border-radius: 50%;
   background: #20BEC6;
   pointer-events: none;
-  z-index: 9999;
+  z-index: 99999;
   transition: width 0.2s, height 0.2s, background 0.2s;
   box-shadow: 0 0 10px #20BEC6, 0 0 20px #20BEC688;
 }
@@ -115,7 +142,7 @@ body {
   border-radius: 50%;
   border: 2px solid #20BEC699;
   pointer-events: none;
-  z-index: 9998;
+  z-index: 99998;
   transition: width 0.25s, height 0.25s, border-color 0.25s;
 }
 
@@ -140,4 +167,21 @@ body {
 
 [data-reveal] {
   will-change: transform, opacity;
+}
+
+/* Shine sweep en TiltCard */
+.shine-sweep {
+  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.18) 50%, transparent 60%);
+  background-size: 200% 100%;
+  background-position: 200% center;
+  transition: background-position 0s;
+}
+div:hover > .shine-sweep {
+  background-position: -200% center;
+  transition: background-position 0.6s ease;
+}
+
+@keyframes floatTri {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50%       { transform: translateY(-14px) rotate(8deg); }
 }

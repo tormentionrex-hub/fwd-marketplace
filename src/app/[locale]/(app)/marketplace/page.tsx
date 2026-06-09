@@ -1,7 +1,10 @@
-import Link from "next/link";
+import SectionHeading from "@/components/ui/SectionHeading";
+import { Reveal } from "@/components/ui/motion";
+import MarketplaceExplorer from "@/components/features/marketplace/MarketplaceExplorer";
+import CategoriesSection from "@/components/features/marketplace/CategoriesSection";
+import ProductCard from "@/components/features/cards/ProductCard";
+import { PRODUCTOS, PRODUCTOS_DESTACADOS } from "@/lib/marketplace-data";
 
-// Listado del marketplace.
-// URL: /es/marketplace
 export default async function MarketplacePage({
   params,
 }: {
@@ -9,32 +12,55 @@ export default async function MarketplacePage({
 }) {
   const { locale } = await params;
 
-  // Datos de ejemplo. Aquí más adelante consultarás Supabase.
-  const items = [
-    { id: "1", title: "Producto de ejemplo 1" },
-    { id: "2", title: "Producto de ejemplo 2" },
-    { id: "3", title: "Producto de ejemplo 3" },
-  ];
-
   return (
-    <section className="flex flex-col gap-6">
-      <h1 className="text-3xl font-semibold tracking-tight">Marketplace</h1>
-      <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {items.map((item) => (
-          <li
-            key={item.id}
-            className="rounded-lg border border-black/[.08] p-5 dark:border-white/[.145]"
-          >
-            <h2 className="font-medium">{item.title}</h2>
-            <Link
-              href={`/${locale}/marketplace/${item.id}`}
-              className="mt-3 inline-block text-sm text-blue-600 hover:underline"
-            >
-              Ver detalle →
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </section>
+    <div className="mx-auto w-full max-w-7xl space-y-20 px-6 py-12 sm:px-8">
+      {/* Encabezado */}
+      <Reveal className="text-center">
+        <span className="inline-flex items-center gap-2 rounded-full bg-fwd-azul/10 px-4 py-1.5 text-sm font-medium text-fwd-azul">
+          <span className="h-2 w-2 animate-pulse rounded-full bg-fwd-azul" />
+          Marketplace FWD
+        </span>
+        <h1 className="mt-5 font-display text-4xl font-extrabold tracking-tight text-text sm:text-5xl">
+          Explora el <span className="text-gradient-fwd">Marketplace</span>
+        </h1>
+        <p className="mx-auto mt-4 max-w-2xl text-lg text-text-muted">
+          Descubre herramientas, servicios y oportunidades para impulsar tu crecimiento y avanzar
+          hacia el futuro.
+        </p>
+      </Reveal>
+
+      {/* Explorador */}
+      <MarketplaceExplorer productos={PRODUCTOS} locale={locale} />
+
+      {/* Categorías */}
+      <section>
+        <Reveal>
+          <SectionHeading
+            eyebrow="Categorías Populares"
+            title="Explora por área de interés"
+            description="Cada categoría reúne productos y servicios para impulsarte hacia adelante."
+          />
+        </Reveal>
+        <div className="mt-8">
+          <CategoriesSection />
+        </div>
+      </section>
+
+      {/* Destacados */}
+      <section>
+        <Reveal>
+          <SectionHeading
+            eyebrow="Productos Destacados"
+            title="Lo más relevante del marketplace"
+            description="Selección curada de lo que está marcando la diferencia."
+          />
+        </Reveal>
+        <div className="mt-10 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          {PRODUCTOS_DESTACADOS.map((producto) => (
+            <ProductCard key={producto.id} producto={producto} locale={locale} />
+          ))}
+        </div>
+      </section>
+    </div>
   );
 }

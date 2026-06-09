@@ -1,12 +1,31 @@
+import Button from "@/components/ui/Button";
+import EmptyState from "@/components/ui/EmptyState";
+import { IconFile } from "@/components/ui/icons";
+
 // Listado de solicitudes / postulaciones del usuario.
 // URL: /es/applications
-export default function ApplicationsPage() {
+export default async function ApplicationsPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+
   return (
-    <section className="flex flex-col gap-6">
-      <h1 className="text-3xl font-semibold tracking-tight">Mis solicitudes</h1>
-      <p className="text-zinc-600 dark:text-zinc-400">
-        Aún no tienes solicitudes. Cuando crees una, aparecerá aquí.
-      </p>
-    </section>
+    <div className="mx-auto w-full max-w-5xl px-6 py-12 sm:px-8">
+      <header className="mb-8">
+        <h1 className="font-display text-3xl font-bold tracking-tight text-text">Mis solicitudes</h1>
+        <p className="mt-1 text-text-muted">Da seguimiento a tus postulaciones a proyectos.</p>
+      </header>
+
+      <EmptyState
+        icon={<IconFile width={28} height={28} />}
+        title="Aún no tienes solicitudes"
+        description="Cuando te postules a un proyecto del marketplace, aparecerá aquí con su estado."
+        action={
+          <Button href={`/${locale}/marketplace`}>Explorar proyectos</Button>
+        }
+      />
+    </div>
   );
 }

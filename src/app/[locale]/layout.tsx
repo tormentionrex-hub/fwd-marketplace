@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
-import { Figtree, Outfit } from 'next/font/google';
 import { NextIntlClientProvider, hasLocale } from 'next-intl';
-import { setRequestLocale } from 'next-intl/server';
+import { setRequestLocale, getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import { RoleBadge } from '@/components/layout/role-badge';
@@ -10,25 +9,29 @@ import WhatsAppButton from '@/components/WhatsAppButton';
 import SmoothScroll from '@/components/SmoothScroll';
 import AnimationsInit from '@/components/AnimationsInit';
 import CursorGlow from '@/components/CursorGlow';
-import '../globals.css';
+import WelcomeOnboarding from '@/components/WelcomeOnboarding';
+import PageLoader from '@/components/PageLoader';
 
-// Figtree — titulares y destacados (pesos 400 / 600 / 700 / 900)
-const figtree = Figtree({
-  variable: '--font-figtree',
+const inter = Inter({
+  variable: '--font-inter',
   subsets: ['latin'],
-  weight: ['400', '600', '700', '900'],
+  display: 'swap',
 });
 
-// Outfit — texto y párrafos (pesos 300 / 400 / 500 / 700)
-const outfit = Outfit({
-  variable: '--font-outfit',
+const spaceGrotesk = Space_Grotesk({
+  variable: '--font-space-grotesk',
   subsets: ['latin'],
-  weight: ['300', '400', '500', '700'],
+  display: 'swap',
+});
+
+const geistMono = Geist_Mono({
+  variable: '--font-geist-mono',
+  subsets: ['latin'],
 });
 
 export const metadata: Metadata = {
   title: 'FWD · Costa Rica — Marketplace',
-  description: 'Avancemos hacia el futuro juntos.',
+  description: 'Conectamos talento, innovación, emprendimiento y tecnología para construir el futuro de Costa Rica.',
 };
 
 export function generateStaticParams() {
@@ -47,23 +50,21 @@ export default async function LocaleLayout({
     notFound();
   }
   setRequestLocale(locale);
+  const messages = await getMessages();
 
   return (
-    <html
-      lang={locale}
-      className={`${figtree.variable} ${outfit.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col font-sans">
-        <SmoothScroll />
-        <AnimationsInit />
-        <CursorGlow />
-        <NextIntlClientProvider>
-          {children}
-          <RoleBadge />
-          <AlertaGlobal />
-        </NextIntlClientProvider>
-        <WhatsAppButton />
-      </body>
-    </html>
+    <>
+      <PageLoader />
+      <SmoothScroll />
+      <AnimationsInit />
+      <CursorGlow />
+      <WelcomeOnboarding />
+      <NextIntlClientProvider messages={messages}>
+        {children}
+        <RoleBadge />
+        <AlertaGlobal />
+      </NextIntlClientProvider>
+      <WhatsAppButton />
+    </>
   );
 }
