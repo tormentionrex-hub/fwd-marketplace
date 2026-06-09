@@ -5,7 +5,6 @@ import {
   crearOferta,
   listarOfertasDeEstudiante,
   retirarOferta as retirarOfertaRepo,
-  listarOfertasDeEstudiante,
 } from '@/server/repositories/oferta.repository';
 import { obtenerVerificacionEstudiante } from '@/server/services/verificacion.service';
 import { mapearEstadoProyecto } from '@/server/services/proyecto.service';

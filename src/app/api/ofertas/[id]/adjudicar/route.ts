@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
 import { getUser } from '@/server/auth/get-user';
-import { adjudicar } from '@/server/services/gestion.service';
+import { adjudicarOfertaService } from '@/server/services/gestion.service';
 
-// POST /api/ofertas/[id]/adjudicar — el empresario adjudica una oferta.
+// POST /api/ofertas/[id]/adjudicar  — adjudica la oferta [id]. Solo el empresario dueño.
 export async function POST(
   _request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const user = await getUser();
   if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
@@ -14,11 +14,13 @@ export async function POST(
   }
 
   const { id } = await params;
-  const r = await adjudicar(id, user.id);
+  const resultado = await adjudicarOfertaService(id, user.id);
 
-  if (r === 'no_encontrado') {
+  if (resultado === 'no_encontrado') {
     return NextResponse.json({ error: 'Oferta no encontrada' }, { status: 404 });
   }
-  if (r === 'no_autorizado') return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
+  if (resultado === 'no_autorizado') {
+    return NextResponse.json({ error: 'Este proyecto no es tuyo' }, { status: 403 });
+  }
   return NextResponse.json({ ok: true });
 }

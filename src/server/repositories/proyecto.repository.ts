@@ -1,10 +1,28 @@
 import 'server-only';
 import { db } from '@/lib/db';
 
-// Capa de datos: queries Prisma sobre el modelo proyectos. Solo lee/escribe;
-// la lógica de negocio vive en los services.
+// Capa de datos (Prisma puro) sobre el modelo proyectos. Sin lógica de negocio.
 
-// Trae un proyecto con su empresario (nombre + sector) y sus tecnologías.
+// Lista los proyectos de un empresario con el conteo de ofertas (candidatos).
+// Una sola query con _count para evitar N+1. (Dashboard empresario, Página 12.)
+export function listarProyectosDeEmpresario(idEmpresario: string) {
+  return db.proyectos.findMany({
+    where: { id_empresario: idEmpresario },
+    select: {
+      id: true,
+      titulo: true,
+      estado: true,
+      plazo_dias: true,
+      publicado: true,
+      cierre: true,
+      _count: { select: { ofertas: true } },
+    },
+    orderBy: { publicado: 'desc' },
+  });
+}
+
+// Trae un proyecto con su empresario (nombre + sector) y sus tecnologías
+// (ficha pública del proyecto).
 export function obtenerProyectoConDetalle(id: string) {
   return db.proyectos.findUnique({
     where: { id },
@@ -30,9 +48,15 @@ export function obtenerProyectoConDetalle(id: string) {
   });
 }
 
-// ── Páginas 11 y 14 (proyecto adjudicado / gestión) ─────────────────────────
+// Datos mínimos del proyecto para la pantalla de gestión (Página 14) y para
+// validar dueño. `buscarProyectoActivo` es el alias que usan las páginas 11/14.
+export function buscarProyectoGestion(id: string) {
+  return db.proyectos.findUnique({
+    where: { id },
+    select: { id: true, titulo: true, estado: true, id_empresario: true },
+  });
+}
 
-// Trae lo mínimo para validar acceso y mostrar la cabecera del proyecto.
 export function buscarProyectoActivo(id: string) {
   return db.proyectos.findUnique({
     where: { id },
