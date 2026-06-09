@@ -46,6 +46,7 @@ model entregables {
   version             Int                 @default(1)
   archivo_url         String
   estado              String              @default("enviado") @db.VarChar(50)
+  comentario_empresario String?
   creado              DateTime            @default(now()) @db.Timestamptz(6)
   perfiles_estudiante perfiles_estudiante @relation(fields: [id_estudiante], references: [id_usuario], onDelete: Cascade, map: "fk_entregables_estudiante")
   proyectos           proyectos           @relation(fields: [id_proyecto], references: [id], onDelete: Cascade, map: "fk_entregables_proyecto")

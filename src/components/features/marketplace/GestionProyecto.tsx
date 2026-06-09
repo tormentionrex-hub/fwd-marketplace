@@ -1,71 +1,111 @@
 'use client';
 
 import { useState } from 'react';
-import type { Proyecto, Oferta, Entregable } from '@/types';
+import { useRouter } from '@/i18n/navigation';
 import EstadoBadge from '@/components/ui/EstadoBadge';
 import OfertaCard from '@/components/features/applications/OfertaCard';
 import StarRating from '@/components/ui/StarRating';
+
+// Tipos locales: el server pasa props planos (no @/types).
+type OfertaVista = {
+  id: string;
+  propuesta: string;
+  prototipoUrl: string | null;
+  documentacionUrl: string | null;
+  estado: string;
+};
+
+type EntregableVista = {
+  id: string;
+  tipo: string;
+  version: number;
+  archivoUrl: string;
+  estado: string;
+  comentarioEmpresario: string | null;
+  creado: string;
+};
+
+type Props = {
+  proyecto: { id: string; titulo: string; estado: string };
+  ofertasIniciales: OfertaVista[];
+  entregablesIniciales: EntregableVista[];
+  evaluacionInicial: number | null;
+};
 
 export default function GestionProyecto({
   proyecto,
   ofertasIniciales,
   entregablesIniciales,
-}: {
-  proyecto: Proyecto;
-  ofertasIniciales: Oferta[];
-  entregablesIniciales: Entregable[];
-}) {
-  const [estadoProyecto, setEstadoProyecto] = useState<Proyecto['estado']>(proyecto.estado);
-  const [ofertas, setOfertas] = useState<Oferta[]>(ofertasIniciales);
-  const [entregables, setEntregables] = useState<Entregable[]>(entregablesIniciales);
-  const [calificacionEstudiante, setCalificacionEstudiante] = useState<number>(
-    proyecto.calificacionEstudiante ?? 0,
-  );
-  const [aviso, setAviso] = useState<string | null>(null);
+  evaluacionInicial,
+}: Props) {
+  const router = useRouter();
 
-  // "Solicitar cambios": id del entregable que se está comentando + texto.
+  // Calificación EFÍMERA de cada oferta (solo UI; no se persiste).
+  const [calificaciones, setCalificaciones] = useState<Record<string, number>>({});
+  // Calificación final del estudiante (se persiste al cerrar, tabla evaluaciones).
+  const [puntuacionFinal, setPuntuacionFinal] = useState<number>(evaluacionInicial ?? 0);
+
   const [comentandoId, setComentandoId] = useState<string | null>(null);
   const [comentarioTexto, setComentarioTexto] = useState('');
   const [errorComentario, setErrorComentario] = useState<string | null>(null);
 
-  const hayAdjudicada = ofertas.some((o) => o.estado === 'adjudicada');
-  const finalAprobado = entregables.some((e) => e.tipo === 'final' && e.estado === 'aprobado');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [aviso, setAviso] = useState<string | null>(null);
 
-  // --- FASE 1: calificar oferta ---
+  const hayAdjudicada = ofertasIniciales.some((o) => o.estado === 'adjudicada');
+  const finalAprobado = entregablesIniciales.some(
+    (e) => e.tipo === 'final' && e.estado === 'aprobado',
+  );
+  const cerrado = proyecto.estado === 'cerrado';
+
+  // --- FASE 1: calificar oferta (SOLO estado local efímero, no se persiste) ---
   function calificarOferta(ofertaId: string, valor: number) {
-    // TODO Fase 5: guardar la calificación en Supabase
-    setOfertas((prev) =>
-      prev.map((o) => (o.id === ofertaId ? { ...o, calificacion: valor } : o)),
-    );
+    setCalificaciones((prev) => ({ ...prev, [ofertaId]: valor }));
   }
 
-  // --- FASE 2: adjudicar (una sola por proyecto) ---
-  function adjudicar(ofertaId: string) {
-    // TODO Fase 5: persistir la adjudicación en Supabase
-    setOfertas((prev) =>
-      prev.map((o) =>
-        o.id === ofertaId
-          ? { ...o, estado: 'adjudicada' }
-          : { ...o, estado: 'rechazada' },
-      ),
-    );
-    setEstadoProyecto('en_desarrollo');
-    setAviso('Proyecto adjudicado. Ahora está en desarrollo.');
+  // --- FASE 2: adjudicar ---
+  async function adjudicar(ofertaId: string) {
+    setError(null);
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/ofertas/${ofertaId}/adjudicar`, { method: 'POST' });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        setError(data?.error ?? 'No se pudo adjudicar la oferta.');
+        return;
+      }
+      setAviso('Proyecto adjudicado. Ahora está en desarrollo.');
+      router.refresh();
+    } catch {
+      setError('Error de red. Intentá de nuevo.');
+    } finally {
+      setLoading(false);
+    }
   }
 
   // --- FASE 3: aprobar / solicitar cambios ---
-  function aprobarEntregable(id: string) {
-    // TODO Fase 5: persistir en Supabase
-    setEntregables((prev) =>
-      prev.map((e) => {
-        if (e.id !== id) return e;
-        // Quitamos el comentario previo al aprobar.
-        const copia: Entregable = { ...e, estado: 'aprobado' };
-        delete copia.comentarioEmpresario;
-        return copia;
-      }),
-    );
-    setAviso('Entregable aprobado.');
+  async function aprobarEntregable(id: string) {
+    setError(null);
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/entregables/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accion: 'aprobar' }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        setError(data?.error ?? 'No se pudo aprobar el entregable.');
+        return;
+      }
+      setAviso('Entregable aprobado.');
+      router.refresh();
+    } catch {
+      setError('Error de red. Intentá de nuevo.');
+    } finally {
+      setLoading(false);
+    }
   }
 
   function abrirComentario(id: string) {
@@ -74,30 +114,58 @@ export default function GestionProyecto({
     setErrorComentario(null);
   }
 
-  function confirmarCambios(id: string) {
+  async function confirmarCambios(id: string) {
     if (!comentarioTexto.trim()) {
       setErrorComentario('El comentario es obligatorio para solicitar cambios.');
       return;
     }
-    // TODO Fase 5: persistir en Supabase
-    setEntregables((prev) =>
-      prev.map((e) =>
-        e.id === id
-          ? { ...e, estado: 'cambios_solicitados', comentarioEmpresario: comentarioTexto.trim() }
-          : e,
-      ),
-    );
-    setComentandoId(null);
-    setComentarioTexto('');
-    setAviso('Se solicitaron cambios al estudiante.');
+    setError(null);
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/entregables/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accion: 'cambios', comentario: comentarioTexto.trim() }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        setError(data?.error ?? 'No se pudieron solicitar cambios.');
+        return;
+      }
+      setComentandoId(null);
+      setComentarioTexto('');
+      setAviso('Se solicitaron cambios al estudiante.');
+      router.refresh();
+    } catch {
+      setError('Error de red. Intentá de nuevo.');
+    } finally {
+      setLoading(false);
+    }
   }
 
   // --- FASE 4: cierre ---
-  function cerrarProyecto() {
+  async function cerrarProyecto() {
     if (!finalAprobado) return;
-    // TODO Fase 5: persistir el cierre en Supabase
-    setEstadoProyecto('cerrado');
-    setAviso('Proyecto cerrado. ¡Gracias!');
+    setError(null);
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/proyectos/${proyecto.id}/cerrar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ puntuacion: puntuacionFinal }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        setError(data?.error ?? 'No se pudo cerrar el proyecto.');
+        return;
+      }
+      setAviso('Proyecto cerrado. ¡Gracias!');
+      router.refresh();
+    } catch {
+      setError('Error de red. Intentá de nuevo.');
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -108,9 +176,12 @@ export default function GestionProyecto({
           <h1 className="text-2xl font-bold">{proyecto.titulo}</h1>
           <p className="text-slate-500">Gestión del proyecto</p>
         </div>
-        <EstadoBadge estado={estadoProyecto} tipo="proyecto" />
+        <EstadoBadge estado={proyecto.estado} tipo="proyecto" />
       </div>
 
+      {error && (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">{error}</div>
+      )}
       {aviso && (
         <div className="rounded-xl border border-green-200 bg-green-50 p-4 text-green-800 flex items-center justify-between">
           <span>{aviso}</span>
@@ -120,43 +191,48 @@ export default function GestionProyecto({
         </div>
       )}
 
-      {/* ===== FASE 1 + 2: ofertas, calificación y adjudicación ===== */}
+      {/* ===== FASE 1 + 2: ofertas, calificación efímera y adjudicación ===== */}
       <section>
         <h2 className="font-bold text-lg mb-4">Fase 1 · Ofertas recibidas</h2>
-        {ofertas.length === 0 ? (
+        {ofertasIniciales.length === 0 ? (
           <p className="text-slate-500 text-sm">Este proyecto todavía no tiene ofertas.</p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {ofertas.map((o) => (
-              <div key={o.id} className="space-y-3">
-                <OfertaCard oferta={o} />
-                <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold">Calificar:</span>
-                    <StarRating
-                      value={o.calificacion ?? 0}
-                      onChange={(v) => calificarOferta(o.id, v)}
-                      className="text-xl"
-                    />
-                  </div>
+            {ofertasIniciales.map((o) => {
+              const calif = calificaciones[o.id] ?? 0;
+              // exactOptionalPropertyTypes: no emitir la clave si no hay calificación.
+              const ofertaProp = calif ? { ...o, calificacion: calif } : o;
+              return (
+                <div key={o.id} className="space-y-3">
+                  <OfertaCard oferta={ofertaProp} />
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold">Calificar:</span>
+                      <StarRating
+                        value={calif}
+                        onChange={(v) => calificarOferta(o.id, v)}
+                        className="text-xl"
+                      />
+                    </div>
 
-                  {/* FASE 2: adjudicar — solo una por proyecto */}
-                  {o.estado === 'adjudicada' ? (
-                    <p className="text-sm font-bold text-green-700">✓ Oferta adjudicada</p>
-                  ) : o.estado === 'rechazada' ? (
-                    <p className="text-sm text-slate-400">Oferta no seleccionada</p>
-                  ) : (
-                    <button
-                      onClick={() => adjudicar(o.id)}
-                      disabled={hayAdjudicada || estadoProyecto !== 'publicado'}
-                      className="px-4 py-2 rounded-lg bg-[#008FD4] text-white text-sm font-semibold hover:brightness-110 transition-all disabled:bg-slate-300 disabled:cursor-not-allowed"
-                    >
-                      Adjudicar
-                    </button>
-                  )}
+                    {/* FASE 2: adjudicar — solo una por proyecto */}
+                    {o.estado === 'adjudicada' ? (
+                      <p className="text-sm font-bold text-green-700">✓ Oferta adjudicada</p>
+                    ) : o.estado === 'no_seleccionada' ? (
+                      <p className="text-sm text-slate-400">Oferta no seleccionada</p>
+                    ) : (
+                      <button
+                        onClick={() => adjudicar(o.id)}
+                        disabled={loading || hayAdjudicada || proyecto.estado !== 'publicado'}
+                        className="px-4 py-2 rounded-lg bg-[#008FD4] text-white text-sm font-semibold hover:brightness-110 transition-all disabled:bg-slate-300 disabled:cursor-not-allowed"
+                      >
+                        Adjudicar
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>
@@ -164,19 +240,19 @@ export default function GestionProyecto({
       {/* ===== FASE 3: entregables ===== */}
       <section>
         <h2 className="font-bold text-lg mb-4">Fase 3 · Entregables</h2>
-        {entregables.length === 0 ? (
+        {entregablesIniciales.length === 0 ? (
           <p className="text-slate-500 text-sm">
             Todavía no hay entregables. Aparecerán cuando el estudiante los suba.
           </p>
         ) : (
           <div className="space-y-4">
-            {entregables.map((e) => (
+            {entregablesIniciales.map((e) => (
               <div key={e.id} className="rounded-xl border border-slate-300 bg-white p-5">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-semibold">
-                      {e.titulo}{' '}
-                      <span className="text-xs text-slate-400">v{e.version} · {e.tipo}</span>
+                      {e.tipo === 'final' ? 'Entregable final' : 'Hito'}{' '}
+                      <span className="text-xs text-slate-400">v{e.version}</span>
                     </p>
                     {e.archivoUrl ? (
                       <a
@@ -187,8 +263,6 @@ export default function GestionProyecto({
                       >
                         Descargar
                       </a>
-                    ) : e.archivoNombre ? (
-                      <span className="text-sm text-slate-500">{e.archivoNombre}</span>
                     ) : null}
                   </div>
                   <EstadoBadge estado={e.estado} tipo="entregable" />
@@ -218,7 +292,8 @@ export default function GestionProyecto({
                         <div className="flex gap-2">
                           <button
                             onClick={() => confirmarCambios(e.id)}
-                            className="px-4 py-2 rounded-lg bg-amber-500 text-white text-sm font-semibold hover:brightness-110"
+                            disabled={loading}
+                            className="px-4 py-2 rounded-lg bg-amber-500 text-white text-sm font-semibold hover:brightness-110 disabled:opacity-60"
                           >
                             Enviar comentario
                           </button>
@@ -234,7 +309,8 @@ export default function GestionProyecto({
                       <div className="flex gap-2">
                         <button
                           onClick={() => aprobarEntregable(e.id)}
-                          className="px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-semibold hover:brightness-110"
+                          disabled={loading}
+                          className="px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-semibold hover:brightness-110 disabled:opacity-60"
                         >
                           Aprobar
                         </button>
@@ -260,20 +336,16 @@ export default function GestionProyecto({
 
         <div className="mb-5">
           <p className="text-sm font-semibold mb-1">Calificación del estudiante</p>
-          <StarRating
-            value={calificacionEstudiante}
-            onChange={setCalificacionEstudiante}
-            readOnly={estadoProyecto === 'cerrado'}
-          />
+          <StarRating value={puntuacionFinal} onChange={setPuntuacionFinal} readOnly={cerrado} />
         </div>
 
-        {estadoProyecto === 'cerrado' ? (
+        {cerrado ? (
           <p className="font-bold text-green-700">✓ Proyecto cerrado</p>
         ) : (
           <>
             <button
               onClick={cerrarProyecto}
-              disabled={!finalAprobado}
+              disabled={loading || !finalAprobado}
               className="px-6 py-3 rounded-xl bg-[#008FD4] text-white font-bold hover:brightness-110 transition-all disabled:bg-slate-300 disabled:cursor-not-allowed"
             >
               Cerrar proyecto
