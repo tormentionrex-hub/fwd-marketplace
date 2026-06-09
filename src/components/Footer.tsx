@@ -1,6 +1,7 @@
 "use client";
 
 import { Link } from "@/i18n/navigation";
+import { FwdLogo } from "@/components/ui/fwd-logo";
 import { useState } from "react";
 
 export default function Footer() {
@@ -16,9 +17,7 @@ export default function Footer() {
           {/* ── Columna 1: Marca + Legal */}
           <div className="flex flex-col gap-6">
             <div>
-              <h2 className="font-heading font-black text-2xl leading-tight">
-                FWD <span className="text-[#20BEC6]">Costa Rica</span>
-              </h2>
+              <FwdLogo />
               <p className="text-gray-400 text-sm mt-3 leading-relaxed">
                 Conectamos empresarios con talento tecnológico para una mejor comunidad.
               </p>
