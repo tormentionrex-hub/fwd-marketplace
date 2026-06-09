@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { Figtree, Outfit } from 'next/font/google';
 import { NextIntlClientProvider, hasLocale } from 'next-intl';
-import { setRequestLocale } from 'next-intl/server';
+import { setRequestLocale, getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import { RoleBadge } from '@/components/layout/role-badge';
@@ -49,6 +49,7 @@ export default async function LocaleLayout({
     notFound();
   }
   setRequestLocale(locale);
+  const messages = await getMessages();
 
   return (
     <html
@@ -61,7 +62,7 @@ export default async function LocaleLayout({
         <AnimationsInit />
         <CursorGlow />
         <WelcomeOnboarding />
-        <NextIntlClientProvider>
+        <NextIntlClientProvider messages={messages}>
           {children}
           <RoleBadge />
           <AlertaGlobal />
