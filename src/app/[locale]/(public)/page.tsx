@@ -7,6 +7,7 @@ import FloatingTriangles from "@/components/FloatingTriangles";
 import WaveFunciona from "@/components/WaveFunciona";
 import AnimatedProjectsTitle from "@/components/AnimatedProjectsTitle";
 import AnimatedHeroTitle from "@/components/AnimatedHeroTitle";
+import TiltCard from "@/components/TiltCard";
 
 /* ─── Hardcoded data ─────────────────────────────── */
 
@@ -272,29 +273,38 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div data-reveal="stagger" className="grid md:grid-cols-3 gap-6">
 
-            <div className="flex flex-col items-center text-center p-10 rounded-2xl hover:scale-105 transition-transform duration-300 shadow-md bg-[#008FD5]">
-              <div className="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center mb-5">
+            <TiltCard
+              className="flex flex-col items-center text-center p-10 rounded-2xl shadow-lg bg-[#008FD5]"
+              style={{ boxShadow: "0 10px 40px rgba(0,143,213,0.4)" }}
+            >
+              <div className="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center mb-5 relative z-20">
                 <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden="true">
                   <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
                 </svg>
               </div>
-              <h3 className="font-heading font-black text-white text-2xl mb-3">Rápido</h3>
-              <p className="text-white/80 text-sm leading-relaxed">De la idea al prototipo en días, no meses.</p>
-            </div>
+              <h3 className="font-heading font-black text-white text-2xl mb-3 relative z-20">Rápido</h3>
+              <p className="text-white/80 text-sm leading-relaxed relative z-20">De la idea al prototipo en días, no meses.</p>
+            </TiltCard>
 
-            <div className="flex flex-col items-center text-center p-10 rounded-2xl hover:scale-105 transition-transform duration-300 shadow-md bg-[#ED008C]">
-              <div className="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center mb-5">
+            <TiltCard
+              className="flex flex-col items-center text-center p-10 rounded-2xl shadow-lg bg-[#ED008C]"
+              style={{ boxShadow: "0 10px 40px rgba(237,0,140,0.4)" }}
+            >
+              <div className="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center mb-5 relative z-20">
                 <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                   <polyline points="9 12 11 14 15 10" />
                 </svg>
               </div>
-              <h3 className="font-heading font-black text-white text-2xl mb-3">Seguro</h3>
-              <p className="text-white/80 text-sm leading-relaxed">Contratos inteligentes y revisión de IA.</p>
-            </div>
+              <h3 className="font-heading font-black text-white text-2xl mb-3 relative z-20">Seguro</h3>
+              <p className="text-white/80 text-sm leading-relaxed relative z-20">Contratos inteligentes y revisión de IA.</p>
+            </TiltCard>
 
-            <div className="flex flex-col items-center text-center p-10 rounded-2xl hover:scale-105 transition-transform duration-300 shadow-md bg-[#662E91]">
-              <div className="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center mb-5">
+            <TiltCard
+              className="flex flex-col items-center text-center p-10 rounded-2xl shadow-lg"
+              style={{ background: "linear-gradient(135deg,#662E91,#9B30D9)", boxShadow: "0 10px 40px rgba(102,46,145,0.4)" }}
+            >
+              <div className="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center mb-5 relative z-20">
                 <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
                   <circle cx="9" cy="7" r="4" />
@@ -302,9 +312,9 @@ export default function Home() {
                   <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                 </svg>
               </div>
-              <h3 className="font-heading font-black text-white text-2xl mb-3">Colaborativo</h3>
-              <p className="text-white/80 text-sm leading-relaxed">Talento joven guiado por expertos locales.</p>
-            </div>
+              <h3 className="font-heading font-black text-white text-2xl mb-3 relative z-20">Colaborativo</h3>
+              <p className="text-white/80 text-sm leading-relaxed relative z-20">Talento joven guiado por expertos locales.</p>
+            </TiltCard>
 
           </div>
         </div>
