@@ -53,7 +53,7 @@ export default async function LocaleLayout({
       lang={locale}
       className={`${figtree.variable} ${outfit.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col font-sans">
+      <body className="min-h-full flex flex-col font-body">
         <SmoothScroll />
         <AnimationsInit />
         <CursorGlow />

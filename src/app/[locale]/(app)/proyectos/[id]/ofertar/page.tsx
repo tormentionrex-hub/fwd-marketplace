@@ -13,7 +13,6 @@ export default async function OfertarProyectoPage({
 }) {
   const { id, locale } = await params;
 
-  // ── Auth ──────────────────────────────────────────────────────────────────
   const user = await getUser();
   if (!user) {
     redirect(`/${locale}/login`);
@@ -22,13 +21,11 @@ export default async function OfertarProyectoPage({
     redirect(`/${locale}/dashboard/estudiante`);
   }
 
-  // ── Datos del proyecto ────────────────────────────────────────────────────
   const proyecto = await buscarProyectoParaOferta(id);
   if (!proyecto) {
     redirect(`/${locale}/marketplace`);
   }
 
-  // ── Calcular días restantes ───────────────────────────────────────────────
   let diasRestantes: number | null = null;
   if (proyecto.cierre) {
     const diff = proyecto.cierre.getTime() - Date.now();
@@ -39,11 +36,9 @@ export default async function OfertarProyectoPage({
     diasRestantes = Math.ceil(diff / (1000 * 60 * 60 * 24));
   }
 
-  // ── ¿Está cerrado? ────────────────────────────────────────────────────────
   const vencido = diasRestantes !== null && diasRestantes <= 0;
   const cerrado = proyecto.estado === 'cerrado' || vencido;
 
-  // ── ¿Ya ofertó? ──────────────────────────────────────────────────────────
   const ofertaExistente = await buscarOfertaExistente(id, user.id);
 
   return (
