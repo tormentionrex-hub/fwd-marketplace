@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Figtree, Outfit } from "next/font/google";
+import { Figtree, Outfit, Inter, Space_Grotesk, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
 const figtree = Figtree({
@@ -14,6 +14,23 @@ const outfit = Outfit({
   weight: ["300", "400", "500", "700"],
 });
 
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-space-grotesk",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
 export const metadata: Metadata = {
   title: "FWD Marketplace · Costa Rica",
   description: "Conectamos empresarios con talento tecnológico de FWD Costa Rica.",
@@ -26,7 +43,7 @@ export default function RootLayout({
 }) {
   return (
     <html
-      className={`${figtree.variable} ${outfit.variable} h-full antialiased`}
+      className={`${figtree.variable} ${outfit.variable} ${inter.variable} ${spaceGrotesk.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col font-body" suppressHydrationWarning>
