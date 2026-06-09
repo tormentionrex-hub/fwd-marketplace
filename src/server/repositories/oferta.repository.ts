@@ -81,6 +81,34 @@ export function listarOfertasDeEstudiante(idEstudiante: string) {
   });
 }
 
+// Busca el proyecto "activo" del estudiante: su oferta adjudicada/aceptada más
+// reciente, con los datos del proyecto y del empresario. Ownership por id_estudiante.
+export function buscarProyectoActivoDeEstudiante(idEstudiante: string) {
+  return db.ofertas.findFirst({
+    where: {
+      id_estudiante: idEstudiante,
+      estado: { in: ['adjudicada', 'aceptada', 'aceptado'] },
+    },
+    orderBy: { enviado: 'desc' },
+    select: {
+      id: true,
+      estado: true,
+      proyectos: {
+        select: {
+          id: true,
+          titulo: true,
+          estado: true,
+          publicado: true,
+          cierre: true,
+          perfiles_empresario: {
+            select: { sector: true, usuarios: { select: { nombre: true } } },
+          },
+        },
+      },
+    },
+  });
+}
+
 // Retira (elimina) una oferta. Verifica pertenencia y estado antes de borrar.
 export async function retirarOferta(
   idOferta: string,
