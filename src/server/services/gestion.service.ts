@@ -8,7 +8,7 @@ import {
 import {
   buscarEntregable,
   aprobarEntregable,
-  marcarCambiosEntregable,
+  solicitarCambiosEntregable,
   existeFinalAprobado,
 } from '@/server/repositories/entregable.repository';
 import { upsertEvaluacion } from '@/server/repositories/evaluacion.repository';
@@ -61,7 +61,7 @@ export async function solicitarCambiosService(
   const e = await buscarEntregable(idEntregable);
   if (!e) return 'no_encontrado';
   if (!(await esDuenoDelProyecto(e.id_proyecto, idEmpresario))) return 'no_autorizado';
-  await marcarCambiosEntregable(idEntregable);
+  await solicitarCambiosEntregable(idEntregable, comentario.trim());
   return { ok: true };
 }
 

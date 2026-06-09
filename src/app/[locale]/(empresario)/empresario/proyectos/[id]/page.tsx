@@ -57,6 +57,7 @@ export default async function GestionProyectoPage({
     version: e.version,
     archivoUrl: e.archivo_url,
     estado: e.estado,
+    comentarioEmpresario: e.comentario_empresario,
     fecha: e.creado.toISOString(),
   }));
 

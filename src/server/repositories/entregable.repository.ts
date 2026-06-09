@@ -77,14 +77,6 @@ export function solicitarCambiosEntregable(id: string, comentario: string) {
   });
 }
 
-// Variante usada por gestion.service (Página 14): marca cambios sin comentario.
-export async function marcarCambiosEntregable(id: string) {
-  await db.entregables.update({
-    where: { id },
-    data: { estado: 'cambios_solicitados' },
-  });
-}
-
 // True si el proyecto ya tiene un entregable final aprobado (requisito para cerrar).
 export async function existeFinalAprobado(idProyecto: string): Promise<boolean> {
   const e = await db.entregables.findFirst({

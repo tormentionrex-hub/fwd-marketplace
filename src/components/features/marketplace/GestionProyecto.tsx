@@ -20,6 +20,7 @@ type EntregableVM = {
   version: number;
   archivoUrl: string;
   estado: string;
+  comentarioEmpresario: string | null;
   fecha: string;
 };
 type Props = {
@@ -137,7 +138,11 @@ export default function GestionProyecto({
     setCargando(null);
     if (!r.ok) return setError(r.error ?? 'No se pudo solicitar cambios.');
     setEntregables((prev) =>
-      prev.map((e) => (e.id === id ? { ...e, estado: 'cambios_solicitados' } : e)),
+      prev.map((e) =>
+        e.id === id
+          ? { ...e, estado: 'cambios_solicitados', comentarioEmpresario: comentarioTexto.trim() }
+          : e,
+      ),
     );
     setComentandoId(null);
     setComentarioTexto('');
@@ -278,6 +283,12 @@ export default function GestionProyecto({
                       </div>
                       <Pill {...b} />
                     </div>
+
+                    {e.estado === 'cambios_solicitados' && e.comentarioEmpresario && (
+                      <div style={{ marginTop: 12, padding: '11px 13px', borderRadius: 'var(--r-sm)', background: '#FDEFDD', border: '1px solid #F3C98C', color: '#B96400', fontSize: 13 }}>
+                        <span style={{ fontWeight: 700 }}>Tu comentario:</span> {e.comentarioEmpresario}
+                      </div>
+                    )}
 
                     {e.estado !== 'aprobado' && !cerrado && (
                       <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid var(--line-2)' }}>
