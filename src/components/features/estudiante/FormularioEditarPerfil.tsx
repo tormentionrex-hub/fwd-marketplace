@@ -1,15 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Badge from "@/components/ui/Badge";
 import Card from "@/components/ui/Card";
 import { IconCheck, IconPlus, IconUpload, IconX } from "@/components/ui/icons";
+import type { NivelHabilidad } from "@/types/sefora";
 import type {
-  Habilidad,
-  NivelHabilidad,
-  ProyectoPortafolio,
-} from "@/types/sefora";
+  HabilidadCatalogo,
+  HabilidadSeleccionada,
+  PerfilEditable,
+  ProyectoCompletado,
+} from "@/server/services/perfil-estudiante.service";
 
 interface FormularioEditarPerfilProps {
   locale: string;
@@ -26,26 +28,11 @@ interface BorradorProyecto {
   demoUrl: string;
 }
 
-const CATALOGO_HABILIDADES: string[] = [
-  "React",
-  "Next.js",
-  "TypeScript",
-  "JavaScript",
-  "Node.js",
-  "Python",
-  "SQL",
-  "Tailwind CSS",
-  "Docker",
-  "GraphQL",
-];
-
 const NIVELES: NivelHabilidad[] = ["básico", "intermedio", "avanzado"];
-
 const MAX_FOTO_MB = 5;
 
 const inputClass =
   "h-11 w-full rounded-xl border border-border bg-surface px-3.5 text-sm text-text outline-none transition-colors placeholder:text-text-muted/60 focus:border-fwd-azul focus:ring-4 focus:ring-fwd-azul/10";
-
 const textareaClass =
   "w-full rounded-xl border border-border bg-surface px-3.5 py-2.5 text-sm text-text outline-none transition-colors placeholder:text-text-muted/60 focus:border-fwd-azul focus:ring-4 focus:ring-fwd-azul/10";
 
@@ -68,48 +55,75 @@ function urlValida(valor: string): boolean {
   }
 }
 
+function slug(nombre: string): string {
+  return nombre.trim().toLowerCase().replace(/\s+/g, "-") || "perfil";
+}
+
 const secciones: { id: Seccion; label: string }[] = [
   { id: "datos", label: "Datos personales" },
   { id: "habilidades", label: "Habilidades" },
   { id: "portafolio", label: "Portafolio" },
 ];
 
-export default function FormularioEditarPerfil({
-  locale,
-}: FormularioEditarPerfilProps) {
-  const [seccion, setSeccion] = useState<Seccion>("datos");
+type GitEstado = "idle" | "checking" | "ok" | "fail";
+type Guardado = "idle" | "saving" | "saved" | "error";
 
-  const [fotoPreview, setFotoPreview] = useState("");
+export default function FormularioEditarPerfil({ locale }: FormularioEditarPerfilProps) {
+  const [seccion, setSeccion] = useState<Seccion>("datos");
+  const [carga, setCarga] = useState<"loading" | "ready" | "error">("loading");
+
+  // Datos personales
+  const [nombre, setNombre] = useState("");
+  const [correo, setCorreo] = useState("");
+  const [resumen, setResumen] = useState("");
+  const [fotoUrl, setFotoUrl] = useState("");
+  const [subiendoFoto, setSubiendoFoto] = useState(false);
   const [errorFoto, setErrorFoto] = useState("");
   const [arrastrando, setArrastrando] = useState(false);
 
-  const [nombre, setNombre] = useState("Juan Pérez");
-  const [correo, setCorreo] = useState("juan.perez@ejemplo.com");
-  const [resumen, setResumen] = useState(
-    "Desarrollador web full-stack egresado de FWD Costa Rica.",
-  );
+  // Habilidades
+  const [catalogo, setCatalogo] = useState<HabilidadCatalogo[]>([]);
+  const [habilidades, setHabilidades] = useState<HabilidadSeleccionada[]>([]);
 
-  const [habilidades, setHabilidades] = useState<Habilidad[]>([
-    { nombre: "React", nivel: "avanzado" },
-    { nombre: "TypeScript", nivel: "intermedio" },
-  ]);
-
-  const [proyectos, setProyectos] = useState<ProyectoPortafolio[]>([]);
+  // Portafolio
+  const [completados, setCompletados] = useState<ProyectoCompletado[]>([]);
+  const [proyectos, setProyectos] = useState<(BorradorProyecto & { id: string })[]>([]);
   const [borrador, setBorrador] = useState<BorradorProyecto>(borradorInicial);
 
-  const [guardado, setGuardado] = useState(false);
+  // Guardar / validación Git
+  const [guardado, setGuardado] = useState<Guardado>("idle");
+  const [errorGuardar, setErrorGuardar] = useState("");
+  const [gitEstado, setGitEstado] = useState<GitEstado>("idle");
 
-  const proyectosAutomaticos: ProyectoPortafolio[] = [
-    {
-      id: "auto-1",
-      titulo: "Tienda en línea para artesanos",
-      tecnologias: ["Next.js", "Supabase"],
-      calificacion: 5,
-      automatico: true,
-    },
-  ];
+  // ── Carga inicial ──────────────────────────────────────────────
+  useEffect(() => {
+    let cancelado = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/estudiante/perfil", { cache: "no-store" });
+        if (!res.ok) throw new Error();
+        const data: PerfilEditable = await res.json();
+        if (cancelado) return;
+        setNombre(data.nombre);
+        setCorreo(data.correo);
+        setResumen(data.resumen);
+        setFotoUrl(data.fotoUrl);
+        setCatalogo(data.catalogo);
+        setHabilidades(data.habilidades);
+        setCompletados(data.completados);
+        setProyectos(data.portafolio);
+        setCarga("ready");
+      } catch {
+        if (!cancelado) setCarga("error");
+      }
+    })();
+    return () => {
+      cancelado = true;
+    };
+  }, []);
 
-  function procesarFoto(archivo: File | undefined) {
+  // ── Foto ───────────────────────────────────────────────────────
+  async function procesarFoto(archivo: File | undefined) {
     setErrorFoto("");
     if (!archivo) return;
     if (!["image/jpeg", "image/png"].includes(archivo.type)) {
@@ -120,67 +134,142 @@ export default function FormularioEditarPerfil({
       setErrorFoto(`La foto no puede superar ${MAX_FOTO_MB} MB.`);
       return;
     }
-    setFotoPreview(URL.createObjectURL(archivo));
+    setSubiendoFoto(true);
+    try {
+      const fd = new FormData();
+      fd.append("archivo", archivo);
+      fd.append("tipo", "prototipo");
+      const res = await fetch("/api/upload/archivo", { method: "POST", body: fd });
+      const data: { url?: string; error?: string } = await res.json();
+      if (!res.ok || !data.url) {
+        setErrorFoto(data.error ?? "No se pudo subir la foto.");
+        return;
+      }
+      setFotoUrl(data.url);
+    } catch {
+      setErrorFoto("No se pudo subir la foto. Intentá de nuevo.");
+    } finally {
+      setSubiendoFoto(false);
+    }
   }
 
-  function toggleHabilidad(nombre: string) {
+  // ── Habilidades ────────────────────────────────────────────────
+  const nombreHabilidad = useCallback(
+    (id: string) => catalogo.find((c) => c.id === id)?.nombre ?? id,
+    [catalogo],
+  );
+
+  function toggleHabilidad(id: string) {
     setHabilidades((prev) =>
-      prev.some((habilidad) => habilidad.nombre === nombre)
-        ? prev.filter((habilidad) => habilidad.nombre !== nombre)
-        : [...prev, { nombre, nivel: "básico" }],
+      prev.some((h) => h.id === id)
+        ? prev.filter((h) => h.id !== id)
+        : [...prev, { id, nivel: "básico" }],
     );
   }
 
-  function cambiarNivel(nombre: string, nivel: NivelHabilidad) {
-    setHabilidades((prev) =>
-      prev.map((habilidad) =>
-        habilidad.nombre === nombre ? { ...habilidad, nivel } : habilidad,
-      ),
-    );
+  function cambiarNivel(id: string, nivel: NivelHabilidad) {
+    setHabilidades((prev) => prev.map((h) => (h.id === id ? { ...h, nivel } : h)));
   }
 
+  // ── Portafolio (local; persistencia pendiente de tabla en BD) ──
   const repoOk = urlValida(borrador.repoUrl);
   const demoOk = urlValida(borrador.demoUrl);
-  const puedeAgregarProyecto =
-    borrador.titulo.trim().length > 0 && repoOk && demoOk;
+  const puedeAgregar = borrador.titulo.trim().length > 0 && repoOk && demoOk;
+
+  async function verificarGit() {
+    if (!borrador.repoUrl || !repoOk) {
+      setGitEstado("idle");
+      return;
+    }
+    setGitEstado("checking");
+    try {
+      const res = await fetch(`/api/utils/url-accesible?url=${encodeURIComponent(borrador.repoUrl)}`);
+      const data: { valida: boolean; accesible: boolean } = await res.json();
+      setGitEstado(data.accesible ? "ok" : "fail");
+    } catch {
+      setGitEstado("fail");
+    }
+  }
 
   function agregarProyecto() {
-    if (!puedeAgregarProyecto) return;
-    setProyectos((prev) => [
-      ...prev,
-      {
-        id: `manual-${prev.length + 1}`,
-        titulo: borrador.titulo,
-        descripcion: borrador.descripcion,
-        tecnologias: borrador.tecnologias
-          .split(",")
-          .map((tech) => tech.trim())
-          .filter(Boolean),
-        fecha: borrador.fecha,
-        repoUrl: borrador.repoUrl,
-        demoUrl: borrador.demoUrl,
-      },
-    ]);
+    if (!puedeAgregar) return;
+    setProyectos((prev) => [...prev, { ...borrador, id: `manual-${Date.now()}` }]);
     setBorrador(borradorInicial);
+    setGitEstado("idle");
   }
 
   function eliminarProyecto(id: string) {
-    setProyectos((prev) => prev.filter((proyecto) => proyecto.id !== id));
+    setProyectos((prev) => prev.filter((p) => p.id !== id));
+  }
+
+  // ── Guardar ────────────────────────────────────────────────────
+  async function guardar() {
+    setErrorGuardar("");
+    setGuardado("saving");
+    try {
+      const res = await fetch("/api/estudiante/perfil", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nombre,
+          correo,
+          fotoUrl,
+          resumen,
+          habilidades,
+          portafolio: proyectos.map((p) => ({
+            titulo: p.titulo,
+            descripcion: p.descripcion,
+            tecnologias: p.tecnologias,
+            fecha: p.fecha,
+            repoUrl: p.repoUrl,
+            demoUrl: p.demoUrl,
+          })),
+        }),
+      });
+      if (!res.ok) {
+        const data: { error?: string } = await res.json().catch(() => ({}));
+        setErrorGuardar(data.error ?? "No se pudieron guardar los cambios.");
+        setGuardado("error");
+        return;
+      }
+      setGuardado("saved");
+    } catch {
+      setErrorGuardar("Error de red. Intentá de nuevo.");
+      setGuardado("error");
+    }
+  }
+
+  if (carga === "loading") {
+    return (
+      <div className="flex flex-col gap-4">
+        <div className="h-8 w-64 animate-pulse rounded bg-surface-2" />
+        <Card className="flex flex-col gap-4 p-6">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="h-11 animate-pulse rounded-xl bg-surface-2" />
+          ))}
+        </Card>
+      </div>
+    );
+  }
+
+  if (carga === "error") {
+    return (
+      <Card className="flex flex-col items-center gap-3 p-10 text-center">
+        <h1 className="font-display text-lg font-bold text-text">No pudimos cargar tu perfil</h1>
+        <p className="text-sm text-text-muted">Recargá la página o intentá más tarde.</p>
+      </Card>
+    );
   }
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-bold tracking-tight text-text">
-            Editar perfil y portafolio
-          </h1>
-          <p className="text-sm text-text-muted">
-            Los cambios se reflejan en tu perfil público.
-          </p>
+          <h1 className="text-2xl font-bold tracking-tight text-text">Editar perfil y portafolio</h1>
+          <p className="text-sm text-text-muted">Los cambios se reflejan en tu perfil público.</p>
         </div>
         <Link
-          href={`/${locale}/perfil/juan-perez`}
+          href={`/${locale}/perfil/${slug(nombre)}`}
           className="text-sm font-medium text-fwd-azul transition-colors hover:text-fwd-azul/80"
         >
           Ver perfil público →
@@ -207,29 +296,23 @@ export default function FormularioEditarPerfil({
       {seccion === "datos" && (
         <Card className="flex flex-col gap-5 p-6">
           <label
-            onDragOver={(event) => {
-              event.preventDefault();
+            onDragOver={(e) => {
+              e.preventDefault();
               setArrastrando(true);
             }}
             onDragLeave={() => setArrastrando(false)}
-            onDrop={(event) => {
-              event.preventDefault();
+            onDrop={(e) => {
+              e.preventDefault();
               setArrastrando(false);
-              procesarFoto(event.dataTransfer.files?.[0]);
+              procesarFoto(e.dataTransfer.files?.[0]);
             }}
             className={`flex cursor-pointer flex-col items-center gap-3 rounded-xl border-2 border-dashed p-6 text-center transition-colors ${
-              arrastrando
-                ? "border-fwd-azul bg-fwd-azul/5"
-                : "border-slate-300 hover:border-fwd-azul/50 dark:border-white/15"
+              arrastrando ? "border-fwd-azul bg-fwd-azul/5" : "border-slate-300 hover:border-fwd-azul/50 dark:border-white/15"
             }`}
           >
-            {fotoPreview ? (
+            {fotoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={fotoPreview}
-                alt="Vista previa de la foto"
-                className="h-20 w-20 rounded-full object-cover"
-              />
+              <img src={fotoUrl} alt="Foto de perfil" className="h-20 w-20 rounded-full object-cover" />
             ) : (
               <span className="flex h-12 w-12 items-center justify-center rounded-full bg-fwd-azul/10 text-fwd-azul">
                 <IconUpload />
@@ -237,51 +320,33 @@ export default function FormularioEditarPerfil({
             )}
             <div className="flex flex-col gap-0.5">
               <span className="text-sm font-medium text-text">
-                Arrastrá una imagen o hacé clic para subirla
+                {subiendoFoto ? "Subiendo…" : "Arrastrá una imagen o hacé clic para subirla"}
               </span>
-              <span className="text-xs text-text-muted">
-                JPG o PNG · máx {MAX_FOTO_MB} MB
-              </span>
+              <span className="text-xs text-text-muted">JPG o PNG · máx {MAX_FOTO_MB} MB</span>
             </div>
             <input
               type="file"
               accept="image/jpeg,image/png"
-              onChange={(event) => procesarFoto(event.target.files?.[0])}
+              disabled={subiendoFoto}
+              onChange={(e) => procesarFoto(e.target.files?.[0])}
               className="hidden"
             />
           </label>
-          {errorFoto && (
-            <p className="text-sm text-red-600 dark:text-red-400">{errorFoto}</p>
-          )}
+          {errorFoto && <p className="text-sm text-red-600 dark:text-red-400">{errorFoto}</p>}
 
           <label className="flex flex-col gap-1.5 text-sm font-medium text-text">
             Nombre completo
-            <input
-              type="text"
-              value={nombre}
-              onChange={(event) => setNombre(event.target.value)}
-              className={inputClass}
-            />
+            <input type="text" value={nombre} onChange={(e) => setNombre(e.target.value)} className={inputClass} />
           </label>
 
           <label className="flex flex-col gap-1.5 text-sm font-medium text-text">
             Correo electrónico
-            <input
-              type="email"
-              value={correo}
-              onChange={(event) => setCorreo(event.target.value)}
-              className={inputClass}
-            />
+            <input type="email" value={correo} onChange={(e) => setCorreo(e.target.value)} className={inputClass} />
           </label>
 
           <label className="flex flex-col gap-1.5 text-sm font-medium text-text">
             Resumen profesional
-            <textarea
-              rows={4}
-              value={resumen}
-              onChange={(event) => setResumen(event.target.value)}
-              className={textareaClass}
-            />
+            <textarea rows={4} value={resumen} onChange={(e) => setResumen(e.target.value)} className={textareaClass} />
           </label>
         </Card>
       )}
@@ -289,64 +354,51 @@ export default function FormularioEditarPerfil({
       {seccion === "habilidades" && (
         <Card className="flex flex-col gap-6 p-6">
           <div className="flex flex-col gap-3">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-text-muted">
-              Catálogo
-            </h2>
-            <div className="flex flex-wrap gap-2">
-              {CATALOGO_HABILIDADES.map((nombre) => {
-                const seleccionada = habilidades.some(
-                  (habilidad) => habilidad.nombre === nombre,
-                );
-                return (
-                  <button
-                    key={nombre}
-                    type="button"
-                    onClick={() => toggleHabilidad(nombre)}
-                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
-                      seleccionada
-                        ? "border-fwd-azul bg-fwd-azul/10 text-fwd-azul"
-                        : "border-slate-200 text-slate-600 hover:border-fwd-azul/40 dark:border-white/15 dark:text-slate-300"
-                    }`}
-                  >
-                    {seleccionada ? (
-                      <IconCheck width={14} height={14} />
-                    ) : (
-                      <IconPlus width={14} height={14} />
-                    )}
-                    {nombre}
-                  </button>
-                );
-              })}
-            </div>
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-text-muted">Catálogo</h2>
+            {catalogo.length === 0 ? (
+              <p className="text-sm text-text-muted">
+                El catálogo de habilidades está vacío. Pedile al administrador que lo cargue.
+              </p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {catalogo.map((h) => {
+                  const seleccionada = habilidades.some((s) => s.id === h.id);
+                  return (
+                    <button
+                      key={h.id}
+                      type="button"
+                      onClick={() => toggleHabilidad(h.id)}
+                      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
+                        seleccionada
+                          ? "border-fwd-azul bg-fwd-azul/10 text-fwd-azul"
+                          : "border-slate-200 text-slate-600 hover:border-fwd-azul/40 dark:border-white/15 dark:text-slate-300"
+                      }`}
+                    >
+                      {seleccionada ? <IconCheck width={14} height={14} /> : <IconPlus width={14} height={14} />}
+                      {h.nombre}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <div className="flex flex-col gap-3">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-text-muted">
-              Tus habilidades
-            </h2>
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-text-muted">Tus habilidades</h2>
             {habilidades.length === 0 ? (
-              <p className="text-sm text-text-muted">
-                Seleccioná habilidades del catálogo.
-              </p>
+              <p className="text-sm text-text-muted">Seleccioná habilidades del catálogo.</p>
             ) : (
               <ul className="flex flex-col gap-2">
-                {habilidades.map((habilidad) => (
+                {habilidades.map((h) => (
                   <li
-                    key={habilidad.nombre}
+                    key={h.id}
                     className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 px-3.5 py-2.5 dark:border-white/10"
                   >
-                    <span className="text-sm font-medium text-text">
-                      {habilidad.nombre}
-                    </span>
+                    <span className="text-sm font-medium text-text">{nombreHabilidad(h.id)}</span>
                     <div className="flex items-center gap-2">
                       <select
-                        value={habilidad.nivel}
-                        onChange={(event) =>
-                          cambiarNivel(
-                            habilidad.nombre,
-                            event.target.value as NivelHabilidad,
-                          )
-                        }
+                        value={h.nivel}
+                        onChange={(e) => cambiarNivel(h.id, e.target.value as NivelHabilidad)}
                         className="h-9 rounded-lg border border-slate-200 bg-white px-2 text-sm capitalize text-slate-700 outline-none focus:border-fwd-azul dark:border-white/15 dark:bg-white/[0.03] dark:text-slate-200"
                       >
                         {NIVELES.map((nivel) => (
@@ -357,8 +409,8 @@ export default function FormularioEditarPerfil({
                       </select>
                       <button
                         type="button"
-                        onClick={() => toggleHabilidad(habilidad.nombre)}
-                        aria-label={`Quitar ${habilidad.nombre}`}
+                        onClick={() => toggleHabilidad(h.id)}
+                        aria-label={`Quitar ${nombreHabilidad(h.id)}`}
                         className="text-text-muted transition-colors hover:text-red-600"
                       >
                         <IconX width={18} height={18} />
@@ -374,158 +426,149 @@ export default function FormularioEditarPerfil({
 
       {seccion === "portafolio" && (
         <Card className="flex flex-col gap-6 p-6">
-          {proyectosAutomaticos.map((proyecto) => (
-            <div
-              key={proyecto.id}
-              className="flex items-center justify-between gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/5 px-4 py-3"
-            >
-              <span className="text-sm font-medium text-text">
-                {proyecto.titulo}
-              </span>
-              <Badge variant="success">Automático</Badge>
-            </div>
-          ))}
+          <div className="flex flex-col gap-2">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-text-muted">
+              Proyectos completados (automáticos)
+            </h2>
+            {completados.length === 0 ? (
+              <p className="text-sm text-text-muted">
+                Tus proyectos completados aparecerán aquí con su calificación cuando un empresario te evalúe.
+              </p>
+            ) : (
+              completados.map((p) => (
+                <div
+                  key={p.id}
+                  className="flex items-center justify-between gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/5 px-4 py-3"
+                >
+                  <span className="text-sm font-medium text-text">{p.titulo}</span>
+                  <Badge variant="success">★ {p.calificacion}</Badge>
+                </div>
+              ))
+            )}
+          </div>
 
-          {proyectos.map((proyecto) => (
-            <div
-              key={proyecto.id}
-              className="flex items-start justify-between gap-3 rounded-xl border border-slate-200 px-4 py-3 dark:border-white/10"
-            >
-              <div className="flex flex-col gap-1">
-                <span className="text-sm font-medium text-text">
-                  {proyecto.titulo}
-                </span>
-                {proyecto.tecnologias.length > 0 && (
-                  <span className="text-xs text-text-muted">
-                    {proyecto.tecnologias.join(" · ")}
-                  </span>
-                )}
-              </div>
-              <button
-                type="button"
-                onClick={() => eliminarProyecto(proyecto.id)}
-                className="text-sm font-medium text-red-600 transition-colors hover:text-red-500"
+          <div className="flex flex-col gap-3">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-text-muted">Proyectos manuales</h2>
+            {proyectos.map((p) => (
+              <div
+                key={p.id}
+                className="flex items-start justify-between gap-3 rounded-xl border border-slate-200 px-4 py-3 dark:border-white/10"
               >
-                Eliminar
-              </button>
-            </div>
-          ))}
+                <div className="flex flex-col gap-1">
+                  <span className="text-sm font-medium text-text">{p.titulo}</span>
+                  {p.tecnologias && <span className="text-xs text-text-muted">{p.tecnologias}</span>}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => eliminarProyecto(p.id)}
+                  className="text-sm font-medium text-red-600 transition-colors hover:text-red-500"
+                >
+                  Eliminar
+                </button>
+              </div>
+            ))}
 
-          <div className="flex flex-col gap-3 rounded-xl border border-dashed border-slate-300 p-4 dark:border-white/15">
-            <input
-              type="text"
-              placeholder="Título del proyecto"
-              value={borrador.titulo}
-              onChange={(event) =>
-                setBorrador((prev) => ({ ...prev, titulo: event.target.value }))
-              }
-              className={inputClass}
-            />
-            <textarea
-              rows={2}
-              placeholder="Descripción"
-              value={borrador.descripcion}
-              onChange={(event) =>
-                setBorrador((prev) => ({
-                  ...prev,
-                  descripcion: event.target.value,
-                }))
-              }
-              className={textareaClass}
-            />
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="flex flex-col gap-3 rounded-xl border border-dashed border-slate-300 p-4 dark:border-white/15">
               <input
                 type="text"
-                placeholder="Tecnologías (separadas por coma)"
-                value={borrador.tecnologias}
-                onChange={(event) =>
-                  setBorrador((prev) => ({
-                    ...prev,
-                    tecnologias: event.target.value,
-                  }))
-                }
+                placeholder="Título del proyecto"
+                value={borrador.titulo}
+                onChange={(e) => setBorrador((p) => ({ ...p, titulo: e.target.value }))}
                 className={inputClass}
               />
-              <input
-                type="date"
-                value={borrador.fecha}
-                onChange={(event) =>
-                  setBorrador((prev) => ({ ...prev, fecha: event.target.value }))
-                }
-                className={inputClass}
+              <textarea
+                rows={2}
+                placeholder="Descripción"
+                value={borrador.descripcion}
+                onChange={(e) => setBorrador((p) => ({ ...p, descripcion: e.target.value }))}
+                className={textareaClass}
               />
-            </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <input
+                  type="text"
+                  placeholder="Tecnologías (separadas por coma)"
+                  value={borrador.tecnologias}
+                  onChange={(e) => setBorrador((p) => ({ ...p, tecnologias: e.target.value }))}
+                  className={inputClass}
+                />
+                <input
+                  type="date"
+                  value={borrador.fecha}
+                  onChange={(e) => setBorrador((p) => ({ ...p, fecha: e.target.value }))}
+                  className={inputClass}
+                />
+              </div>
 
-            <div className="flex flex-col gap-1">
-              <input
-                type="url"
-                placeholder="Enlace al repositorio Git"
-                value={borrador.repoUrl}
-                onChange={(event) =>
-                  setBorrador((prev) => ({
-                    ...prev,
-                    repoUrl: event.target.value,
-                  }))
-                }
-                className={`${inputClass} ${
-                  repoOk ? "" : "border-red-400 focus:border-red-400 focus:ring-red-400/20"
-                }`}
-              />
-              {!repoOk && (
-                <span className="text-xs text-red-600 dark:text-red-400">
-                  Ingresá una URL válida (http o https).
-                </span>
-              )}
-            </div>
+              <div className="flex flex-col gap-1">
+                <input
+                  type="url"
+                  placeholder="Enlace al repositorio Git"
+                  value={borrador.repoUrl}
+                  onChange={(e) => {
+                    setBorrador((p) => ({ ...p, repoUrl: e.target.value }));
+                    setGitEstado("idle");
+                  }}
+                  onBlur={verificarGit}
+                  className={`${inputClass} ${repoOk ? "" : "border-red-400 focus:border-red-400 focus:ring-red-400/20"}`}
+                />
+                {!repoOk ? (
+                  <span className="text-xs text-red-600 dark:text-red-400">Ingresá una URL válida (http o https).</span>
+                ) : gitEstado === "checking" ? (
+                  <span className="text-xs text-text-muted">Verificando que el repo sea accesible…</span>
+                ) : gitEstado === "ok" ? (
+                  <span className="text-xs text-emerald-600 dark:text-emerald-400">✓ El repositorio responde.</span>
+                ) : gitEstado === "fail" ? (
+                  <span className="text-xs text-red-600 dark:text-red-400">✗ El repositorio no responde o no existe.</span>
+                ) : null}
+              </div>
 
-            <div className="flex flex-col gap-1">
-              <input
-                type="url"
-                placeholder="Enlace a demo en vivo (opcional)"
-                value={borrador.demoUrl}
-                onChange={(event) =>
-                  setBorrador((prev) => ({
-                    ...prev,
-                    demoUrl: event.target.value,
-                  }))
-                }
-                className={`${inputClass} ${
-                  demoOk ? "" : "border-red-400 focus:border-red-400 focus:ring-red-400/20"
-                }`}
-              />
-              {!demoOk && (
-                <span className="text-xs text-red-600 dark:text-red-400">
-                  Ingresá una URL válida (http o https).
-                </span>
-              )}
-            </div>
+              <div className="flex flex-col gap-1">
+                <input
+                  type="url"
+                  placeholder="Enlace a demo en vivo (opcional)"
+                  value={borrador.demoUrl}
+                  onChange={(e) => setBorrador((p) => ({ ...p, demoUrl: e.target.value }))}
+                  className={`${inputClass} ${demoOk ? "" : "border-red-400 focus:border-red-400 focus:ring-red-400/20"}`}
+                />
+                {!demoOk && (
+                  <span className="text-xs text-red-600 dark:text-red-400">Ingresá una URL válida (http o https).</span>
+                )}
+              </div>
 
-            <button
-              type="button"
-              onClick={agregarProyecto}
-              disabled={!puedeAgregarProyecto}
-              className="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl border border-fwd-azul px-5 text-sm font-semibold text-fwd-azul transition-colors hover:bg-fwd-azul/5 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              <IconPlus width={16} height={16} />
-              Agregar proyecto
-            </button>
+              <button
+                type="button"
+                onClick={agregarProyecto}
+                disabled={!puedeAgregar}
+                className="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl border border-fwd-azul px-5 text-sm font-semibold text-fwd-azul transition-colors hover:bg-fwd-azul/5 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <IconPlus width={16} height={16} />
+                Agregar proyecto
+              </button>
+              <p className="text-xs text-text-muted">
+                Los proyectos se guardan al presionar &ldquo;Guardar cambios&rdquo;.
+              </p>
+            </div>
           </div>
         </Card>
       )}
 
-      <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center gap-4">
         <button
           type="button"
-          onClick={() => setGuardado(true)}
-          className="inline-flex h-11 items-center justify-center rounded-xl bg-fwd-azul px-6 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-fwd-azul/90"
+          onClick={guardar}
+          disabled={guardado === "saving" || subiendoFoto}
+          className="inline-flex h-11 items-center justify-center rounded-xl bg-fwd-azul px-6 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-fwd-azul/90 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          Guardar cambios
+          {guardado === "saving" ? "Guardando…" : "Guardar cambios"}
         </button>
-        {guardado && (
+        {guardado === "saved" && (
           <span className="inline-flex items-center gap-1.5 text-sm font-medium text-emerald-600 dark:text-emerald-400">
             <IconCheck width={16} height={16} />
             Cambios guardados
           </span>
+        )}
+        {guardado === "error" && (
+          <span className="text-sm font-medium text-red-600 dark:text-red-400">{errorGuardar}</span>
         )}
       </div>
     </div>
