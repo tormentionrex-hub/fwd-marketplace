@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { db } from "@/lib/db";
 import { generarAvatar } from "@/lib/avatar";
 import type {
@@ -51,9 +52,18 @@ function nivelANumero(nivel: string | null): number {
  * coincida con `username` y construye el perfil con sus datos reales (los campos
  * que el editor de perfil modifica). Si no hay match, cae al perfil de ejemplo.
  */
-export async function getPerfilPublico(username: string): Promise<PerfilPublico> {
-  const candidatos = await db.usuarios.findMany({
+export const getPerfilPublico = cache(async (username: string): Promise<PerfilPublico> => {
+  // 1) Match liviano por slug del nombre (solo id + nombre).
+  const estudiantes = await db.usuarios.findMany({
     where: { roles: { nombre: "estudiante" } },
+    select: { id: true, nombre: true },
+  });
+  const match = estudiantes.find((u) => slugify(u.nombre) === username);
+  if (!match) return perfilDemo(username);
+
+  // 2) Datos completos SOLO del estudiante encontrado.
+  const real = await db.usuarios.findUnique({
+    where: { id: match.id },
     select: {
       id: true,
       nombre: true,
@@ -92,11 +102,7 @@ export async function getPerfilPublico(username: string): Promise<PerfilPublico>
       },
     },
   });
-
-  const real = candidatos.find((u) => slugify(u.nombre) === username);
-  if (!real || !real.perfiles_estudiante) {
-    return perfilDemo(username);
-  }
+  if (!real || !real.perfiles_estudiante) return perfilDemo(username);
 
   const pe = real.perfiles_estudiante;
 
@@ -180,7 +186,7 @@ export async function getPerfilPublico(username: string): Promise<PerfilPublico>
     certificaciones: [],
     logros: [],
   };
-}
+});
 
 // ── Perfil de ejemplo (fallback cuando el username no corresponde a un
 // estudiante real). Mantiene la demo con datos ilustrativos. ────────────────
