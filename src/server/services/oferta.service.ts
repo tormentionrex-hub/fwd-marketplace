@@ -5,11 +5,12 @@ import {
   crearOferta,
   listarOfertasDeEstudiante,
   retirarOferta as retirarOfertaRepo,
-  listarOfertasDeEstudiante,
 } from '@/server/repositories/oferta.repository';
-import { normalizarEstadoOferta } from '@/lib/oferta-estado';
+import { normalizarEstadoOferta, type EstadoOfertaDetalle } from '@/lib/oferta-estado';
+import { obtenerVerificacionEstudiante } from '@/server/services/verificacion.service';
 import { calcularEstadisticas } from '@/lib/oferta-estadisticas';
 import type { MiOfertaDTO, EstadisticasOfertas } from '@/types/oferta';
+import type { EstadoProyecto } from '@/types/sefora';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -20,13 +21,6 @@ export type ResultadoEnviarOferta =
   | 'proyecto_cerrado'
   | 'ya_oferto'
   | 'sin_prototipo';
-
-// Estados de oferta que siguen "vivos" (sin resolución final del empresario).
-const ESTADOS_ACTIVOS: ReadonlySet<EstadoOfertaDetalle> = new Set([
-  'enviada',
-  'en_revision',
-  'preseleccionado',
-]);
 
 // Lógica de negocio para enviar una oferta:
 // 1. Verifica que el proyecto existe y está abierto
@@ -96,7 +90,7 @@ export async function listarMisOfertas(idEstudiante: string): Promise<MiOfertaDT
         empresario: proyecto.perfiles_empresario?.usuarios?.nombre ?? '',
         sector: proyecto.perfiles_empresario?.sector ?? '',
         tecnologias: proyecto.proyectos_tecnologias.map((t) => t.tecnologias.nombre),
-        estado: proyecto.estado as any,
+        estado: proyecto.estado as EstadoProyecto,
         fechaLimite: proyecto.cierre ? proyecto.cierre.toISOString() : null,
       },
     };
@@ -119,11 +113,11 @@ export async function estadoOfertaDeEstudiante(
 
   const oferta = await buscarOfertaExistente(idProyecto, idEstudiante);
   if (!oferta) {
-    return { yaOferto: false, estado: null, idOferta: null };
+    return { existe: false, estado: null, enviado: null };
   }
   return {
-    yaOferto: true,
+    existe: true,
     estado: normalizarEstadoOferta(oferta.estado),
-    idOferta: oferta.id,
+    enviado: oferta.enviado.toISOString(),
   };
 }
