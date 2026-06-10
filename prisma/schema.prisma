@@ -198,9 +198,27 @@ model perfiles_estudiante {
   estudiantes_habilidades estudiantes_habilidades[]
   evaluaciones            evaluaciones[]
   ofertas                 ofertas[]
+  portafolio_proyectos    portafolio_proyectos[]
   usuarios                usuarios                  @relation(fields: [id_usuario], references: [id], onDelete: Cascade, map: "fk_perfiles_estudiante_usuario")
 
   @@index([reputacion], map: "idx_perfiles_estudiante_reputacion")
+}
+
+/// Proyectos de portafolio agregados manualmente por el estudiante.
+/// Migración SQL en prisma/sql/portafolio_proyectos.sql.
+model portafolio_proyectos {
+  id                  String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id_usuario          String              @db.Uuid
+  titulo              String              @db.VarChar(200)
+  descripcion         String?
+  tecnologias         String?
+  fecha               DateTime?           @db.Date
+  repo_url            String?
+  demo_url            String?
+  creado              DateTime            @default(now()) @db.Timestamptz(6)
+  perfiles_estudiante perfiles_estudiante @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade, map: "fk_portafolio_estudiante")
+
+  @@index([id_usuario], map: "idx_portafolio_id_usuario")
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.

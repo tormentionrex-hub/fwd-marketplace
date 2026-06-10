@@ -91,20 +91,30 @@ export default function OfertaPanel({
     };
   }, [proyectoId, bloqueado, intento]);
 
-  // --- Proyecto bloqueado (cerrado / cancelado / vencido) ---
-  if (inactivo) {
+  // --- Proyecto bloqueado: prioridad cancelado > vencido > cerrado ---
+  if (estadoProyecto === "cancelado") {
     return (
       <Bloqueado
         titulo="No disponible"
-        mensaje="Este proyecto ya no admite nuevas ofertas."
+        mensaje="Este proyecto fue cancelado y ya no recibe ofertas."
       />
     );
   }
   if (vencido) {
+    // Subtarea 3: el plazo venció → botón deshabilitado + mensaje específico.
     return (
       <Bloqueado
+        titulo="Plazo vencido"
         mensaje="El período para enviar ofertas ha finalizado."
         mensajeTone="danger"
+      />
+    );
+  }
+  if (estadoProyecto === "cerrado") {
+    return (
+      <Bloqueado
+        titulo="No disponible"
+        mensaje="Este proyecto ya no admite nuevas ofertas."
       />
     );
   }
