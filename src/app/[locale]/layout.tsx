@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Inter, Space_Grotesk, Geist_Mono } from 'next/font/google';
 import { NextIntlClientProvider, hasLocale } from 'next-intl';
 import { setRequestLocale, getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
