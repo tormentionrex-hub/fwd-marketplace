@@ -100,36 +100,6 @@ export default async function Home() {
       {/* ── CÓMO FUNCIONA ────────────────────────── */}
       <section className="relative py-28 overflow-hidden" style={{ background: "#f7f6f4" }}>
 
-        {/* Triángulos decorativos pastel */}
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-          {[
-            { t:"4%",  l:"-1%",  s:110, c:"#20BEC6", o:0.18, r:0   },
-            { t:"2%",  l:"6%",   s:70,  c:"#20BEC6", o:0.12, r:0   },
-            { t:"18%", l:"0%",   s:55,  c:"#FFCB05", o:0.2,  r:0   },
-            { t:"0%",  l:"58%",  s:80,  c:"#ED008C", o:0.15, r:-30 },
-            { t:"0%",  l:"66%",  s:55,  c:"#FFCB05", o:0.2,  r:20  },
-            { t:"0%",  l:"74%",  s:40,  c:"#662D91", o:0.15, r:0   },
-            { t:"72%", l:"3%",   s:55,  c:"#ED008C", o:0.18, r:180 },
-            { t:"78%", l:"9%",   s:35,  c:"#20BEC6", o:0.2,  r:90  },
-            { t:"78%", l:"18%",  s:45,  c:"#FFCB05", o:0.2,  r:0   },
-            { t:"78%", l:"28%",  s:38,  c:"#ED008C", o:0.15, r:180 },
-            { t:"80%", l:"37%",  s:42,  c:"#20BEC6", o:0.18, r:0   },
-            { t:"76%", l:"46%",  s:30,  c:"#662D91", o:0.18, r:90  },
-            { t:"80%", l:"54%",  s:44,  c:"#FFCB05", o:0.2,  r:0   },
-            { t:"76%", l:"63%",  s:36,  c:"#20BEC6", o:0.15, r:180 },
-            { t:"80%", l:"72%",  s:48,  c:"#662D91", o:0.18, r:0   },
-            { t:"76%", l:"82%",  s:34,  c:"#FFCB05", o:0.2,  r:90  },
-            { t:"80%", l:"90%",  s:44,  c:"#20BEC6", o:0.18, r:0   },
-            { t:"20%", l:"92%",  s:80,  c:"#662D91", o:0.15, r:0   },
-            { t:"50%", l:"94%",  s:55,  c:"#FFCB05", o:0.18, r:-20 },
-          ].map((tri, i) => (
-            <svg key={i} width={tri.s} height={tri.s * 0.87} viewBox={`0 0 ${tri.s} ${tri.s * 0.87}`}
-              style={{ position:"absolute", top:tri.t, left:tri.l, opacity:tri.o, transform:`rotate(${tri.r}deg)` }}>
-              <polygon points={`0,0 ${tri.s},${(tri.s*0.87)/2} 0,${tri.s*0.87}`} fill={tri.c} />
-            </svg>
-          ))}
-        </div>
-
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
 
           <div className="text-center mb-16">

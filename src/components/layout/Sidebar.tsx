@@ -1,69 +1,109 @@
 'use client';
 
-import Link from 'next/link'; // TODO: migrar a "@/i18n/navigation" cuando el Carril B esté mergeado
-import { usePathname } from 'next/navigation';
+import { Link, usePathname } from '@/i18n/navigation';
+import { FwdLogo } from '@/components/ui/fwd-logo';
+import {
+  IconGrid,
+  IconFolder,
+  IconSpark,
+  IconSettings,
+  IconBriefcase,
+} from '@/components/ui/fwd-icons';
 
-// Menú lateral del empresario. Se monta una sola vez desde (empresario)/layout.tsx,
-// así aparece en todas las páginas del empresario (12, 14 y las futuras 13/15).
-export default function Sidebar({ locale }: { locale: string }) {
-  const pathname = usePathname();
+// Menú lateral del empresario (diseño FWD). Se monta una sola vez desde
+// (empresario)/layout.tsx, así lo comparten las páginas 12 y 14.
+// Las clases (.sidebar, .nav-item, .sb-*) están en el design system scoped del layout.
+export default function Sidebar({ nombre }: { nombre: string }) {
+  const pathname = usePathname(); // sin prefijo de locale (next-intl)
 
-  const navItems = [
-    { label: 'Inicio', icon: 'home', href: `/${locale}/empresario` },
-    { label: 'Perfil', icon: 'person', href: '#' },
-    { label: 'Mis Proyectos', icon: 'work', href: '#' },
-    { label: 'Notificaciones', icon: 'notifications', href: '#' },
-  ];
+  const iniciales =
+    nombre
+      .trim()
+      .split(' ')
+      .slice(0, 2)
+      .map((w) => w[0])
+      .join('')
+      .toUpperCase() || 'E';
 
-  const isActive = (href: string) => href !== '#' && pathname === href;
+  const isActive = (href: string) => pathname === href;
 
   return (
-    <aside className="h-screen w-[280px] fixed left-0 top-0 bg-[#00B2B2] flex flex-col py-2 border-r border-white/10 shadow-xl z-50">
-      <div className="px-6 py-8">
-        <div className="font-display text-2xl font-bold text-white mb-1">TechLink</div>
-        <div className="text-white text-sm opacity-90 uppercase tracking-wider font-semibold">
-          Talent Marketplace
+    <aside className="sidebar">
+      <Link href="/empresario" className="sb-brand">
+        <FwdLogo />
+      </Link>
+
+      {/* Pill de rol */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 9,
+          padding: '9px 12px',
+          borderRadius: 10,
+          background: 'var(--azul-tint)',
+          marginBottom: 14,
+        }}
+      >
+        <span
+          style={{
+            width: 26,
+            height: 26,
+            borderRadius: 8,
+            background: 'var(--azul)',
+            display: 'grid',
+            placeItems: 'center',
+            flexShrink: 0,
+            color: '#fff',
+          }}
+        >
+          <IconBriefcase size={14} />
+        </span>
+        <div style={{ lineHeight: 1.15 }}>
+          <div className="font-display" style={{ fontWeight: 700, fontSize: 13, color: 'var(--ink-900)' }}>
+            Empresario
+          </div>
+          <div style={{ fontSize: 10.5, color: 'var(--ink-500)' }}>Cuenta activa</div>
         </div>
       </div>
 
-      <nav className="flex-1 px-4 space-y-1 overflow-y-auto custom-scrollbar">
-        {navItems.map((item) => (
-          <Link
-            key={item.label}
-            href={item.href}
-            className={
-              isActive(item.href)
-                ? 'flex items-center px-4 py-3 border-l-4 border-white bg-white/20 text-white font-bold transition-colors duration-200'
-                : 'flex items-center px-4 py-3 text-white/80 hover:text-white hover:bg-white/10 transition-colors duration-200'
-            }
-          >
-            <span className="material-symbols-outlined mr-3">{item.icon}</span>
-            <span className="text-sm">{item.label}</span>
-          </Link>
-        ))}
-      </nav>
+      <div className="sb-section">Gestión</div>
+      <Link href="/empresario" className={`nav-item ${isActive('/empresario') ? 'on' : ''}`}>
+        <IconGrid size={19} />
+        Dashboard
+      </Link>
+      <Link
+        href="/empresario/proyectos"
+        className={`nav-item ${isActive('/empresario/proyectos') ? 'on' : ''}`}
+      >
+        <IconFolder size={19} />
+        Mis proyectos
+      </Link>
+      <Link
+        href="/empresario/nuevo-proyecto"
+        className={`nav-item ${isActive('/empresario/nuevo-proyecto') ? 'on' : ''}`}
+      >
+        <IconSpark size={19} />
+        Crear con IA
+      </Link>
 
-      <div className="mt-auto px-4 py-6 space-y-1">
-        <Link
-          href={`/${locale}/empresario/nuevo-proyecto`}
-          className="w-full block text-center bg-white text-[#00B2B2] font-bold py-3 px-4 rounded-lg shadow-lg hover:bg-sky-50 transition-all active:scale-95 mb-6"
-        >
-          Publicar proyecto
-        </Link>
-        <Link
-          href="#"
-          className="flex items-center px-4 py-2 text-white/80 hover:text-white hover:bg-white/10 transition-colors duration-200"
-        >
-          <span className="material-symbols-outlined mr-3">settings</span>
-          <span className="text-sm">Ajustes</span>
-        </Link>
-        <Link
-          href="#"
-          className="flex items-center px-4 py-2 text-white/80 hover:text-white hover:bg-white/10 transition-colors duration-200"
-        >
-          <span className="material-symbols-outlined mr-3">help</span>
-          <span className="text-sm">Soporte</span>
-        </Link>
+      <div className="sb-section">Cuenta</div>
+      {/* TODO: ruta de configuración (otra persona) */}
+      <a href="#" className="nav-item">
+        <IconSettings size={19} />
+        Configuración
+      </a>
+
+      <div className="sb-foot">
+        <div className="sb-user">
+          <div className="avatar" style={{ width: 38, height: 38, fontSize: 14, background: 'var(--azul)' }}>
+            {iniciales}
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="nm">{nombre}</div>
+            <div className="rl">Empresario</div>
+          </div>
+        </div>
       </div>
     </aside>
   );
