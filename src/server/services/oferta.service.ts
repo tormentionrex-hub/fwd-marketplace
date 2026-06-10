@@ -12,6 +12,8 @@ import { normalizarEstadoOferta, type EstadoOfertaDetalle } from '@/lib/oferta-e
 import { calcularEstadisticas } from '@/lib/oferta-estadisticas';
 import type { EstadisticasOfertas, MiOfertaDTO } from '@/types/oferta';
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export type ResultadoEnviarOferta =
   | { ok: true; ofertaId: string }
   | 'no_verificado'
@@ -113,6 +115,9 @@ export async function estadoOfertaDeEstudiante(
   idProyecto: string,
   idEstudiante: string,
 ): Promise<{ existe: boolean; estado: EstadoOfertaDetalle | null; enviado: string | null }> {
+  // Un idProyecto mal formado (no-UUID) haría que Prisma lance; lo tratamos como "sin oferta".
+  if (!UUID_RE.test(idProyecto)) return { existe: false, estado: null, enviado: null };
+
   const oferta = await buscarOfertaExistente(idProyecto, idEstudiante);
   if (!oferta) return { existe: false, estado: null, enviado: null };
   return {

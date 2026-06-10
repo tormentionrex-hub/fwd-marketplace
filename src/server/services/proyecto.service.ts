@@ -12,6 +12,8 @@ export interface ProyectoDetalleDTO {
   area: string;
   tecnologias: string[];
   diasRestantes: number;
+  /** Fecha límite (ISO) o null si el proyecto no define cierre. */
+  fechaLimite: string | null;
   empresario: { nombre: string; sector: string };
   estado: EstadoProyecto;
   vencido: boolean;
@@ -19,6 +21,7 @@ export interface ProyectoDetalleDTO {
 
 const MS_POR_DIA = 86_400_000;
 const ESTADOS_CERRADOS = ['cerrado', 'finalizado', 'adjudicado', 'completado'];
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function mapearEstadoProyecto(
   estadoDb: string | null | undefined,
@@ -43,6 +46,9 @@ export function mapearEstadoProyecto(
 }
 
 export async function obtenerDetalleProyecto(id: string): Promise<ProyectoDetalleDTO | null> {
+  // Un id mal formado (no-UUID) haría que Prisma lance; lo tratamos como "no existe".
+  if (!UUID_RE.test(id)) return null;
+
   const p = await obtenerProyectoConDetalle(id);
   if (!p) return null;
 
@@ -55,6 +61,7 @@ export async function obtenerDetalleProyecto(id: string): Promise<ProyectoDetall
     area: p.area_negocio ?? 'General',
     tecnologias: p.proyectos_tecnologias.map((t) => t.tecnologias.nombre),
     diasRestantes,
+    fechaLimite: p.cierre ? p.cierre.toISOString() : null,
     empresario: {
       nombre: p.perfiles_empresario?.usuarios?.nombre ?? 'Empresa',
       sector: p.perfiles_empresario?.sector ?? '—',
