@@ -2,52 +2,61 @@ import { NextResponse } from 'next/server';
 import { login } from '@/server/services/auth.service';
 import { crearCookieSesion } from '@/server/auth/session';
 import { rutaPorRol } from '@/server/auth/rutas';
+import { permitido } from '@/server/auth/rate-limit';
+import { clienteIp, mismoOrigen } from '@/server/http/request';
+import { error, errorInterno, parsearBody } from '@/server/http/responder';
+import { loginSchema } from '@/server/validation/auth.schema';
+
+const QUINCE_MIN = 15 * 60_000;
 
 export async function POST(request: Request) {
-  let body: { email?: string; password?: string };
+  if (!mismoOrigen(request)) return error('Origen no permitido', 403);
+
+  const parseo = await parsearBody(request, loginSchema);
+  if (!parseo.ok) return parseo.respuesta;
+  const { email, password } = parseo.data;
+
+  // Rate limit: por correo+IP (fuerza bruta a una cuenta) y por IP (credential
+  // stuffing). Se chequea antes del verify (scrypt) para no gastar CPU en spam.
+  const ip = clienteIp(request);
+  if (
+    !permitido(`login:${ip}:${email}`, 8, QUINCE_MIN) ||
+    !permitido(`login-ip:${ip}`, 30, QUINCE_MIN)
+  ) {
+    return error('Demasiados intentos. Esperá unos minutos e intentá de nuevo.', 429);
+  }
+
   try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: 'Cuerpo inválido' }, { status: 400 });
+    const resultado = await login(email, password);
+
+    if (resultado === null) {
+      return error('Correo o contraseña incorrectos', 401);
+    }
+    if (resultado === 'pendiente') {
+      return error(
+        'Tu cuenta está pendiente de aprobación por un administrador. Te avisaremos por email cuando esté lista.',
+        403,
+      );
+    }
+
+    // Lo privado (id, rol, correo, token) viaja en la cookie httpOnly firmada.
+    await crearCookieSesion({
+      uid: resultado.usuario.id,
+      rol: resultado.usuario.rol,
+      correo: resultado.usuario.correo,
+      token: resultado.token,
+    });
+
+    // Lo público (nombre, foto) vuelve en el body para localStorage. redirectTo
+    // se calcula acá según el rol, así el cliente no necesita conocerlo.
+    return NextResponse.json({
+      perfil: {
+        nombre: resultado.usuario.nombre,
+        image_url: resultado.usuario.image_url,
+      },
+      redirectTo: rutaPorRol(resultado.usuario.rol),
+    });
+  } catch (e) {
+    return errorInterno('auth/login', e);
   }
-
-  const { email, password } = body;
-  if (!email || !password) {
-    return NextResponse.json({ error: 'Faltan credenciales' }, { status: 400 });
-  }
-
-  const resultado = await login(email, password);
-
-  if (resultado === null) {
-    return NextResponse.json(
-      { error: 'Correo o contraseña incorrectos' },
-      { status: 401 }
-    );
-  }
-
-  if (resultado === 'pendiente') {
-    return NextResponse.json(
-      { error: 'Tu cuenta está pendiente de aprobación por un administrador. Te avisaremos por email cuando esté lista.' },
-      { status: 403 }
-    );
-  }
-
-  // Lo privado (id, rol, correo, token) viaja en la cookie httpOnly.
-  await crearCookieSesion({
-    uid: resultado.usuario.id,
-    rol: resultado.usuario.rol,
-    correo: resultado.usuario.correo,
-    token: resultado.token,
-  });
-
-  // Lo público (nombre, foto) vuelve en el body para que el cliente lo guarde
-  // en localStorage. redirectTo se calcula acá según el rol, así el cliente sabe
-  // a dónde ir sin conocer el rol (que es privado).
-  return NextResponse.json({
-    perfil: {
-      nombre: resultado.usuario.nombre,
-      image_url: resultado.usuario.image_url,
-    },
-    redirectTo: rutaPorRol(resultado.usuario.rol),
-  });
 }
