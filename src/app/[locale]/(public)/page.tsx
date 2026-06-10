@@ -9,6 +9,7 @@ import WaveFunciona from "@/components/WaveFunciona";
 import AnimatedProjectsTitle from "@/components/AnimatedProjectsTitle";
 import AnimatedHeroTitle from "@/components/AnimatedHeroTitle";
 import TiltCard from "@/components/TiltCard";
+import AnimatedSubtitle from "@/components/AnimatedSubtitle";
 
 /* ─── Hardcoded data ─────────────────────────────── */
 
@@ -106,9 +107,7 @@ export default async function Home() {
             <div data-reveal="heading" className="flex justify-center mb-4">
               <WaveFunciona />
             </div>
-            <p data-reveal="fade-up" className="text-gray-500 text-lg max-w-md mx-auto">
-              Un proceso simple para conectar ideas con talento.
-            </p>
+            <AnimatedSubtitle text="Un proceso simple para conectar ideas con talento." />
           </div>
 
           <div data-reveal="stagger" className="grid md:grid-cols-2 gap-6">
@@ -208,23 +207,24 @@ export default async function Home() {
 
           <div data-reveal="stagger" className="grid md:grid-cols-3 gap-6">
             {proyectos.map((proj) => (
-              <article
-                key={proj.id}
-                className="rounded-3xl p-7 flex flex-col hover:scale-105 transition-transform duration-300 shadow-lg"
-                style={{ backgroundColor: proj.color }}
-              >
-                <span className="text-xs font-bold text-white/70 uppercase tracking-widest mb-3">{proj.area}</span>
-                <h3 className="font-heading font-black text-white text-xl leading-snug mb-5 flex-1">{proj.titulo}</h3>
-                <div className="flex flex-wrap gap-2 mb-6">
-                  {proj.tecnologias.map((tech) => (
-                    <span key={tech} className="bg-white/20 text-white text-xs font-semibold px-3 py-1 rounded-full">{tech}</span>
-                  ))}
-                </div>
-                <div className="flex items-center justify-between pt-4 border-t border-white/20">
-                  <span className="text-white/80 text-sm">por <span className="font-bold text-white">{proj.empresario}</span></span>
-                  <span className="bg-[#FFCB05] text-[#0e1628] text-xs font-black px-3 py-1 rounded-full">{proj.diasRestantes}{p("restantes")}</span>
-                </div>
-              </article>
+              <Link key={proj.id} href="/proyectos" className="block">
+                <article
+                  className="rounded-3xl p-7 flex flex-col hover:scale-105 transition-transform duration-300 shadow-lg"
+                  style={{ backgroundColor: proj.color }}
+                >
+                  <span className="text-xs font-bold text-white/70 uppercase tracking-widest mb-3">{proj.area}</span>
+                  <h3 className="font-heading font-black text-white text-xl leading-snug mb-5 flex-1">{proj.titulo}</h3>
+                  <div className="flex flex-wrap gap-2 mb-6">
+                    {proj.tecnologias.map((tech) => (
+                      <span key={tech} className="bg-white/20 text-white text-xs font-semibold px-3 py-1 rounded-full">{tech}</span>
+                    ))}
+                  </div>
+                  <div className="flex items-center justify-between pt-4 border-t border-white/20">
+                    <span className="text-white/80 text-sm">por <span className="font-bold text-white">{proj.empresario}</span></span>
+                    <span className="bg-[#FFCB05] text-[#0e1628] text-xs font-black px-3 py-1 rounded-full">{proj.diasRestantes}{p("restantes")}</span>
+                  </div>
+                </article>
+              </Link>
             ))}
           </div>
 
