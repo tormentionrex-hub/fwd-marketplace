@@ -5,12 +5,11 @@ import {
   crearOferta,
   listarOfertasDeEstudiante,
   retirarOferta as retirarOfertaRepo,
+  listarOfertasDeEstudiante,
 } from '@/server/repositories/oferta.repository';
-import { obtenerVerificacionEstudiante } from '@/server/services/verificacion.service';
-import { mapearEstadoProyecto } from '@/server/services/proyecto.service';
-import { normalizarEstadoOferta, type EstadoOfertaDetalle } from '@/lib/oferta-estado';
+import { normalizarEstadoOferta } from '@/lib/oferta-estado';
 import { calcularEstadisticas } from '@/lib/oferta-estadisticas';
-import type { EstadisticasOfertas, MiOfertaDTO } from '@/types/oferta';
+import type { MiOfertaDTO, EstadisticasOfertas } from '@/types/oferta';
 
 export type ResultadoEnviarOferta =
   | { ok: true; ofertaId: string }
@@ -67,57 +66,56 @@ export async function retirarOfertaService(
   return retirarOfertaRepo(idOferta, idEstudiante);
 }
 
-// Lista las ofertas del estudiante autenticado mapeadas al DTO de "Mis Ofertas".
-// El estado de la oferta se normaliza; el badge añade "proyecto_cerrado" cuando
-// el proyecto se cerró/venció mientras la oferta seguía activa.
+// Lista y normaliza las ofertas de un estudiante
 export async function listarMisOfertas(idEstudiante: string): Promise<MiOfertaDTO[]> {
-  const filas = await listarOfertasDeEstudiante(idEstudiante);
+  const ofertasRepo = await listarOfertasDeEstudiante(idEstudiante);
+  const ahora = new Date();
 
-  return filas.map((o) => {
-    const estado = normalizarEstadoOferta(o.estado);
-    const p = o.proyectos;
-    const { estado: estadoProyecto } = mapearEstadoProyecto(p.estado, p.cierre);
-    const badge =
-      ESTADOS_ACTIVOS.has(estado) && estadoProyecto === 'cerrado' ? 'proyecto_cerrado' : estado;
+  return ofertasRepo.map((o) => {
+    const estadoCanonico = normalizarEstadoOferta(o.estado);
+    const proyecto = o.proyectos;
+    const cerrado = proyecto.estado === 'cerrado' || (proyecto.cierre !== null && proyecto.cierre < ahora);
+
+    // Si el proyecto se cerró y la oferta aún no tiene resolución final (aceptada, rechazada, cancelada)
+    const resolucionFinal = estadoCanonico === 'aceptado' || estadoCanonico === 'rechazado' || estadoCanonico === 'cancelado';
+    const badge = (cerrado && !resolucionFinal) ? 'proyecto_cerrado' : estadoCanonico;
 
     return {
       id: o.id,
-      estado,
+      estado: estadoCanonico,
       badge,
       propuesta: o.propuesta,
-      monto: null, // el schema actual no almacena monto (pendiente Fase de datos)
+      monto: null,
       fechaEnvio: o.enviado.toISOString(),
       proyecto: {
-        id: p.id,
-        titulo: p.titulo,
-        area: p.area_negocio ?? 'General',
-        empresario: p.perfiles_empresario?.usuarios?.nombre ?? 'Empresa',
-        sector: p.perfiles_empresario?.sector ?? '—',
-        tecnologias: p.proyectos_tecnologias.map((t) => t.tecnologias.nombre),
-        estado: estadoProyecto,
-        fechaLimite: p.cierre ? p.cierre.toISOString() : null,
+        id: proyecto.id,
+        titulo: proyecto.titulo,
+        area: proyecto.area_negocio ?? '',
+        empresario: proyecto.perfiles_empresario?.usuarios?.nombre ?? '',
+        sector: proyecto.perfiles_empresario?.sector ?? '',
+        tecnologias: proyecto.proyectos_tecnologias.map((t) => t.tecnologias.nombre),
+        estado: proyecto.estado as any,
+        fechaLimite: proyecto.cierre ? proyecto.cierre.toISOString() : null,
       },
     };
   });
 }
 
-// Contadores de "Mis Ofertas". Reutiliza la misma lista + el cálculo puro para
-// que los números coincidan exactamente con lo que se muestra en la vista.
+// Obtiene estadísticas de ofertas de un estudiante
 export async function estadisticasMisOfertas(idEstudiante: string): Promise<EstadisticasOfertas> {
   const ofertas = await listarMisOfertas(idEstudiante);
   return calcularEstadisticas(ofertas);
 }
 
-// Indica si el estudiante ya ofertó a un proyecto y, de ser así, su estado.
-export async function estadoOfertaDeEstudiante(
-  idProyecto: string,
-  idEstudiante: string,
-): Promise<{ existe: boolean; estado: EstadoOfertaDetalle | null; enviado: string | null }> {
+// Obtiene el estado actual de la oferta de un estudiante para un proyecto específico
+export async function estadoOfertaDeEstudiante(idProyecto: string, idEstudiante: string) {
   const oferta = await buscarOfertaExistente(idProyecto, idEstudiante);
-  if (!oferta) return { existe: false, estado: null, enviado: null };
+  if (!oferta) {
+    return { yaOferto: false, estado: null, idOferta: null };
+  }
   return {
-    existe: true,
+    yaOferto: true,
     estado: normalizarEstadoOferta(oferta.estado),
-    enviado: oferta.enviado.toISOString(),
+    idOferta: oferta.id,
   };
 }

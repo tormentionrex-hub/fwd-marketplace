@@ -306,3 +306,5 @@ model usuarios {
   @@index([estado], map: "idx_usuarios_estado")
   @@index([id_rol], map: "idx_usuarios_id_rol")
 }
+
+

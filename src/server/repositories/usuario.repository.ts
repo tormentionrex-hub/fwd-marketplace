@@ -120,3 +120,17 @@ export function listarUsuarios() {
     },
   });
 }
+
+// Actualiza el hash de la contraseña de un usuario
+export function actualizarHashContrasena(id: string, hash: string) {
+  return db.usuarios.update({
+    where: { id },
+    data: { hash_contrasena: hash },
+  });
+}
+
+// Elimina un usuario por id. Los perfiles y datos relacionados se borran en
+// cascada según las FK del esquema. Lo usa el panel admin.
+export function eliminarUsuario(id: string) {
+  return db.usuarios.delete({ where: { id } });
+}
