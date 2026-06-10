@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import Image from "next/image";
 import { gsap } from "gsap";
+import { generarAvatar } from "@/lib/avatar";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 interface Estudiante {
@@ -12,57 +12,83 @@ interface Estudiante {
   frase: string;
   color: string;
   iniciales: string;
-  foto?: string;
+  foto: string;
 }
 
+/* ── Graduados reales del programa FWD (fwdcostarica.com/talento).
+   El "comentario" es su propia bio de perfil. ──────────────────── */
 const estudiantes: Estudiante[] = [
   {
-    nombre: "María González",
-    rol: "Full Stack Developer",
-    tecnologias: ["React", "Node.js", "PostgreSQL"],
-    frase: "FWD me dio la oportunidad de trabajar en proyectos reales antes de graduarme. La experiencia fue invaluable.",
+    nombre: "Adrián Campos Cisneros",
+    rol: "Desarrollador Full Stack",
+    tecnologias: ["Full Stack", "Front End", "Back End"],
+    frase: "Soy una persona que aprende rápido, amable, empática y sincera, y que quiere poner a prueba los conocimientos aprendidos en FWD.",
     color: "#008FD4",
-    iniciales: "MG",
+    iniciales: "AC",
+    foto: "/students/adrian.jpg",
   },
   {
-    nombre: "Carlos Jiménez",
-    rol: "UX/UI Designer",
-    tecnologias: ["Figma", "React", "TailwindCSS"],
-    frase: "Aprendí más en 3 meses de proyectos reales que en un año de clases teóricas.",
-    color: "#ED008C",
-    iniciales: "CJ",
+    nombre: "Fiorella Chaves González",
+    rol: "Ingeniería en Software",
+    tecnologias: ["Full Stack", "Bases de datos", "Agile"],
+    frase: "Enfocada en el diseño y desarrollo de aplicaciones web y modelado de bases de datos, con trabajo colaborativo bajo metodologías ágiles.",
+    color: "#EC008C",
+    iniciales: "FC",
+    foto: "/students/fiorella.jpg",
   },
   {
-    nombre: "Ana Vargas",
-    rol: "Data Analyst",
-    tecnologias: ["Python", "SQL", "Power BI"],
-    frase: "Conecté con empresas que valoran el talento joven de Costa Rica.",
-    color: "#FFCB05",
-    iniciales: "AV",
-  },
-  {
-    nombre: "Diego Mora",
-    rol: "Backend Developer",
-    tecnologias: ["Python", "FastAPI", "Docker"],
-    frase: "Publicar mi primer proyecto fue el punto de quiebre en mi carrera.",
-    color: "#20BEC6",
-    iniciales: "DM",
-  },
-  {
-    nombre: "Sofía Castro",
-    rol: "Mobile Developer",
-    tecnologias: ["React Native", "Firebase", "TypeScript"],
-    frase: "La plataforma me ayudó a construir un portafolio profesional real desde el primer día.",
+    nombre: "Christopher Rodríguez Ruiz",
+    rol: "Full Stack Developer Jr.",
+    tecnologias: ["React", "Django", "MySQL"],
+    frase: "Formación intensiva en tecnologías modernas, construyendo aplicaciones web completas, APIs seguras y bases de datos relacionales.",
     color: "#662D91",
-    iniciales: "SC",
+    iniciales: "CR",
+    foto: "/students/christopher.jpg",
   },
   {
-    nombre: "Andrés López",
-    rol: "DevOps Engineer",
-    tecnologias: ["Docker", "AWS", "CI/CD"],
-    frase: "Nunca pensé que desde FWD llegaría a colaborar con startups de toda la región.",
+    nombre: "Luisa Torres Carrión",
+    rol: "Front End & UI",
+    tecnologias: ["Front End", "UI/UX", "Full Stack"],
+    frase: "Apasionada por la programación y el diseño. Me gusta combinar tecnología y diseño para transformar ideas en proyectos bien estructurados.",
+    color: "#20BEC6",
+    iniciales: "LT",
+    foto: "/students/luisa.jpg",
+  },
+  {
+    nombre: "Joseph Hernández Solís",
+    rol: "Full Stack Developer",
+    tecnologias: ["JavaScript", "React", "Python"],
+    frase: "Me gusta la resolución de problemas, el trabajo colaborativo y transformar ideas en soluciones digitales prácticas y eficientes.",
+    color: "#008FD4",
+    iniciales: "JH",
+    foto: "/students/joseph.jpg",
+  },
+  {
+    nombre: "Miranda Méndez Cruz",
+    rol: "Ingeniera de Software",
+    tecnologias: ["Backend", "Enterprise Apps", "Full Stack"],
+    frase: "Orientada a resultados, con experiencia en el diseño y desarrollo completo de aplicaciones empresariales y sistemas complejos.",
     color: "#F7901E",
-    iniciales: "AL",
+    iniciales: "MM",
+    foto: "/students/miranda.jpg",
+  },
+  {
+    nombre: "Sergio Aguirre Miranda",
+    rol: "Front-End / Full Stack",
+    tecnologias: ["Front End", "Full Stack", "JavaScript"],
+    frase: "Enfocado en crear aplicaciones funcionales y eficientes. Responsable, proactivo y en constante aprendizaje.",
+    color: "#20BEC6",
+    iniciales: "SA",
+    foto: "/students/sergio.jpg",
+  },
+  {
+    nombre: "Hillary Calderón Ulloa",
+    rol: "Desarrolladora Web",
+    tecnologias: ["Full Stack", "Front End", "Back End"],
+    frase: "Soy responsable y con mucho interés en aprender. Dispuesta a asumir nuevas responsabilidades con compromiso y respeto.",
+    color: "#662D91",
+    iniciales: "HC",
+    foto: "/students/hillary.jpg",
   },
 ];
 
@@ -175,23 +201,22 @@ export default function StudentCarousel() {
             >
               {/* Avatar + info */}
               <div className="flex items-center gap-4 mb-5">
-                {est.foto ? (
-                  <div className="w-14 h-14 rounded-full overflow-hidden flex-shrink-0 relative">
-                    <Image
-                      src={est.foto}
-                      alt={est.nombre}
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                ) : (
-                  <div
-                    className="w-14 h-14 rounded-full flex items-center justify-center text-white font-heading font-black text-lg flex-shrink-0"
-                    style={{ backgroundColor: est.color }}
-                  >
-                    {est.iniciales}
-                  </div>
-                )}
+                <div className="w-14 h-14 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-white shadow-sm bg-gray-100">
+                  {/* Foto realista (IA · persona no real); si falla, cae al avatar generado por nombre. */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={est.foto}
+                    alt={est.nombre}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                    onError={(e) => {
+                      const img = e.currentTarget;
+                      if (img.dataset.fallback) return;
+                      img.dataset.fallback = "1";
+                      img.src = generarAvatar(est.nombre);
+                    }}
+                  />
+                </div>
                 <div>
                   <h3 className="font-heading font-bold text-fwd-navy text-base leading-tight">
                     {est.nombre}
@@ -229,15 +254,20 @@ export default function StudentCarousel() {
 
         {/* Navigation */}
         <div className="flex items-center justify-center gap-6 mt-10">
+          {/* Botón anterior */}
           <button
             onClick={prev}
-            className="w-10 h-10 rounded-full border-2 border-gray-200 flex items-center justify-center text-gray-500 hover:border-fwd-purple hover:text-fwd-purple transition-colors font-bold"
             aria-label="Anterior"
+            className="group relative w-11 h-11 rounded-full flex items-center justify-center shadow-md transition-all duration-300 hover:scale-110 active:scale-95 hover:shadow-lg"
+            style={{ background: "linear-gradient(135deg, #1a0a40, #662D91)" }}
           >
-            ←
+            <svg className="w-4 h-4 text-white transition-transform duration-200 group-hover:-translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
           </button>
 
-          <div className="flex gap-2">
+          {/* Dots */}
+          <div className="flex items-center gap-2">
             {estudiantes.map((_, i) => (
               <button
                 key={i}
@@ -245,20 +275,27 @@ export default function StudentCarousel() {
                 aria-label={`Ir al estudiante ${i + 1}`}
                 className="rounded-full transition-all duration-300"
                 style={{
-                  width: i === current ? "24px" : "8px",
+                  width:  i === current ? "28px" : "8px",
                   height: "8px",
-                  backgroundColor: i === current ? "#662D91" : "#D1D5DB",
+                  background: i === current
+                    ? "linear-gradient(90deg, #20BEC6, #662D91)"
+                    : "#D1D5DB",
+                  boxShadow: i === current ? "0 0 10px #20BEC688, 0 0 20px #662D9144" : "none",
                 }}
               />
             ))}
           </div>
 
+          {/* Botón siguiente */}
           <button
             onClick={next}
-            className="w-10 h-10 rounded-full border-2 border-gray-200 flex items-center justify-center text-gray-500 hover:border-fwd-purple hover:text-fwd-purple transition-colors font-bold"
             aria-label="Siguiente"
+            className="group relative w-11 h-11 rounded-full flex items-center justify-center shadow-md transition-all duration-300 hover:scale-110 active:scale-95 hover:shadow-lg"
+            style={{ background: "linear-gradient(135deg, #662D91, #ED008C)" }}
           >
-            →
+            <svg className="w-4 h-4 text-white transition-transform duration-200 group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+              <path d="M9 18l6-6-6-6" />
+            </svg>
           </button>
         </div>
       </div>

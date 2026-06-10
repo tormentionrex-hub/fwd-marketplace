@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { FwdIsotipo } from "@/components/ui/fwd-logo";
 
 type Phase = "video" | "alert" | "done";
 
@@ -8,13 +9,6 @@ const STORAGE_KEY = "fwd_onboarding_count";
 const MAX_SHOWS   = 3;
 
 /* ── Iconos SVG inline ─────────────────────────────── */
-const IconAccessibility = () => (
-  <svg viewBox="0 0 24 24" fill="white" className="w-7 h-7" aria-hidden="true">
-    <circle cx="12" cy="4" r="2" />
-    <path d="M19 9H5a1 1 0 0 0 0 2h4.5l-1.2 7.4a1 1 0 0 0 1.97.32L11.5 13h1l1.23 5.76a1
-      1 0 0 0 1.97-.32L14.5 11H19a1 1 0 0 0 0-2Z" />
-  </svg>
-);
 
 const IconSoundOn = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
@@ -38,16 +32,18 @@ const IconSoundOff = () => (
 const IconRepeat = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
     strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-    <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
-    <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+    <path d="M3 3v5h5" />
   </svg>
 );
 
 const IconCheck = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
     strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-    <polyline points="20 6 9 17 4 12" />
+    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+    <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+    <line x1="12" y1="19" x2="12" y2="23" />
+    <line x1="8" y1="23" x2="16" y2="23" />
   </svg>
 );
 
@@ -67,16 +63,15 @@ export default function WelcomeOnboarding() {
   useEffect(() => {
     const isDev = process.env.NODE_ENV === "development";
     if (isDev) {
-      // En desarrollo siempre muestra para facilitar pruebas
-      setPhase("video");
-      setVideoOpacity(1);
+      setPhase("alert");
+      requestAnimationFrame(() => setTimeout(() => setAlertIn(true), 30));
       return;
     }
     const count = parseInt(localStorage.getItem(STORAGE_KEY) ?? "0", 10);
     if (count < MAX_SHOWS) {
       localStorage.setItem(STORAGE_KEY, String(count + 1));
-      setPhase("video");
-      setVideoOpacity(1);
+      setPhase("alert");
+      requestAnimationFrame(() => setTimeout(() => setAlertIn(true), 30));
     }
   }, []);
 
@@ -288,40 +283,57 @@ export default function WelcomeOnboarding() {
           }}
         >
           <div
-            className="relative w-full max-w-md bg-white/96 rounded-3xl shadow-2xl overflow-hidden"
+            className="relative w-full max-w-md rounded-3xl overflow-hidden"
             style={{
+              background: "linear-gradient(135deg, #0e1628 0%, #2a1060 60%, #1a0a40 100%)",
+              boxShadow: "0 30px 70px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.08)",
               transform: alertIn ? "scale(1) translateY(0)" : "scale(0.88) translateY(20px)",
               transition: "transform 0.45s cubic-bezier(0.34,1.56,0.64,1)",
-              boxShadow: "0 25px 60px rgba(0,0,0,0.25), 0 0 0 1px rgba(255,255,255,0.1)",
             }}
           >
-            {/* Barra superior decorativa */}
-            <div className="h-1 w-full" style={{ background: "linear-gradient(90deg,#20BEC6,#008FD4,#662D91)" }} />
+            {/* Barra superior degradada */}
+            <div className="h-1 w-full" style={{ background: "linear-gradient(90deg,#20BEC6,#662D91,#ED008C)" }} />
 
-            <div className="p-7">
+            {/* Brillo radial decorativo */}
+            <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(ellipse at top right, rgba(102,45,145,0.35) 0%, transparent 65%)" }} />
+
+            <div className="relative p-7">
 
               {/* ── Encabezado ── */}
               <div className="flex items-center gap-4 mb-5">
                 <div
-                  className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg"
-                  style={{ background: "linear-gradient(135deg,#20BEC6,#008FD4)" }}
+                  className="group w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 transition-all duration-300 hover:scale-110 hover:shadow-[0_0_22px_rgba(32,190,198,0.65)] cursor-default"
+                  style={{ background: "linear-gradient(135deg, #0e1628, #2a1060)", boxShadow: "0 4px 20px rgba(0,0,0,0.4)" }}
                 >
-                  <IconAccessibility />
+                  <FwdIsotipo className="w-9 h-9 fwd-spin group-hover:scale-125 transition-transform duration-300" />
                 </div>
                 <div>
                   <h2
-                    className="text-lg font-bold text-[#1a1a2e] leading-tight"
-                    onMouseEnter={(e) => speakText((e.target as HTMLElement).innerText)}
+                    className="text-lg font-bold leading-tight cursor-default transition-all duration-300 hover:scale-[1.03] hover:drop-shadow-[0_0_8px_rgba(237,0,140,0.7)] inline-block"
+                    style={{ color: "white" }}
+                    onMouseEnter={(e) => {
+                      const el = e.target as HTMLElement;
+                      el.style.backgroundImage = "linear-gradient(90deg,#ED008C,#662D91,#20BEC6)";
+                      el.style.backgroundClip = "text";
+                      el.style.color = "transparent";
+                      speakText(el.innerText);
+                    }}
+                    onMouseLeave={(e) => {
+                      const el = e.target as HTMLElement;
+                      el.style.backgroundImage = "none";
+                      el.style.backgroundClip = "unset";
+                      el.style.color = "white";
+                    }}
                   >
                     Lector de voz disponible
                   </h2>
-                  <p className="text-xs text-gray-400 mt-0.5">Accesibilidad · FWD Costa Rica</p>
+                  <p className="text-xs text-white/40 mt-0.5 transition-all duration-300 hover:text-[#20BEC6] hover:tracking-wide cursor-default">Accesibilidad · FWD Costa Rica</p>
                 </div>
               </div>
 
               {/* ── Descripción ── */}
               <p
-                className="text-gray-600 text-sm leading-relaxed mb-4"
+                className="text-white/70 text-sm leading-relaxed mb-4 cursor-default transition-all duration-300 hover:text-white hover:translate-x-1 hover:drop-shadow-[0_0_6px_rgba(32,190,198,0.5)]"
                 onMouseEnter={(e) => speakText((e.target as HTMLElement).innerText)}
               >
                 ¿Necesita que el sitio le lea el contenido en voz alta al pasar el cursor?
@@ -331,11 +343,14 @@ export default function WelcomeOnboarding() {
               {/* ── Banner sugerencia ── */}
               <div
                 className="flex items-start gap-2 rounded-xl px-4 py-3 mb-6"
-                style={{ background: "rgba(32,190,198,0.08)", border: "1px solid rgba(32,190,198,0.25)" }}
+                style={{ background: "rgba(32,190,198,0.12)", border: "1px solid rgba(32,190,198,0.3)" }}
                 onMouseEnter={(e) => speakText((e.target as HTMLElement).innerText)}
               >
-                <span className="text-base flex-shrink-0">💡</span>
-                <p className="text-xs text-[#0a7f88] leading-relaxed">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#20BEC6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 flex-shrink-0 mt-0.5" aria-hidden="true">
+                  <path d="M12 2a7 7 0 0 1 5 11.9l-.8.8A2 2 0 0 0 15 16v1a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-1a2 2 0 0 0-.7-1.3L7.4 14A7 7 0 0 1 12 2z" />
+                  <path d="M9 21h6" />
+                </svg>
+                <p className="text-xs text-[#20BEC6] leading-relaxed">
                   Pase el cursor sobre cualquier texto de esta ventana para escucharlo
                 </p>
               </div>
@@ -346,20 +361,23 @@ export default function WelcomeOnboarding() {
                 {/* Primario */}
                 <button
                   onClick={activateVoice}
-                  className="group relative overflow-hidden w-full flex items-center justify-center gap-2 text-white font-bold py-4 rounded-xl text-sm tracking-wide transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_8px_30px_rgba(32,190,198,0.45)] active:scale-[0.98]"
-                  style={{ background: "linear-gradient(90deg,#20BEC6,#008FD4)" }}
+                  className="group relative overflow-hidden w-full flex items-center justify-center gap-2 text-white font-black py-4 rounded-xl text-sm tracking-wide transition-all duration-300 hover:scale-[1.02] hover:brightness-110 active:scale-[0.98]"
+                  style={{
+                    background: "linear-gradient(90deg, #ED008C, #662D91)",
+                    boxShadow: "0 6px 25px rgba(237,0,140,0.45)",
+                  }}
                   onMouseEnter={(e) => speakText((e.target as HTMLElement).innerText)}
                 >
                   <IconCheck />
                   <span className="relative z-10">Activar lector de voz</span>
-                  <span className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] bg-white/20 skew-x-[-20deg] transition-transform duration-700" />
+                  <span className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] bg-white/25 skew-x-[-20deg] transition-transform duration-700" />
                 </button>
 
                 {/* Fila secundaria */}
                 <div className="flex gap-3">
                   <button
                     onClick={handleRepeat}
-                    className="flex-1 flex items-center justify-center gap-2 border-2 border-gray-200 text-gray-600 font-semibold py-3 rounded-xl text-sm hover:border-[#20BEC6] hover:text-[#20BEC6] transition-all duration-200"
+                    className="flex-1 flex items-center justify-center gap-2 border border-[#ED008C]/40 bg-[#ED008C]/10 text-[#ED008C] font-semibold py-3 rounded-xl text-sm hover:bg-[#ED008C]/20 hover:border-[#ED008C] hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
                     onMouseEnter={(e) => speakText((e.target as HTMLElement).innerText)}
                   >
                     <IconRepeat />
@@ -367,7 +385,7 @@ export default function WelcomeOnboarding() {
                   </button>
                   <button
                     onClick={closeModal}
-                    className="flex-1 text-gray-400 font-medium py-3 rounded-xl border border-gray-100 hover:border-gray-300 hover:text-gray-600 transition-all duration-200 text-sm"
+                    className="flex-1 bg-white/5 text-white/40 font-medium py-3 rounded-xl border border-white/10 hover:border-[#ED008C]/40 hover:text-[#ED008C]/80 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 text-sm"
                     onMouseEnter={(e) => speakText((e.target as HTMLElement).innerText)}
                   >
                     Continuar sin lector

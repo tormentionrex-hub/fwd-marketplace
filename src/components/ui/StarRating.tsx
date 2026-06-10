@@ -1,6 +1,9 @@
 'use client';
 
 // Selector de estrellas 1-5 reutilizable. Si readOnly, solo muestra (no edita).
+// - `size` (px) fija el tamaño de las estrellas vía fontSize; si no se pasa, se
+//   usa el tamaño tipográfico de `className` (por defecto text-2xl).
+// - `showValue` añade el número (x.x) junto a las estrellas.
 export default function StarRating({
   value,
   onChange,

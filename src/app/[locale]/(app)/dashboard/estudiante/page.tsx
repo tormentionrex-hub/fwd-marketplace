@@ -1,11 +1,11 @@
-import Badge, { type BadgeVariant } from "@/components/ui/Badge";
+import { redirect } from "next/navigation";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import StatCard from "@/components/ui/StatCard";
-import MiniChart from "@/components/ui/MiniChart";
 import SectionHeading from "@/components/ui/SectionHeading";
 import ProjectCard from "@/components/features/cards/ProjectCard";
 import EventCard from "@/components/features/cards/EventCard";
+import NotificacionesPanel from "@/components/features/dashboard/NotificacionesPanel";
 import {
   IconArrowRight,
   IconAward,
@@ -15,14 +15,11 @@ import {
   IconStar,
 } from "@/components/ui/icons";
 import { EVENTOS, PROYECTOS } from "@/lib/marketplace-data";
-import type { EstadoOferta, Oferta, ResumenDashboard } from "@/types/sefora";
-
-const estadoConfig: Record<EstadoOferta, { label: string; variant: BadgeVariant }> = {
-  enviada: { label: "Enviada", variant: "neutral" },
-  en_revision: { label: "En revisión", variant: "info" },
-  adjudicada: { label: "Adjudicada", variant: "success" },
-  no_seleccionada: { label: "No seleccionada", variant: "danger" },
-};
+import { ESTADO_OFERTA_META } from "@/lib/oferta-estado";
+import { getUser } from "@/server/auth/get-user";
+import { obtenerVerificacionEstudiante } from "@/server/services/verificacion.service";
+import { resumenDashboardEstudiante } from "@/server/services/dashboard.service";
+import { listarMisOfertas } from "@/server/services/oferta.service";
 
 export default async function DashboardEstudiantePage({
   params,
@@ -31,45 +28,59 @@ export default async function DashboardEstudiantePage({
 }) {
   const { locale } = await params;
 
-  const verificado = true;
-  const nombre = "Juan";
+  // El layout ya garantiza sesión + rol 'estudiante'; reforzamos por seguridad.
+  const user = await getUser();
+  if (!user) redirect(`/${locale}/login`);
 
-  const resumen: ResumenDashboard = {
-    totalOfertas: 12,
-    proyectosCompletados: 4,
-    calificacionPromedio: 4.6,
-    reputacion: 4.6,
-    proyectosActivos: 1,
-  };
+  // Verificación FWD: fuente de verdad en la DB (no un flag hardcodeado).
+  const verif = await obtenerVerificacionEstudiante(user.id);
+  const nombre = user.nombre.trim().split(/\s+/)[0] || "Estudiante";
 
-  const ofertas: Oferta[] = [
-    { id: "1", proyectoId: "1", proyecto: "Plataforma de inventario para PYME", estado: "en_revision", fecha: "2026-06-01" },
-    { id: "2", proyectoId: "2", proyecto: "App de reservas para clínica dental", estado: "adjudicada", fecha: "2026-05-28" },
-    { id: "3", proyectoId: "3", proyecto: "Rediseño de sitio corporativo", estado: "no_seleccionada", fecha: "2026-05-20" },
-    { id: "4", proyectoId: "4", proyecto: "Bot de atención al cliente", estado: "enviada", fecha: "2026-06-04" },
-  ];
-
-  const notificaciones: string[] = [
-    "Tu oferta en 'App de reservas' fue adjudicada.",
-    "Un empresario revisó tu perfil.",
-    "Nuevo proyecto de TI que coincide con tus habilidades.",
-  ];
-
-  if (!verificado) {
+  if (!verif.verificado) {
+    const solicitado = verif.solicitado
+      ? new Date(verif.solicitado).toLocaleDateString("es-CR", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        })
+      : "—";
     return (
-      <Card className="flex flex-col items-center gap-4 p-10 text-center">
+      <Card className="mx-auto flex max-w-lg flex-col items-center gap-4 p-10 text-center">
         <span className="grid h-14 w-14 place-items-center rounded-full bg-fwd-naranja/10 text-fwd-naranja">
           <IconShieldCheck width={28} height={28} />
         </span>
-        <h1 className="font-display text-xl font-bold text-text">Verificación pendiente</h1>
+        <h1 className="font-display text-xl font-bold text-text">
+          Cuenta pendiente de verificación
+        </h1>
         <p className="max-w-md text-sm text-text-muted">
-          Tu cuenta aún no ha sido verificada como egresado de FWD Costa Rica. Cuando se confirme
-          podrás acceder a tu dashboard y enviar ofertas.
+          Tu cuenta aún está siendo revisada por FWD Costa Rica. Cuando la verificación sea
+          aprobada podrás enviar ofertas, aplicar a proyectos, participar en adjudicaciones y
+          acceder al dashboard completo.
         </p>
-        <Badge variant="warning">Estado: pendiente</Badge>
+        <dl className="mt-1 grid w-full max-w-sm grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+          <div className="rounded-xl bg-surface-2 px-4 py-3 text-left">
+            <dt className="text-xs uppercase tracking-wide text-text-muted">Estado</dt>
+            <dd className="font-semibold capitalize text-text">{verif.estado ?? "pendiente"}</dd>
+          </div>
+          <div className="rounded-xl bg-surface-2 px-4 py-3 text-left">
+            <dt className="text-xs uppercase tracking-wide text-text-muted">Fecha de envío</dt>
+            <dd className="font-semibold text-text">{solicitado}</dd>
+          </div>
+        </dl>
+        <p className="text-xs text-text-muted">
+          Tiempo estimado de revisión: 24–72 horas hábiles.
+        </p>
+        <Button href={`/${locale}/dashboard/estudiante/perfil`}>Actualizar información</Button>
       </Card>
     );
   }
+
+  // Datos reales del dashboard (en paralelo).
+  const [resumen, misOfertas] = await Promise.all([
+    resumenDashboardEstudiante(user.id),
+    listarMisOfertas(user.id),
+  ]);
+  const ofertasRecientes = misOfertas.slice(0, 5);
 
   return (
     <div className="flex flex-col gap-8">
@@ -87,60 +98,53 @@ export default async function DashboardEstudiantePage({
         </Button>
       </header>
 
-      {/* KPIs */}
+      {/* KPIs (datos reales) */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Ofertas enviadas" value={resumen.totalOfertas} icon={<IconFile width={22} height={22} />} color="#008fd4" delta="+3 este mes" />
+        <StatCard label="Ofertas enviadas" value={resumen.totalOfertas} icon={<IconFile width={22} height={22} />} color="#008fd4" />
         <StatCard label="Proyectos activos" value={resumen.proyectosActivos} icon={<IconBriefcase width={22} height={22} />} color="#20bec6" />
-        <StatCard label="Completados" value={resumen.proyectosCompletados} icon={<IconAward width={22} height={22} />} color="#662d91" delta="+1" />
+        <StatCard label="Completados" value={resumen.proyectosCompletados} icon={<IconAward width={22} height={22} />} color="#662d91" />
         <StatCard label="Reputación" value={resumen.reputacion.toFixed(1)} icon={<IconStar width={22} height={22} />} color="#f7901e" />
       </div>
 
-      {/* Actividad + Notificaciones */}
+      {/* Mis ofertas + Notificaciones */}
       <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <h2 className="font-display text-lg font-bold text-text">Actividad semanal</h2>
-            <Badge variant="success">+18%</Badge>
-          </div>
-          <p className="mt-1 text-sm text-text-muted">Ofertas e interacciones de los últimos 7 días.</p>
-          <div className="mt-6">
-            <MiniChart data={[4, 7, 5, 9, 6, 11, 8]} color="#008fd4" height={88} />
-            <div className="mt-2 flex justify-between text-xs text-text-muted">
-              {["L", "M", "M", "J", "V", "S", "D"].map((d, i) => (
-                <span key={i}>{d}</span>
-              ))}
-            </div>
-          </div>
-        </Card>
-
         <Card className="flex flex-col p-6">
-          <h2 className="font-display text-lg font-bold text-text">Notificaciones</h2>
-          <ul className="mt-3 flex flex-col divide-y divide-border">
-            {notificaciones.map((nota, index) => (
-              <li key={index} className="flex gap-3 py-3 text-sm text-text-muted">
-                <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-fwd-azul" />
-                {nota}
-              </li>
-            ))}
-          </ul>
-        </Card>
-      </div>
+          <div className="flex items-center justify-between">
+            <h2 className="font-display text-lg font-bold text-text">Mis ofertas</h2>
+            <a href={`/${locale}/mis-ofertas`} className="text-sm font-medium text-fwd-azul hover:underline">
+              Ver todas
+            </a>
+          </div>
 
-      {/* Mis ofertas */}
-      <section>
-        <h2 className="font-display text-lg font-bold text-text">Mis ofertas</h2>
-        <Card className="mt-3 divide-y divide-border">
-          {ofertas.map((oferta) => {
-            const { label, variant } = estadoConfig[oferta.estado];
-            return (
-              <div key={oferta.id} className="flex items-center justify-between gap-3 px-5 py-4">
-                <span className="truncate text-sm font-medium text-text">{oferta.proyecto}</span>
-                <Badge variant={variant}>{label}</Badge>
-              </div>
-            );
-          })}
+          {ofertasRecientes.length === 0 ? (
+            <p className="mt-4 text-sm text-text-muted">
+              Aún no enviaste ofertas.{" "}
+              <a href={`/${locale}/marketplace`} className="font-medium text-fwd-azul hover:underline">
+                Explorá proyectos
+              </a>
+              .
+            </p>
+          ) : (
+            <ul className="mt-3 flex flex-col divide-y divide-border">
+              {ofertasRecientes.map((o) => {
+                const meta = ESTADO_OFERTA_META[o.estado];
+                return (
+                  <li key={o.id} className="flex items-center justify-between gap-3 py-3">
+                    <span className="truncate text-sm font-medium text-text">{o.proyecto.titulo}</span>
+                    <span
+                      className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${meta.badge}`}
+                    >
+                      {meta.label}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </Card>
-      </section>
+
+        <NotificacionesPanel />
+      </div>
 
       {/* Oportunidades */}
       <section>

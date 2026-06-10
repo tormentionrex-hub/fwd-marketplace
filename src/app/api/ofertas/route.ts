@@ -46,6 +46,12 @@ export async function POST(request: Request) {
     documentacionUrl: documentacionUrl || null,
   });
 
+  if (resultado === 'no_verificado') {
+    return NextResponse.json(
+      { error: 'Tu cuenta aún no está verificada por FWD Costa Rica' },
+      { status: 403 }
+    );
+  }
   if (resultado === 'proyecto_no_encontrado') {
     return NextResponse.json({ error: 'Proyecto no encontrado' }, { status: 404 });
   }

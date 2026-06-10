@@ -3,6 +3,7 @@ import {
   buscarProyectoParaOferta,
   buscarOfertaExistente,
   crearOferta,
+  listarOfertasDeEstudiante,
   retirarOferta as retirarOfertaRepo,
   listarOfertasDeEstudiante,
 } from '@/server/repositories/oferta.repository';
@@ -12,10 +13,18 @@ import type { MiOfertaDTO, EstadisticasOfertas } from '@/types/oferta';
 
 export type ResultadoEnviarOferta =
   | { ok: true; ofertaId: string }
+  | 'no_verificado'
   | 'proyecto_no_encontrado'
   | 'proyecto_cerrado'
   | 'ya_oferto'
   | 'sin_prototipo';
+
+// Estados de oferta que siguen "vivos" (sin resolución final del empresario).
+const ESTADOS_ACTIVOS: ReadonlySet<EstadoOfertaDetalle> = new Set([
+  'enviada',
+  'en_revision',
+  'preseleccionado',
+]);
 
 // Lógica de negocio para enviar una oferta:
 // 1. Verifica que el proyecto existe y está abierto
@@ -29,6 +38,10 @@ export async function enviarOferta(datos: {
   prototipoUrl?: string | null;
   documentacionUrl?: string | null;
 }): Promise<ResultadoEnviarOferta> {
+  // Enforcement de verificación FWD en el servidor (no confiar en la UI).
+  const verif = await obtenerVerificacionEstudiante(datos.idEstudiante);
+  if (!verif.verificado) return 'no_verificado';
+
   const proyecto = await buscarProyectoParaOferta(datos.idProyecto);
   if (!proyecto) return 'proyecto_no_encontrado';
 

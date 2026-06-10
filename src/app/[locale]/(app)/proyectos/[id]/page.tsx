@@ -1,25 +1,39 @@
-import { notFound } from 'next/navigation';
+import { redirect, notFound } from 'next/navigation';
+import { getUser } from '@/server/auth/get-user';
 import {
-  getProyectoById,
-  getEntregablesByProyecto,
-  ESTUDIANTE_ACTUAL_ID,
-} from '@/lib/mocks';
+  buscarProyectoActivo,
+  buscarEstudianteAdjudicado,
+} from '@/server/repositories/proyecto.repository';
+import { listarEntregablesDeProyecto } from '@/server/repositories/entregable.repository';
 import EntregablesEstudiante from '@/components/features/marketplace/EntregablesEstudiante';
+
+// El tipo del entregable es opcional en la DB; lo normalizamos a las dos variantes.
+function normalizarTipo(tipo: string | null): 'hito' | 'final' {
+  return tipo === 'final' ? 'final' : 'hito';
+}
 
 export default async function ProyectoActivoPage({
   params,
 }: {
   params: Promise<{ locale: string; id: string }>;
 }) {
-  const { id } = await params;
+  const { locale, id } = await params;
 
-  const proyecto = getProyectoById(id);
+  const user = await getUser();
+  if (!user) {
+    redirect(`/${locale}/login`);
+  }
+  if (user.roles.nombre !== 'estudiante') {
+    redirect(`/${locale}/dashboard/estudiante`);
+  }
+
+  const proyecto = await buscarProyectoActivo(id);
   if (!proyecto) notFound();
 
-  // Regla 1: solo accede el estudiante adjudicado de un proyecto en desarrollo.
+  // Solo accede el estudiante adjudicado de un proyecto en desarrollo.
+  const adjudicado = await buscarEstudianteAdjudicado(id);
   const tieneAcceso =
-    proyecto.estado === 'en_desarrollo' &&
-    proyecto.estudianteAdjudicadoId === ESTUDIANTE_ACTUAL_ID;
+    proyecto.estado === 'en_desarrollo' && adjudicado?.id_estudiante === user.id;
 
   if (!tieneAcceso) {
     return (
@@ -32,13 +46,20 @@ export default async function ProyectoActivoPage({
     );
   }
 
-  const entregables = getEntregablesByProyecto(id);
+  const entregables = await listarEntregablesDeProyecto(id);
 
   return (
     <EntregablesEstudiante
-      proyecto={proyecto}
-      entregablesIniciales={entregables}
-      estudianteId={ESTUDIANTE_ACTUAL_ID}
+      proyecto={{ id: proyecto.id, titulo: proyecto.titulo }}
+      entregablesIniciales={entregables.map((e) => ({
+        id: e.id,
+        tipo: normalizarTipo(e.tipo),
+        version: e.version,
+        archivoUrl: e.archivo_url,
+        estado: e.estado,
+        comentarioEmpresario: e.comentario_empresario,
+        creado: e.creado.toISOString(),
+      }))}
     />
   );
 }

@@ -13,23 +13,6 @@ import CursorGlow from '@/components/CursorGlow';
 import WelcomeOnboarding from '@/components/WelcomeOnboarding';
 import PageLoader from '@/components/PageLoader';
 
-const inter = Inter({
-  variable: '--font-inter',
-  subsets: ['latin'],
-  display: 'swap',
-});
-
-const spaceGrotesk = Space_Grotesk({
-  variable: '--font-space-grotesk',
-  subsets: ['latin'],
-  display: 'swap',
-});
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-});
-
 export const metadata: Metadata = {
   title: 'FWD · Costa Rica — Marketplace',
   description: 'Conectamos talento, innovación, emprendimiento y tecnología para construir el futuro de Costa Rica.',
