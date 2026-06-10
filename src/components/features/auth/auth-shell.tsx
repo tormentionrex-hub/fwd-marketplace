@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Link } from "@/i18n/navigation";
 import { FwdLogo, FwdIsotipo } from "@/components/ui/fwd-logo";
 
 /** Patrón decorativo de flechas multicolor (sistema gráfico, pág. 11). */
@@ -50,9 +51,13 @@ export function AuthShell({ highlight, children }: AuthShellProps) {
         <ArrowPattern />
 
         <div className="relative z-10">
-          <div className="inline-flex rounded-2xl bg-white px-5 py-3 shadow-lg">
+          <Link
+            href="/"
+            aria-label="Ir al inicio"
+            className="inline-flex rounded-2xl bg-white px-5 py-3 shadow-lg transition hover:shadow-xl"
+          >
             <FwdLogo />
-          </div>
+          </Link>
         </div>
 
         <div className="relative z-10 max-w-md">
@@ -79,7 +84,9 @@ export function AuthShell({ highlight, children }: AuthShellProps) {
       <main className="flex flex-1 flex-col items-center justify-center bg-white px-6 py-10 sm:px-10">
         {/* Logo compacto solo visible en móvil/tablet */}
         <div className="mb-8 lg:hidden">
-          <FwdLogo />
+          <Link href="/" aria-label="Ir al inicio" className="inline-flex">
+            <FwdLogo />
+          </Link>
         </div>
         <div className="w-full max-w-md">{children}</div>
       </main>
