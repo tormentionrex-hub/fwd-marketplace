@@ -194,6 +194,7 @@ model perfiles_estudiante {
   total_calificaciones    Int                       @default(0)
   descripcion             String?
   document_url            String?
+  generacion_fwd          Int?
   chats                   chats[]
   curriculums             curriculums?
   entregables             entregables[]
@@ -310,6 +311,7 @@ model password_resets {
 model usuarios {
   id                  String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   nombre              String               @db.VarChar(150)
+  segundo_apellido    String?              @db.VarChar(150)
   correo              String               @unique @db.VarChar(255)
   hash_contrasena     String
   image_url           String?

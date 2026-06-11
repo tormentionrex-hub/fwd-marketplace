@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Link } from "@/i18n/navigation";
 import { FwdLogo, FwdIsotipo } from "@/components/ui/fwd-logo";
 
 /** Patrón decorativo de flechas multicolor (sistema gráfico, pág. 11). */
@@ -33,8 +34,6 @@ function ArrowPattern() {
 type AuthShellProps = {
   /** Texto destacado del panel de marca */
   highlight: string;
-  /** Logo a mostrar en el panel de marca y en el header móvil. Default: FwdLogo. */
-  logo?: ReactNode;
   children: ReactNode;
 };
 
@@ -42,8 +41,7 @@ type AuthShellProps = {
  * Estructura de autenticación: panel de marca (navy) + panel de formulario (claro).
  * Responsive: el panel de marca se oculta en móvil y deja un encabezado compacto.
  */
-export function AuthShell({ highlight, logo, children }: AuthShellProps) {
-  const brandLogo = logo ?? <FwdLogo />;
+export function AuthShell({ highlight, children }: AuthShellProps) {
   return (
     <div className="flex min-h-screen flex-col lg:flex-row">
       {/* Panel de marca */}
@@ -53,13 +51,13 @@ export function AuthShell({ highlight, logo, children }: AuthShellProps) {
         <ArrowPattern />
 
         <div className="relative z-10">
-          {logo ? (
-            brandLogo
-          ) : (
-            <div className="inline-flex rounded-2xl bg-white px-5 py-3 shadow-lg">
-              {brandLogo}
-            </div>
-          )}
+          <Link
+            href="/"
+            aria-label="Ir al inicio"
+            className="inline-flex rounded-2xl bg-white px-5 py-3 shadow-lg transition hover:shadow-xl"
+          >
+            <FwdLogo />
+          </Link>
         </div>
 
         <div className="relative z-10 mt-10 max-w-md">
@@ -86,7 +84,9 @@ export function AuthShell({ highlight, logo, children }: AuthShellProps) {
       <main className="flex flex-1 flex-col items-center justify-center bg-white px-6 py-10 sm:px-10">
         {/* Logo compacto solo visible en móvil/tablet */}
         <div className="mb-8 lg:hidden">
-          {brandLogo}
+          <Link href="/" aria-label="Ir al inicio" className="inline-flex">
+            <FwdLogo />
+          </Link>
         </div>
         <div className="w-full max-w-md">{children}</div>
       </main>
