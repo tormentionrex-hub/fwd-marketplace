@@ -194,6 +194,10 @@ export function RegisterForm() {
             max={50}
             step={1}
             inputMode="numeric"
+            onInput={(e) => {
+              const t = e.currentTarget;
+              if (t.value.length > 2) t.value = t.value.slice(0, 2);
+            }}
             required
           />
         </div>
