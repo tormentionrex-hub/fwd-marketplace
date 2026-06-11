@@ -99,7 +99,10 @@ export default async function Home() {
       </section>
 
       {/* ── CÓMO FUNCIONA ────────────────────────── */}
-      <section className="relative py-28 overflow-hidden" style={{ background: "#f7f6f4" }}>
+      {/* Sin `relative`: si la sección se posiciona, su fondo pinta ENCIMA de la capa
+          de FloatingTriangles (z-0) y la franja pierde la decoración. El div interno
+          ya es `relative` y mantiene el contenido por encima. */}
+      <section className="py-28 overflow-hidden" style={{ background: "#f7f6f4" }}>
 
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
 
