@@ -8,6 +8,7 @@ import {
   type ActividadTipo,
 } from '@/server/services/proyecto.service';
 import { ProyectoRow } from '@/components/features/empresario/lista-proyectos';
+import { tiempoRelativo } from '@/lib/tiempo';
 import {
   IconFolder,
   IconSend,
