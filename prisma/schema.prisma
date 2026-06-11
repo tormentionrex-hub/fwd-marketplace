@@ -39,17 +39,17 @@ model conversaciones_ia {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model entregables {
-  id                  String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  id_proyecto         String              @db.Uuid
-  id_estudiante       String              @db.Uuid
-  tipo                String?             @db.VarChar(100)
-  version             Int                 @default(1)
-  archivo_url         String
-  estado              String              @default("enviado") @db.VarChar(50)
+  id                    String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id_proyecto           String              @db.Uuid
+  id_estudiante         String              @db.Uuid
+  tipo                  String?             @db.VarChar(100)
+  version               Int                 @default(1)
+  archivo_url           String
+  estado                String              @default("enviado") @db.VarChar(50)
+  creado                DateTime            @default(now()) @db.Timestamptz(6)
   comentario_empresario String?
-  creado              DateTime            @default(now()) @db.Timestamptz(6)
-  perfiles_estudiante perfiles_estudiante @relation(fields: [id_estudiante], references: [id_usuario], onDelete: Cascade, map: "fk_entregables_estudiante")
-  proyectos           proyectos           @relation(fields: [id_proyecto], references: [id], onDelete: Cascade, map: "fk_entregables_proyecto")
+  perfiles_estudiante   perfiles_estudiante @relation(fields: [id_estudiante], references: [id_usuario], onDelete: Cascade, map: "fk_entregables_estudiante")
+  proyectos             proyectos           @relation(fields: [id_proyecto], references: [id], onDelete: Cascade, map: "fk_entregables_proyecto")
 
   @@index([id_proyecto], map: "idx_entregables_id_proyecto")
 }
@@ -199,6 +199,7 @@ model perfiles_estudiante {
   evaluaciones            evaluaciones[]
   ofertas                 ofertas[]
   usuarios                usuarios                  @relation(fields: [id_usuario], references: [id], onDelete: Cascade, map: "fk_perfiles_estudiante_usuario")
+  portafolio_proyectos    portafolio_proyectos[]
 
   @@index([reputacion], map: "idx_perfiles_estudiante_reputacion")
 }
@@ -305,4 +306,20 @@ model usuarios {
 
   @@index([estado], map: "idx_usuarios_estado")
   @@index([id_rol], map: "idx_usuarios_id_rol")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model portafolio_proyectos {
+  id                  String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id_usuario          String              @db.Uuid
+  titulo              String              @db.VarChar(200)
+  descripcion         String?
+  tecnologias         String?
+  fecha               DateTime?           @db.Date
+  repo_url            String?
+  demo_url            String?
+  creado              DateTime            @default(now()) @db.Timestamptz(6)
+  perfiles_estudiante perfiles_estudiante @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([id_usuario], map: "idx_portafolio_id_usuario")
 }
