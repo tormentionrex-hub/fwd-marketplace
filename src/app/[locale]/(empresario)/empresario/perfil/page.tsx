@@ -3,6 +3,7 @@ import { Link } from '@/i18n/navigation';
 import { getUser } from '@/server/auth/get-user';
 import { obtenerPerfilEmpresarioDTO } from '@/server/services/perfil-empresario.service';
 import { ESTADO_BADGE } from '@/components/features/empresario/lista-proyectos';
+import EditarPerfilEmpresario from '@/components/features/empresario/editar-perfil-empresario';
 import {
   IconBell,
   IconBriefcase,
@@ -91,6 +92,12 @@ export default async function PerfilEmpresarioPage({
           <div className="tb-sub">Así te ven los estudiantes en la plataforma</div>
         </div>
         <div className="tb-spacer" />
+        <EditarPerfilEmpresario
+          nombreInicial={perfil.responsable}
+          nombreEmpresaInicial={perfil.nombreEmpresaRaw}
+          fotoUrlInicial={perfil.fotoUrl}
+          inicialesFallback={inicialesDe(perfil.empresa)}
+        />
         <div className="tb-icon">
           <IconBell size={18} />
           <span className="dot" />
@@ -103,12 +110,21 @@ export default async function PerfilEmpresarioPage({
           <div style={{ display: 'flex', flexDirection: 'column', gap: 18, position: 'sticky', top: 20 }}>
             <div className="card card-pad" style={{ textAlign: 'center' }}>
               <div style={{ position: 'relative', width: 92, height: 92, margin: '0 auto 14px' }}>
-                <div
-                  className="avatar"
-                  style={{ width: 92, height: 92, background: 'var(--azul)', fontSize: 34, borderRadius: 22 }}
-                >
-                  {inicialesDe(perfil.empresa)}
-                </div>
+                {perfil.fotoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={perfil.fotoUrl}
+                    alt={perfil.empresa}
+                    style={{ width: 92, height: 92, borderRadius: 22, objectFit: 'cover' }}
+                  />
+                ) : (
+                  <div
+                    className="avatar"
+                    style={{ width: 92, height: 92, background: 'var(--azul)', fontSize: 34, borderRadius: 22 }}
+                  >
+                    {inicialesDe(perfil.empresa)}
+                  </div>
+                )}
                 {perfil.verificado && (
                   <span
                     style={{

@@ -1,5 +1,9 @@
 import 'server-only';
-import { obtenerPerfilEmpresario } from '@/server/repositories/perfil-empresario.repository';
+import { Prisma } from '@prisma/client';
+import {
+  obtenerPerfilEmpresario,
+  actualizarPerfilEmpresario,
+} from '@/server/repositories/perfil-empresario.repository';
 
 // ── Perfil del empresario (pantalla "Mi perfil", SRS RF-16/17) ──────────────
 // Mapea la fila de la DB al DTO que consume el RSC. Solo expone datos que el
@@ -23,6 +27,10 @@ export interface ResenaEmpresario {
 
 export interface PerfilEmpresarioDTO {
   empresa: string;
+  /** Valor editable crudo de nombre_empresa ('' si aún no se definió). */
+  nombreEmpresaRaw: string;
+  /** Foto de perfil (usuarios.image_url) o null. */
+  fotoUrl: string | null;
   responsable: string;
   sector: string | null;
   tipo: string;
@@ -53,10 +61,12 @@ export async function obtenerPerfilEmpresarioDTO(
   const u = perfil.usuarios;
   const proyectos = perfil.proyectos;
 
+  const nombreEmpresa = perfil.nombre_empresa?.trim() ?? '';
+
   return {
-    // El nombre de empresa (perfiles_empresario.nombre_empresa) aún no existe en
-    // la DB actual; usamos el nombre del usuario como nombre de la cuenta.
-    empresa: u?.nombre || 'Mi empresa',
+    empresa: nombreEmpresa || u?.nombre || 'Mi empresa',
+    nombreEmpresaRaw: nombreEmpresa,
+    fotoUrl: u?.image_url ?? null,
     responsable: u?.nombre ?? '',
     sector: perfil.sector,
     tipo: perfil.tipo?.trim() || 'Empresa',
@@ -78,4 +88,47 @@ export async function obtenerPerfilEmpresarioDTO(
     })),
     resenas: [],
   };
+}
+
+// ── Guardar perfil del empresario (CRUD "Editar perfil") ────────────────────
+// Solo edita lo que pidió el negocio: nombre de la empresa y foto de perfil.
+// Valida y normaliza antes de persistir.
+
+export type ResultadoGuardarEmpresario = { ok: true } | 'datos_invalidos' | 'no_existe';
+
+function esUrlValida(v: string): boolean {
+  try {
+    const u = new URL(v);
+    return u.protocol === 'http:' || u.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+export async function guardarPerfilEmpresario(
+  idUsuario: string,
+  entrada: { nombre?: string; nombreEmpresa?: string; fotoUrl?: string | null },
+): Promise<ResultadoGuardarEmpresario> {
+  const nombre = (entrada.nombre ?? '').trim();
+  if (!nombre || nombre.length > 150) return 'datos_invalidos';
+
+  const nombreEmpresa = (entrada.nombreEmpresa ?? '').trim();
+  if (nombreEmpresa.length > 200) return 'datos_invalidos';
+
+  const fotoUrl = (entrada.fotoUrl ?? '').trim();
+  if (fotoUrl && !esUrlValida(fotoUrl)) return 'datos_invalidos';
+
+  try {
+    await actualizarPerfilEmpresario(idUsuario, {
+      nombre,
+      nombreEmpresa: nombreEmpresa || null,
+      imageUrl: fotoUrl || null,
+    });
+    return { ok: true };
+  } catch (e) {
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2025') {
+      return 'no_existe';
+    }
+    throw e;
+  }
 }
