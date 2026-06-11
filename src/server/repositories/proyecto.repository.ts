@@ -48,6 +48,52 @@ export function obtenerProyectoConDetalle(id: string) {
   });
 }
 
+// ── Actividad reciente del empresario (Dashboard, Página 12) ────────────────
+// Tres consultas acotadas a los proyectos del empresario; la capa de servicio
+// las mezcla y ordena. Cada una trae solo lo que la UI muestra.
+
+// Últimas ofertas recibidas en los proyectos del empresario (con autor y proyecto).
+export function ofertasRecientesDeEmpresario(idEmpresario: string, limite: number) {
+  return db.ofertas.findMany({
+    where: { proyectos: { id_empresario: idEmpresario } },
+    select: {
+      id: true,
+      enviado: true,
+      id_proyecto: true,
+      proyectos: { select: { titulo: true } },
+      perfiles_estudiante: { select: { usuarios: { select: { nombre: true } } } },
+    },
+    orderBy: { enviado: 'desc' },
+    take: limite,
+  });
+}
+
+// Últimas entregas subidas en los proyectos del empresario.
+export function entregablesRecientesDeEmpresario(idEmpresario: string, limite: number) {
+  return db.entregables.findMany({
+    where: { proyectos: { id_empresario: idEmpresario } },
+    select: {
+      id: true,
+      creado: true,
+      id_proyecto: true,
+      proyectos: { select: { titulo: true } },
+      perfiles_estudiante: { select: { usuarios: { select: { nombre: true } } } },
+    },
+    orderBy: { creado: 'desc' },
+    take: limite,
+  });
+}
+
+// Últimos proyectos cerrados del empresario.
+export function proyectosCerradosDeEmpresario(idEmpresario: string, limite: number) {
+  return db.proyectos.findMany({
+    where: { id_empresario: idEmpresario, estado: 'cerrado', cierre: { not: null } },
+    select: { id: true, titulo: true, cierre: true },
+    orderBy: { cierre: 'desc' },
+    take: limite,
+  });
+}
+
 // Datos mínimos del proyecto para la pantalla de gestión (Página 14) y para
 // validar dueño. `buscarProyectoActivo` es el alias que usan las páginas 11/14.
 export function buscarProyectoGestion(id: string) {

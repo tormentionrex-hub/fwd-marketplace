@@ -140,7 +140,7 @@ export default async function EmpresarioLayout({
         ))}
       </div>
 
-      <Sidebar nombre={user?.nombre ?? 'Empresario'} />
+      <Sidebar nombre={user?.nombre ?? 'Empresario'} fotoUrl={user?.image_url ?? null} />
       <main className="main">{children}</main>
     </div>
   );
