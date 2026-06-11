@@ -21,6 +21,7 @@ export function buscarUsuarioPorId(id: string) {
       image_url: true,
       estado: true,
       id_rol: true,
+      ultima_sesion: true,
       roles: { select: { nombre: true } },
     },
   });
@@ -128,6 +129,17 @@ export function listarUsuarios() {
       creado: true,
       roles: { select: { nombre: true } },
     },
+  });
+}
+
+// Registra la marca de tiempo de la sesión actual (último login exitoso).
+// Lo llama el servicio de auth tras validar credenciales. Devuelve la cantidad
+// de filas afectadas vía Prisma update; el llamador no necesita el resultado.
+export function registrarUltimaSesion(id: string) {
+  return db.usuarios.update({
+    where: { id },
+    data: { ultima_sesion: new Date() },
+    select: { id: true },
   });
 }
 

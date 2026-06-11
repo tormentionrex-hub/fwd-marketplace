@@ -35,13 +35,29 @@ export async function POST(request: Request) {
   }
 
   try {
-    await solicitarRecuperacion(email);
-  } catch (err) {
-    // No se filtran fallos internos ni si el correo existe o no.
-    console.error("[password/request]", err);
-  }
+    const resultado = await solicitarRecuperacion(email);
 
-  // Siempre 200: por seguridad no revelamos si el correo está registrado
-  // (anti-enumeración). Si existe, se envió el código; si no, no se hace nada.
-  return NextResponse.json({ ok: true });
+    // Por requerimiento de producto SÍ se valida la existencia del correo: si no
+    // hay cuenta, se informa con 404 en vez de un éxito falso (así el usuario
+    // sabe que el código solo llega a correos realmente registrados).
+    if (!resultado.existe) {
+      return NextResponse.json(
+        { error: "No encontramos una cuenta con ese correo." },
+        { status: 404 },
+      );
+    }
+
+    // El código fue enviado. Devolvemos la última sesión para mostrarla en la
+    // pantalla de verificación (ISO 8601 o null si nunca inició sesión).
+    return NextResponse.json({
+      ok: true,
+      ultimaSesion: resultado.ultimaSesion ? resultado.ultimaSesion.toISOString() : null,
+    });
+  } catch (err) {
+    console.error("[password/request]", err);
+    return NextResponse.json(
+      { error: "No se pudo enviar el código. Intentá de nuevo." },
+      { status: 500 },
+    );
+  }
 }

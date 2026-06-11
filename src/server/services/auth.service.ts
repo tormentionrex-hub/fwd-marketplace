@@ -4,6 +4,7 @@ import {
   crearEmpresario,
   crearEstudiante,
   buscarRolIdPorNombre,
+  registrarUltimaSesion,
 } from '@/server/repositories/usuario.repository';
 import { verifyPassword, hashPassword } from '@/server/auth/password';
 import { generarToken } from '@/server/auth/token';
@@ -41,6 +42,14 @@ export async function login(
   if (!verifyPassword(password, usuario.hash_contrasena)) return null;
 
   if (usuario.estado === 'pendiente') return 'pendiente';
+
+  // Marca el inicio de esta sesión. No bloquea el login si la escritura falla:
+  // registrar la sesión es secundario frente a dejar entrar al usuario.
+  try {
+    await registrarUltimaSesion(usuario.id);
+  } catch (e) {
+    console.error('[auth] no se pudo registrar ultima_sesion', e);
+  }
 
   return {
     token: generarToken(),
