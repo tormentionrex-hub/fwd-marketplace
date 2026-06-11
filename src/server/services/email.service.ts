@@ -1,10 +1,10 @@
 import "server-only";
-import sgMail from "@sendgrid/mail";
+import nodemailer, { type Transporter } from "nodemailer";
 
-// Servicio de correo (SendGrid vía @sendgrid/mail). Usa SENDGRID_API_KEY /
-// SENDGRID_FROM_EMAIL del .env. Si faltan credenciales, NO envía y solo
-// registra en consola — el flujo de recuperación nunca se rompe por un fallo
-// de correo.
+// Servicio de correo (SMTP vía nodemailer). Usa EMAIL_USER / EMAIL_PASS /
+// EMAIL_FROM del .env. Host/puerto opcionales (por defecto Gmail SMTP).
+// Si faltan credenciales, NO envía y solo registra en consola — el flujo de
+// recuperación nunca se rompe por un fallo de correo.
 
 // ¿El valor es real (no vacío ni placeholder tipo "XXXX")?
 function esReal(v: string | undefined): boolean {
@@ -15,19 +15,44 @@ function esReal(v: string | undefined): boolean {
 // Nombre visible del remitente (mejora la confianza y reduce spam).
 const NOMBRE_REMITENTE = "FWD Marketplace";
 
-// Configura la API key una sola vez (si es real).
-const apiKey = process.env.SENDGRID_API_KEY;
-if (esReal(apiKey)) {
-  sgMail.setApiKey(apiKey as string);
+// Remitente SMTP: EMAIL_FROM solo si es real y tiene "@"; si no, el EMAIL_USER
+// autenticado. Siempre con nombre visible. NUNCA usa el placeholder "XXXX".
+function fromSmtp(): string {
+  const f = (process.env.EMAIL_FROM || "").trim();
+  if (esReal(f) && /@/.test(f)) {
+    // Si ya trae nombre ("Nombre <correo>") lo respetamos; si es solo el correo,
+    // le anteponemos el nombre de marca.
+    return /</.test(f) ? f : `${NOMBRE_REMITENTE} <${f}>`;
+  }
+  const user = (process.env.EMAIL_USER || "").trim();
+  if (esReal(user)) return `${NOMBRE_REMITENTE} <${user}>`;
+  return `${NOMBRE_REMITENTE} <no-reply@fwd.cr>`;
 }
 
-// Remitente para SendGrid: SENDGRID_FROM_EMAIL si es real y tiene "@"; si no,
-// un fallback de marca. SendGrid exige que el correo sea un Single Sender
-// verificado (o un dominio autenticado) en la cuenta.
-function fromSendgrid(): { email: string; name: string } {
-  const f = (process.env.SENDGRID_FROM_EMAIL || "").trim();
-  const email = esReal(f) && /@/.test(f) ? f : "no-reply@fwd.cr";
-  return { email, name: NOMBRE_REMITENTE };
+// Remitente válido para Resend: usa EMAIL_FROM si es real; si no, el remitente
+// de pruebas de Resend (onboarding@resend.dev), que envía a tu propio correo.
+function fromResend(): string {
+  const f = (process.env.EMAIL_FROM || "").trim();
+  if (esReal(f) && /@/.test(f)) return f;
+  return "FWD Marketplace <onboarding@resend.dev>";
+}
+
+let transporter: Transporter | null = null;
+
+function getTransporter(): Transporter | null {
+  if (transporter) return transporter;
+  const user = process.env.EMAIL_USER;
+  const pass = process.env.EMAIL_PASS;
+  if (!esReal(user) || !esReal(pass)) return null;
+
+  const port = Number(process.env.EMAIL_PORT || 587);
+  transporter = nodemailer.createTransport({
+    host: process.env.EMAIL_HOST || "smtp.gmail.com",
+    port,
+    secure: port === 465,
+    auth: { user, pass },
+  });
+  return transporter;
 }
 
 interface OpcionesCorreo {
@@ -41,24 +66,56 @@ interface OpcionesCorreo {
 }
 
 async function enviar({ to, subject, html, text, replyTo }: OpcionesCorreo) {
-  if (!esReal(process.env.SENDGRID_API_KEY)) {
+  // 1) Resend (API HTTP, sin dependencias): la opción más simple.
+  const resendKey = process.env.RESEND_API_KEY;
+  if (esReal(resendKey)) {
+    try {
+      const res = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${resendKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: fromResend(),
+          to,
+          subject,
+          html,
+          text,
+          ...(replyTo ? { reply_to: replyTo } : {}),
+        }),
+      });
+      if (!res.ok) {
+        console.error("[email] Resend error:", res.status, await res.text().catch(() => ""));
+      } else {
+        console.info("[email] enviado vía Resend");
+      }
+    } catch (err) {
+      console.error("[email] Resend falló:", err);
+    }
+    return;
+  }
+
+  // 2) SMTP (nodemailer) — p. ej. Gmail con contraseña de aplicación.
+  const t = getTransporter();
+  if (!t) {
     console.warn(
-      `[email] Sin proveedor configurado (SENDGRID_API_KEY real) — correo omitido: "${subject}" -> ${to}`,
+      `[email] Sin proveedor configurado (RESEND_API_KEY o EMAIL_USER/EMAIL_PASS reales) — correo omitido: "${subject}" -> ${to}`,
     );
     return;
   }
   try {
-    await sgMail.send({
+    await t.sendMail({
+      from: fromSmtp(),
       to,
-      from: fromSendgrid(),
       subject,
       html,
       text,
       ...(replyTo ? { replyTo } : {}),
     });
-    console.info("[email] enviado vía SendGrid");
+    console.info("[email] enviado vía SMTP");
   } catch (err) {
-    console.error("[email] Error SendGrid:", err);
+    console.error("[email] Error SMTP:", err);
   }
 }
 
