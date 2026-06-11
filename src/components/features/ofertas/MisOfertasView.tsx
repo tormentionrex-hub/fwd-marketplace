@@ -252,7 +252,7 @@ export default function MisOfertasView({ locale }: MisOfertasViewProps) {
   );
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-6 py-10 sm:px-8">
+    <div className="w-full">
       {encabezado}
 
       <div className="mt-8">

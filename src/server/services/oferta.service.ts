@@ -6,7 +6,8 @@ import {
   listarOfertasDeEstudiante,
   retirarOferta as retirarOfertaRepo,
 } from '@/server/repositories/oferta.repository';
-import { normalizarEstadoOferta } from '@/lib/oferta-estado';
+import { normalizarEstadoOferta, type EstadoOfertaDetalle } from '@/lib/oferta-estado';
+import { obtenerVerificacionEstudiante } from '@/server/services/verificacion.service';
 import { calcularEstadisticas } from '@/lib/oferta-estadisticas';
 import type { MiOfertaDTO, EstadisticasOfertas } from '@/types/oferta';
 import type { EstadoProyecto } from '@/types/sefora';
@@ -119,11 +120,11 @@ export async function estadoOfertaDeEstudiante(
 
   const oferta = await buscarOfertaExistente(idProyecto, idEstudiante);
   if (!oferta) {
-    return { yaOferto: false, estado: null, idOferta: null };
+    return { existe: false, estado: null, enviado: null };
   }
   return {
-    yaOferto: true,
+    existe: true,
     estado: normalizarEstadoOferta(oferta.estado),
-    idOferta: oferta.id,
+    enviado: oferta.enviado ? oferta.enviado.toISOString() : null,
   };
 }

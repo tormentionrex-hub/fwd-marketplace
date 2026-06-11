@@ -1,11 +1,33 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Card from "@/components/ui/Card";
+import type { ComponentType, SVGProps } from "react";
+import {
+  IconAward,
+  IconBell,
+  IconBriefcase,
+  IconCheck,
+  IconMail,
+} from "@/components/ui/icons";
 import type { NotificacionDTO, NotificacionesPayload } from "@/types/notificacion";
 
-// Refresco periódico (near real-time vía polling; no websockets).
 const POLL_MS = 30_000;
+
+function metaTipo(tipo: string): {
+  Icon: ComponentType<SVGProps<SVGSVGElement>>;
+  badge: string;
+} {
+  const t = (tipo ?? "").toLowerCase();
+  if (t.includes("oportun") || t.includes("proyecto"))
+    return { Icon: IconBriefcase, badge: "bg-fwd-azul/10 text-fwd-azul" };
+  if (t.includes("logro") || t.includes("reputa") || t.includes("adjudic"))
+    return { Icon: IconAward, badge: "bg-fwd-amarillo/15 text-fwd-naranja" };
+  if (t.includes("mensaje") || t.includes("empresar"))
+    return { Icon: IconMail, badge: "bg-fwd-morado/10 text-fwd-morado" };
+  if (t.includes("oferta") || t.includes("respuesta") || t.includes("acept"))
+    return { Icon: IconCheck, badge: "bg-fwd-turquesa/10 text-fwd-turquesa" };
+  return { Icon: IconBell, badge: "bg-fwd-magenta/10 text-fwd-magenta" };
+}
 
 function tiempoRelativo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
@@ -46,7 +68,6 @@ export default function NotificacionesPanel() {
   }, [cargar]);
 
   async function marcarLeidas() {
-    // Optimista: limpia el contador ya y confirma contra el backend.
     setNoLeidas(0);
     setItems((prev) => prev.map((n) => ({ ...n, leida: true })));
     await fetch("/api/notificaciones/read", { method: "PATCH" }).catch(() => {});
@@ -54,9 +75,12 @@ export default function NotificacionesPanel() {
   }
 
   return (
-    <Card className="flex flex-col p-6">
+    <div className="glass flex flex-col rounded-2xl p-6 shadow-sm">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
+          <span className="grid h-9 w-9 place-items-center rounded-xl bg-fwd-morado/10 text-fwd-morado">
+            <IconBell width={18} height={18} />
+          </span>
           <h2 className="font-display text-lg font-bold text-text">Notificaciones</h2>
           {noLeidas > 0 && (
             <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-fwd-azul px-1.5 text-xs font-bold text-white">
@@ -86,21 +110,31 @@ export default function NotificacionesPanel() {
       ) : items.length === 0 ? (
         <p className="mt-4 text-sm text-text-muted">No tenés notificaciones por ahora.</p>
       ) : (
-        <ul className="mt-3 flex flex-col divide-y divide-border">
-          {items.map((n) => (
-            <li key={n.id} className="flex gap-3 py-3 text-sm">
-              <span
-                className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${n.leida ? "bg-border" : "bg-fwd-azul"}`}
-                aria-hidden
-              />
-              <span className="flex-1 text-text-muted">
-                {n.mensaje}
-                <span className="ml-1 text-xs text-text-muted/70">· {tiempoRelativo(n.creado)}</span>
-              </span>
-            </li>
-          ))}
+        <ul className="mt-3 flex flex-col gap-1">
+          {items.map((n) => {
+            const meta = metaTipo(n.tipo);
+            return (
+              <li
+                key={n.id}
+                className={`flex items-start gap-3 rounded-xl px-2.5 py-2.5 text-sm transition-colors ${
+                  n.leida ? "" : "bg-fwd-azul/[0.04]"
+                }`}
+              >
+                <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg ${meta.badge}`}>
+                  <meta.Icon width={16} height={16} />
+                </span>
+                <span className="flex-1 text-text-muted">
+                  <span className={n.leida ? "" : "font-medium text-text"}>{n.mensaje}</span>
+                  <span className="ml-1 text-xs text-text-muted/70">· {tiempoRelativo(n.creado)}</span>
+                </span>
+                {!n.leida && (
+                  <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-fwd-azul" aria-hidden />
+                )}
+              </li>
+            );
+          })}
         </ul>
       )}
-    </Card>
+    </div>
   );
 }
