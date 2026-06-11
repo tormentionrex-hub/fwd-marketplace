@@ -9,13 +9,15 @@ export default function PageLoader() {
   useEffect(() => {
     const hide = () => {
       setFading(true);
-      setTimeout(() => setVisible(false), 500);
+      setTimeout(() => setVisible(false), 300);
     };
 
+    // Se oculta apenas la pagina termina de cargar. Antes habia +400ms de espera
+    // artificial y un fade de 500ms (~900ms total); ahora solo ~300ms de fade.
     if (document.readyState === "complete") {
-      setTimeout(hide, 400);
+      hide();
     } else {
-      window.addEventListener("load", () => setTimeout(hide, 400));
+      window.addEventListener("load", hide);
     }
   }, []);
 
@@ -26,7 +28,7 @@ export default function PageLoader() {
       className="fixed inset-0 z-[99999] flex flex-col items-center justify-center"
       style={{
         background: "#0e1628",
-        transition: "opacity 0.5s ease",
+        transition: "opacity 0.3s ease",
         opacity: fading ? 0 : 1,
       }}
     >
