@@ -19,19 +19,23 @@ export default function WaveFunciona() {
 
     const chars = el.querySelectorAll<HTMLSpanElement>(".func-char");
 
-    gsap.from(chars, {
-      opacity: 0,
-      y: 55,
-      rotateX: -90,
-      stagger: 0.04,
-      duration: 0.6,
-      ease: "back.out(1.5)",
-      scrollTrigger: {
-        trigger: el,
-        start: "top 85%",
-        toggleActions: "play none none none",
-      },
-    });
+    // context con scope: el revert limpia SOLO lo de este título. Antes el cleanup
+    // hacía ScrollTrigger.getAll().kill() y mataba los triggers de toda la página.
+    const ctx = gsap.context(() => {
+      gsap.from(".func-char", {
+        opacity: 0,
+        y: 55,
+        rotateX: -90,
+        stagger: 0.04,
+        duration: 0.6,
+        ease: "back.out(1.5)",
+        scrollTrigger: {
+          trigger: el,
+          start: "top 85%",
+          toggleActions: "play none none none",
+        },
+      });
+    }, el);
 
     chars.forEach((char) => {
       char.addEventListener("mouseenter", () => {
@@ -42,7 +46,7 @@ export default function WaveFunciona() {
       });
     });
 
-    return () => { ScrollTrigger.getAll().forEach((t) => t.kill()); };
+    return () => { gsap.killTweensOf(chars); ctx.revert(); };
   }, []);
 
   return (
