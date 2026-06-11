@@ -50,6 +50,15 @@ Los hooks existen para mantener calidad — saltarlos es engañar al equipo.
 
 ---
 
+## REGLA #2.5 — El autor de los commits SIEMPRE debe ser Christopher
+
+**Todo commit DEBE quedar firmado como Christopher.** Antes de comitear, verificá que el `git config user.name` y `user.email` correspondan a Christopher (`Christopher G` / `tormentionrex@gmail.com`).
+
+- **NUNCA** cambies el autor ni el committer (`--author`, `GIT_AUTHOR_*`, `GIT_COMMITTER_*`, `user.name`/`user.email`) a otra persona.
+- Si por algún motivo el `user.name`/`user.email` activo no es el de Christopher, **PARÁ** y avisale antes de comitear — no comitees con otro autor.
+
+---
+
 ## REGLA #3 — Nunca tocar `.env`
 
 - **NUNCA** comitear `.env` (está en `.gitignore` y debe permanecer ahí).
