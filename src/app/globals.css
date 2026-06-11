@@ -212,3 +212,52 @@ div:hover > .shine-sweep {
 .footer-wave-wrap:hover .footer-wave-2 {
   animation-duration: 1.2s;
 }
+
+/* ---- Utilidades de marca (degradados, glass) ---- */
+.text-gradient-fwd {
+  background-image: linear-gradient(100deg, #008fd4, #662d91 55%, #ec008c);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.bg-gradient-fwd {
+  background-image: linear-gradient(100deg, #008fd4, #662d91 55%, #ec008c);
+}
+
+.bg-gradient-fwd-soft {
+  background-image: linear-gradient(135deg, #008fd4, #20bec6);
+}
+
+.glass {
+  background-color: color-mix(in srgb, var(--surface) 72%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+}
+
+@keyframes fwd-aurora {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translate(24px, -18px) scale(1.12);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.7;
+  }
+}
+
+.animate-aurora {
+  animation: fwd-aurora 14s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-aurora,
+  .fwd-spin {
+    animation: none !important;
+  }
+}

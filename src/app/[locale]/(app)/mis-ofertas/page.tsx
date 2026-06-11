@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import EstudianteShell from "@/components/layout/EstudianteShell";
 import MisOfertasView from "@/components/features/ofertas/MisOfertasView";
 
 export const metadata: Metadata = {
@@ -12,5 +13,9 @@ export default async function MisOfertasPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  return <MisOfertasView locale={locale} />;
+  return (
+    <EstudianteShell locale={locale}>
+      <MisOfertasView locale={locale} />
+    </EstudianteShell>
+  );
 }
