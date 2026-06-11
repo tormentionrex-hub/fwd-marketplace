@@ -21,13 +21,24 @@ export default function CursorGlow() {
       dot.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%, -50%)`;
     };
 
-    const onEnterLink = () => {
-      dot.classList.add("cursor-hover");
-      ring.classList.add("cursor-hover");
+    // Event delegation: antes re-escaneabamos TODO el DOM (querySelectorAll) y
+    // reenganchabamos listeners en cada mutacion via MutationObserver, lo que
+    // causaba jank al renderizar/cambiar de ruta. Ahora escuchamos UNA vez en
+    // document y miramos con closest() si el cursor entro/salio de un interactivo.
+    const interactivo = (t: EventTarget | null) =>
+      t instanceof Element && t.closest("a, button, [role='button']");
+
+    const onOver = (e: MouseEvent) => {
+      if (interactivo(e.target)) {
+        dot.classList.add("cursor-hover");
+        ring.classList.add("cursor-hover");
+      }
     };
-    const onLeaveLink = () => {
-      dot.classList.remove("cursor-hover");
-      ring.classList.remove("cursor-hover");
+    const onOut = (e: MouseEvent) => {
+      if (interactivo(e.target)) {
+        dot.classList.remove("cursor-hover");
+        ring.classList.remove("cursor-hover");
+      }
     };
 
     const animate = () => {
@@ -38,26 +49,15 @@ export default function CursorGlow() {
     };
 
     document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseover", onOver);
+    document.addEventListener("mouseout", onOut);
     animate();
-
-    const addListeners = () => {
-      document
-        .querySelectorAll("a, button, [role='button']")
-        .forEach((el) => {
-          el.addEventListener("mouseenter", onEnterLink);
-          el.addEventListener("mouseleave", onLeaveLink);
-        });
-    };
-
-    addListeners();
-
-    const observer = new MutationObserver(addListeners);
-    observer.observe(document.body, { childList: true, subtree: true });
 
     return () => {
       document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseover", onOver);
+      document.removeEventListener("mouseout", onOut);
       cancelAnimationFrame(raf);
-      observer.disconnect();
     };
   }, []);
 
