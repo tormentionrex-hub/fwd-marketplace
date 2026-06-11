@@ -11,6 +11,9 @@ import Timeline from "@/components/features/perfil/Timeline";
 import Certifications from "@/components/features/perfil/Certifications";
 import Achievements from "@/components/features/perfil/Achievements";
 import ProfileLinks from "@/components/features/perfil/ProfileLinks";
+import CvPublicoSection from "@/components/features/perfil/CvPublicoSection";
+import { getUser } from "@/server/auth/get-user";
+import { metadataCvPublico } from "@/server/services/curriculum.service";
 import {
   IconAward,
   IconBolt,
@@ -53,6 +56,11 @@ export default async function PerfilPublicoPage({ params }: PerfilPublicoPagePro
   const { locale, username } = await params;
   const perfil = await getPerfilPublico(username);
 
+  // Currículum público: solo lo ve un empresario autenticado, si el estudiante lo habilitó.
+  const viewer = await getUser();
+  const cvPublico =
+    viewer?.roles.nombre === "empresario" ? await metadataCvPublico(username) : null;
+
   // Proyectos ordenados por relevancia: calificación ponderada por nº de evaluaciones.
   const proyectosOrdenados = [...perfil.proyectos].sort(
     (a, b) =>
@@ -84,6 +92,17 @@ export default async function PerfilPublicoPage({ params }: PerfilPublicoPagePro
       />
 
       <ProfileHeader perfil={perfil} profilePath={`/${locale}/perfil/${perfil.username}`} />
+
+      {cvPublico && (
+        <div className="mt-8">
+          <CvPublicoSection
+            username={username}
+            fileName={cvPublico.fileName}
+            fileType={cvPublico.fileType}
+            actualizado={cvPublico.actualizado}
+          />
+        </div>
+      )}
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_20rem]">
         <main className="flex min-w-0 flex-col gap-14">

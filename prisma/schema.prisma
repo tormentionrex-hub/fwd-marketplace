@@ -221,6 +221,34 @@ model portafolio_proyectos {
   @@index([id_usuario], map: "idx_portafolio_id_usuario")
 }
 
+/// Currículum del estudiante (StudentCV). 1→1 con perfiles_estudiante.
+/// El archivo vive en Supabase Storage (bucket privado); aquí solo ruta + metadatos.
+/// Migración SQL en prisma/sql/curriculums.sql.
+model curriculums {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id_usuario   String   @unique @db.Uuid
+  file_name    String   @db.VarChar(255)
+  storage_path String
+  file_size    BigInt
+  file_type    String   @db.VarChar(100)
+  es_publico   Boolean  @default(false)
+  subido       DateTime @default(now()) @db.Timestamptz(6)
+  actualizado  DateTime @default(now()) @db.Timestamptz(6)
+}
+
+/// Auditoría: accesos de empresarios al CV de un estudiante.
+model cv_accesos {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id_curriculum String   @db.Uuid
+  id_empresario String   @db.Uuid
+  id_proyecto   String?  @db.Uuid
+  accion        String   @default("ver") @db.VarChar(20)
+  creado        DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([id_curriculum], map: "idx_cv_accesos_curriculum")
+  @@index([id_empresario], map: "idx_cv_accesos_empresario")
+}
+
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model proyecto_mejoras {
