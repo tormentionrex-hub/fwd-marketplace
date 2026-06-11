@@ -1,81 +1,74 @@
 import { listarUsuarios } from "@/server/repositories/usuario.repository";
+import { getUser } from "@/server/auth/get-user";
+import { LogoutButton } from "@/components/features/admin/logout-button";
+import { UsuariosTabla } from "@/components/features/admin/usuarios-tabla";
 
-// Panel de administración (presentación / solo lectura).
-// URL: /es/admin — protegido por (admin)/layout.tsx (rol admin).
+// Panel de administración (presentación / solo lectura + borrado).
+// URL: /es/admin — protegido por (admin)/layout.tsx (solo rol admin).
 export default async function AdminPage() {
-  const usuarios = await listarUsuarios();
+  const [data, me] = await Promise.all([listarUsuarios(), getUser()]);
+
+  const usuarios = data.map((u) => ({
+    id: u.id,
+    nombre: u.nombre,
+    correo: u.correo,
+    rol: u.roles.nombre,
+    estado: u.estado,
+    creado: u.creado.toISOString(),
+  }));
 
   const conteo = { estudiante: 0, empresario: 0, admin: 0 };
   for (const u of usuarios) {
-    const rol = u.roles.nombre as keyof typeof conteo;
+    const rol = u.rol as keyof typeof conteo;
     if (rol in conteo) conteo[rol] += 1;
   }
 
   const tarjetas = [
-    { rol: "Estudiantes", total: conteo.estudiante },
-    { rol: "Empresarios", total: conteo.empresario },
-    { rol: "Admins", total: conteo.admin },
+    { rol: "Estudiantes", total: conteo.estudiante, color: "#008FD4" },
+    { rol: "Empresarios", total: conteo.empresario, color: "#662D91" },
+    { rol: "Admins", total: conteo.admin, color: "#EC008C" },
+    { rol: "Total", total: usuarios.length, color: "#20BEC6" },
   ];
 
   return (
-    <section className="mx-auto flex w-full max-w-5xl flex-col gap-6 p-6">
-      <header className="flex flex-col gap-1">
-        <h1 className="text-3xl font-semibold tracking-tight">
-          Panel de administración
-        </h1>
-        <p className="text-zinc-600 dark:text-zinc-400">
-          Usuarios registrados — vista de solo lectura.
-        </p>
+    <section className="mx-auto flex w-full max-w-5xl flex-col gap-8 p-6 sm:p-10">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex flex-col gap-1">
+          <p className="font-display text-xs font-bold uppercase tracking-[0.3em] text-fwd-blue">
+            FWD · Costa Rica
+          </p>
+          <h1 className="font-display text-3xl font-black tracking-tight text-fwd-ink">
+            Panel de administración
+          </h1>
+          <p className="text-fwd-ink/60">
+            Gestión de usuarios registrados.
+          </p>
+        </div>
+        <LogoutButton />
       </header>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      {/* Tarjetas de resumen */}
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {tarjetas.map((t) => (
           <div
             key={t.rol}
-            className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900"
+            className="relative overflow-hidden rounded-2xl border border-fwd-ink/10 bg-white p-5 shadow-sm"
           >
-            <p className="text-sm text-zinc-500">{t.rol}</p>
-            <p className="mt-1 text-3xl font-bold tabular-nums">{t.total}</p>
+            <span
+              className="absolute inset-y-0 left-0 w-1.5"
+              style={{ backgroundColor: t.color }}
+              aria-hidden
+            />
+            <p className="text-sm text-fwd-ink/55">{t.rol}</p>
+            <p className="mt-1 text-3xl font-black tabular-nums text-fwd-ink">
+              {t.total}
+            </p>
           </div>
         ))}
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-zinc-50 text-zinc-500 dark:bg-zinc-900">
-            <tr>
-              <th className="px-4 py-3 font-medium">Nombre</th>
-              <th className="px-4 py-3 font-medium">Correo</th>
-              <th className="px-4 py-3 font-medium">Rol</th>
-              <th className="px-4 py-3 font-medium">Estado</th>
-              <th className="px-4 py-3 font-medium">Registrado</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-            {usuarios.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-zinc-400">
-                  Aún no hay usuarios registrados.
-                </td>
-              </tr>
-            ) : (
-              usuarios.map((u) => (
-                <tr key={u.id}>
-                  <td className="px-4 py-3">{u.nombre}</td>
-                  <td className="px-4 py-3 text-zinc-600 dark:text-zinc-400">
-                    {u.correo}
-                  </td>
-                  <td className="px-4 py-3 capitalize">{u.roles.nombre}</td>
-                  <td className="px-4 py-3 capitalize">{u.estado}</td>
-                  <td className="px-4 py-3 text-zinc-500">
-                    {u.creado.toLocaleDateString("es-CR")}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+      {/* Tabla con filtros por rol, buscador, orden y borrado */}
+      <UsuariosTabla usuarios={usuarios} currentUserId={me?.id ?? ""} />
     </section>
   );
 }

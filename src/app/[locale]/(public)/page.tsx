@@ -80,14 +80,14 @@ export default async function Home() {
 
             <div data-hero="cta" className="flex flex-col sm:flex-row gap-4">
               <Link
-                href="/auth/registro"
+                href="/register"
                 className="inline-flex items-center justify-center gap-2 bg-[#FFCB05] text-fwd-navy font-bold px-8 py-4 rounded-xl transition-all duration-300 text-base hover:scale-105 hover:brightness-110 active:scale-95"
                 style={{ boxShadow: "0 4px 25px #FFCB0566, 0 10px 40px #FFCB0533" }}
               >
                 {h("ctaPublicar")} <span aria-hidden="true">▶</span>
               </Link>
               <Link
-                href="/proyectos"
+                href="/marketplace"
                 className="inline-flex items-center justify-center gap-2 border-2 border-[#FFCB05] text-[#FFCB05] font-bold px-8 py-4 rounded-xl transition-all duration-300 text-base hover:scale-105 hover:bg-[#FFCB05] hover:text-fwd-navy active:scale-95"
               >
                 {h("ctaExplorar")}
@@ -138,7 +138,7 @@ export default async function Home() {
 
               <div className="mt-8">
                 <Link
-                  href="/auth/registro?tipo=empresa"
+                  href="/register"
                   className="btn-empresa group relative flex items-center justify-center gap-3 w-full text-white font-bold py-4 rounded-xl overflow-hidden uppercase tracking-widest text-sm transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_8px_30px_#008FD566] active:scale-95"
                   style={{ background: "linear-gradient(90deg,#008FD5,#20BEC6)" }}
                 >
@@ -173,7 +173,7 @@ export default async function Home() {
 
               <div className="mt-8">
                 <Link
-                  href="/auth/registro?tipo=estudiante"
+                  href="/register-estudiante"
                   className="group relative flex items-center justify-center gap-3 w-full text-white font-bold py-4 rounded-xl overflow-hidden uppercase tracking-widest text-sm transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_8px_30px_#662E9166] active:scale-95"
                   style={{ background: "linear-gradient(90deg,#662E91,#ED008C)" }}
                 >
@@ -199,7 +199,7 @@ export default async function Home() {
             </div>
             <Link
               data-reveal="fade-right"
-              href="/proyectos"
+              href="/marketplace"
               className="hidden sm:inline-flex items-center gap-2 border border-white/20 hover:border-[#FFCB05] text-white hover:text-[#FFCB05] font-semibold text-sm px-5 py-2.5 rounded-full transition-all duration-200"
             >
               {p("verTodos")}
@@ -229,7 +229,7 @@ export default async function Home() {
           </div>
 
           <div className="text-center mt-10 sm:hidden">
-            <Link href="/proyectos" className="text-[#FFCB05] font-semibold text-sm">Ver todos los proyectos →</Link>
+            <Link href="/marketplace" className="text-[#FFCB05] font-semibold text-sm">Ver todos los proyectos →</Link>
           </div>
         </div>
       </section>

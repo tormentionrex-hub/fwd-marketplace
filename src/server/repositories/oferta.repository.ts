@@ -126,34 +126,3 @@ export async function retirarOferta(
   await db.ofertas.delete({ where: { id: idOferta } });
   return 'ok';
 }
-
-// ── Página 14 (gestión del empresario) ─────────────────────────────────────
-
-// Lista todas las ofertas de un proyecto, de la más antigua a la más nueva.
-export function listarOfertasDeProyecto(idProyecto: string) {
-  return db.ofertas.findMany({
-    where: { id_proyecto: idProyecto },
-    orderBy: { enviado: 'asc' },
-  });
-}
-
-// Trae una oferta mínima (para validar a qué proyecto pertenece).
-export function buscarOferta(id: string) {
-  return db.ofertas.findUnique({
-    where: { id },
-    select: { id: true, id_proyecto: true },
-  });
-}
-
-// Adjudica una oferta de forma atómica: la elegida pasa a 'adjudicada', las demás
-// del proyecto a 'no_seleccionada' y el proyecto a 'en_desarrollo'.
-export function adjudicarOferta(idOferta: string, idProyecto: string) {
-  return db.$transaction([
-    db.ofertas.update({ where: { id: idOferta }, data: { estado: 'adjudicada' } }),
-    db.ofertas.updateMany({
-      where: { id_proyecto: idProyecto, id: { not: idOferta } },
-      data: { estado: 'no_seleccionada' },
-    }),
-    db.proyectos.update({ where: { id: idProyecto }, data: { estado: 'en_desarrollo' } }),
-  ]);
-}

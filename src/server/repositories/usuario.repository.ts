@@ -120,3 +120,9 @@ export function listarUsuarios() {
     },
   });
 }
+
+// Elimina un usuario por id. Los perfiles y datos relacionados se borran en
+// cascada según las FK del esquema. Lo usa el panel admin.
+export function eliminarUsuario(id: string) {
+  return db.usuarios.delete({ where: { id } });
+}

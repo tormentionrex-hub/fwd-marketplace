@@ -6,11 +6,13 @@ import {
   listarOfertasDeEstudiante,
   retirarOferta as retirarOfertaRepo,
 } from '@/server/repositories/oferta.repository';
-import { obtenerVerificacionEstudiante } from '@/server/services/verificacion.service';
-import { mapearEstadoProyecto } from '@/server/services/proyecto.service';
 import { normalizarEstadoOferta, type EstadoOfertaDetalle } from '@/lib/oferta-estado';
+import { obtenerVerificacionEstudiante } from '@/server/services/verificacion.service';
 import { calcularEstadisticas } from '@/lib/oferta-estadisticas';
-import type { EstadisticasOfertas, MiOfertaDTO } from '@/types/oferta';
+import type { MiOfertaDTO, EstadisticasOfertas } from '@/types/oferta';
+import type { EstadoProyecto } from '@/types/sefora';
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export type ResultadoEnviarOferta =
   | { ok: true; ofertaId: string }
@@ -19,13 +21,6 @@ export type ResultadoEnviarOferta =
   | 'proyecto_cerrado'
   | 'ya_oferto'
   | 'sin_prototipo';
-
-// Estados de oferta que siguen "vivos" (sin resolución final del empresario).
-const ESTADOS_ACTIVOS: ReadonlySet<EstadoOfertaDetalle> = new Set([
-  'enviada',
-  'en_revision',
-  'preseleccionado',
-]);
 
 // Lógica de negocio para enviar una oferta:
 // 1. Verifica que el proyecto existe y está abierto
@@ -67,42 +62,42 @@ export async function retirarOfertaService(
   return retirarOfertaRepo(idOferta, idEstudiante);
 }
 
-// Lista las ofertas del estudiante autenticado mapeadas al DTO de "Mis Ofertas".
-// El estado de la oferta se normaliza; el badge añade "proyecto_cerrado" cuando
-// el proyecto se cerró/venció mientras la oferta seguía activa.
+// Lista y normaliza las ofertas de un estudiante
 export async function listarMisOfertas(idEstudiante: string): Promise<MiOfertaDTO[]> {
-  const filas = await listarOfertasDeEstudiante(idEstudiante);
+  const ofertasRepo = await listarOfertasDeEstudiante(idEstudiante);
+  const ahora = new Date();
 
-  return filas.map((o) => {
-    const estado = normalizarEstadoOferta(o.estado);
-    const p = o.proyectos;
-    const { estado: estadoProyecto } = mapearEstadoProyecto(p.estado, p.cierre);
-    const badge =
-      ESTADOS_ACTIVOS.has(estado) && estadoProyecto === 'cerrado' ? 'proyecto_cerrado' : estado;
+  return ofertasRepo.map((o) => {
+    const estadoCanonico = normalizarEstadoOferta(o.estado);
+    const proyecto = o.proyectos;
+    const cerrado = proyecto.estado === 'cerrado' || (proyecto.cierre !== null && proyecto.cierre < ahora);
+
+    // Si el proyecto se cerró y la oferta aún no tiene resolución final (aceptada, rechazada, cancelada)
+    const resolucionFinal = estadoCanonico === 'aceptado' || estadoCanonico === 'rechazado' || estadoCanonico === 'cancelado';
+    const badge = (cerrado && !resolucionFinal) ? 'proyecto_cerrado' : estadoCanonico;
 
     return {
       id: o.id,
-      estado,
+      estado: estadoCanonico,
       badge,
       propuesta: o.propuesta,
-      monto: null, // el schema actual no almacena monto (pendiente Fase de datos)
+      monto: null,
       fechaEnvio: o.enviado.toISOString(),
       proyecto: {
-        id: p.id,
-        titulo: p.titulo,
-        area: p.area_negocio ?? 'General',
-        empresario: p.perfiles_empresario?.usuarios?.nombre ?? 'Empresa',
-        sector: p.perfiles_empresario?.sector ?? '—',
-        tecnologias: p.proyectos_tecnologias.map((t) => t.tecnologias.nombre),
-        estado: estadoProyecto,
-        fechaLimite: p.cierre ? p.cierre.toISOString() : null,
+        id: proyecto.id,
+        titulo: proyecto.titulo,
+        area: proyecto.area_negocio ?? '',
+        empresario: proyecto.perfiles_empresario?.usuarios?.nombre ?? '',
+        sector: proyecto.perfiles_empresario?.sector ?? '',
+        tecnologias: proyecto.proyectos_tecnologias.map((t) => t.tecnologias.nombre),
+        estado: proyecto.estado as EstadoProyecto,
+        fechaLimite: proyecto.cierre ? proyecto.cierre.toISOString() : null,
       },
     };
   });
 }
 
-// Contadores de "Mis Ofertas". Reutiliza la misma lista + el cálculo puro para
-// que los números coincidan exactamente con lo que se muestra en la vista.
+// Obtiene estadísticas de ofertas de un estudiante
 export async function estadisticasMisOfertas(idEstudiante: string): Promise<EstadisticasOfertas> {
   const ofertas = await listarMisOfertas(idEstudiante);
   return calcularEstadisticas(ofertas);
@@ -113,8 +108,13 @@ export async function estadoOfertaDeEstudiante(
   idProyecto: string,
   idEstudiante: string,
 ): Promise<{ existe: boolean; estado: EstadoOfertaDetalle | null; enviado: string | null }> {
+  // Un idProyecto mal formado (no-UUID) haría que Prisma lance; lo tratamos como "sin oferta".
+  if (!UUID_RE.test(idProyecto)) return { existe: false, estado: null, enviado: null };
+
   const oferta = await buscarOfertaExistente(idProyecto, idEstudiante);
-  if (!oferta) return { existe: false, estado: null, enviado: null };
+  if (!oferta) {
+    return { existe: false, estado: null, enviado: null };
+  }
   return {
     existe: true,
     estado: normalizarEstadoOferta(oferta.estado),

@@ -5,17 +5,22 @@ import {
   aprobarSolicitud,
 } from '@/server/repositories/pending-verification.repository';
 import { enviarEmailInvitacion } from '@/lib/email';
+import { mismoOrigen } from '@/server/http/request';
+import { error, errorInterno, parsearBody } from '@/server/http/responder';
+import { aprobarVerificacionSchema } from '@/server/validation/admin.schema';
 
 // GET /api/admin/verificaciones
 // Lista todas las invitaciones/solicitudes pendientes. Solo admin.
 export async function GET() {
   const user = await getUser();
-  if (!user || user.roles.nombre !== 'admin') {
-    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-  }
+  if (!user || user.roles.nombre !== 'admin') return error('No autorizado', 401);
 
-  const pendientes = await listarPendingVerifications();
-  return NextResponse.json({ pendientes });
+  try {
+    const pendientes = await listarPendingVerifications();
+    return NextResponse.json({ pendientes });
+  } catch (e) {
+    return errorInterno('admin/verificaciones/GET', e);
+  }
 }
 
 // PATCH /api/admin/verificaciones
@@ -23,29 +28,26 @@ export async function GET() {
 //   → cierra la fila (pending=false) y envía el email de invitación al estudiante.
 // Body: { id: string }
 export async function PATCH(request: Request) {
+  if (!mismoOrigen(request)) return error('Origen no permitido', 403);
+
   const user = await getUser();
-  if (!user || user.roles.nombre !== 'admin') {
-    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-  }
+  if (!user || user.roles.nombre !== 'admin') return error('No autorizado', 401);
 
-  let body: { id?: string };
+  const parseo = await parsearBody(request, aprobarVerificacionSchema);
+  if (!parseo.ok) return parseo.respuesta;
+  const { id } = parseo.data;
+
   try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: 'Cuerpo inválido' }, { status: 400 });
+    const verificacion = await aprobarSolicitud(id);
+
+    // Enviar invitación para que completen el registro
+    await enviarEmailInvitacion(verificacion.email);
+
+    return NextResponse.json({
+      ok: true,
+      mensaje: `Invitación enviada a ${verificacion.email}.`,
+    });
+  } catch (e) {
+    return errorInterno('admin/verificaciones/PATCH', e);
   }
-
-  if (!body.id) {
-    return NextResponse.json({ error: 'Falta el id' }, { status: 400 });
-  }
-
-  const verificacion = await aprobarSolicitud(body.id);
-
-  // Enviar invitación para que completen el registro
-  await enviarEmailInvitacion(verificacion.email);
-
-  return NextResponse.json({
-    ok: true,
-    mensaje: `Invitación enviada a ${verificacion.email}.`,
-  });
 }

@@ -28,7 +28,7 @@ export async function generateMetadata({
   params,
 }: PerfilPublicoPageProps): Promise<Metadata> {
   const { username } = await params;
-  const perfil = getPerfilPublico(username);
+  const perfil = await getPerfilPublico(username);
   const title = `${perfil.nombre} (@${perfil.username}) · FWD Marketplace`;
   const description = perfil.resumen.slice(0, 160);
 
@@ -51,7 +51,7 @@ export async function generateMetadata({
 
 export default async function PerfilPublicoPage({ params }: PerfilPublicoPageProps) {
   const { locale, username } = await params;
-  const perfil = getPerfilPublico(username);
+  const perfil = await getPerfilPublico(username);
 
   // Proyectos ordenados por relevancia: calificación ponderada por nº de evaluaciones.
   const proyectosOrdenados = [...perfil.proyectos].sort(

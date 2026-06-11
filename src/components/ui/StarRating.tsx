@@ -20,10 +20,10 @@ export default function StarRating({
   showValue?: boolean;
 }) {
   return (
-    <span className="inline-flex items-center gap-1.5">
-      <span
-        className={`flex text-[#F9B233] ${size ? '' : className}`}
-        style={size ? { fontSize: size, lineHeight: 1 } : undefined}
+    <div className="flex items-center gap-1.5">
+      <div
+        className={`flex text-[#F9B233] ${className}`}
+        style={size ? { fontSize: `${size}px` } : undefined}
       >
         {[1, 2, 3, 4, 5].map((n) => (
           <button
@@ -37,10 +37,12 @@ export default function StarRating({
             {n <= value ? '★' : '☆'}
           </button>
         ))}
-      </span>
+      </div>
       {showValue && (
-        <span className="text-sm font-semibold text-text">{value.toFixed(1)}</span>
+        <span className="text-sm font-semibold text-text-muted">
+          {value.toFixed(1)}
+        </span>
       )}
-    </span>
+    </div>
   );
 }
