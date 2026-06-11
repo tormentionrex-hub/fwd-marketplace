@@ -1,23 +1,28 @@
 import 'server-only';
+import sgMail from '@sendgrid/mail';
 
-// Envío de emails transaccionales via Resend REST API (sin paquete extra —
-// usa el fetch nativo de Node 18+).
+// Envío de emails transaccionales via SendGrid (@sendgrid/mail).
 //
 // Configuración en .env:
-//   RESEND_API_KEY=re_xxxx   ← obtené una gratis en https://resend.com
-//   RESEND_FROM=FWD Marketplace <noreply@tudominio.com>
+//   SENDGRID_API_KEY=SG.xxxx   ← obtené una en https://sendgrid.com
+//   SENDGRID_FROM_EMAIL=no-reply@tudominio.com  (Single Sender verificado)
 //
-// Si RESEND_API_KEY no está configurada, el envío se simula por consola
-// (útil en desarrollo sin cuenta Resend).
+// Si SENDGRID_API_KEY no está configurada, el envío se simula por consola
+// (útil en desarrollo sin cuenta SendGrid).
 
-const RESEND_API_URL = 'https://api.resend.com/emails';
-const FROM = process.env.RESEND_FROM ?? 'FWD Marketplace <onboarding@resend.dev>';
+const FROM = {
+  email: process.env.SENDGRID_FROM_EMAIL ?? 'no-reply@fwd.cr',
+  name: 'FWD Marketplace',
+};
 const APP_URL = process.env.NEXT_PUBLIC_URL ?? 'http://localhost:3000';
 
-async function enviarEmail(to: string, subject: string, html: string): Promise<void> {
-  const apiKey = process.env.RESEND_API_KEY;
+const sendgridKey = process.env.SENDGRID_API_KEY;
+if (sendgridKey) {
+  sgMail.setApiKey(sendgridKey);
+}
 
-  if (!apiKey) {
+async function enviarEmail(to: string, subject: string, html: string): Promise<void> {
+  if (!sendgridKey) {
     // Modo desarrollo: simulación por consola
     console.log('\n──────────────── EMAIL SIMULADO ────────────────');
     console.log(`Para:    ${to}`);
@@ -27,22 +32,10 @@ async function enviarEmail(to: string, subject: string, html: string): Promise<v
   }
 
   try {
-    const res = await fetch(RESEND_API_URL, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ from: FROM, to: [to], subject, html }),
-    });
-
-    if (!res.ok) {
-      const error = await res.text();
-      // No lanzamos el error para no romper el flujo de negocio si el email falla
-      console.error('[EMAIL ERROR]', res.status, error);
-    }
+    await sgMail.send({ to, from: FROM, subject, html });
   } catch (err) {
-    console.error('[EMAIL ERROR] No se pudo conectar con Resend:', err);
+    // No lanzamos el error para no romper el flujo de negocio si el email falla
+    console.error('[EMAIL ERROR] No se pudo enviar con SendGrid:', err);
   }
 }
 
