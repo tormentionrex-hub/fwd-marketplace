@@ -82,6 +82,24 @@ Resumen — el detalle está en [ARCHITECTURE.md](ARCHITECTURE.md):
 
 ---
 
+## REGLA #6 — PROHIBIDO usar emojis (cero emojis, sin excepciones)
+
+**NUNCA uses emojis en NINGUNA parte del producto ni del repositorio.** Los emojis se ven poco profesionales y están terminantemente prohibidos en este proyecto. Esta regla es absoluta, amplia y no admite excepciones.
+
+Aplica a **todo** lo que llega a la UI o queda en el código:
+- **Texto visible**: títulos, párrafos, labels, botones, placeholders, tooltips, toasts, mensajes de error/éxito, estados vacíos, badges, breadcrumbs.
+- **Contenido e i18n**: los mensajes de traducción (`es`/`en`), datos hardcodeados, `metadata`, `alt`, `aria-label`, títulos de página.
+- **Diseño y decoración**: NO uses emojis como íconos, viñetas, separadores, bullets ni adornos visuales.
+- **Código y comentarios**: nada de emojis en `.tsx`/`.ts`, JSON, comentarios ni documentación de la UI.
+
+**Qué usar en su lugar:**
+1. **Íconos de `lucide-react`** (ya está instalado) o los componentes de ícono/SVG propios del proyecto. Es la opción preferida cuando se necesita un símbolo visual.
+2. Si no hay un ícono adecuado, **no pongas nada**: texto limpio y profesional es mejor que un emoji.
+
+**Auto-revisión OBLIGATORIA:** antes de dar por terminado cualquier cambio que toque la UI o agregue texto, **revisá si introdujiste algún emoji**. Si encontrás aunque sea uno —en cualquier archivo (`.tsx`, `.ts`, JSON de i18n, etc.)—, **corregilo de inmediato**: reemplazalo por un ícono de `lucide-react` o quitalo, antes de continuar. Si ves emojis preexistentes en el código que estás tocando, señalalos para limpiarlos.
+
+---
+
 ## Referencia rápida
 
 | Si querés... | Mirá |
@@ -91,3 +109,4 @@ Resumen — el detalle está en [ARCHITECTURE.md](ARCHITECTURE.md):
 | Entender arquitectura / reparto de capas | [ARCHITECTURE.md](ARCHITECTURE.md) |
 | Setup local, variables de entorno, troubleshooting Supabase | [README.md](README.md) |
 | Reglas de commitlint | [commitlint.config.js](commitlint.config.js) |
+| Poner un símbolo/ícono en la UI (NUNCA emojis) | REGLA #6 — usar [`lucide-react`](https://lucide.dev/icons) |

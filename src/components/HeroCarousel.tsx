@@ -47,23 +47,6 @@ export default function HeroCarousel() {
             "linear-gradient(105deg, rgba(14,22,40,0.88) 40%, rgba(14,22,40,0.55) 75%, rgba(14,22,40,0.30) 100%)",
         }}
       />
-
-      {/* Indicadores de posición */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2 z-10">
-        {imagenes.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => setCurrent(i)}
-            aria-label={`Ir a imagen ${i + 1}`}
-            className="rounded-full transition-all duration-300"
-            style={{
-              width: i === current ? "28px" : "8px",
-              height: "8px",
-              backgroundColor: i === current ? "#FFCB05" : "rgba(255,255,255,0.4)",
-            }}
-          />
-        ))}
-      </div>
     </div>
   );
 }
