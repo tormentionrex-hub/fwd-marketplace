@@ -17,6 +17,7 @@ import {
 import { EVENTOS, PROYECTOS } from "@/lib/marketplace-data";
 import { ESTADO_OFERTA_META } from "@/lib/oferta-estado";
 import { getUser } from "@/server/auth/get-user";
+import { tiempoRelativo } from "@/lib/tiempo";
 import { obtenerVerificacionEstudiante } from "@/server/services/verificacion.service";
 import { resumenDashboardEstudiante } from "@/server/services/dashboard.service";
 import { listarMisOfertas } from "@/server/services/oferta.service";
@@ -35,6 +36,7 @@ export default async function DashboardEstudiantePage({
   // Verificación FWD: fuente de verdad en la DB (no un flag hardcodeado).
   const verif = await obtenerVerificacionEstudiante(user.id);
   const nombre = user.nombre.trim().split(/\s+/)[0] || "Estudiante";
+  const ultimaSesion = tiempoRelativo(user.ultima_sesion);
 
   if (!verif.verificado) {
     const solicitado = verif.solicitado
@@ -88,9 +90,12 @@ export default async function DashboardEstudiantePage({
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="font-display text-3xl font-bold tracking-tight text-text">
-            Hola, {nombre} 👋
+            Hola, {nombre}
           </h1>
           <p className="mt-1 text-text-muted">Este es el resumen de tu actividad en la plataforma.</p>
+          {ultimaSesion && (
+            <p className="mt-1 text-sm text-text-muted">Última sesión: {ultimaSesion}</p>
+          )}
         </div>
         <Button href={`/${locale}/marketplace`}>
           Explorar proyectos

@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { Link } from '@/i18n/navigation';
 import { getUser } from '@/server/auth/get-user';
+import { tiempoRelativo } from '@/lib/tiempo';
 import { dashboardEmpresario } from '@/server/services/proyecto.service';
 import { ProyectoRow } from '@/components/features/empresario/lista-proyectos';
 import {
@@ -36,14 +37,18 @@ export default async function DashboardEmpresarioPage({
   ];
 
   const primerNombre = user.nombre.split(' ')[0];
+  const ultimaSesion = tiempoRelativo(user.ultima_sesion);
 
   return (
     <>
       {/* Topbar */}
       <div className="topbar">
         <div>
-          <div className="tb-title">Hola, {primerNombre} 👋</div>
-          <div className="tb-sub">{user.nombre} · Panel del empresario</div>
+          <div className="tb-title">Hola, {primerNombre}</div>
+          <div className="tb-sub">
+            {user.nombre} · Panel del empresario
+            {ultimaSesion ? ` · Última sesión: ${ultimaSesion}` : ""}
+          </div>
         </div>
         <div className="tb-spacer" />
         <div className="tb-search">
