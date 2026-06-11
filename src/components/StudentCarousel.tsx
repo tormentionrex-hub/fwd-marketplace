@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { gsap } from "gsap";
 import { generarAvatar } from "@/lib/avatar";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { Observer } from "gsap/Observer";
 
 interface Estudiante {
   nombre: string;
@@ -110,11 +111,15 @@ function AnimatedStudentsTitle() {
     const el = ref.current;
     if (!el) return;
     const words = el.querySelectorAll<HTMLSpanElement>(".sw");
-    gsap.from(words, {
-      opacity: 0, y: 45, rotateX: -70, stagger: 0.09,
-      duration: 0.65, ease: "back.out(1.4)",
-      scrollTrigger: { trigger: el, start: "top 88%", toggleActions: "play none none none" },
-    });
+    // context con scope: el revert limpia SOLO este título (antes el cleanup
+    // mataba los ScrollTriggers de toda la página).
+    const ctx = gsap.context(() => {
+      gsap.from(".sw", {
+        opacity: 0, y: 45, rotateX: -70, stagger: 0.09,
+        duration: 0.65, ease: "back.out(1.4)",
+        scrollTrigger: { trigger: el, start: "top 88%", toggleActions: "play none none none" },
+      });
+    }, el);
     words.forEach((w, i) => {
       const base = TITLE_WORDS[i]?.color ?? "#0e1628";
       w.addEventListener("mouseenter", () =>
@@ -124,7 +129,7 @@ function AnimatedStudentsTitle() {
         gsap.to(w, { y: 0, scale: 1, color: base, duration: 0.4, ease: "elastic.out(1,0.5)" })
       );
     });
-    return () => ScrollTrigger.getAll().forEach((t) => t.kill());
+    return () => { gsap.killTweensOf(words); ctx.revert(); };
   }, []);
 
   return (
@@ -145,27 +150,89 @@ function AnimatedStudentsTitle() {
 
 export default function StudentCarousel() {
   const [current, setCurrent] = useState(0);
-  const [animating, setAnimating] = useState(false);
+  const gridRef  = useRef<HTMLDivElement>(null);
+  const hoverRef = useRef(false); // autoplay en pausa mientras el cursor está sobre las cards
+  const animRef  = useRef(false); // bloquea la navegación durante una transición
+  const dirRef   = useRef(1);     // 1 = avanza (entra por la derecha), -1 = retrocede
   const total = estudiantes.length;
 
+  /* Salida con GSAP en la dirección elegida; al completar se cambia el estado y
+     la entrada corre en el efecto de abajo. */
   const goTo = useCallback(
-    (index: number) => {
-      setAnimating(true);
-      setTimeout(() => {
-        setCurrent(((index % total) + total) % total);
-        setAnimating(false);
-      }, 200);
+    (index: number, dir = 1) => {
+      if (animRef.current) return;
+      animRef.current = true;
+      dirRef.current = dir;
+      const cards = gridRef.current ? Array.from(gridRef.current.children) : [];
+      gsap.to(cards, {
+        x: -36 * dir,
+        autoAlpha: 0,
+        duration: 0.22,
+        stagger: 0.04,
+        ease: "power2.in",
+        onComplete: () => setCurrent(((index % total) + total) % total),
+      });
     },
     [total]
   );
 
-  const next = useCallback(() => goTo(current + 1), [current, goTo]);
-  const prev = () => goTo(current - 1);
+  const next = useCallback(() => goTo(current + 1, 1), [current, goTo]);
+  const prev = useCallback(() => goTo(current - 1, -1), [current, goTo]);
 
+  /* Entrada de las cards nuevas. Las keys del grid son por posición, así React
+     reutiliza los nodos (que quedaron ocultos tras la salida) y no hay parpadeo. */
   useEffect(() => {
-    const timer = setInterval(next, 5000);
+    if (!animRef.current) return; // primer render: sin transición
+    const cards = gridRef.current ? Array.from(gridRef.current.children) : [];
+    gsap.fromTo(
+      cards,
+      { x: 36 * dirRef.current, autoAlpha: 0 },
+      {
+        x: 0,
+        autoAlpha: 1,
+        duration: 0.32,
+        stagger: 0.05,
+        ease: "power2.out",
+        onComplete: () => { animRef.current = false; },
+      }
+    );
+  }, [current]);
+
+  /* Autoplay: respeta el hover y las transiciones en curso. */
+  useEffect(() => {
+    const timer = setInterval(() => {
+      if (hoverRef.current || animRef.current) return;
+      next();
+    }, 5000);
     return () => clearInterval(timer);
   }, [next]);
+
+  /* Swipe táctil (móvil/tablet) con Observer. Refs para no recrear el Observer
+     en cada slide; touch-action: pan-y deja pasar el scroll vertical. */
+  const nextRef = useRef(next);
+  const prevRef = useRef(prev);
+  useEffect(() => { nextRef.current = next; prevRef.current = prev; });
+
+  useEffect(() => {
+    gsap.registerPlugin(Observer);
+    const target = gridRef.current;
+    if (!target) return;
+    const obs = Observer.create({
+      target,
+      type: "touch",
+      tolerance: 45,
+      lockAxis: true,
+      onLeft: () => nextRef.current(),
+      onRight: () => prevRef.current(),
+    });
+    return () => obs.kill();
+  }, []);
+
+  /* Limpieza al desmontar: mata tweens pendientes de las cards. */
+  useEffect(() => {
+    const grid = gridRef.current;
+    return () => { if (grid) gsap.killTweensOf(grid.children); };
+  }, []);
 
   const visible = [0, 1, 2].map(
     (offset) => estudiantes[(current + offset) % total]!
@@ -185,18 +252,18 @@ export default function StudentCarousel() {
           </p>
         </div>
 
-        {/* Cards */}
+        {/* Cards — GSAP anima la salida/entrada; key por posición para que React
+            reutilice los nodos entre slides (sin parpadeo entre transiciones). */}
         <div
+          ref={gridRef}
           className="grid md:grid-cols-3 gap-6"
-          style={{
-            opacity: animating ? 0 : 1,
-            transform: animating ? "translateY(6px)" : "translateY(0)",
-            transition: "opacity 0.2s ease, transform 0.2s ease",
-          }}
+          style={{ touchAction: "pan-y" }}
+          onMouseEnter={() => { hoverRef.current = true; }}
+          onMouseLeave={() => { hoverRef.current = false; }}
         >
           {visible.map((est, i) => (
             <div
-              key={`${est.nombre}-${i}`}
+              key={i}
               className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow flex flex-col"
             >
               {/* Avatar + info */}
@@ -271,7 +338,7 @@ export default function StudentCarousel() {
             {estudiantes.map((_, i) => (
               <button
                 key={i}
-                onClick={() => goTo(i)}
+                onClick={() => { if (i !== current) goTo(i, i > current ? 1 : -1); }}
                 aria-label={`Ir al estudiante ${i + 1}`}
                 className="rounded-full transition-all duration-300"
                 style={{
