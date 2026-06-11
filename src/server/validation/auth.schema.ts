@@ -46,6 +46,13 @@ export const registerSchema = z.object({
     .min(1, "Mínimo 1")
     .max(50, "Máximo 50")
     .optional(),
+  companyName: z
+    .string()
+    .trim()
+    .min(2, "Mínimo 2 caracteres")
+    .max(200, "Máximo 200 caracteres")
+    .optional()
+    .or(z.literal("").transform(() => undefined)),
   email: z
     .string()
     .min(11, "Mínimo 11 caracteres")

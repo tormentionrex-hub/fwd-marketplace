@@ -32,6 +32,7 @@ export function buscarUsuarioPorId(id: string) {
 export function crearEmpresario(datos: {
   nombre: string;
   segundoApellido?: string | undefined;
+  nombreEmpresa?: string | undefined;
   correo: string;
   hash: string;
   idRol: bigint;
@@ -43,7 +44,9 @@ export function crearEmpresario(datos: {
       correo: datos.correo,
       hash_contrasena: datos.hash,
       id_rol: datos.idRol,
-      perfiles_empresario: { create: {} },
+      perfiles_empresario: {
+        create: { nombre_empresa: datos.nombreEmpresa ?? null },
+      },
     },
     select: {
       id: true,
