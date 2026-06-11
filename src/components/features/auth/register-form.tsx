@@ -5,8 +5,46 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { TextField } from "@/components/ui/text-field";
 import { SocialAuthButtons } from "@/components/features/auth/social-auth-buttons";
 
-type Role = "estudiante" | "empresario";
-type StudentStatus = "en_curso" | "graduado" | "otro";
+// Persistencia del form en sessionStorage: si el usuario navega a /terminos y
+// vuelve, recupera lo que llevaba escrito (excepto password). Se limpia al
+// registrar con éxito.
+const STORAGE_KEY = "fwd_register_form_state";
+const PERSISTED_FIELDS = [
+  "firstName",
+  "lastName",
+  "secondLastName",
+  "identificationNumber",
+  "age",
+  "companyName",
+  "email",
+] as const;
+type PersistedField = (typeof PERSISTED_FIELDS)[number];
+type PersistedState = Partial<Record<PersistedField, string>> & { terms?: boolean };
+
+function loadPersisted(): PersistedState {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as PersistedState) : {};
+  } catch {
+    return {};
+  }
+}
+
+function savePersisted(form: HTMLFormElement, terms: boolean) {
+  if (typeof window === "undefined") return;
+  const fd = new FormData(form);
+  const data: PersistedState = { terms };
+  for (const key of PERSISTED_FIELDS) {
+    const v = fd.get(key);
+    if (typeof v === "string") data[key] = v;
+  }
+  try {
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch {
+    /* quota / privacy mode: ignorar */
+  }
+}
 
 /** Reglas de validación de la contraseña: se marcan con check al cumplirse. */
 const PASSWORD_RULES = [
@@ -33,15 +71,18 @@ function CheckIcon({ className }: { className?: string }) {
 
 export function RegisterForm() {
   const router = useRouter();
-  const [loading, setLoading]             = useState(false);
-  const [error, setError]                 = useState<string | null>(null);
-  const [role, setRole]                   = useState<Role>("estudiante");
-  const [password, setPassword]           = useState("");
-  const [terms, setTerms]                 = useState(false);
-  const [studentStatus, setStudentStatus] = useState<StudentStatus>("en_curso");
+  const [initial] = useState<PersistedState>(() => loadPersisted());
+  const [loading, setLoading]   = useState(false);
+  const [error, setError]       = useState<string | null>(null);
+  const [password, setPassword] = useState("");
+  const [terms, setTerms]       = useState<boolean>(initial.terms ?? false);
 
   const passwordValid = PASSWORD_RULES.every((r) => r.test(password));
   const canSubmit     = passwordValid && terms && !loading;
+
+  function handleFormInput(e: React.FormEvent<HTMLFormElement>) {
+    savePersisted(e.currentTarget, terms);
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -53,8 +94,7 @@ export function RegisterForm() {
     const firstName = String(formData.get("firstName") ?? "");
     const lastName = String(formData.get("lastName") ?? "");
     const secondLastName = String(formData.get("secondLastName") ?? "").trim();
-    const generationFwdRaw = String(formData.get("generationFwd") ?? "").trim();
-    const generationFwd = generationFwdRaw ? Number(generationFwdRaw) : undefined;
+    const companyName = String(formData.get("companyName") ?? "").trim();
     const email = String(formData.get("email") ?? "");
     const password = String(formData.get("password") ?? "");
 
@@ -66,7 +106,7 @@ export function RegisterForm() {
           firstName,
           lastName,
           secondLastName: secondLastName || undefined,
-          generationFwd,
+          companyName: companyName || undefined,
           email,
           password,
         }),
@@ -82,6 +122,13 @@ export function RegisterForm() {
       // Perfil público (nombre, foto) -> localStorage. Lo privado va en la cookie.
       if (data?.perfil) {
         localStorage.setItem("fwd_perfil", JSON.stringify(data.perfil));
+      }
+
+      // Limpiar el borrador del form: ya quedó creada la cuenta.
+      try {
+        sessionStorage.removeItem(STORAGE_KEY);
+      } catch {
+        /* ignorar */
       }
 
       router.push(data?.redirectTo ?? "/empresario");
@@ -104,7 +151,7 @@ export function RegisterForm() {
         </p>
       </header>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+      <form onSubmit={handleSubmit} onInput={handleFormInput} className="flex flex-col gap-5">
         {error && (
           <p
             role="alert"
@@ -125,6 +172,7 @@ export function RegisterForm() {
             maxLength={50}
             pattern="[\p{L}\s'’\-]+"
             title="Solo letras, espacios y guiones (2–50)"
+            defaultValue={initial.firstName ?? ""}
             required
           />
           <TextField
@@ -137,6 +185,7 @@ export function RegisterForm() {
             maxLength={50}
             pattern="[\p{L}\s'’\-]+"
             title="Solo letras, espacios y guiones (2–50)"
+            defaultValue={initial.lastName ?? ""}
             required
           />
         </div>
@@ -151,99 +200,52 @@ export function RegisterForm() {
             maxLength={50}
             pattern="[\p{L}\s'’\-]*"
             title="Solo letras, espacios y guiones (máx. 50)"
+            defaultValue={initial.secondLastName ?? ""}
           />
           <TextField
-            id="cedula"
-            name="cedula"
-            label="Cédula"
-            placeholder="1-2345-6789"
-            inputMode="numeric"
+            id="identificationNumber"
+            name="identificationNumber"
+            label="Número de identificación"
+            placeholder="Ej. 1-2345-6789, 12345678A, 12-3456789"
             autoComplete="off"
-            minLength={9}
-            maxLength={12}
-            pattern="\d{1,2}-?\d{4}-?\d{4}"
-            title="Formato: 1-2345-6789 (9 dígitos, guiones opcionales)"
-            required
-          />
-        </div>
-
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <TextField
-            id="age"
-            name="age"
-            type="number"
-            label="Edad"
-            placeholder="18"
-            min={18}
-            max={99}
-            step={1}
-            inputMode="numeric"
-            onInput={(e) => {
-              const t = e.currentTarget;
-              if (t.value.length > 2) t.value = t.value.slice(0, 2);
-            }}
-            required
-          />
-          <TextField
-            id="generationFwd"
-            name="generationFwd"
-            type="number"
-            label="Generación FWD"
-            placeholder="15"
-            min={1}
-            max={50}
-            step={1}
-            inputMode="numeric"
+            minLength={8}
+            maxLength={20}
+            pattern="[A-Za-z0-9\-]+"
+            title="Letras, números y guiones (8–20). Admite cédula CR, DNI/NIE ES, SSN/EIN US, CURP MX, etc."
+            defaultValue={initial.identificationNumber ?? ""}
             required
           />
         </div>
 
         <TextField
-          id="residence"
-          name="residence"
-          label="Lugar de residencia"
-          placeholder="Cantón, provincia"
-          autoComplete="address-level2"
-          minLength={2}
-          maxLength={150}
+          id="age"
+          name="age"
+          type="number"
+          label="Edad"
+          placeholder="18"
+          min={18}
+          max={99}
+          step={1}
+          inputMode="numeric"
+          onInput={(e) => {
+            const t = e.currentTarget;
+            if (t.value.length > 2) t.value = t.value.slice(0, 2);
+          }}
+          defaultValue={initial.age ?? ""}
           required
         />
 
-        <fieldset className="flex flex-col gap-1.5">
-          <legend className="mb-1.5 text-sm font-medium text-fwd-ink/80">
-            Quiero registrarme como
-          </legend>
-          <div className="grid grid-cols-2 gap-2 rounded-xl bg-fwd-mist/60 p-1">
-            {(
-              [
-                { value: "estudiante", label: "Soy Estudiante" },
-                { value: "empresario", label: "Soy Empresario" },
-              ] as const
-            ).map((opt) => {
-              const active = role === opt.value;
-              return (
-                <label
-                  key={opt.value}
-                  className={`flex cursor-pointer items-center justify-center rounded-lg px-3 py-2.5 text-center text-sm font-medium transition ${
-                    active
-                      ? "bg-fwd-blue text-white shadow-sm"
-                      : "text-fwd-ink/70 hover:text-fwd-ink"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="role"
-                    value={opt.value}
-                    checked={active}
-                    onChange={() => setRole(opt.value)}
-                    className="sr-only"
-                  />
-                  {opt.label}
-                </label>
-              );
-            })}
-          </div>
-        </fieldset>
+        <TextField
+          id="companyName"
+          name="companyName"
+          label="Nombre de empresa"
+          placeholder="FWD Costa Rica S.A."
+          autoComplete="organization"
+          minLength={2}
+          maxLength={200}
+          defaultValue={initial.companyName ?? ""}
+          required
+        />
 
         <TextField
           id="email"
@@ -254,6 +256,7 @@ export function RegisterForm() {
           autoComplete="email"
           minLength={11}
           maxLength={30}
+          defaultValue={initial.email ?? ""}
           required
         />
 

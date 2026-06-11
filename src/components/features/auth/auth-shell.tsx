@@ -45,7 +45,7 @@ export function AuthShell({ highlight, children }: AuthShellProps) {
   return (
     <div className="flex min-h-screen flex-col lg:flex-row">
       {/* Panel de marca */}
-      <aside className="relative hidden overflow-hidden bg-fwd-navy lg:flex lg:w-[46%] lg:flex-col lg:justify-between lg:p-12 xl:p-16">
+      <aside className="relative hidden overflow-hidden bg-fwd-navy lg:flex lg:w-[46%] lg:flex-col lg:p-12 xl:p-16">
         {/* Degradado de marca (portada navy → morado → magenta) */}
         <div className="absolute inset-0 bg-gradient-to-br from-fwd-navy via-fwd-purple/40 to-fwd-magenta/40" />
         <ArrowPattern />
@@ -60,7 +60,7 @@ export function AuthShell({ highlight, children }: AuthShellProps) {
           </Link>
         </div>
 
-        <div className="relative z-10 max-w-md">
+        <div className="relative z-10 mt-10 max-w-md">
           <p className="font-display text-xs font-bold uppercase tracking-[0.3em] text-fwd-teal">
             FWD · Costa Rica
           </p>
@@ -74,7 +74,7 @@ export function AuthShell({ highlight, children }: AuthShellProps) {
           </p>
         </div>
 
-        <div className="relative z-10 flex items-center gap-3 text-sm text-white/50">
+        <div className="relative z-10 mt-auto flex items-center gap-3 text-sm text-white/50">
           <FwdIsotipo className="h-5 w-auto" />
           <span>© {new Date().getFullYear()} FWD · Costa Rica</span>
         </div>
