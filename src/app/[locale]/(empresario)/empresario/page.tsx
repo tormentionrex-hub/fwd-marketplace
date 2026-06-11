@@ -8,6 +8,7 @@ import {
   type ActividadTipo,
 } from '@/server/services/proyecto.service';
 import { ProyectoRow } from '@/components/features/empresario/lista-proyectos';
+import { tiempoRelativo } from '@/lib/tiempo';
 import {
   IconFolder,
   IconSend,
@@ -64,7 +65,10 @@ export default async function DashboardEmpresarioPage({
       <div className="topbar">
         <div>
           <div className="tb-title">Hola, {primerNombre}</div>
-          <div className="tb-sub">{user.nombre} · Panel del empresario</div>
+          <div className="tb-sub">
+            {user.nombre} · Panel del empresario
+            {ultimaSesion ? ` · última sesión ${ultimaSesion}` : ''}
+          </div>
         </div>
         <div className="tb-spacer" />
         <div className="tb-search">
