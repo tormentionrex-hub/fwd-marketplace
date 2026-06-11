@@ -21,20 +21,23 @@ export default function AnimatedProjectsTitle({ text, className = "" }: Props) {
 
     const chars = el.querySelectorAll<HTMLSpanElement>(".anim-char");
 
-    /* Entrada: cada letra sube con stagger */
-    gsap.from(chars, {
-      opacity: 0,
-      y: 55,
-      rotateX: -90,
-      stagger: 0.04,
-      duration: 0.6,
-      ease: "back.out(1.5)",
-      scrollTrigger: {
-        trigger: el,
-        start: "top 85%",
-        toggleActions: "play none none none",
-      },
-    });
+    /* Entrada: cada letra sube con stagger. El context con scope limpia SOLO lo de
+       este título (antes el cleanup mataba los ScrollTriggers de toda la página). */
+    const ctx = gsap.context(() => {
+      gsap.from(".anim-char", {
+        opacity: 0,
+        y: 55,
+        rotateX: -90,
+        stagger: 0.04,
+        duration: 0.6,
+        ease: "back.out(1.5)",
+        scrollTrigger: {
+          trigger: el,
+          start: "top 85%",
+          toggleActions: "play none none none",
+        },
+      });
+    }, el);
 
     /* Hover por letra */
     chars.forEach((char) => {
@@ -51,7 +54,7 @@ export default function AnimatedProjectsTitle({ text, className = "" }: Props) {
       });
     });
 
-    return () => ScrollTrigger.getAll().forEach((t) => t.kill());
+    return () => { gsap.killTweensOf(chars); ctx.revert(); };
   }, []);
 
   return (
