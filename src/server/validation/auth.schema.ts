@@ -4,7 +4,11 @@ import { z } from "zod";
 // (findUnique por `correo`, case-sensitive), así que normalizarlo (lowercase)
 // podría impedir el login de cuentas ya existentes. Solo exigimos presencia.
 export const loginSchema = z.object({
-  email: z.string().min(1, "Faltan credenciales").max(254),
+  email: z
+    .string()
+    .min(11, "Mínimo 11 caracteres")
+    .max(30, "Máximo 30 caracteres")
+    .email("Ingresá un correo electrónico válido"),
   password: z.string().min(1, "Faltan credenciales").max(128),
 });
 export type LoginInput = z.infer<typeof loginSchema>;
