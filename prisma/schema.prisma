@@ -320,6 +320,7 @@ model usuarios {
   fecha_nacimiento    DateTime?            @db.Date
   creado              DateTime             @default(now()) @db.Timestamptz(6)
   segundo_apellido    String?              @db.VarChar(150)
+  ultima_sesion       DateTime?            @db.Timestamptz(6)
   mensajes            mensajes[]
   notificaciones      notificaciones[]
   password_resets     password_resets[]

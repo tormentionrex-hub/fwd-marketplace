@@ -56,6 +56,7 @@ export default async function DashboardEmpresarioPage({
   ];
 
   const primerNombre = user.nombre.split(' ')[0];
+  const ultimaSesion = tiempoRelativo(user.ultima_sesion);
 
   return (
     <>
