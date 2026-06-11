@@ -34,6 +34,8 @@ function ArrowPattern() {
 type AuthShellProps = {
   /** Texto destacado del panel de marca */
   highlight: string;
+  /** Logo a mostrar en el panel y en el header móvil. Default: FwdLogo con card blanco. */
+  logo?: ReactNode;
   children: ReactNode;
 };
 
@@ -41,7 +43,7 @@ type AuthShellProps = {
  * Estructura de autenticación: panel de marca (navy) + panel de formulario (claro).
  * Responsive: el panel de marca se oculta en móvil y deja un encabezado compacto.
  */
-export function AuthShell({ highlight, children }: AuthShellProps) {
+export function AuthShell({ highlight, logo, children }: AuthShellProps) {
   return (
     <div className="flex min-h-screen flex-col lg:flex-row">
       {/* Panel de marca */}
@@ -51,13 +53,19 @@ export function AuthShell({ highlight, children }: AuthShellProps) {
         <ArrowPattern />
 
         <div className="relative z-10">
-          <Link
-            href="/"
-            aria-label="Ir al inicio"
-            className="inline-flex rounded-2xl bg-white px-5 py-3 shadow-lg transition hover:shadow-xl"
-          >
-            <FwdLogo />
-          </Link>
+          {logo ? (
+            <Link href="/" aria-label="Ir al inicio" className="inline-flex transition hover:opacity-90">
+              {logo}
+            </Link>
+          ) : (
+            <Link
+              href="/"
+              aria-label="Ir al inicio"
+              className="inline-flex rounded-2xl bg-white px-5 py-3 shadow-lg transition hover:shadow-xl"
+            >
+              <FwdLogo />
+            </Link>
+          )}
         </div>
 
         <div className="relative z-10 mt-10 max-w-md">
@@ -85,7 +93,7 @@ export function AuthShell({ highlight, children }: AuthShellProps) {
         {/* Logo compacto solo visible en móvil/tablet */}
         <div className="mb-8 lg:hidden">
           <Link href="/" aria-label="Ir al inicio" className="inline-flex">
-            <FwdLogo />
+            {logo ?? <FwdLogo />}
           </Link>
         </div>
         <div className="w-full max-w-md">{children}</div>
