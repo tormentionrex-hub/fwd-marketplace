@@ -9,7 +9,7 @@ export async function RoleBadge() {
   if (!user) return null;
 
   return (
-    <div className="fixed right-4 top-4 z-50 flex items-center gap-3 rounded-full border border-fwd-ink/10 bg-white/90 px-4 py-2 shadow-lg backdrop-blur">
+    <div className="fixed bottom-4 right-4 z-50 flex items-center gap-3 rounded-full border border-fwd-ink/10 bg-white/90 px-4 py-2 shadow-lg backdrop-blur">
       <div className="flex flex-col leading-tight">
         <span className="text-[0.65rem] uppercase tracking-wide text-fwd-ink/50">
           Rol

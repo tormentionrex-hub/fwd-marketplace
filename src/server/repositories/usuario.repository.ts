@@ -31,6 +31,7 @@ export function buscarUsuarioPorId(id: string) {
 // usuario sin su perfil.
 export function crearEmpresario(datos: {
   nombre: string;
+  segundoApellido?: string | undefined;
   correo: string;
   hash: string;
   idRol: bigint;
@@ -38,6 +39,7 @@ export function crearEmpresario(datos: {
   return db.usuarios.create({
     data: {
       nombre: datos.nombre,
+      segundo_apellido: datos.segundoApellido ?? null,
       correo: datos.correo,
       hash_contrasena: datos.hash,
       id_rol: datos.idRol,
@@ -57,6 +59,8 @@ export function crearEmpresario(datos: {
 // login hasta que el admin apruebe la cuenta en pending_verifications.
 export function crearEstudiante(datos: {
   nombre: string;
+  segundoApellido?: string | undefined;
+  generacionFwd?: number | undefined;
   correo: string;
   hash: string;
   idRol: bigint;
@@ -64,11 +68,14 @@ export function crearEstudiante(datos: {
   return db.usuarios.create({
     data: {
       nombre: datos.nombre,
+      segundo_apellido: datos.segundoApellido ?? null,
       correo: datos.correo,
       hash_contrasena: datos.hash,
       id_rol: datos.idRol,
       estado: 'activo', // ya fue pre-aprobado por el admin al enviarlo la invitación
-      perfiles_estudiante: { create: {} },
+      perfiles_estudiante: {
+        create: { generacion_fwd: datos.generacionFwd ?? null },
+      },
     },
     select: {
       id: true,

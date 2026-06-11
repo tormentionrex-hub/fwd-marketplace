@@ -14,6 +14,7 @@ const PASSWORD_RULES = [
   { id: "upper", label: "Una mayúscula", test: (v: string) => /[A-Z]/.test(v) },
   { id: "lower", label: "Una minúscula", test: (v: string) => /[a-z]/.test(v) },
   { id: "num", label: "Un número", test: (v: string) => /[0-9]/.test(v) },
+  { id: "special", label: "Un carácter especial", test: (v: string) => /[^A-Za-z0-9]/.test(v) },
 ] as const;
 
 function CheckIcon({ className }: { className?: string }) {
@@ -51,6 +52,9 @@ export function RegisterForm() {
     const formData = new FormData(e.currentTarget);
     const firstName = String(formData.get("firstName") ?? "");
     const lastName = String(formData.get("lastName") ?? "");
+    const secondLastName = String(formData.get("secondLastName") ?? "").trim();
+    const generationFwdRaw = String(formData.get("generationFwd") ?? "").trim();
+    const generationFwd = generationFwdRaw ? Number(generationFwdRaw) : undefined;
     const email = String(formData.get("email") ?? "");
     const password = String(formData.get("password") ?? "");
 
@@ -58,7 +62,14 @@ export function RegisterForm() {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ firstName, lastName, email, password }),
+        body: JSON.stringify({
+          firstName,
+          lastName,
+          secondLastName: secondLastName || undefined,
+          generationFwd,
+          email,
+          password,
+        }),
       });
 
       const data = await res.json().catch(() => null);
@@ -110,6 +121,10 @@ export function RegisterForm() {
             label="Nombre"
             placeholder="Ana"
             autoComplete="given-name"
+            minLength={2}
+            maxLength={50}
+            pattern="[\p{L}\s'’\-]+"
+            title="Solo letras, espacios y guiones (2–50)"
             required
           />
           <TextField
@@ -118,11 +133,25 @@ export function RegisterForm() {
             label="Apellido"
             placeholder="Mora"
             autoComplete="family-name"
+            minLength={2}
+            maxLength={50}
+            pattern="[\p{L}\s'’\-]+"
+            title="Solo letras, espacios y guiones (2–50)"
             required
           />
         </div>
 
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <TextField
+            id="secondLastName"
+            name="secondLastName"
+            label="Segundo Apellido"
+            placeholder="Quirós"
+            autoComplete="additional-name"
+            maxLength={50}
+            pattern="[\p{L}\s'’\-]*"
+            title="Solo letras, espacios y guiones (máx. 50)"
+          />
           <TextField
             id="cedula"
             name="cedula"
@@ -130,16 +159,41 @@ export function RegisterForm() {
             placeholder="1-2345-6789"
             inputMode="numeric"
             autoComplete="off"
+            minLength={9}
+            maxLength={12}
+            pattern="\d{1,2}-?\d{4}-?\d{4}"
+            title="Formato: 1-2345-6789 (9 dígitos, guiones opcionales)"
             required
           />
+        </div>
+
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <TextField
             id="age"
             name="age"
             type="number"
             label="Edad"
             placeholder="18"
+            min={18}
+            max={99}
+            step={1}
+            inputMode="numeric"
+            onInput={(e) => {
+              const t = e.currentTarget;
+              if (t.value.length > 2) t.value = t.value.slice(0, 2);
+            }}
+            required
+          />
+          <TextField
+            id="generationFwd"
+            name="generationFwd"
+            type="number"
+            label="Generación FWD"
+            placeholder="15"
             min={1}
-            max={120}
+            max={50}
+            step={1}
+            inputMode="numeric"
             required
           />
         </div>
@@ -150,6 +204,8 @@ export function RegisterForm() {
           label="Lugar de residencia"
           placeholder="Cantón, provincia"
           autoComplete="address-level2"
+          minLength={2}
+          maxLength={150}
           required
         />
 
@@ -196,6 +252,8 @@ export function RegisterForm() {
           label="Correo electrónico"
           placeholder="tu@correo.com"
           autoComplete="email"
+          minLength={11}
+          maxLength={30}
           required
         />
 
@@ -213,6 +271,8 @@ export function RegisterForm() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Mínimo 8 caracteres"
               autoComplete="new-password"
+              minLength={8}
+              maxLength={128}
               required
               aria-invalid={password.length > 0 && !passwordValid}
               className={`w-full rounded-xl border bg-fwd-mist/40 px-4 py-3 pr-11 text-[0.95rem] text-fwd-ink outline-none transition placeholder:text-fwd-ink/35 focus:bg-white focus:ring-4 ${
