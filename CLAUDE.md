@@ -50,12 +50,13 @@ Los hooks existen para mantener calidad — saltarlos es engañar al equipo.
 
 ---
 
-## REGLA #2.5 — El autor de los commits SIEMPRE debe ser Christopher
+## REGLA #2.5 — Claude NUNCA debe figurar como autor ni co-autor
 
-**Todo commit DEBE quedar firmado como Christopher.** Antes de comitear, verificá que el `git config user.name` y `user.email` correspondan a Christopher (`Christopher G` / `tormentionrex@gmail.com`).
+Los commits los firman las **personas del equipo** (Christopher y sus compañeros). Eso es normal y esperado: cualquier desarrollador humano puede ser autor. Lo **ÚNICO prohibido** es que Claude / el agente IA aparezca en la autoría.
 
-- **NUNCA** cambies el autor ni el committer (`--author`, `GIT_AUTHOR_*`, `GIT_COMMITTER_*`, `user.name`/`user.email`) a otra persona.
-- Si por algún motivo el `user.name`/`user.email` activo no es el de Christopher, **PARÁ** y avisale antes de comitear — no comitees con otro autor.
+- **NUNCA** agregues el trailer `Co-Authored-By: Claude ...` (ni ningún `Co-Authored-By` de un modelo de IA) al mensaje de commit.
+- **NUNCA** te pongas como autor o committer vía `--author`, `GIT_AUTHOR_*`, `GIT_COMMITTER_*`, ni cambiando `user.name`/`user.email` a una identidad de IA.
+- El autor/committer debe quedar siempre como el desarrollador humano cuyo git está configurado. Dejá el `user.name`/`user.email` tal cual está; no lo toques.
 
 ---
 
