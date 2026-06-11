@@ -8,6 +8,7 @@ import {
   IconSpark,
   IconSettings,
   IconBriefcase,
+  IconUsers,
 } from '@/components/ui/fwd-icons';
 
 // Menú lateral del empresario (diseño FWD). Se monta una sola vez desde
@@ -85,6 +86,13 @@ export default function Sidebar({ nombre }: { nombre: string }) {
       >
         <IconSpark size={19} />
         Crear con IA
+      </Link>
+      <Link
+        href="/empresario/perfil"
+        className={`nav-item ${isActive('/empresario/perfil') ? 'on' : ''}`}
+      >
+        <IconUsers size={19} />
+        Mi perfil
       </Link>
 
       <div className="sb-section">Cuenta</div>
