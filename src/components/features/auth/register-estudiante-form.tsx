@@ -134,6 +134,8 @@ export function RegisterEstudianteForm() {
             label="Correo de invitación"
             placeholder="tu@correo.com"
             autoComplete="email"
+            minLength={11}
+            maxLength={30}
             required
           />
 
@@ -193,6 +195,10 @@ export function RegisterEstudianteForm() {
             label="Nombre"
             placeholder="Ana"
             autoComplete="given-name"
+            minLength={2}
+            maxLength={50}
+            pattern="[\p{L}\s'’\-]+"
+            title="Solo letras, espacios y guiones (2–50)"
             required
           />
           <TextField
@@ -201,6 +207,10 @@ export function RegisterEstudianteForm() {
             label="Apellido"
             placeholder="Mora"
             autoComplete="family-name"
+            minLength={2}
+            maxLength={50}
+            pattern="[\p{L}\s'’\-]+"
+            title="Solo letras, espacios y guiones (2–50)"
             required
           />
         </div>
@@ -213,6 +223,7 @@ export function RegisterEstudianteForm() {
           placeholder="Mínimo 8 caracteres"
           autoComplete="new-password"
           minLength={8}
+          maxLength={128}
           required
         />
 
@@ -224,6 +235,7 @@ export function RegisterEstudianteForm() {
           placeholder="Repetí la contraseña"
           autoComplete="new-password"
           minLength={8}
+          maxLength={128}
           required
         />
 

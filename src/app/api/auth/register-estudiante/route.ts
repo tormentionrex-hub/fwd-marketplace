@@ -22,12 +22,15 @@ export async function POST(request: Request) {
 
   const parseo = await parsearBody(request, registerSchema);
   if (!parseo.ok) return parseo.respuesta;
-  const { firstName, lastName, email, password } = parseo.data;
+  const { firstName, lastName, secondLastName, generationFwd, email, password } = parseo.data;
 
   const nombre = `${firstName} ${lastName}`.trim();
 
   try {
-    const resultado = await registrarEstudiante(nombre, email, password);
+    const resultado = await registrarEstudiante(nombre, email, password, {
+      segundoApellido: secondLastName,
+      generacionFwd: generationFwd,
+    });
 
     if (resultado === 'no_invitado') {
       return error(

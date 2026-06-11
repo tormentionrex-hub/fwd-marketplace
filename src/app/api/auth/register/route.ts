@@ -22,12 +22,14 @@ export async function POST(request: Request) {
 
   const parseo = await parsearBody(request, registerSchema);
   if (!parseo.ok) return parseo.respuesta;
-  const { firstName, lastName, email, password } = parseo.data;
+  const { firstName, lastName, secondLastName, email, password } = parseo.data;
 
   const nombre = `${firstName} ${lastName}`.trim();
 
   try {
-    const resultado = await registrarEmpresario(nombre, email, password);
+    const resultado = await registrarEmpresario(nombre, email, password, {
+      segundoApellido: secondLastName,
+    });
     if (!resultado) {
       return error('Ese correo ya está registrado', 409);
     }
