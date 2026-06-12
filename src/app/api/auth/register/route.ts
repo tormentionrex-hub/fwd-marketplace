@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
-import { registrarEmpresario } from '@/server/services/auth.service';
-import { crearCookieSesion } from '@/server/auth/session';
-import { rutaPorRol } from '@/server/auth/rutas';
+import {
+  registrarEmpresario,
+  registrarEstudianteLibre,
+} from '@/server/services/auth.service';
 import { permitido } from '@/server/auth/rate-limit';
 import { clienteIp, mismoOrigen } from '@/server/http/request';
 import { error, errorInterno, parsearBody } from '@/server/http/responder';
@@ -9,8 +10,8 @@ import { registerSchema } from '@/server/validation/auth.schema';
 
 const QUINCE_MIN = 15 * 60_000;
 
-// Registro principal: SOLO crea empresarios. El alta de estudiantes va por el
-// flujo de invitación del admin.
+// Registro de auto-servicio: estudiantes y empresarios. Ambos quedan en estado
+// 'pendiente' hasta que un administrador apruebe la cuenta.
 export async function POST(request: Request) {
   if (!mismoOrigen(request)) return error('Origen no permitido', 403);
 
@@ -22,32 +23,32 @@ export async function POST(request: Request) {
 
   const parseo = await parsearBody(request, registerSchema);
   if (!parseo.ok) return parseo.respuesta;
-  const { firstName, lastName, secondLastName, companyName, email, password } = parseo.data;
+  const { firstName, lastName, secondLastName, companyName, email, password, role, generationFwd } =
+    parseo.data;
 
   const nombre = `${firstName} ${lastName}`.trim();
 
   try {
-    const resultado = await registrarEmpresario(nombre, email, password, {
-      segundoApellido: secondLastName,
-      nombreEmpresa: companyName,
-    });
+    const resultado =
+      role === 'estudiante'
+        ? await registrarEstudianteLibre(nombre, email, password, {
+            segundoApellido: secondLastName,
+            generacionFwd: generationFwd,
+          })
+        : await registrarEmpresario(nombre, email, password, {
+            segundoApellido: secondLastName,
+            nombreEmpresa: companyName,
+          });
     if (!resultado) {
       return error('Ese correo ya está registrado', 409);
     }
 
-    await crearCookieSesion({
-      uid: resultado.usuario.id,
-      rol: resultado.usuario.rol,
-      correo: resultado.usuario.correo,
-      token: resultado.token,
-    });
-
+    // La cuenta queda PENDIENTE de aprobación del admin: NO se crea sesión.
+    // El usuario no puede acceder hasta que un administrador la valide.
     return NextResponse.json({
-      perfil: {
-        nombre: resultado.usuario.nombre,
-        image_url: resultado.usuario.image_url,
-      },
-      redirectTo: rutaPorRol(resultado.usuario.rol),
+      pending: true,
+      mensaje:
+        'Tu cuenta fue creada y está pendiente de aprobación por un administrador. Te avisaremos cuando esté lista.',
     });
   } catch (e) {
     return errorInterno('auth/register', e);

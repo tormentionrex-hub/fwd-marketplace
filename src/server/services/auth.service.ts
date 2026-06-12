@@ -3,6 +3,7 @@ import {
   buscarUsuarioPorCorreo,
   crearEmpresario,
   crearEstudiante,
+  crearEstudiantePendiente,
   buscarRolIdPorNombre,
 } from '@/server/repositories/usuario.repository';
 import { verifyPassword, hashPassword } from '@/server/auth/password';
@@ -86,6 +87,43 @@ export async function registrarEmpresario(
       correo: usuario.correo,
       image_url: usuario.image_url,
       rol: 'empresario',
+    },
+  };
+}
+
+// ─── REGISTRO ESTUDIANTE LIBRE (auto-registro) ───────────────────────────────
+// El estudiante se registra directamente y queda 'pendiente' hasta que el admin
+// lo apruebe (mismo flujo que el empresario). Devuelve null si el correo ya
+// existe (route → 409).
+export async function registrarEstudianteLibre(
+  nombre: string,
+  correo: string,
+  password: string,
+  extra: { segundoApellido?: string | undefined; generacionFwd?: number | undefined } = {}
+): Promise<ResultadoAuth | null> {
+  const existente = await buscarUsuarioPorCorreo(correo);
+  if (existente) return null;
+
+  const idRol = await buscarRolIdPorNombre('estudiante');
+  if (!idRol) throw new Error("No existe el rol 'estudiante' en la BD");
+
+  const usuario = await crearEstudiantePendiente({
+    nombre,
+    segundoApellido: extra.segundoApellido,
+    generacionFwd: extra.generacionFwd,
+    correo,
+    hash: hashPassword(password),
+    idRol,
+  });
+
+  return {
+    token: generarToken(),
+    usuario: {
+      id: usuario.id,
+      nombre: usuario.nombre,
+      correo: usuario.correo,
+      image_url: usuario.image_url,
+      rol: 'estudiante',
     },
   };
 }

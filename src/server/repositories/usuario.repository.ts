@@ -44,6 +44,7 @@ export function crearEmpresario(datos: {
       correo: datos.correo,
       hash_contrasena: datos.hash,
       id_rol: datos.idRol,
+      estado: 'pendiente', // auto-registro: requiere aprobación del admin
       perfiles_empresario: {
         create: { nombre_empresa: datos.nombreEmpresa ?? null },
       },
@@ -76,6 +77,37 @@ export function crearEstudiante(datos: {
       hash_contrasena: datos.hash,
       id_rol: datos.idRol,
       estado: 'activo', // ya fue pre-aprobado por el admin al enviarlo la invitación
+      perfiles_estudiante: {
+        create: { generacion_fwd: datos.generacionFwd ?? null },
+      },
+    },
+    select: {
+      id: true,
+      nombre: true,
+      correo: true,
+      image_url: true,
+    },
+  });
+}
+
+// Crea un estudiante por AUTO-REGISTRO: estado 'pendiente' (no invitado).
+// Requiere aprobación del admin antes de poder acceder.
+export function crearEstudiantePendiente(datos: {
+  nombre: string;
+  segundoApellido?: string | undefined;
+  generacionFwd?: number | undefined;
+  correo: string;
+  hash: string;
+  idRol: bigint;
+}) {
+  return db.usuarios.create({
+    data: {
+      nombre: datos.nombre,
+      segundo_apellido: datos.segundoApellido ?? null,
+      correo: datos.correo,
+      hash_contrasena: datos.hash,
+      id_rol: datos.idRol,
+      estado: 'pendiente',
       perfiles_estudiante: {
         create: { generacion_fwd: datos.generacionFwd ?? null },
       },
@@ -135,4 +167,33 @@ export function listarUsuarios() {
 // cascada según las FK del esquema. Lo usa el panel admin.
 export function eliminarUsuario(id: string) {
   return db.usuarios.delete({ where: { id } });
+}
+
+// Lista las cuentas pendientes de validación (auto-registradas, sin aprobar).
+// Las usa la sección Validaciones del panel admin.
+export function listarUsuariosPendientes() {
+  return db.usuarios.findMany({
+    where: { estado: 'pendiente' },
+    orderBy: { creado: 'desc' },
+    select: {
+      id: true,
+      nombre: true,
+      correo: true,
+      creado: true,
+      roles: { select: { nombre: true } },
+    },
+  });
+}
+
+// Cuenta las cuentas pendientes de validación (para alertas/resumen).
+export function contarUsuariosPendientes() {
+  return db.usuarios.count({ where: { estado: 'pendiente' } });
+}
+
+// Rechaza una cuenta pendiente: estado 'rechazado' (no puede iniciar sesión).
+export function rechazarUsuario(id: string) {
+  return db.usuarios.update({
+    where: { id },
+    data: { estado: 'rechazado' },
+  });
 }

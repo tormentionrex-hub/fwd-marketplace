@@ -21,6 +21,24 @@ export function listarProyectosDeEmpresario(idEmpresario: string) {
   });
 }
 
+// Lista todos los proyectos para el panel admin: empresario, estado y nº de
+// ofertas. Solo lectura, acotado a los más recientes.
+export function listarProyectosAdmin() {
+  return db.proyectos.findMany({
+    take: 50,
+    orderBy: { publicado: 'desc' },
+    select: {
+      id: true,
+      titulo: true,
+      estado: true,
+      publicado: true,
+      cierre: true,
+      perfiles_empresario: { select: { usuarios: { select: { nombre: true } } } },
+      _count: { select: { ofertas: true } },
+    },
+  });
+}
+
 // Trae un proyecto con su empresario (nombre + sector) y sus tecnologías
 // (ficha pública del proyecto).
 export function obtenerProyectoConDetalle(id: string) {
