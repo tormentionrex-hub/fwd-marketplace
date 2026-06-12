@@ -194,18 +194,9 @@ export default async function Home() {
       <section className="bg-[#0e1628] py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-          <div className="flex items-center justify-between mb-14">
-            <div>
-              <p data-reveal="fade-left" className="text-[#20BEC7] text-xs font-semibold uppercase tracking-widest mb-2">{p("badge")}</p>
-              <AnimatedProjectsTitle text={p("title")} />
-            </div>
-            <Link
-              data-reveal="fade-right"
-              href="/marketplace"
-              className="hidden sm:inline-flex items-center gap-2 border border-white/20 hover:border-[#FFCB05] text-white hover:text-[#FFCB05] font-semibold text-sm px-5 py-2.5 rounded-full transition-all duration-200"
-            >
-              {p("verTodos")}
-            </Link>
+          <div className="mb-14">
+            <p data-reveal="fade-left" className="text-[#20BEC7] text-xs font-semibold uppercase tracking-widest mb-2">{p("badge")}</p>
+            <AnimatedProjectsTitle text={p("title")} />
           </div>
 
           <div data-reveal="stagger" className="grid md:grid-cols-3 gap-6">
@@ -231,8 +222,17 @@ export default async function Home() {
             ))}
           </div>
 
-          <div className="text-center mt-10 sm:hidden">
-            <Link href="/marketplace" className="text-[#FFCB05] font-semibold text-sm">Ver todos los proyectos →</Link>
+          {/* Botón Ver todos — centrado debajo de las cards */}
+          <div className="flex justify-center mt-14">
+            <Link
+              href="/marketplace"
+              className="group relative overflow-hidden inline-flex items-center gap-3 font-black text-base uppercase tracking-widest px-12 py-5 rounded-full transition-all duration-300 hover:scale-105 hover:shadow-[0_8px_30px_rgba(0,143,213,0.45)] active:scale-95"
+              style={{ background: "linear-gradient(90deg, #008FD5, #20BEC6)", color: "white" }}
+            >
+              <span className="relative z-10">{p("verTodos")}</span>
+              <span className="relative z-10 text-lg transition-transform duration-300 group-hover:translate-x-1">→</span>
+              <span className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] bg-white/25 skew-x-[-20deg] transition-transform duration-700" />
+            </Link>
           </div>
         </div>
       </section>
