@@ -18,18 +18,33 @@ export default async function MisProyectosPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ estado?: string }>;
+  searchParams: Promise<{ estado?: string; q?: string }>;
 }) {
   const { locale } = await params;
-  const { estado: filtro } = await searchParams;
+  const { estado: filtro, q } = await searchParams;
 
   const user = await getUser();
   if (!user) redirect(`/${locale}/login`);
   if (user.roles.nombre !== 'empresario') redirect(`/${locale}`);
 
   const { proyectos } = await dashboardEmpresario(user.id);
-  const lista = filtro ? proyectos.filter((p) => p.estado === filtro) : proyectos;
+  const consulta = (q ?? '').trim();
+  const consultaLower = consulta.toLowerCase();
+  const lista = proyectos.filter(
+    (p) =>
+      (!filtro || p.estado === filtro) &&
+      (!consultaLower || p.titulo.toLowerCase().includes(consultaLower)),
+  );
   const activo = filtro ?? '';
+
+  // Conserva la búsqueda (?q) al cambiar de chip de estado.
+  const hrefFiltro = (k: string) => {
+    const sp = new URLSearchParams();
+    if (k) sp.set('estado', k);
+    if (consulta) sp.set('q', consulta);
+    const qs = sp.toString();
+    return qs ? `/empresario/proyectos?${qs}` : '/empresario/proyectos';
+  };
 
   return (
     <>
@@ -37,7 +52,9 @@ export default async function MisProyectosPage({
         <div>
           <div className="tb-title">Mis proyectos</div>
           <div className="tb-sub">
-            {proyectos.length} {proyectos.length === 1 ? 'proyecto publicado' : 'proyectos publicados'}
+            {consulta
+              ? `${lista.length} ${lista.length === 1 ? 'resultado' : 'resultados'} para "${consulta}"`
+              : `${proyectos.length} ${proyectos.length === 1 ? 'proyecto publicado' : 'proyectos publicados'}`}
           </div>
         </div>
         <div className="tb-spacer" />
@@ -55,7 +72,7 @@ export default async function MisProyectosPage({
             return (
               <Link
                 key={k || 'todos'}
-                href={k ? `/empresario/proyectos?estado=${k}` : '/empresario/proyectos'}
+                href={hrefFiltro(k)}
                 className="btn btn-sm"
                 style={
                   on
@@ -69,10 +86,35 @@ export default async function MisProyectosPage({
           })}
         </div>
 
+        {consulta && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              marginBottom: 14,
+              fontSize: 13,
+              color: 'var(--ink-600)',
+            }}
+          >
+            <span>
+              Resultados para <strong style={{ color: 'var(--ink-900)' }}>&ldquo;{consulta}&rdquo;</strong>
+            </span>
+            <Link
+              href={filtro ? `/empresario/proyectos?estado=${filtro}` : '/empresario/proyectos'}
+              style={{ color: 'var(--azul-700)', fontWeight: 600 }}
+            >
+              Limpiar búsqueda
+            </Link>
+          </div>
+        )}
+
         <div className="card">
           {lista.length === 0 ? (
             <div className="muted" style={{ padding: 48, textAlign: 'center' }}>
-              No hay proyectos en este estado.
+              {consulta
+                ? 'No encontramos proyectos que coincidan con tu búsqueda.'
+                : 'No hay proyectos en este estado.'}
             </div>
           ) : (
             lista.map((p) => <ProyectoRow key={p.id} p={p} />)
