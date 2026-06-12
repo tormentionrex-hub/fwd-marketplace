@@ -5,6 +5,7 @@ import { SinPermiso } from '@/components/layout/sin-permiso';
 import Sidebar from '@/components/layout/Sidebar';
 import { estadoCompletitudEmpresario } from '@/server/services/perfil-empresario.service';
 import CompletarPerfilModal from '@/components/features/empresario/completar-perfil-modal';
+import NotificacionesCampana from '@/components/features/empresario/notificaciones-campana';
 
 // Design system FWD (portado del prototipo), scoped a .fwd-app para no tocar
 // globals.css ni el layout global del Carril B. Variables, sidebar, topbar,
@@ -170,6 +171,12 @@ export default async function EmpresarioLayout({
 
       <Sidebar nombre={user?.nombre ?? 'Empresario'} fotoUrl={user?.image_url ?? null} />
       <main className="main">{children}</main>
+
+      {/* Campana persistente: vive en el shell, misma posición en todas las
+          páginas del empresario y no se re-monta al navegar. */}
+      <div className="tb-bell">
+        <NotificacionesCampana />
+      </div>
 
       {completitud && !completitud.completo && (
         <CompletarPerfilModal datos={completitud} />
