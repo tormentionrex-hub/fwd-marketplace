@@ -61,12 +61,10 @@ export default function WelcomeOnboarding() {
 
   /* ── Init: comprobar contador ─────────────────── */
   useEffect(() => {
-    const isDev = process.env.NODE_ENV === "development";
-    if (isDev) {
-      setPhase("alert");
-      requestAnimationFrame(() => setTimeout(() => setAlertIn(true), 30));
-      return;
-    }
+    // Antes el modal se forzaba SIEMPRE en desarrollo (overlay con backdrop-blur a
+    // pantalla completa en cada carga). Ahora dev respeta el mismo contador que
+    // produccion: aparece como maximo MAX_SHOWS veces. Para volver a verlo en dev,
+    // borrar la clave `fwd_onboarding_count` de localStorage.
     const count = parseInt(localStorage.getItem(STORAGE_KEY) ?? "0", 10);
     if (count < MAX_SHOWS) {
       localStorage.setItem(STORAGE_KEY, String(count + 1));

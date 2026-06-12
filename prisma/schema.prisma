@@ -39,17 +39,17 @@ model conversaciones_ia {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model entregables {
-  id                  String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  id_proyecto         String              @db.Uuid
-  id_estudiante       String              @db.Uuid
-  tipo                String?             @db.VarChar(100)
-  version             Int                 @default(1)
-  archivo_url         String
-  estado              String              @default("enviado") @db.VarChar(50)
+  id                    String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id_proyecto           String              @db.Uuid
+  id_estudiante         String              @db.Uuid
+  tipo                  String?             @db.VarChar(100)
+  version               Int                 @default(1)
+  archivo_url           String
+  estado                String              @default("enviado") @db.VarChar(50)
+  creado                DateTime            @default(now()) @db.Timestamptz(6)
   comentario_empresario String?
-  creado              DateTime            @default(now()) @db.Timestamptz(6)
-  perfiles_estudiante perfiles_estudiante @relation(fields: [id_estudiante], references: [id_usuario], onDelete: Cascade, map: "fk_entregables_estudiante")
-  proyectos           proyectos           @relation(fields: [id_proyecto], references: [id], onDelete: Cascade, map: "fk_entregables_proyecto")
+  perfiles_estudiante   perfiles_estudiante @relation(fields: [id_estudiante], references: [id_usuario], onDelete: Cascade, map: "fk_entregables_estudiante")
+  proyectos             proyectos           @relation(fields: [id_proyecto], references: [id], onDelete: Cascade, map: "fk_entregables_proyecto")
 
   @@index([id_proyecto], map: "idx_entregables_id_proyecto")
 }
@@ -177,8 +177,10 @@ model perfiles_empresario {
   tipo              String?             @db.VarChar(100)
   sector            String?             @db.VarChar(150)
   descripcion       String?
+  nombre_empresa    String?             @db.VarChar(200)
   chats             chats[]
   conversaciones_ia conversaciones_ia[]
+  cv_accesos        cv_accesos[]
   evaluaciones      evaluaciones[]
   usuarios          usuarios            @relation(fields: [id_usuario], references: [id], onDelete: Cascade, map: "fk_perfiles_empresario_usuario")
   proyectos         proyectos[]
@@ -193,13 +195,15 @@ model perfiles_estudiante {
   total_calificaciones    Int                       @default(0)
   descripcion             String?
   document_url            String?
+  generacion_fwd          Int?
   chats                   chats[]
+  curriculums             curriculums?
   entregables             entregables[]
   estudiantes_habilidades estudiantes_habilidades[]
   evaluaciones            evaluaciones[]
   ofertas                 ofertas[]
-  portafolio_proyectos    portafolio_proyectos[]
   usuarios                usuarios                  @relation(fields: [id_usuario], references: [id], onDelete: Cascade, map: "fk_perfiles_estudiante_usuario")
+  portafolio_proyectos    portafolio_proyectos[]
 
   @@index([reputacion], map: "idx_perfiles_estudiante_reputacion")
 }
@@ -216,37 +220,9 @@ model portafolio_proyectos {
   repo_url            String?
   demo_url            String?
   creado              DateTime            @default(now()) @db.Timestamptz(6)
-  perfiles_estudiante perfiles_estudiante @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade, map: "fk_portafolio_estudiante")
+  perfiles_estudiante perfiles_estudiante @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade, onUpdate: NoAction, map: "fk_portafolio_estudiante")
 
   @@index([id_usuario], map: "idx_portafolio_id_usuario")
-}
-
-/// Currículum del estudiante (StudentCV). 1→1 con perfiles_estudiante.
-/// El archivo vive en Supabase Storage (bucket privado); aquí solo ruta + metadatos.
-/// Migración SQL en prisma/sql/curriculums.sql.
-model curriculums {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  id_usuario   String   @unique @db.Uuid
-  file_name    String   @db.VarChar(255)
-  storage_path String
-  file_size    BigInt
-  file_type    String   @db.VarChar(100)
-  es_publico   Boolean  @default(false)
-  subido       DateTime @default(now()) @db.Timestamptz(6)
-  actualizado  DateTime @default(now()) @db.Timestamptz(6)
-}
-
-/// Auditoría: accesos de empresarios al CV de un estudiante.
-model cv_accesos {
-  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  id_curriculum String   @db.Uuid
-  id_empresario String   @db.Uuid
-  id_proyecto   String?  @db.Uuid
-  accion        String   @default("ver") @db.VarChar(20)
-  creado        DateTime @default(now()) @db.Timestamptz(6)
-
-  @@index([id_curriculum], map: "idx_cv_accesos_curriculum")
-  @@index([id_empresario], map: "idx_cv_accesos_empresario")
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
@@ -279,6 +255,7 @@ model proyectos {
   cierre                DateTime?               @db.Timestamptz(6)
   chats                 chats[]
   conversaciones_ia     conversaciones_ia[]
+  cv_accesos            cv_accesos[]
   entregables           entregables[]
   evaluaciones          evaluaciones[]
   ofertas               ofertas[]
@@ -342,6 +319,8 @@ model usuarios {
   id_rol              BigInt
   fecha_nacimiento    DateTime?            @db.Date
   creado              DateTime             @default(now()) @db.Timestamptz(6)
+  segundo_apellido    String?              @db.VarChar(150)
+  ultima_sesion       DateTime?            @db.Timestamptz(6)
   mensajes            mensajes[]
   notificaciones      notificaciones[]
   password_resets     password_resets[]
@@ -353,4 +332,33 @@ model usuarios {
   @@index([id_rol], map: "idx_usuarios_id_rol")
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model curriculums {
+  id                  String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id_usuario          String              @unique @db.Uuid
+  file_name           String              @db.VarChar(255)
+  storage_path        String
+  file_size           BigInt
+  file_type           String              @db.VarChar(100)
+  es_publico          Boolean             @default(false)
+  subido              DateTime            @default(now()) @db.Timestamptz(6)
+  actualizado         DateTime            @default(now()) @db.Timestamptz(6)
+  perfiles_estudiante perfiles_estudiante @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade, onUpdate: NoAction)
+  cv_accesos          cv_accesos[]
+}
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model cv_accesos {
+  id                  String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id_curriculum       String              @db.Uuid
+  id_empresario       String              @db.Uuid
+  id_proyecto         String?             @db.Uuid
+  accion              String              @default("ver") @db.VarChar(20)
+  creado              DateTime            @default(now()) @db.Timestamptz(6)
+  curriculums         curriculums         @relation(fields: [id_curriculum], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  perfiles_empresario perfiles_empresario @relation(fields: [id_empresario], references: [id_usuario], onDelete: Cascade, onUpdate: NoAction)
+  proyectos           proyectos?          @relation(fields: [id_proyecto], references: [id], onUpdate: NoAction)
+
+  @@index([id_curriculum], map: "idx_cv_accesos_curriculum")
+  @@index([id_empresario], map: "idx_cv_accesos_empresario")
+}

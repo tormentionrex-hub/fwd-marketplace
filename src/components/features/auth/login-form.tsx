@@ -75,6 +75,8 @@ export function LoginForm() {
           label="Correo electrónico"
           placeholder="tu@correo.com"
           autoComplete="email"
+          minLength={11}
+          maxLength={30}
           required
         />
 

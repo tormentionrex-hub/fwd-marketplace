@@ -106,15 +106,36 @@ export default function AnimatedHeroTitle({ title1, titleHighlight, title2 }: He
     if (!el) return;
     const words = el.querySelectorAll<HTMLSpanElement>(".hero-word");
 
-    gsap.from(words, {
-      opacity: 0,
-      y: 50,
-      rotateX: -60,
-      stagger: 0.07,
-      duration: 0.7,
-      ease: "back.out(1.4)",
-      delay: 0.2,
-    });
+    /* fromTo con destino explícito: el estado final nunca depende del estado
+       actual del DOM (que puede quedar congelado a mitad de animación). */
+    const playIntro = () => {
+      gsap.killTweensOf(words);
+      gsap.fromTo(
+        words,
+        { opacity: 0, y: 50, rotateX: -60 },
+        {
+          opacity: 1,
+          y: 0,
+          rotateX: 0,
+          stagger: 0.07,
+          duration: 0.7,
+          ease: "back.out(1.4)",
+          delay: 0.2,
+          clearProps: "transform,opacity",
+        }
+      );
+    };
+
+    playIntro();
+
+    /* Al volver con el botón "atrás", el navegador restaura la página desde el
+       bfcache: el componente no se re-monta y el título queda congelado con los
+       estilos intermedios de GSAP. Re-ejecutamos la entrada para normalizarlo. */
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) playIntro();
+    };
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
   }, []);
 
   return (

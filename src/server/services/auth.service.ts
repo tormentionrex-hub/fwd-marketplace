@@ -4,6 +4,7 @@ import {
   crearEmpresario,
   crearEstudiante,
   buscarRolIdPorNombre,
+  registrarUltimaSesion,
 } from '@/server/repositories/usuario.repository';
 import { verifyPassword, hashPassword } from '@/server/auth/password';
 import { generarToken } from '@/server/auth/token';
@@ -42,6 +43,14 @@ export async function login(
 
   if (usuario.estado === 'pendiente') return 'pendiente';
 
+  // Marca el inicio de esta sesión. No bloquea el login si la escritura falla:
+  // registrar la sesión es secundario frente a dejar entrar al usuario.
+  try {
+    await registrarUltimaSesion(usuario.id);
+  } catch (e) {
+    console.error('[auth] no se pudo registrar ultima_sesion', e);
+  }
+
   return {
     token: generarToken(),
     usuario: {
@@ -60,7 +69,8 @@ export async function login(
 export async function registrarEmpresario(
   nombre: string,
   correo: string,
-  password: string
+  password: string,
+  extra: { segundoApellido?: string | undefined; nombreEmpresa?: string | undefined } = {}
 ): Promise<ResultadoAuth | null> {
   const existente = await buscarUsuarioPorCorreo(correo);
   if (existente) return null;
@@ -70,6 +80,8 @@ export async function registrarEmpresario(
 
   const usuario = await crearEmpresario({
     nombre,
+    segundoApellido: extra.segundoApellido,
+    nombreEmpresa: extra.nombreEmpresa,
     correo,
     hash: hashPassword(password),
     idRol,
@@ -101,7 +113,8 @@ export async function registrarEmpresario(
 export async function registrarEstudiante(
   nombre: string,
   correo: string,
-  password: string
+  password: string,
+  extra: { segundoApellido?: string | undefined; generacionFwd?: number | undefined } = {}
 ): Promise<ResultadoAuth | 'no_invitado' | null> {
   // 1. ¿Fue invitado?
   const invitacion = await buscarInvitacionPendientePorEmail(correo);
@@ -117,6 +130,8 @@ export async function registrarEstudiante(
   // 3. Crear usuario activo (la invitación es la aprobación del admin)
   const usuario = await crearEstudiante({
     nombre,
+    segundoApellido: extra.segundoApellido,
+    generacionFwd: extra.generacionFwd,
     correo,
     hash: hashPassword(password),
     idRol,

@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getUser } from '@/server/auth/get-user';
+import { mismoOrigen } from '@/server/http/request';
+import { subirImagenCloudinary } from '@/server/storage/cloudinary';
 
 // Cliente Supabase con service role para bypasear RLS en Storage.
 // SUPABASE_SERVICE_ROLE_KEY debe estar en .env (nunca con prefijo NEXT_PUBLIC_).
@@ -31,6 +33,10 @@ const MAX_DOCUMENTACION_BYTES = 5 * 1024 * 1024; // 5 MB
 //   tipo     → 'prototipo' | 'documentacion'
 // Respuesta: { url: string }
 export async function POST(request: Request) {
+  if (!mismoOrigen(request)) {
+    return NextResponse.json({ error: 'Origen no permitido' }, { status: 403 });
+  }
+
   const user = await getUser();
   if (!user) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
@@ -76,8 +82,19 @@ export async function POST(request: Request) {
     );
   }
 
+  // Las imágenes van a Cloudinary; el resto (ZIP/PDF) a Supabase Storage.
+  if (archivo.type.startsWith('image/')) {
+    const url = await subirImagenCloudinary(archivo, `fwd/${tipo}`);
+    if (!url) {
+      return NextResponse.json(
+        { error: 'No se pudo subir la imagen a Cloudinary. Revisá las credenciales.' },
+        { status: 500 },
+      );
+    }
+    return NextResponse.json({ url });
+  }
+
   // Generar path único: userId/timestamp-nombreOriginal
-  const ext = archivo.name.split('.').pop() ?? 'bin';
   const timestamp = Date.now();
   const nombreSeguro = archivo.name
     .replace(/[^a-zA-Z0-9._-]/g, '_')

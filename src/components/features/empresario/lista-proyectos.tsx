@@ -23,7 +23,7 @@ export function textoPlazo(p: FilaProyectoEmpresario): string {
 export function ProyectoRow({ p }: { p: FilaProyectoEmpresario }) {
   const badge = ESTADO_BADGE[p.estado] ?? { cls: 'borrador', label: p.estado };
   return (
-    <Link href={`/empresario/proyectos/${p.id}`} className="fwd-row">
+    <Link href={`/empresario/gestion-proyectos/${p.id}`} className="fwd-row">
       <div style={{ minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 7 }}>
           <span

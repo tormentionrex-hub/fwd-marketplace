@@ -47,7 +47,7 @@ export default function Navbar() {
             {t("inicio")}
           </Link>
           <Link
-            href="/marketplace"
+            href="/proyectos"
             className="text-white/80 hover:text-[#20BEC7] text-base font-semibold transition-colors duration-200"
           >
             {t("proyectos")}
@@ -89,7 +89,7 @@ export default function Navbar() {
           <Link href="/" className="text-white/80 text-base font-semibold py-1 hover:text-[#20BEC7] transition-colors" onClick={() => setMenuOpen(false)}>
             {t("inicio")}
           </Link>
-          <Link href="/marketplace" className="text-white/80 text-base font-semibold py-1 hover:text-[#20BEC7] transition-colors" onClick={() => setMenuOpen(false)}>
+          <Link href="/proyectos" className="text-white/80 text-base font-semibold py-1 hover:text-[#20BEC7] transition-colors" onClick={() => setMenuOpen(false)}>
             {t("proyectos")}
           </Link>
           <Link href="/login" className="text-white/80 text-base font-semibold py-1 hover:text-[#20BEC7] transition-colors" onClick={() => setMenuOpen(false)}>

@@ -22,13 +22,6 @@ export type ResultadoEnviarOferta =
   | 'ya_oferto'
   | 'sin_prototipo';
 
-// Estados de oferta que siguen "vivos" (sin resolución final del empresario).
-const ESTADOS_ACTIVOS: ReadonlySet<EstadoOfertaDetalle> = new Set([
-  'enviada',
-  'en_revision',
-  'preseleccionado',
-]);
-
 // Lógica de negocio para enviar una oferta:
 // 1. Verifica que el proyecto existe y está abierto
 // 2. Verifica que el estudiante no haya ofertado antes (la BD también lo enforcea con UNIQUE)

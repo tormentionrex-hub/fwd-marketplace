@@ -1,26 +1,29 @@
 import { NextResponse } from 'next/server';
 import { getUser } from '@/server/auth/get-user';
 import { adjudicarOfertaService } from '@/server/services/gestion.service';
+import { mismoOrigen } from '@/server/http/request';
+import { error, errorInterno } from '@/server/http/responder';
 
 // POST /api/ofertas/[id]/adjudicar  — adjudica la oferta [id]. Solo el empresario dueño.
 export async function POST(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  if (!mismoOrigen(request)) return error('Origen no permitido', 403);
+
   const user = await getUser();
-  if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-  if (user.roles.nombre !== 'empresario') {
-    return NextResponse.json({ error: 'Solo empresarios' }, { status: 403 });
-  }
+  if (!user) return error('No autorizado', 401);
+  if (user.roles.nombre !== 'empresario') return error('Solo empresarios', 403);
 
   const { id } = await params;
-  const resultado = await adjudicarOfertaService(id, user.id);
 
-  if (resultado === 'no_encontrado') {
-    return NextResponse.json({ error: 'Oferta no encontrada' }, { status: 404 });
+  try {
+    const resultado = await adjudicarOfertaService(id, user.id);
+
+    if (resultado === 'no_encontrado') return error('Oferta no encontrada', 404);
+    if (resultado === 'no_autorizado') return error('Este proyecto no es tuyo', 403);
+    return NextResponse.json({ ok: true });
+  } catch (e) {
+    return errorInterno('ofertas/adjudicar', e);
   }
-  if (resultado === 'no_autorizado') {
-    return NextResponse.json({ error: 'Este proyecto no es tuyo' }, { status: 403 });
-  }
-  return NextResponse.json({ ok: true });
 }

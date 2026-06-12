@@ -23,6 +23,7 @@ import { EVENTOS, PROYECTOS } from "@/lib/marketplace-data";
 import { ESTADO_OFERTA_META } from "@/lib/oferta-estado";
 import type { ProyectoDetalle } from "@/types/sefora";
 import { getUser } from "@/server/auth/get-user";
+import { tiempoRelativo } from "@/lib/tiempo";
 import { obtenerVerificacionEstudiante } from "@/server/services/verificacion.service";
 import { resumenDashboardEstudiante } from "@/server/services/dashboard.service";
 import { listarMisOfertas } from "@/server/services/oferta.service";
@@ -68,6 +69,7 @@ export default async function DashboardEstudiantePage({
 
   const verif = await obtenerVerificacionEstudiante(user.id);
   const nombre = user.nombre.trim().split(/\s+/)[0] || "Estudiante";
+  const ultimaSesion = tiempoRelativo(user.ultima_sesion);
 
   if (!verif.verificado) {
     const solicitado = verif.solicitado

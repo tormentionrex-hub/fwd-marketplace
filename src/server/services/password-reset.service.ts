@@ -25,14 +25,21 @@ export function esPasswordValida(p: string): boolean {
 }
 
 // ---- Paso 1: solicitar código ----
-// Devuelve true si el correo existe (y se envió el OTP) o false si no hay cuenta.
+// Resultado de la solicitud de recuperación.
+//   existe       → si hay una cuenta con ese correo (si es false, no se envió nada).
+//   ultimaSesion → fecha del último login de esa cuenta (null si nunca inició sesión).
 // Nota: revelar la existencia del correo es por requerimiento explícito del
 // producto; tiene el trade-off de permitir enumeración de correos registrados.
-export async function solicitarRecuperacion(correo: string): Promise<boolean> {
+export interface ResultadoSolicitud {
+  existe: boolean;
+  ultimaSesion: Date | null;
+}
+
+export async function solicitarRecuperacion(correo: string): Promise<ResultadoSolicitud> {
   const usuario = await buscarUsuarioPorCorreo(correo);
   if (!usuario) {
     console.warn("[seguridad] solicitud de recuperación para correo no registrado");
-    return false;
+    return { existe: false, ultimaSesion: null };
   }
 
   await repo.invalidarResetsDeUsuario(usuario.id);
@@ -43,7 +50,7 @@ export async function solicitarRecuperacion(correo: string): Promise<boolean> {
 
   await enviarCodigoOtp(usuario.correo, otp);
   console.info("[seguridad] OTP de recuperación emitido");
-  return true;
+  return { existe: true, ultimaSesion: usuario.ultima_sesion ?? null };
 }
 
 // ---- Paso 2: verificar código ----

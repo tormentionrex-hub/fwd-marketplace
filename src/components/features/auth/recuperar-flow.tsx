@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { TextField } from "@/components/ui/text-field";
+import { tiempoRelativo } from "@/lib/tiempo";
 
 type Paso = "solicitar" | "verificar" | "nueva" | "exito";
 
@@ -44,6 +45,7 @@ export function RecuperarFlow() {
   const [paso, setPaso] = useState<Paso>("solicitar");
   const [email, setEmail] = useState("");
   const [resetToken, setResetToken] = useState("");
+  const [ultimaSesion, setUltimaSesion] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -65,12 +67,14 @@ export function RecuperarFlow() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: valor }),
       });
+      const d = await res.json().catch(() => ({}));
       if (!res.ok) {
-        const d = await res.json().catch(() => ({}));
+        // 404 → el correo no está registrado; mostramos el mensaje del servidor.
         setError(d.error ?? "No se pudo enviar el código.");
         return;
       }
       setEmail(valor);
+      setUltimaSesion(typeof d.ultimaSesion === "string" ? d.ultimaSesion : null);
       setPaso("verificar");
     } catch {
       setError("Error de red. Intentá de nuevo.");
@@ -126,6 +130,7 @@ export function RecuperarFlow() {
           {paso === "verificar" && (
             <PasoVerificar
               email={email}
+              ultimaSesion={ultimaSesion}
               onError={setError}
               error={error}
               onVerificado={(tok) => {
@@ -180,11 +185,13 @@ export function RecuperarFlow() {
 // ---------- Paso 2: verificar OTP ----------
 function PasoVerificar({
   email,
+  ultimaSesion,
   error,
   onError,
   onVerificado,
 }: {
   email: string;
+  ultimaSesion: string | null;
   error: string | null;
   onError: (m: string | null) => void;
   onVerificado: (resetToken: string) => void;
@@ -208,6 +215,7 @@ function PasoVerificar({
   }, []);
 
   const code = digits.join("");
+  const ultimaSesionTexto = tiempoRelativo(ultimaSesion);
 
   async function verificar(codigo: string) {
     onError(null);
@@ -286,6 +294,11 @@ function PasoVerificar({
           className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700"
         >
           Hemos enviado un código de verificación a tu correo electrónico.
+        </p>
+        <p className="rounded-xl border border-fwd-ink/10 bg-fwd-mist/40 px-4 py-3 text-sm text-fwd-ink/70">
+          {ultimaSesionTexto
+            ? <>Última sesión de esta cuenta: <strong className="text-fwd-ink">{ultimaSesionTexto}</strong>.</>
+            : "Esta cuenta todavía no ha iniciado sesión."}
         </p>
         {error && <ErrorBanner msg={error} />}
 

@@ -8,12 +8,19 @@ import {
   IconSpark,
   IconSettings,
   IconBriefcase,
+  IconUsers,
 } from '@/components/ui/fwd-icons';
 
 // Menú lateral del empresario (diseño FWD). Se monta una sola vez desde
 // (empresario)/layout.tsx, así lo comparten las páginas 12 y 14.
 // Las clases (.sidebar, .nav-item, .sb-*) están en el design system scoped del layout.
-export default function Sidebar({ nombre }: { nombre: string }) {
+export default function Sidebar({
+  nombre,
+  fotoUrl,
+}: {
+  nombre: string;
+  fotoUrl?: string | null;
+}) {
   const pathname = usePathname(); // sin prefijo de locale (next-intl)
 
   const iniciales =
@@ -86,19 +93,37 @@ export default function Sidebar({ nombre }: { nombre: string }) {
         <IconSpark size={19} />
         Crear con IA
       </Link>
+      <Link
+        href="/empresario/perfil"
+        className={`nav-item ${isActive('/empresario/perfil') ? 'on' : ''}`}
+      >
+        <IconUsers size={19} />
+        Mi perfil
+      </Link>
 
       <div className="sb-section">Cuenta</div>
-      {/* TODO: ruta de configuración (otra persona) */}
-      <a href="#" className="nav-item">
+      <Link
+        href="/empresario/configuracion"
+        className={`nav-item ${isActive('/empresario/configuracion') ? 'on' : ''}`}
+      >
         <IconSettings size={19} />
         Configuración
-      </a>
+      </Link>
 
       <div className="sb-foot">
         <div className="sb-user">
-          <div className="avatar" style={{ width: 38, height: 38, fontSize: 14, background: 'var(--azul)' }}>
-            {iniciales}
-          </div>
+          {fotoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={fotoUrl}
+              alt={nombre}
+              style={{ width: 38, height: 38, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+            />
+          ) : (
+            <div className="avatar" style={{ width: 38, height: 38, fontSize: 14, background: 'var(--azul)' }}>
+              {iniciales}
+            </div>
+          )}
           <div style={{ flex: 1, minWidth: 0 }}>
             <div className="nm">{nombre}</div>
             <div className="rl">Empresario</div>

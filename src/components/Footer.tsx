@@ -4,10 +4,53 @@ import { Link } from "@/i18n/navigation";
 import Image from "next/image";
 import { useState } from "react";
 
+type EstadoEnvio = "idle" | "enviando" | "ok" | "error";
+
 export default function Footer() {
   const year = new Date().getFullYear();
   const [email, setEmail] = useState("");
   const [mensaje, setMensaje] = useState("");
+  const [estado, setEstado] = useState<EstadoEnvio>("idle");
+  const [aviso, setAviso] = useState("");
+
+  async function enviarMensaje() {
+    if (estado === "enviando") return;
+    setAviso("");
+
+    const correo = email.trim();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(correo)) {
+      setEstado("error");
+      setAviso("Ingresá un correo electrónico válido.");
+      return;
+    }
+    if (!mensaje.trim()) {
+      setEstado("error");
+      setAviso("Escribí un mensaje antes de enviar.");
+      return;
+    }
+
+    setEstado("enviando");
+    try {
+      const res = await fetch("/api/contacto", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: correo, mensaje: mensaje.trim() }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setEstado("error");
+        setAviso(data?.error || "No se pudo enviar el mensaje. Intentá más tarde.");
+        return;
+      }
+      setEstado("ok");
+      setAviso("¡Mensaje enviado! Te responderemos pronto.");
+      setEmail("");
+      setMensaje("");
+    } catch {
+      setEstado("error");
+      setAviso("No se pudo enviar el mensaje. Revisá tu conexión.");
+    }
+  }
 
   return (
     <footer
@@ -175,13 +218,24 @@ export default function Footer() {
                 rows={3}
                 className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-400 focus:outline-none focus:border-[#20BEC6] transition-colors resize-none"
               />
-              <a
-                href={`mailto:contacto@fwdcostarica.com?subject=Mensaje desde la web&body=${encodeURIComponent(mensaje)}`}
-                className="w-full text-center font-black text-sm uppercase tracking-widest py-3 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95"
+              <button
+                type="button"
+                onClick={enviarMensaje}
+                disabled={estado === "enviando"}
+                className="w-full text-center font-black text-sm uppercase tracking-widest py-3 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
                 style={{ background: "linear-gradient(90deg, #20BEC6, #008FD5)" }}
               >
-                Enviar Mensaje
-              </a>
+                {estado === "enviando" ? "Enviando…" : "Enviar Mensaje"}
+              </button>
+
+              {aviso && (
+                <p
+                  role="status"
+                  className={`text-xs ${estado === "ok" ? "text-[#20BEC6]" : "text-pink-300"}`}
+                >
+                  {aviso}
+                </p>
+              )}
 
               <div className="mt-2 flex flex-col gap-2">
                 <a href="mailto:contacto@fwdcostarica.com" className="flex items-center gap-2 text-white/60 hover:text-[#20BEC6] hover:translate-x-1 text-sm transition-all duration-200">
