@@ -157,11 +157,3 @@ export function eliminarUsuario(id: string) {
   return db.usuarios.delete({ where: { id } });
 }
 
-// Registra la última sesión del usuario (fecha y hora del login).
-export function registrarUltimaSesion(id: string) {
-  return db.usuarios.update({
-    where: { id },
-    data: { ultima_sesion: new Date() },
-  });
-}
-
