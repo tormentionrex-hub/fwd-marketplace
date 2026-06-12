@@ -102,11 +102,13 @@ export default function Sidebar({
       </Link>
 
       <div className="sb-section">Cuenta</div>
-      {/* TODO: ruta de configuración (otra persona) */}
-      <a href="#" className="nav-item">
+      <Link
+        href="/empresario/configuracion"
+        className={`nav-item ${isActive('/empresario/configuracion') ? 'on' : ''}`}
+      >
         <IconSettings size={19} />
         Configuración
-      </a>
+      </Link>
 
       <div className="sb-foot">
         <div className="sb-user">

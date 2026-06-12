@@ -302,7 +302,7 @@ export default async function PerfilEmpresarioPage({
                   return (
                     <Link
                       key={p.id}
-                      href={`/empresario/proyectos/${p.id}`}
+                      href={`/empresario/gestion-proyectos/${p.id}`}
                       style={{
                         display: 'flex',
                         alignItems: 'center',
