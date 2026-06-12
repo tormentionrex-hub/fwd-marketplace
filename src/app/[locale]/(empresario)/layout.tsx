@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { getUser } from '@/server/auth/get-user';
 import { SinPermiso } from '@/components/layout/sin-permiso';
 import Sidebar from '@/components/layout/Sidebar';
+import NotificacionesCampana from '@/components/features/empresario/notificaciones-campana';
 
 // Design system FWD (portado del prototipo), scoped a .fwd-app para no tocar
 // globals.css ni el layout global del Carril B. Variables, sidebar, topbar,
@@ -52,7 +53,10 @@ const FWD_CSS = `
   .fwd-app .main { overflow-y:auto; position:relative; }
   .fwd-app .main::-webkit-scrollbar { width:11px; }
   .fwd-app .main::-webkit-scrollbar-thumb { background:var(--ink-300); border-radius:9px; border:3px solid var(--bg); }
-  .fwd-app .topbar { position:sticky; top:0; z-index:4; background:rgba(244,246,251,.82); backdrop-filter:blur(10px); border-bottom:1px solid var(--line); padding:16px 38px; display:flex; align-items:center; gap:18px; }
+  /* padding-right reserva el espacio de la campana fija del layout (40px + gap) */
+  .fwd-app .topbar { position:sticky; top:0; z-index:4; background:rgba(244,246,251,.82); backdrop-filter:blur(10px); border-bottom:1px solid var(--line); padding:16px 90px 16px 38px; display:flex; align-items:center; gap:18px; }
+  /* Campana de notificaciones: anclada al shell (persiste entre páginas) */
+  .fwd-app .tb-bell { position:absolute; top:16px; right:38px; z-index:30; }
   .fwd-app .tb-title { font-size:21px; font-weight:800; }
   .fwd-app .tb-sub { color:var(--ink-500); font-size:13.5px; margin-top:2px; }
   .fwd-app .tb-spacer { flex:1; }
@@ -88,10 +92,23 @@ const FWD_CSS = `
   .fwd-app .badge.en_desarrollo .bdot { background:var(--naranja); }
   .fwd-app .badge.cerrado { background:#DEF5F6; color:#0E7A80; }
   .fwd-app .badge.cerrado .bdot { background:var(--turquesa); }
+  .fwd-app .badge.abierto { background:var(--azul-tint); color:var(--azul-700); }
+  .fwd-app .badge.abierto .bdot { background:var(--azul); }
+  .fwd-app .badge.recepcion { background:var(--azul-tint); color:var(--azul-700); }
+  .fwd-app .badge.recepcion .bdot { background:var(--azul); animation:fwdpulse 1.6s ease-in-out infinite; }
+  @keyframes fwdpulse { 0%,100% { box-shadow:0 0 0 0 rgba(0,143,212,.5); } 50% { box-shadow:0 0 0 4px rgba(0,143,212,0); } }
+  .fwd-app .badge.adjudicado { background:#F0E7F7; color:var(--morado); }
+  .fwd-app .badge.adjudicado .bdot { background:var(--morado); }
+  .fwd-app .badge.cancelado { background:#FCE3F1; color:#B40A6B; }
+  .fwd-app .badge.cancelado .bdot { background:var(--magenta); }
 
   /* Filas de proyecto */
   .fwd-app .fwd-row { display:grid; grid-template-columns:1fr auto; gap:16px; align-items:center; padding:16px 20px; width:100%; text-align:left; border-top:1px solid var(--line); transition:background .14s; }
   .fwd-app .fwd-row:hover { background:var(--bg); }
+
+  /* Feed de actividad (dashboard): cada item enlaza a la gestión del proyecto */
+  .fwd-app .fwd-act { transition:color .14s; }
+  .fwd-app .fwd-act:hover .fwd-act-t { color:var(--azul-700); }
 
   /* Misc */
   .fwd-app .stat-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:18px; }
@@ -142,6 +159,12 @@ export default async function EmpresarioLayout({
 
       <Sidebar nombre={user?.nombre ?? 'Empresario'} fotoUrl={user?.image_url ?? null} />
       <main className="main">{children}</main>
+
+      {/* Campana persistente: vive en el shell, igual posición en todas las
+          páginas del empresario y no se re-monta al navegar. */}
+      <div className="tb-bell">
+        <NotificacionesCampana />
+      </div>
     </div>
   );
 }
