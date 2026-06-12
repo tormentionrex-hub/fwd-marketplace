@@ -100,6 +100,14 @@ export function actualizarHashContrasena(id: string, hashContrasena: string) {
   });
 }
 
+// Registra la última sesión iniciada por el usuario.
+export function registrarUltimaSesion(id: string) {
+  return db.usuarios.update({
+    where: { id },
+    data: { ultima_sesion: new Date() },
+  });
+}
+
 // Activa un usuario cambiando su estado a 'activo'. Lo llama el admin al aprobar.
 export function activarUsuario(id: string) {
   return db.usuarios.update({
