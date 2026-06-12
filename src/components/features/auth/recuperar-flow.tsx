@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { TextField } from "@/components/ui/text-field";
+import { IconArrowRight, IconCheck } from "@/components/ui/icons";
 import { tiempoRelativo } from "@/lib/tiempo";
 
 type Paso = "solicitar" | "verificar" | "nueva" | "exito";
@@ -116,7 +117,7 @@ export function RecuperarFlow() {
                 />
                 <button type="submit" disabled={loading} className={`${botonClass} bg-fwd-blue hover:bg-fwd-purple`}>
                   {loading ? "Enviando…" : "Enviar código"}
-                  <span className="transition-transform group-hover:translate-x-1">▶</span>
+                  <IconArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </button>
               </form>
               <p className="mt-8 text-center text-sm text-fwd-ink/60">
@@ -172,7 +173,7 @@ export function RecuperarFlow() {
                 className={`${botonClass} mx-auto mt-8 bg-fwd-blue hover:bg-fwd-purple`}
               >
                 Ir a iniciar sesión
-                <span className="transition-transform group-hover:translate-x-1">▶</span>
+                <IconArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </button>
             </div>
           )}
@@ -342,7 +343,7 @@ function PasoVerificar({
           className={`${botonClass} bg-fwd-blue hover:bg-fwd-purple`}
         >
           {loading ? "Verificando…" : "Verificar código"}
-          <span className="transition-transform group-hover:translate-x-1">▶</span>
+          <IconArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
         </button>
       </div>
     </div>
@@ -452,7 +453,11 @@ function PasoNueva({
                       key={rule.id}
                       className={`flex items-center gap-1.5 text-xs ${ok ? "text-green-600" : "text-fwd-ink/45"}`}
                     >
-                      <span className={ok ? "text-green-500" : "text-fwd-ink/30"}>{ok ? "✓" : "○"}</span>
+                      {ok ? (
+                        <IconCheck className="h-3.5 w-3.5 text-green-500" />
+                      ) : (
+                        <span className="block h-3.5 w-3.5 rounded-full border border-fwd-ink/30" />
+                      )}
                       {rule.label}
                     </li>
                   );
@@ -484,7 +489,7 @@ function PasoNueva({
 
         <button type="submit" disabled={!puede} className={`${botonClass} bg-fwd-blue hover:bg-fwd-purple`}>
           {loading ? "Guardando…" : "Cambiar contraseña"}
-          <span className="transition-transform group-hover:translate-x-1">▶</span>
+          <IconArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
         </button>
       </form>
     </div>
