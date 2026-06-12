@@ -21,9 +21,9 @@ import {
 } from "@/components/ui/icons";
 import { EVENTOS, PROYECTOS } from "@/lib/marketplace-data";
 import { ESTADO_OFERTA_META } from "@/lib/oferta-estado";
+import { tiempoRelativo } from "@/lib/tiempo";
 import type { ProyectoDetalle } from "@/types/sefora";
 import { getUser } from "@/server/auth/get-user";
-import { tiempoRelativo } from "@/lib/tiempo";
 import { obtenerVerificacionEstudiante } from "@/server/services/verificacion.service";
 import { resumenDashboardEstudiante } from "@/server/services/dashboard.service";
 import { listarMisOfertas } from "@/server/services/oferta.service";
@@ -143,6 +143,9 @@ export default async function DashboardEstudiantePage({
               Bienvenido a tu centro de oportunidades profesionales. Descubrí proyectos, gestioná
               tus ofertas y construí tu reputación dentro del ecosistema FWD Costa Rica.
             </p>
+            {ultimaSesion && (
+              <p className="mt-2 text-xs text-white/70">Última sesión: {ultimaSesion}</p>
+            )}
             <Link
               href={`/${locale}/marketplace`}
               className="mt-5 inline-flex h-12 items-center gap-2 rounded-full bg-white px-6 text-sm font-semibold text-fwd-azul shadow-lg shadow-black/10 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl"
