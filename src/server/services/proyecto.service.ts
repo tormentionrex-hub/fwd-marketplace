@@ -5,6 +5,7 @@ import {
   ofertasRecientesDeEmpresario,
   entregablesRecientesDeEmpresario,
   proyectosCerradosDeEmpresario,
+  contarOfertasDesde,
 } from '@/server/repositories/proyecto.repository';
 import type { EstadoProyecto } from '@/types/sefora';
 
@@ -17,6 +18,10 @@ export type ResumenEmpresario = {
   ofertasRecibidas: number;
   enDesarrollo: number;
   cerrados: number;
+  // Deltas reales "esta semana" (últimos 7 días) para los chips de tendencia
+  // del dashboard. 0 si no hubo novedad — la UI oculta el chip en ese caso.
+  nuevosActivosSemana: number;
+  nuevasOfertasSemana: number;
 };
 
 export type FilaProyectoEmpresario = {
@@ -25,6 +30,7 @@ export type FilaProyectoEmpresario = {
   estado: string;
   candidatos: number;
   fechaLimite: string | null; // ISO; null si el proyecto no tiene plazo definido
+  adjudicadoA: string | null; // nombre del estudiante adjudicado, o null
 };
 
 // Deriva la fecha límite a partir de `cierre`, o de `publicado` + `plazo_dias`
@@ -45,7 +51,11 @@ export async function dashboardEmpresario(idEmpresario: string): Promise<{
   resumen: ResumenEmpresario;
   proyectos: FilaProyectoEmpresario[];
 }> {
-  const filas = await listarProyectosDeEmpresario(idEmpresario);
+  const hace7Dias = new Date(Date.now() - 7 * 86400000);
+  const [filas, nuevasOfertasSemana] = await Promise.all([
+    listarProyectosDeEmpresario(idEmpresario),
+    contarOfertasDesde(idEmpresario, hace7Dias),
+  ]);
 
   const proyectos: FilaProyectoEmpresario[] = filas.map((p) => ({
     id: p.id,
@@ -53,6 +63,7 @@ export async function dashboardEmpresario(idEmpresario: string): Promise<{
     estado: p.estado,
     candidatos: p._count.ofertas,
     fechaLimite: calcularFechaLimite(p),
+    adjudicadoA: p.ofertas[0]?.perfiles_estudiante?.usuarios?.nombre ?? null,
   }));
 
   const resumen: ResumenEmpresario = {
@@ -60,6 +71,13 @@ export async function dashboardEmpresario(idEmpresario: string): Promise<{
     enDesarrollo: filas.filter((p) => p.estado === 'en_desarrollo').length,
     cerrados: filas.filter((p) => p.estado === 'cerrado').length,
     ofertasRecibidas: filas.reduce((acc, p) => acc + p._count.ofertas, 0),
+    nuevosActivosSemana: filas.filter(
+      (p) =>
+        p.estado === 'publicado' &&
+        p.publicado != null &&
+        p.publicado.getTime() >= hace7Dias.getTime(),
+    ).length,
+    nuevasOfertasSemana,
   };
 
   return { resumen, proyectos };
