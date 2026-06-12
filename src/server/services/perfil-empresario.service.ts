@@ -3,6 +3,8 @@ import { Prisma } from '@prisma/client';
 import {
   obtenerPerfilEmpresario,
   actualizarPerfilEmpresario,
+  obtenerDatosCompletitud,
+  actualizarDatosCompletitud,
 } from '@/server/repositories/perfil-empresario.repository';
 
 // ── Perfil del empresario (pantalla "Mi perfil", SRS RF-16/17) ──────────────
@@ -93,6 +95,103 @@ export async function obtenerPerfilEmpresarioDTO(
 // ── Guardar perfil del empresario (CRUD "Editar perfil") ────────────────────
 // Solo edita lo que pidió el negocio: nombre de la empresa y foto de perfil.
 // Valida y normaliza antes de persistir.
+
+// ── Completitud del perfil (gate del modal) ────────────────────────────────
+// Obligatorios para operar: numero_identificacion y nombre_empresa.
+// Precarga todos los campos editables para el modal.
+
+export interface DatosCompletitudDTO {
+  completo: boolean;
+  firstName: string;
+  lastName: string;
+  segundoNombre: string;
+  segundoApellido: string;
+  edad: number | null;
+  correo: string;
+  numeroIdentificacion: string;
+  nombreEmpresa: string;
+}
+
+export async function estadoCompletitudEmpresario(
+  idUsuario: string,
+): Promise<DatosCompletitudDTO | null> {
+  const perfil = await obtenerDatosCompletitud(idUsuario);
+  if (!perfil) return null;
+
+  const u = perfil.usuarios;
+  const partes = (u?.nombre ?? '').trim().split(' ');
+  const firstName = partes[0] ?? '';
+  const lastName = partes.slice(1).join(' ');
+
+  const numeroIdentificacion = perfil.numero_identificacion?.trim() ?? '';
+  const nombreEmpresa = perfil.nombre_empresa?.trim() ?? '';
+
+  return {
+    completo: numeroIdentificacion !== '' && nombreEmpresa !== '',
+    firstName,
+    lastName,
+    segundoNombre: u?.segundo_nombre?.trim() ?? '',
+    segundoApellido: u?.segundo_apellido?.trim() ?? '',
+    edad: u?.edad ?? null,
+    correo: u?.correo ?? '',
+    numeroIdentificacion,
+    nombreEmpresa,
+  };
+}
+
+// ── Guardar datos de completitud (endpoint POST /api/empresario/completar-perfil) ──
+
+export type ResultadoCompletarPerfil = { ok: true } | 'datos_invalidos' | 'no_existe';
+
+const NAME_RE = /^[\p{L}\s''\-]+$/u;
+
+export async function completarPerfilEmpresario(
+  idUsuario: string,
+  entrada: {
+    firstName: string;
+    lastName: string;
+    segundoNombre?: string | undefined;
+    segundoApellido?: string | undefined;
+    edad?: number | null | undefined;
+    nombreEmpresa: string;
+    numeroIdentificacion: string;
+  },
+): Promise<ResultadoCompletarPerfil> {
+  const firstName = entrada.firstName.trim();
+  const lastName = entrada.lastName.trim();
+  const segundoNombre = (entrada.segundoNombre ?? '').trim();
+  const segundoApellido = (entrada.segundoApellido ?? '').trim();
+  const edad = entrada.edad ?? null;
+  const nombreEmpresa = entrada.nombreEmpresa.trim();
+  const numeroIdentificacion = entrada.numeroIdentificacion.trim();
+
+  if (!firstName || firstName.length > 50 || !NAME_RE.test(firstName)) return 'datos_invalidos';
+  if (!lastName || lastName.length > 50 || !NAME_RE.test(lastName)) return 'datos_invalidos';
+  if (segundoNombre && (segundoNombre.length > 50 || !NAME_RE.test(segundoNombre))) return 'datos_invalidos';
+  if (segundoApellido && (segundoApellido.length > 50 || !NAME_RE.test(segundoApellido))) return 'datos_invalidos';
+  if (edad !== null && (edad < 18 || edad > 99)) return 'datos_invalidos';
+  if (!nombreEmpresa || nombreEmpresa.length > 200) return 'datos_invalidos';
+  if (!numeroIdentificacion || numeroIdentificacion.length < 6 || numeroIdentificacion.length > 50) return 'datos_invalidos';
+
+  const nombre = `${firstName} ${lastName}`.trim();
+
+  try {
+    await actualizarDatosCompletitud(idUsuario, {
+      nombre,
+      segundoNombre: segundoNombre || null,
+      segundoApellido: segundoApellido || null,
+      edad,
+      nombreEmpresa,
+      numeroIdentificacion,
+    });
+    return { ok: true };
+  } catch (e) {
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2025') {
+      return 'no_existe';
+    }
+    throw e;
+  }
+}
 
 export type ResultadoGuardarEmpresario = { ok: true } | 'datos_invalidos' | 'no_existe';
 

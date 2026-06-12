@@ -16,8 +16,25 @@ export function listarProyectosDeEmpresario(idEmpresario: string) {
       publicado: true,
       cierre: true,
       _count: { select: { ofertas: true } },
+      // Estudiante adjudicado (si lo hay): se deriva de la oferta 'adjudicada'.
+      // Una sola query (take:1 filtrado) — sin N+1.
+      ofertas: {
+        where: { estado: 'adjudicada' },
+        select: {
+          perfiles_estudiante: { select: { usuarios: { select: { nombre: true } } } },
+        },
+        take: 1,
+      },
     },
     orderBy: { publicado: 'desc' },
+  });
+}
+
+// Cuenta las ofertas recibidas en los proyectos del empresario desde `desde`
+// (para el delta "nuevas esta semana" del dashboard). Una query agregada.
+export function contarOfertasDesde(idEmpresario: string, desde: Date) {
+  return db.ofertas.count({
+    where: { proyectos: { id_empresario: idEmpresario }, enviado: { gte: desde } },
   });
 }
 

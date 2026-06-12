@@ -95,6 +95,8 @@ export function RegisterForm() {
     const firstName = String(formData.get("firstName") ?? "");
     const lastName = String(formData.get("lastName") ?? "");
     const secondLastName = String(formData.get("secondLastName") ?? "").trim();
+    const identificationNumber = String(formData.get("identificationNumber") ?? "").trim();
+    const age = String(formData.get("age") ?? "").trim();
     const companyName = String(formData.get("companyName") ?? "").trim();
     const email = String(formData.get("email") ?? "");
     const password = String(formData.get("password") ?? "");
@@ -107,6 +109,8 @@ export function RegisterForm() {
           firstName,
           lastName,
           secondLastName: secondLastName || undefined,
+          identificationNumber: identificationNumber || undefined,
+          age: age ? Number(age) : undefined,
           companyName: companyName || undefined,
           email,
           password,

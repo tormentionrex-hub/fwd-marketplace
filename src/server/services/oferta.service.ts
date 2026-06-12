@@ -8,6 +8,7 @@ import {
 } from '@/server/repositories/oferta.repository';
 import { normalizarEstadoOferta, type EstadoOfertaDetalle } from '@/lib/oferta-estado';
 import { obtenerVerificacionEstudiante } from '@/server/services/verificacion.service';
+import { notificarOfertaRecibida } from '@/server/services/notificacion.service';
 import { calcularEstadisticas } from '@/lib/oferta-estadisticas';
 import type { MiOfertaDTO, EstadisticasOfertas } from '@/types/oferta';
 import type { EstadoProyecto } from '@/types/sefora';
@@ -51,6 +52,10 @@ export async function enviarOferta(datos: {
   if (!datos.prototipoUrl?.trim()) return 'sin_prototipo';
 
   const oferta = await crearOferta(datos);
+
+  // Avisa al empresario dueño del proyecto (no bloquea ni rompe si falla).
+  await notificarOfertaRecibida(datos.idProyecto, datos.idEstudiante);
+
   return { ok: true, ofertaId: oferta.id };
 }
 
