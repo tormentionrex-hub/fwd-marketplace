@@ -174,10 +174,10 @@ model pending_verifications {
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model perfiles_empresario {
   id_usuario        String              @id @db.Uuid
-  nombre_empresa    String?             @db.VarChar(200)
   tipo              String?             @db.VarChar(100)
   sector            String?             @db.VarChar(150)
   descripcion       String?
+  nombre_empresa    String?             @db.VarChar(200)
   chats             chats[]
   conversaciones_ia conversaciones_ia[]
   cv_accesos        cv_accesos[]
