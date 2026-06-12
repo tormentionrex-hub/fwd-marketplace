@@ -34,19 +34,27 @@ export function crearEmpresario(datos: {
   nombre: string;
   segundoApellido?: string | undefined;
   nombreEmpresa?: string | undefined;
+  numeroIdentificacion?: string | undefined;
+  edad?: number | undefined;
   correo: string;
   hash: string;
   idRol: bigint;
+  imageUrl?: string | undefined;
 }) {
   return db.usuarios.create({
     data: {
       nombre: datos.nombre,
       segundo_apellido: datos.segundoApellido ?? null,
+      edad: datos.edad ?? null,
       correo: datos.correo,
       hash_contrasena: datos.hash,
       id_rol: datos.idRol,
+      image_url: datos.imageUrl ?? null,
       perfiles_empresario: {
-        create: { nombre_empresa: datos.nombreEmpresa ?? null },
+        create: {
+          nombre_empresa: datos.nombreEmpresa ?? null,
+          numero_identificacion: datos.numeroIdentificacion ?? null,
+        },
       },
     },
     select: {
@@ -129,6 +137,17 @@ export function listarUsuarios() {
       creado: true,
       roles: { select: { nombre: true } },
     },
+  });
+}
+
+// Registra la marca de tiempo de la sesión actual (último login exitoso).
+// Lo llama el servicio de auth tras validar credenciales. Devuelve la cantidad
+// de filas afectadas vía Prisma update; el llamador no necesita el resultado.
+export function registrarUltimaSesion(id: string) {
+  return db.usuarios.update({
+    where: { id },
+    data: { ultima_sesion: new Date() },
+    select: { id: true },
   });
 }
 

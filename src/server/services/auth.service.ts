@@ -70,7 +70,12 @@ export async function registrarEmpresario(
   nombre: string,
   correo: string,
   password: string,
-  extra: { segundoApellido?: string | undefined; nombreEmpresa?: string | undefined } = {}
+  extra: {
+    segundoApellido?: string | undefined;
+    nombreEmpresa?: string | undefined;
+    numeroIdentificacion?: string | undefined;
+    edad?: number | undefined;
+  } = {}
 ): Promise<ResultadoAuth | null> {
   const existente = await buscarUsuarioPorCorreo(correo);
   if (existente) return null;
@@ -82,6 +87,8 @@ export async function registrarEmpresario(
     nombre,
     segundoApellido: extra.segundoApellido,
     nombreEmpresa: extra.nombreEmpresa,
+    numeroIdentificacion: extra.numeroIdentificacion,
+    edad: extra.edad,
     correo,
     hash: hashPassword(password),
     idRol,

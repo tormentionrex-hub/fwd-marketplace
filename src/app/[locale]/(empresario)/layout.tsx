@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation';
 import { getUser } from '@/server/auth/get-user';
 import { SinPermiso } from '@/components/layout/sin-permiso';
 import Sidebar from '@/components/layout/Sidebar';
+import { estadoCompletitudEmpresario } from '@/server/services/perfil-empresario.service';
+import CompletarPerfilModal from '@/components/features/empresario/completar-perfil-modal';
 
 // Design system FWD (portado del prototipo), scoped a .fwd-app para no tocar
 // globals.css ni el layout global del Carril B. Variables, sidebar, topbar,
@@ -125,6 +127,8 @@ export default async function EmpresarioLayout({
     return <SinPermiso locale={locale} />;
   }
 
+  const completitud = await estadoCompletitudEmpresario(user.id);
+
   return (
     <div className="fwd-app">
       <link
@@ -142,6 +146,10 @@ export default async function EmpresarioLayout({
 
       <Sidebar nombre={user?.nombre ?? 'Empresario'} fotoUrl={user?.image_url ?? null} />
       <main className="main">{children}</main>
+
+      {completitud && !completitud.completo && (
+        <CompletarPerfilModal datos={completitud} />
+      )}
     </div>
   );
 }
