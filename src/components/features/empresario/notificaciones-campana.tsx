@@ -1,7 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import type { ComponentType } from 'react';
+import type { ComponentType, ReactNode } from 'react';
+import { Link } from '@/i18n/navigation';
 import {
   IconBell,
   IconBriefcase,
@@ -14,6 +15,16 @@ import {
 import type { NotificacionDTO, NotificacionesPayload } from '@/types/notificacion';
 
 const POLL_MS = 30_000;
+
+// Los mensajes de notificación llevan el título del proyecto entre comillas
+// (p.ej. Nueva oferta de Ana en "App de flota"). Lo extraemos para enlazar la
+// notificación a "Mis proyectos" filtrado por ese título (reusa el buscador).
+function destinoDeNotificacion(mensaje: string): string | null {
+  const m = mensaje.match(/"([^"]+)"/);
+  const titulo = m?.[1]?.trim();
+  if (!titulo) return null;
+  return `/empresario/proyectos?q=${encodeURIComponent(titulo)}`;
+}
 
 // tipo de notificación -> icono + color de marca (tokens del .fwd-app).
 // Alineado con el feed de actividad: oferta/magenta, entrega/naranja, cierre/turquesa.
@@ -83,6 +94,18 @@ export default function NotificacionesCampana() {
     setItems((prev) => prev.map((n) => ({ ...n, leida: true })));
     await fetch('/api/notificaciones/read', { method: 'PATCH' }).catch(() => {});
     cargar();
+  }
+
+  // Marca UNA como leída (update optimista). La usa el clic en una notificación.
+  function marcarUna(n: NotificacionDTO) {
+    if (n.leida) return;
+    setItems((prev) => prev.map((x) => (x.id === n.id ? { ...x, leida: true } : x)));
+    setNoLeidas((c) => Math.max(0, c - 1));
+    fetch('/api/notificaciones/read', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: n.id }),
+    }).catch(() => {});
   }
 
   return (
@@ -212,17 +235,10 @@ export default function NotificacionesCampana() {
               ) : (
                 items.map((n, i) => {
                   const { Icon, color } = metaTipo(n.tipo);
-                  return (
-                    <div
-                      key={n.id}
-                      style={{
-                        display: 'flex',
-                        gap: 11,
-                        padding: '11px 14px',
-                        borderTop: i ? '1px solid var(--line-2)' : 'none',
-                        background: n.leida ? 'transparent' : 'color-mix(in srgb, var(--azul) 5%, transparent)',
-                      }}
-                    >
+                  const destino = destinoDeNotificacion(n.mensaje);
+
+                  const contenido: ReactNode = (
+                    <>
                       <span
                         style={{
                           width: 32,
@@ -258,6 +274,45 @@ export default function NotificacionesCampana() {
                           style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--azul)', marginTop: 6, flexShrink: 0 }}
                         />
                       )}
+                    </>
+                  );
+
+                  const filaStyle = {
+                    display: 'flex',
+                    gap: 11,
+                    padding: '11px 14px',
+                    borderTop: i ? '1px solid var(--line-2)' : 'none',
+                    background: n.leida ? 'transparent' : 'color-mix(in srgb, var(--azul) 5%, transparent)',
+                  } as const;
+
+                  // Con destino: enlace (marca leída + cierra el dropdown al navegar).
+                  // Sin destino: fila estática que solo marca leída al hacer clic.
+                  return destino ? (
+                    <Link
+                      key={n.id}
+                      href={destino}
+                      className="fwd-noti"
+                      style={filaStyle}
+                      onClick={() => {
+                        marcarUna(n);
+                        setAbierto(false);
+                      }}
+                    >
+                      {contenido}
+                    </Link>
+                  ) : (
+                    <div
+                      key={n.id}
+                      role="button"
+                      tabIndex={0}
+                      className="fwd-noti"
+                      style={{ ...filaStyle, cursor: n.leida ? 'default' : 'pointer' }}
+                      onClick={() => marcarUna(n)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') marcarUna(n);
+                      }}
+                    >
+                      {contenido}
                     </div>
                   );
                 })

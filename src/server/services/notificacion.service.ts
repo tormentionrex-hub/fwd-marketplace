@@ -3,6 +3,7 @@ import {
   listarNotificacionesDeUsuario,
   contarNoLeidas,
   marcarTodasLeidas,
+  marcarUnaLeida,
   crearNotificacion,
 } from '@/server/repositories/notificacion.repository';
 import { buscarProyectoGestion } from '@/server/repositories/proyecto.repository';
@@ -31,6 +32,15 @@ export async function obtenerNotificaciones(idUsuario: string): Promise<Notifica
 // Marca como leídas todas las notificaciones del usuario. Devuelve cuántas.
 export async function marcarNotificacionesLeidas(idUsuario: string): Promise<number> {
   const r = await marcarTodasLeidas(idUsuario);
+  return r.count;
+}
+
+// Marca UNA notificación como leída (la del usuario). Devuelve cuántas (0 o 1).
+export async function marcarNotificacionLeida(
+  idUsuario: string,
+  idNotificacion: string,
+): Promise<number> {
+  const r = await marcarUnaLeida(idUsuario, idNotificacion);
   return r.count;
 }
 

@@ -26,6 +26,15 @@ export function marcarTodasLeidas(idUsuario: string) {
   });
 }
 
+// Marca UNA notificación como leída. Acota por id_usuario (ownership): un usuario
+// no puede tocar las de otro aunque acierte el id.
+export function marcarUnaLeida(idUsuario: string, idNotificacion: string) {
+  return db.notificaciones.updateMany({
+    where: { id: idNotificacion, id_usuario: idUsuario, leida: false },
+    data: { leida: true },
+  });
+}
+
 // Inserta una notificación para un usuario. La usan los services al ocurrir un
 // evento (nueva oferta, entrega, etc.). `leida` y `creado` van por default.
 export function crearNotificacion(d: { idUsuario: string; tipo: string; mensaje: string }) {

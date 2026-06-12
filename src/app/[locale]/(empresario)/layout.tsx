@@ -111,6 +111,14 @@ const FWD_CSS = `
   .fwd-app .fwd-act { transition:color .14s; }
   .fwd-app .fwd-act:hover .fwd-act-t { color:var(--azul-700); }
 
+  /* Notificación dentro del dropdown de la campana */
+  .fwd-app .fwd-noti { transition:background .14s; }
+  .fwd-app .fwd-noti:hover { background:var(--bg) !important; }
+
+  /* Stat cards clickeables del dashboard (llevan a su vista filtrada) */
+  .fwd-app .fwd-stat { transition:transform .14s, box-shadow .14s, border-color .14s; }
+  .fwd-app .fwd-stat:hover { transform:translateY(-2px); box-shadow:var(--sh); border-color:var(--ink-300); }
+
   /* Misc */
   .fwd-app .stat-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:18px; }
   .fwd-app .muted { color:var(--ink-500); }
