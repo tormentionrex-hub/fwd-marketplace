@@ -7,6 +7,7 @@ import {
 } from '@/server/repositories/oferta-gestion.repository';
 import { listarEntregablesDeProyecto } from '@/server/repositories/entregable.repository';
 import { buscarEvaluacion } from '@/server/repositories/evaluacion.repository';
+import { tiempoRelativo } from '@/lib/tiempo';
 import GestionProyecto from '@/components/features/marketplace/GestionProyecto';
 
 export default async function GestionProyectoPage({
@@ -49,6 +50,9 @@ export default async function GestionProyectoPage({
     documentacionUrl: o.documentacion_url,
     estado: o.estado,
     fechaEnvio: o.enviado.toISOString(),
+    // Texto relativo precomputado en el servidor para evitar desajustes de
+    // hidratación (Date.now() difiere entre server y cliente).
+    enviadoTexto: tiempoRelativo(o.enviado),
   }));
 
   const entregables = entregablesRaw.map((e) => ({
@@ -59,6 +63,7 @@ export default async function GestionProyectoPage({
     estado: e.estado,
     comentarioEmpresario: e.comentario_empresario,
     fecha: e.creado.toISOString(),
+    fechaTexto: tiempoRelativo(e.creado),
   }));
 
   return (
