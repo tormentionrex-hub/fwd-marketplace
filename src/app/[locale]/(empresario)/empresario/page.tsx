@@ -9,6 +9,7 @@ import {
 } from '@/server/services/proyecto.service';
 import { ProyectoRow } from '@/components/features/empresario/lista-proyectos';
 import BuscadorProyectos from '@/components/features/empresario/buscador-proyectos';
+import DashboardRefresher from '@/components/features/empresario/dashboard-refresher';
 import { tiempoRelativo } from '@/lib/tiempo';
 import {
   IconFolder,
@@ -51,11 +52,12 @@ export default async function DashboardEmpresarioPage({
 
   // `delta` = novedades reales de los últimos 7 días (0 = sin chip). El diseño
   // solo muestra tendencia en las cards con movimiento; el resto va sin chip.
+  // `href` = vista filtrada a la que lleva la card al hacer clic (#5).
   const stats = [
-    { label: 'Proyectos activos', value: resumen.activos, Icon: IconFolder, color: 'var(--azul)', delta: resumen.nuevosActivosSemana },
-    { label: 'Ofertas recibidas', value: resumen.ofertasRecibidas, Icon: IconSend, color: 'var(--magenta)', delta: resumen.nuevasOfertasSemana },
-    { label: 'En desarrollo', value: resumen.enDesarrollo, Icon: IconLayers, color: 'var(--naranja)', delta: 0 },
-    { label: 'Proyectos cerrados', value: resumen.cerrados, Icon: IconTrophy, color: 'var(--turquesa)', delta: 0 },
+    { label: 'Proyectos activos', value: resumen.activos, Icon: IconFolder, color: 'var(--azul)', delta: resumen.nuevosActivosSemana, href: '/empresario/proyectos?estado=publicado' },
+    { label: 'Ofertas recibidas', value: resumen.ofertasRecibidas, Icon: IconSend, color: 'var(--magenta)', delta: resumen.nuevasOfertasSemana, href: '/empresario/proyectos' },
+    { label: 'En desarrollo', value: resumen.enDesarrollo, Icon: IconLayers, color: 'var(--naranja)', delta: 0, href: '/empresario/proyectos?estado=en_desarrollo' },
+    { label: 'Proyectos cerrados', value: resumen.cerrados, Icon: IconTrophy, color: 'var(--turquesa)', delta: 0, href: '/empresario/proyectos?estado=cerrado' },
   ];
 
   const primerNombre = user.nombre.split(' ')[0];
@@ -63,6 +65,9 @@ export default async function DashboardEmpresarioPage({
 
   return (
     <>
+      {/* Refresco automático del dashboard (foco de pestaña + cada 60s) */}
+      <DashboardRefresher />
+
       {/* Topbar */}
       <div className="topbar">
         <div>
@@ -84,9 +89,10 @@ export default async function DashboardEmpresarioPage({
         {/* Tarjetas resumen (datos reales de resumenEmpresario) */}
         <div className="stat-grid" style={{ marginBottom: 28 }}>
           {stats.map((s) => (
-            <div
+            <Link
               key={s.label}
-              className="card card-pad"
+              href={s.href}
+              className="card card-pad fwd-stat"
               style={{ display: 'flex', flexDirection: 'column', gap: 14 }}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -134,7 +140,7 @@ export default async function DashboardEmpresarioPage({
                   {s.label}
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
 
