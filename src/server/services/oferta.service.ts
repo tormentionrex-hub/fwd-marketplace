@@ -118,6 +118,6 @@ export async function estadoOfertaDeEstudiante(
   return {
     existe: true,
     estado: normalizarEstadoOferta(oferta.estado),
-    enviado: oferta.enviado.toISOString(),
+    enviado: oferta.enviado ? oferta.enviado.toISOString() : null,
   };
 }
