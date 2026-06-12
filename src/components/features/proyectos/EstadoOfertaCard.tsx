@@ -29,13 +29,12 @@ export default function EstadoOfertaCard({ estado, fecha }: EstadoOfertaCardProp
 
   return (
     <div className="flex flex-col gap-3">
-      <span className="text-sm font-semibold text-text">Estado de mi oferta</span>
-      <div className={cn("flex items-center gap-3 rounded-xl px-3 py-3", meta.badge)}>
-        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-white/40 dark:bg-white/10">
-          <Icon width={18} height={18} />
+      <div className={cn("flex items-center gap-3 rounded-xl px-3.5 py-3.5", meta.badge)}>
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-white/40 dark:bg-white/10">
+          <Icon width={20} height={20} />
         </span>
         <div className="flex min-w-0 flex-col">
-          <span className="text-sm font-bold">{meta.label}</span>
+          <span className="text-[15px] font-bold leading-tight">{meta.label}</span>
           {fecha && <span className="truncate text-xs opacity-80">Enviada el {fecha}</span>}
         </div>
       </div>

@@ -7,43 +7,55 @@ function Block({ className = "" }: { className?: string }) {
 
 export default function ProyectoLoading() {
   return (
-    <div className="mx-auto w-full max-w-7xl px-6 py-10 sm:px-8">
+    <div className="mx-auto w-full max-w-6xl px-6 py-10 sm:px-8">
       <Block className="h-4 w-36" />
 
-      <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_22rem]">
-        <main className="flex flex-col gap-8">
-          <div className="flex flex-col gap-4">
-            <Block className="h-7 w-44 rounded-full" />
-            <div className="flex gap-2">
-              <Block className="h-6 w-16 rounded-full" />
-              <Block className="h-6 w-56 rounded-full" />
-            </div>
-            <Block className="h-10 w-3/4" />
-            <Block className="h-24 w-full max-w-2xl" />
-          </div>
+      {/* Encabezado */}
+      <div className="mt-6 flex flex-col gap-4">
+        <div className="flex gap-2">
+          <Block className="h-7 w-20 rounded-full" />
+          <Block className="h-7 w-28 rounded-full" />
+        </div>
+        <Block className="h-10 w-3/4" />
+        <Block className="h-5 w-64 rounded-full" />
+      </div>
 
-          <div className="flex flex-col gap-3">
-            <Block className="h-4 w-48" />
-            <div className="flex flex-wrap gap-2">
+      <div className="mt-8 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_21rem]">
+        <main className="flex flex-col gap-6">
+          <div className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-6 shadow-sm sm:p-8">
+            <Block className="h-4 w-28" />
+            <Block className="h-24 w-full" />
+          </div>
+          <div className="flex flex-col gap-4 rounded-2xl border border-border bg-surface p-6 shadow-sm sm:p-8">
+            <Block className="h-4 w-40" />
+            <div className="flex flex-wrap gap-2.5">
               {Array.from({ length: 5 }).map((_, i) => (
-                <Block key={i} className="h-7 w-24 rounded-full" />
+                <Block key={i} className="h-8 w-24 rounded-full" />
               ))}
             </div>
           </div>
         </main>
 
-        <aside>
-          <div className="flex flex-col gap-5 rounded-2xl border border-border bg-surface p-6 shadow-sm">
-            <div className="flex items-center gap-3">
-              <Block className="h-11 w-11 rounded-full" />
-              <div className="flex flex-1 flex-col gap-2">
-                <Block className="h-4 w-32" />
-                <Block className="h-3 w-24" />
-              </div>
-            </div>
-            <Block className="h-11 w-full" />
-            <Block className="h-px w-full" />
+        <aside className="flex flex-col gap-6">
+          <div className="rounded-2xl border border-border bg-surface p-5 shadow-sm">
+            <Block className="mx-auto h-12 w-16" />
+            <Block className="mx-auto mt-3 h-4 w-24" />
+          </div>
+          <div className="flex flex-col gap-4 rounded-2xl border border-border bg-surface p-5 shadow-sm">
+            <Block className="h-4 w-20" />
             <Block className="h-11 w-full rounded-full" />
+          </div>
+          <div className="flex flex-col gap-4 rounded-2xl border border-border bg-surface p-5 shadow-sm">
+            <Block className="h-4 w-32" />
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <Block className="h-8 w-8 rounded-lg" />
+                <div className="flex flex-1 flex-col gap-1.5">
+                  <Block className="h-3 w-16" />
+                  <Block className="h-4 w-28" />
+                </div>
+              </div>
+            ))}
           </div>
         </aside>
       </div>

@@ -132,17 +132,6 @@ export function listarUsuarios() {
   });
 }
 
-// Registra la marca de tiempo de la sesión actual (último login exitoso).
-// Lo llama el servicio de auth tras validar credenciales. Devuelve la cantidad
-// de filas afectadas vía Prisma update; el llamador no necesita el resultado.
-export function registrarUltimaSesion(id: string) {
-  return db.usuarios.update({
-    where: { id },
-    data: { ultima_sesion: new Date() },
-    select: { id: true },
-  });
-}
-
 // Elimina un usuario por id. Los perfiles y datos relacionados se borran en
 // cascada según las FK del esquema. Lo usa el panel admin.
 export function eliminarUsuario(id: string) {

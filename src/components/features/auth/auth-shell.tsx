@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Link } from "@/i18n/navigation";
 import { FwdLogo, FwdIsotipo } from "@/components/ui/fwd-logo";
+import { IconHome } from "@/components/ui/icons";
 
 /** Patrón decorativo de flechas multicolor (sistema gráfico, pág. 11). */
 function ArrowPattern() {
@@ -45,7 +46,16 @@ type AuthShellProps = {
  */
 export function AuthShell({ highlight, logo, children }: AuthShellProps) {
   return (
-    <div className="flex min-h-screen flex-col lg:flex-row">
+    <div className="relative flex min-h-screen flex-col lg:flex-row">
+      {/* Botón de inicio (vuelve al home, respeta el locale) */}
+      <Link
+        href="/"
+        className="absolute right-4 top-4 z-20 inline-flex items-center gap-1.5 rounded-full border border-fwd-ink/15 bg-white/85 px-4 py-2 text-sm font-medium text-fwd-ink shadow-sm backdrop-blur transition hover:border-fwd-blue hover:text-fwd-blue lg:right-6 lg:top-6"
+      >
+        <IconHome width={16} height={16} />
+        Inicio
+      </Link>
+
       {/* Panel de marca */}
       <aside className="relative hidden overflow-hidden bg-fwd-navy lg:flex lg:w-[46%] lg:flex-col lg:p-12 xl:p-16">
         {/* Degradado de marca (portada navy → morado → magenta) */}
