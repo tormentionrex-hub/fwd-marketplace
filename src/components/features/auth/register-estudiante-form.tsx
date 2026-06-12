@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { TextField } from "@/components/ui/text-field";
+import { IconArrowRight, IconArrowLeft, IconCheck } from "@/components/ui/icons";
 
 type Step = "email" | "datos";
 
@@ -145,7 +146,7 @@ export function RegisterEstudianteForm() {
             className="group mt-1 flex h-12 items-center justify-center gap-2 rounded-full bg-fwd-blue px-6 font-semibold text-white shadow-sm transition hover:bg-fwd-purple disabled:opacity-60"
           >
             {loading ? "Verificando…" : "Verificar invitación"}
-            <span className="transition-transform group-hover:translate-x-1">▶</span>
+            <IconArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
           </button>
         </form>
 
@@ -167,7 +168,7 @@ export function RegisterEstudianteForm() {
     <div>
       <header className="mb-8">
         <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-green-50 px-3 py-1.5 text-sm font-medium text-green-700 border border-green-200">
-          <span>✓</span>
+          <IconCheck className="h-4 w-4" />
           <span>Invitación verificada: {emailVerificado}</span>
         </div>
         <h1 className="font-display text-3xl font-black text-fwd-ink">
@@ -264,15 +265,16 @@ export function RegisterEstudianteForm() {
           className="group mt-1 flex h-12 items-center justify-center gap-2 rounded-full bg-fwd-blue px-6 font-semibold text-white shadow-sm transition hover:bg-fwd-purple disabled:opacity-60"
         >
           {loading ? "Creando cuenta…" : "Crear mi cuenta"}
-          <span className="transition-transform group-hover:translate-x-1">▶</span>
+          <IconArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
         </button>
 
         <button
           type="button"
           onClick={() => { setStep("email"); setError(null); }}
-          className="text-center text-sm text-fwd-ink/50 hover:text-fwd-ink transition"
+          className="inline-flex items-center justify-center gap-1.5 text-sm text-fwd-ink/50 hover:text-fwd-ink transition"
         >
-          ← Cambiar correo
+          <IconArrowLeft className="h-4 w-4" />
+          Cambiar correo
         </button>
       </form>
     </div>

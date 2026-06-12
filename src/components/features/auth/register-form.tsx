@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { TextField } from "@/components/ui/text-field";
+import { IconArrowRight } from "@/components/ui/icons";
 import { SocialAuthButtons } from "@/components/features/auth/social-auth-buttons";
 
 // Persistencia del form en sessionStorage: si el usuario navega a /terminos y
@@ -348,7 +349,7 @@ export function RegisterForm() {
           }`}
         >
           {loading ? "Avanzando…" : "Crear cuenta"}
-          <span className="transition-transform group-hover:translate-x-1">▶</span>
+          <IconArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
         </button>
       </form>
 
