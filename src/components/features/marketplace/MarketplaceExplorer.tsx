@@ -1,12 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import ScrollReveal from "@/components/ScrollReveal";
 import ProductCard from "@/components/features/cards/ProductCard";
 import type { Complejidad, Prioridad, ProductoMarketplace, TipoProyecto } from "@/types/marketplace";
 import AnimatedMarketplaceTitle from "@/components/AnimatedMarketplaceTitle";
 import SelectFWD from "@/components/SelectFWD";
 import { FwdIsotipo } from "@/components/ui/fwd-logo";
+import ParticleBackground from "@/components/ParticleBackground";
 
 /* ── Opciones de filtros ─────────────────────────── */
 const TODO_TIPO      = "Todos los tipos";
@@ -40,6 +41,9 @@ export default function MarketplaceExplorer({ productos, locale }: Props) {
   const [prioridad,   setPrioridad]   = useState(TODA_PRIORIDAD);
   const [complejidad, setComplejidad] = useState(TODA_COMPLEJIDAD);
   const [orden,       setOrden]       = useState(ORDENES_OPCIONES[0]);
+  const [pagina,      setPagina]      = useState(1);
+
+  const POR_PAGINA = 6;
 
   const hasFilters =
     query !== "" ||
@@ -52,6 +56,7 @@ export default function MarketplaceExplorer({ productos, locale }: Props) {
     setQuery("");
     setTipo(TODO_TIPO); setLenguaje(TODO_LENGUAJE);
     setPrioridad(TODA_PRIORIDAD); setComplejidad(TODA_COMPLEJIDAD);
+    setPagina(1);
   };
 
   const visibles = useMemo(() => {
@@ -83,6 +88,14 @@ export default function MarketplaceExplorer({ productos, locale }: Props) {
     return lista;
   }, [productos, query, orden, tipo, lenguaje, prioridad, complejidad]);
 
+  const totalPaginas = Math.ceil(visibles.length / POR_PAGINA);
+  const paginados    = visibles.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA);
+
+  const cambiarPagina = (p: number) => {
+    setPagina(p);
+    document.getElementById("marketplace-grid")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   return (
     <div>
       {/* ══ HERO OSCURO ══ */}
@@ -95,23 +108,63 @@ export default function MarketplaceExplorer({ productos, locale }: Props) {
           className="pointer-events-none absolute inset-0"
           style={{ background: "radial-gradient(ellipse at 70% 50%, rgba(32,190,198,0.12) 0%, transparent 60%)" }}
         />
-        {/* Isotipos decorativos */}
+        {/* Isotipo derecha */}
         <div className="pointer-events-none absolute right-[-60px] top-1/2 -translate-y-1/2 opacity-20">
           <FwdIsotipo style={{ width: "420px", height: "auto" }} />
         </div>
-        <div className="pointer-events-none absolute left-[-40px] bottom-[-20px] opacity-10">
-          <FwdIsotipo style={{ width: "200px", height: "auto" }} />
-        </div>
 
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+
+          {/* Logo giratorio — esquina superior izquierda del contenido */}
+          <div
+            className="pointer-events-none absolute hidden lg:block"
+            style={{
+              left: "-45px",
+              top: "-30px",
+              animation: "spinLogo 18s linear infinite",
+            }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/imagenes/Comunidad icon-01.png"
+              alt=""
+              width={170}
+              height={170}
+              style={{ width: 170, height: 170, objectFit: "contain" }}
+            />
+          </div>
+
+          <style>{`
+            @keyframes spinLogo {
+              from { transform: rotate(0deg); }
+              to   { transform: rotate(360deg); }
+            }
+          `}</style>
           <p className="text-[#20BEC7] text-xs font-semibold uppercase tracking-widest mb-4">
             &#9658;&#9658; MARKETPLACE FWD
           </p>
 
           <AnimatedMarketplaceTitle text="Explora el Marketplace" className="text-center mb-4" />
 
-          <p className="text-white/60 text-lg max-w-xl mx-auto mb-10">
-            Descubre proyectos, servicios y oportunidades que se adaptan a tus habilidades
+          <p className="text-lg max-w-xl mx-auto mb-10 flex flex-wrap justify-center gap-x-2">
+            {["Descubre","proyectos,","servicios","y","oportunidades","que","se","adaptan","a","tus","habilidades"].map((word, i) => (
+              <span
+                key={i}
+                className="inline-block cursor-default transition-all duration-200 hover:-translate-y-1"
+                style={{ color: "rgba(255,255,255,0.6)" }}
+                onMouseEnter={(e) => {
+                  const colors = ["#20BEC6","#ED008C","#662D91","#008FD5","#FFCB05","#F7901E"];
+                  (e.currentTarget as HTMLElement).style.color = colors[i % colors.length] ?? "#20BEC6";
+                  (e.currentTarget as HTMLElement).style.textShadow = `0 0 20px ${colors[i % colors.length]}88`;
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.6)";
+                  (e.currentTarget as HTMLElement).style.textShadow = "none";
+                }}
+              >
+                {word}
+              </span>
+            ))}
           </p>
 
           {/* Barra de búsqueda */}
@@ -173,21 +226,95 @@ export default function MarketplaceExplorer({ productos, locale }: Props) {
       </section>
 
       {/* ══ CONTENIDO ══ */}
-      <div className="mx-auto w-full max-w-7xl px-6 py-10 sm:px-8">
+      <div className="relative overflow-hidden">
+        <ParticleBackground />
+        <div className="relative z-10 mx-auto w-full max-w-7xl px-6 py-10 sm:px-8">
 
         {/* Contador */}
-        <p className="text-text-muted text-sm mb-8">
+        <p className="text-text-muted text-sm mb-8" id="marketplace-grid">
           {visibles.length} resultado{visibles.length !== 1 ? "s" : ""} encontrado{visibles.length !== 1 ? "s" : ""}
+          {totalPaginas > 1 && <span className="ml-2 text-text-muted/60">· Página {pagina} de {totalPaginas}</span>}
         </p>
 
         {/* Grid de productos */}
-        <motion.div layout className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-          <AnimatePresence mode="popLayout">
-            {visibles.map((producto) => (
-              <ProductCard key={producto.id} producto={producto} locale={locale} />
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          {paginados.map((producto, index) => (
+            <ScrollReveal key={producto.id} delay={(index % 3) * 120}>
+              <ProductCard producto={producto} locale={locale} />
+            </ScrollReveal>
+          ))}
+        </div>
+
+        {/* Paginación */}
+        {totalPaginas > 1 && (
+          <div className="flex items-center justify-center gap-2 mt-14">
+
+            {/* Flecha anterior */}
+            <button
+              onClick={() => cambiarPagina(pagina - 1)}
+              disabled={pagina === 1}
+              aria-label="Anterior"
+              className="group relative w-11 h-11 rounded-full flex items-center justify-center shadow-md transition-all duration-300 hover:scale-110 active:scale-95 hover:shadow-lg disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100"
+              style={{ background: "linear-gradient(135deg, #1a0a40, #662D91)" }}
+            >
+              <svg className="w-4 h-4 text-white transition-transform duration-200 group-hover:-translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+            </button>
+
+            {/* Números */}
+            {Array.from({ length: totalPaginas }, (_, i) => i + 1).map((n) => (
+              <button
+                key={n}
+                onClick={() => cambiarPagina(n)}
+                className="w-11 h-11 rounded-full flex items-center justify-center text-sm font-black transition-all duration-300 hover:scale-110 active:scale-95"
+                style={
+                  n === pagina
+                    ? {
+                        background: "linear-gradient(135deg, #20BEC6, #008FD5)",
+                        color: "white",
+                        boxShadow: "0 4px 20px rgba(32,190,198,0.5), 0 0 0 3px rgba(32,190,198,0.2)",
+                      }
+                    : {
+                        background: "rgba(0,0,0,0.05)",
+                        color: "#64748b",
+                        border: "1px solid rgba(0,0,0,0.08)",
+                      }
+                }
+                onMouseEnter={(e) => {
+                  if (n !== pagina) {
+                    (e.currentTarget as HTMLElement).style.background = "linear-gradient(135deg, #20BEC622, #008FD522)";
+                    (e.currentTarget as HTMLElement).style.color = "#008FD5";
+                    (e.currentTarget as HTMLElement).style.borderColor = "#20BEC6";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (n !== pagina) {
+                    (e.currentTarget as HTMLElement).style.background = "rgba(0,0,0,0.05)";
+                    (e.currentTarget as HTMLElement).style.color = "#64748b";
+                    (e.currentTarget as HTMLElement).style.borderColor = "rgba(0,0,0,0.08)";
+                  }
+                }}
+              >
+                {n}
+              </button>
             ))}
-          </AnimatePresence>
-        </motion.div>
+
+            {/* Flecha siguiente */}
+            <button
+              onClick={() => cambiarPagina(pagina + 1)}
+              disabled={pagina === totalPaginas}
+              aria-label="Siguiente"
+              className="group relative w-11 h-11 rounded-full flex items-center justify-center shadow-md transition-all duration-300 hover:scale-110 active:scale-95 hover:shadow-lg disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100"
+              style={{ background: "linear-gradient(135deg, #662D91, #ED008C)" }}
+            >
+              <svg className="w-4 h-4 text-white transition-transform duration-200 group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                <path d="M9 18l6-6-6-6" />
+              </svg>
+            </button>
+
+          </div>
+        )}
 
         {/* Estado vacío */}
         {visibles.length === 0 && (
@@ -210,6 +337,7 @@ export default function MarketplaceExplorer({ productos, locale }: Props) {
             </button>
           </div>
         )}
+        </div>
       </div>
     </div>
   );

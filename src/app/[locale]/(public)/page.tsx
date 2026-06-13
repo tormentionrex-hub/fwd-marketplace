@@ -10,6 +10,7 @@ import AnimatedProjectsTitle from "@/components/AnimatedProjectsTitle";
 import AnimatedHeroTitle from "@/components/AnimatedHeroTitle";
 import TiltCard from "@/components/TiltCard";
 import AnimatedSubtitle from "@/components/AnimatedSubtitle";
+import WhatsAppButton from "@/components/WhatsAppButton";
 
 /* ─── Hardcoded data ─────────────────────────────── */
 
@@ -106,7 +107,7 @@ export default async function Home() {
 
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
 
-          <div className="text-center mb-16">
+<div className="text-center mb-16">
             <div data-reveal="heading" className="flex justify-center mb-4">
               <WaveFunciona />
             </div>
@@ -293,6 +294,7 @@ export default async function Home() {
       <StudentCarousel />
 
       <Footer />
+      <WhatsAppButton />
     </div>
   );
 }

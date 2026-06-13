@@ -27,11 +27,29 @@ export default function SelectFWD({ value, onChange, options }: Props) {
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-white transition-all duration-200 min-w-[180px] w-full"
+        className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-white min-w-[180px] w-full"
         style={{
-          background: open ? "rgba(32,190,198,0.2)" : "rgba(255,255,255,0.1)",
+          background: open ? "linear-gradient(135deg, rgba(32,190,198,0.25), rgba(0,143,213,0.2))" : "rgba(255,255,255,0.1)",
           border: open ? "1px solid #20BEC6" : "1px solid rgba(255,255,255,0.2)",
           backdropFilter: "blur(8px)",
+          boxShadow: open ? "0 0 20px rgba(32,190,198,0.3), inset 0 1px 0 rgba(255,255,255,0.1)" : "none",
+          transition: "all 0.25s ease",
+        }}
+        onMouseEnter={(e) => {
+          if (!open) {
+            (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.18)";
+            (e.currentTarget as HTMLElement).style.border = "1px solid rgba(32,190,198,0.5)";
+            (e.currentTarget as HTMLElement).style.boxShadow = "0 0 16px rgba(32,190,198,0.2)";
+            (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)";
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!open) {
+            (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.1)";
+            (e.currentTarget as HTMLElement).style.border = "1px solid rgba(255,255,255,0.2)";
+            (e.currentTarget as HTMLElement).style.boxShadow = "none";
+            (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
+          }
         }}
       >
         <span className={value === options[0] ? "text-white/50" : "text-white"}>

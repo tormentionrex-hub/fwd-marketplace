@@ -3,6 +3,9 @@ import { Reveal } from "@/components/ui/motion";
 import MarketplaceExplorer from "@/components/features/marketplace/MarketplaceExplorer";
 import CategoriesSection from "@/components/features/marketplace/CategoriesSection";
 import ProductCard from "@/components/features/cards/ProductCard";
+import Footer from "@/components/Footer";
+import HomeButton from "@/components/HomeButton";
+import ParticleBackground from "@/components/ParticleBackground";
 import { PRODUCTOS, PRODUCTOS_DESTACADOS } from "@/lib/marketplace-data";
 
 export default async function MarketplacePage({
@@ -14,12 +17,16 @@ export default async function MarketplacePage({
 
   return (
     <div className="flex flex-col">
-      {/* Hero + buscador + filtros + grid de productos */}
+
+      <HomeButton />
+
+      {/* Hero + buscador + filtros + grid */}
       <MarketplaceExplorer productos={PRODUCTOS} locale={locale} />
 
-      {/* Categorías y destacados en contenedor restringido */}
-      <div className="mx-auto w-full max-w-7xl space-y-20 px-6 py-12 sm:px-8">
-        {/* Categorías */}
+      {/* Categorías y destacados */}
+      <div className="relative overflow-hidden">
+        <ParticleBackground />
+        <div className="relative z-10 mx-auto w-full max-w-7xl space-y-20 px-6 py-12 sm:px-8">
         <section>
           <Reveal>
             <SectionHeading
@@ -33,7 +40,6 @@ export default async function MarketplacePage({
           </div>
         </section>
 
-        {/* Destacados */}
         <section>
           <Reveal>
             <SectionHeading
@@ -48,7 +54,10 @@ export default async function MarketplacePage({
             ))}
           </div>
         </section>
+        </div>
       </div>
+
+      <Footer />
     </div>
   );
 }
