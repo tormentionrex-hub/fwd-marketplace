@@ -69,6 +69,8 @@ export interface Logro {
 }
 
 export interface PerfilPublico {
+  /** Id real del usuario estudiante; null en el perfil de ejemplo (demo). */
+  id?: string | null;
   username: string;
   nombre: string;
   rol: string;

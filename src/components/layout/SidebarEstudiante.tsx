@@ -9,8 +9,10 @@ import {
   IconFile,
   IconHome,
   IconLogout,
+  IconMail,
   IconStar,
   IconUser,
+  IconUserPlus,
 } from "@/components/ui/icons";
 import ThemeToggle from "@/components/theme/ThemeToggle";
 import { cn } from "@/lib/utils/cn";
@@ -53,6 +55,8 @@ export default function SidebarEstudiante({
     { href: base, label: "Inicio", Icon: IconHome, exact: true },
     { href: `${base}/perfil`, label: "Mi perfil", Icon: IconUser },
     { href: `/${locale}/mis-ofertas`, label: "Mis ofertas", Icon: IconFile },
+    { href: `${base}/solicitudes`, label: "Solicitudes", Icon: IconUserPlus },
+    { href: `/${locale}/mensajes`, label: "Mensajes", Icon: IconMail },
     { href: `${base}/proyecto-activo`, label: "Proyecto activo", Icon: IconBriefcase },
   ];
 
