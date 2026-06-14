@@ -220,25 +220,18 @@ model perfiles_estudiante {
   total_calificaciones    Int                       @default(0)
   descripcion             String?
   document_url            String?
-<<<<<<< HEAD
   generacion_fwd          Int?
-  chats                   chats[]
   curriculums             curriculums?
-=======
   chats_iniciados         chats[]                   @relation("chats_origen")
   chats_recibidos         chats[]                   @relation("chats_destino")
->>>>>>> 26276f9 (fix: chat del estudiante)
   entregables             entregables[]
   estudiantes_habilidades estudiantes_habilidades[]
   evaluaciones            evaluaciones[]
   ofertas                 ofertas[]
-<<<<<<< HEAD
-=======
   portafolio_proyectos    portafolio_proyectos[]
   solicitudes_mensaje     solicitudes_mensaje[]
->>>>>>> 26276f9 (fix: chat del estudiante)
   usuarios                usuarios                  @relation(fields: [id_usuario], references: [id], onDelete: Cascade, map: "fk_perfiles_estudiante_usuario")
-  portafolio_proyectos    portafolio_proyectos[]
+
 
   @@index([reputacion], map: "idx_perfiles_estudiante_reputacion")
 }
