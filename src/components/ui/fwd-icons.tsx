@@ -207,6 +207,12 @@ export const IconCode = make(
     <path d="M16 6l6 6-6 6" />
   </>,
 );
+export const IconTrend = make(
+  <>
+    <path d="M3 17l6-6 4 4 7-7" />
+    <path d="M17 7h4v4" />
+  </>,
+);
 
 // Icono Comunidad FWD — seis flechas radiales multicolor (empty states).
 export function IconComunidad({ size = 64 }: { size?: number }) {

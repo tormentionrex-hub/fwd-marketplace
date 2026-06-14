@@ -346,6 +346,8 @@ model usuarios {
   image_url           String?
   estado              String               @default("activo") @db.VarChar(50)
   id_rol              BigInt
+  segundo_nombre      String?              @db.VarChar(150)
+  edad                Int?                 @db.SmallInt
   fecha_nacimiento    DateTime?            @db.Date
   creado              DateTime             @default(now()) @db.Timestamptz(6)
   segundo_apellido    String?              @db.VarChar(150)
@@ -390,4 +392,24 @@ model cv_accesos {
 
   @@index([id_curriculum], map: "idx_cv_accesos_curriculum")
   @@index([id_empresario], map: "idx_cv_accesos_empresario")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model solicitudes_mensaje {
+  id                  String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id_empresario       String              @db.Uuid
+  id_estudiante       String              @db.Uuid
+  id_proyecto         String?             @db.Uuid
+  asunto              String              @db.VarChar(200)
+  mensaje             String
+  estado              String              @default("pendiente") @db.VarChar(20)
+  creado              DateTime            @default(now()) @db.Timestamptz(6)
+  actualizado         DateTime            @default(now()) @db.Timestamptz(6)
+  perfiles_empresario perfiles_empresario @relation(fields: [id_empresario], references: [id_usuario], onDelete: Cascade, onUpdate: NoAction, map: "fk_solicitudes_empresario")
+  perfiles_estudiante perfiles_estudiante @relation(fields: [id_estudiante], references: [id_usuario], onDelete: Cascade, onUpdate: NoAction, map: "fk_solicitudes_estudiante")
+  proyectos           proyectos?          @relation(fields: [id_proyecto], references: [id], onUpdate: NoAction, map: "fk_solicitudes_proyecto")
+
+  @@index([id_empresario], map: "idx_solicitudes_empresario")
+  @@index([estado], map: "idx_solicitudes_estado")
+  @@index([id_estudiante], map: "idx_solicitudes_estudiante")
 }

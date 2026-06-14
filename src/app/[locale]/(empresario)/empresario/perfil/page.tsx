@@ -5,7 +5,6 @@ import { obtenerPerfilEmpresarioDTO } from '@/server/services/perfil-empresario.
 import { ESTADO_BADGE } from '@/components/features/empresario/lista-proyectos';
 import EditarPerfilEmpresario from '@/components/features/empresario/editar-perfil-empresario';
 import {
-  IconBell,
   IconBriefcase,
   IconLayers,
   IconMail,
@@ -98,10 +97,6 @@ export default async function PerfilEmpresarioPage({
           fotoUrlInicial={perfil.fotoUrl}
           inicialesFallback={inicialesDe(perfil.empresa)}
         />
-        <div className="tb-icon">
-          <IconBell size={18} />
-          <span className="dot" />
-        </div>
       </div>
 
       <div className="page fade-in">

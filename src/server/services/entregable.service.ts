@@ -4,6 +4,7 @@ import {
   buscarEstudianteAdjudicado,
 } from '@/server/repositories/proyecto.repository';
 import { siguienteVersion, crearEntregable } from '@/server/repositories/entregable.repository';
+import { notificarEntregaRecibida } from '@/server/services/notificacion.service';
 
 // Lógica de negocio: el estudiante adjudicado sube un entregable (hito/final).
 // 1. Debe venir un archivo (URL ya subida a Storage).
@@ -39,6 +40,9 @@ export async function enviarEntregable(d: {
     version,
     archivoUrl: archivo,
   });
+
+  // Avisa al empresario dueño del proyecto (no bloquea ni rompe si falla).
+  await notificarEntregaRecibida(d.idProyecto, d.idEstudiante);
 
   return { ok: true, entregableId: entregable.id };
 }
