@@ -9,7 +9,6 @@ import {
   IconCheck,
   IconCheckCircle,
   IconAlert,
-  IconUpload,
   IconX,
 } from '@/components/ui/fwd-icons';
 import type { Preferencias } from '@/server/repositories/perfil-empresario.repository';
@@ -21,6 +20,7 @@ type Props = {
   verificado: boolean;
   preferenciasIniciales: Preferencias;
   cedulaJuridica: string;
+  fotoUrl: string | null;
 };
 
 const labelStyle: React.CSSProperties = {
@@ -191,7 +191,7 @@ const TABS = [
 
 type TabId = (typeof TABS)[number]['id'];
 
-export default function ConfiguracionEmpresario({ nombre, empresa, correo, verificado, preferenciasIniciales, cedulaJuridica }: Props) {
+export default function ConfiguracionEmpresario({ nombre, empresa, correo, verificado, preferenciasIniciales, cedulaJuridica, fotoUrl }: Props) {
   const [tab, setTab] = useState<TabId>('cuenta');
   const [notif, setNotif] = useState(preferenciasIniciales.notif);
   const [priv, setPriv] = useState(preferenciasIniciales.priv);
@@ -370,20 +370,25 @@ export default function ConfiguracionEmpresario({ nombre, empresa, correo, verif
                       marginBottom: 6,
                     }}
                   >
-                    <div
-                      className="avatar"
-                      style={{ width: 60, height: 60, background: 'var(--azul)', fontSize: 22 }}
-                    >
-                      {inicialesDe(empresa)}
-                    </div>
-                    <div>
-                      <button className="btn btn-ghost btn-sm" type="button">
-                        <IconUpload size={14} />
-                        Cambiar foto
-                      </button>
-                      <div className="muted" style={{ fontSize: 11.5, marginTop: 6 }}>
-                        JPG o PNG · máx. 2 MB
+                    {fotoUrl ? (
+                      <img
+                        src={fotoUrl}
+                        alt={nombre}
+                        style={{ width: 60, height: 60, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+                      />
+                    ) : (
+                      <div
+                        className="avatar"
+                        style={{ width: 60, height: 60, background: 'var(--azul)', fontSize: 22 }}
+                      >
+                        {inicialesDe(nombre || empresa)}
                       </div>
+                    )}
+                    <div>
+                      <div style={{ fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 14, color: 'var(--ink-900)' }}>
+                        {nombre || empresa}
+                      </div>
+                      <div className="muted" style={{ fontSize: 12.5, marginTop: 2 }}>{correo}</div>
                     </div>
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
