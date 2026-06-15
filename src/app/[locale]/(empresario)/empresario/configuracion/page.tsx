@@ -29,6 +29,7 @@ export default async function ConfiguracionPage({
       verificado={user.estado === 'activo'}
       preferenciasIniciales={preferencias}
       cedulaJuridica={completitud?.numero_identificacion ?? ''}
+      fotoUrl={perfil?.fotoUrl ?? null}
     />
   );
 }
