@@ -6,7 +6,6 @@ import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import { RoleBadge } from '@/components/layout/role-badge';
 import { AlertaGlobal } from '@/components/layout/alerta-global';
-import WhatsAppButton from '@/components/WhatsAppButton';
 import SmoothScroll from '@/components/SmoothScroll';
 import AnimationsInit from '@/components/AnimationsInit';
 import CursorGlow from '@/components/CursorGlow';
@@ -48,7 +47,6 @@ export default async function LocaleLayout({
         <RoleBadge />
         <AlertaGlobal />
       </NextIntlClientProvider>
-      <WhatsAppButton />
     </>
   );
 }
