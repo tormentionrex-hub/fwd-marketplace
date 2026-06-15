@@ -50,7 +50,6 @@ export default function CompletarPerfilModal({ datos }: { datos: DatosCompletitu
   const [segundoApellido,      setSegundoApellido]      = useState(datos.segundoApellido);
   const [edad,                 setEdad]                 = useState(datos.edad !== null ? String(datos.edad) : '');
   const [nombreEmpresa,        setNombreEmpresa]        = useState(datos.nombreEmpresa);
-  const [numeroIdentificacion, setNumeroIdentificacion] = useState(datos.numeroIdentificacion);
 
   const [guardando, setGuardando] = useState(false);
   const [error,     setError]     = useState('');
@@ -69,10 +68,6 @@ export default function CompletarPerfilModal({ datos }: { datos: DatosCompletitu
       setError('El nombre de empresa es obligatorio.');
       return;
     }
-    if (!numeroIdentificacion.trim()) {
-      setError('El número de identificación es obligatorio.');
-      return;
-    }
 
     setGuardando(true);
     try {
@@ -86,7 +81,6 @@ export default function CompletarPerfilModal({ datos }: { datos: DatosCompletitu
           segundoApellido:      segundoApellido.trim() || undefined,
           edad:                 edad ? Number(edad) : null,
           nombreEmpresa:        nombreEmpresa.trim(),
-          numeroIdentificacion: numeroIdentificacion.trim(),
         }),
       });
 
@@ -244,23 +238,7 @@ export default function CompletarPerfilModal({ datos }: { datos: DatosCompletitu
             />
           </div>
 
-          {/* Número de identificación */}
-          <div style={fieldWrap}>
-            <label style={labelStyle}>
-              Número de identificación<span style={{ color: 'var(--magenta)' }}> *</span>
-            </label>
-            <input
-              type="text"
-              value={numeroIdentificacion}
-              maxLength={50}
-              placeholder="Ej. 1-2345-6789"
-              onChange={(e) => setNumeroIdentificacion(e.target.value)}
-              style={inputStyle}
-            />
-            <span style={{ fontSize: 11.5, color: 'var(--ink-400)' }}>
-              Cédula, DNI, pasaporte u otro documento de identidad.
-            </span>
-          </div>
+
 
           {/* Nombre de empresa */}
           <div style={fieldWrap}>

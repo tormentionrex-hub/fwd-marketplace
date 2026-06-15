@@ -25,6 +25,7 @@ const FWD_CSS = `
     --sidebar-w:264px;
     --font-head:'Figtree',system-ui,sans-serif; --font-body:'Outfit',system-ui,sans-serif;
     position:relative; display:grid; grid-template-columns:var(--sidebar-w) 1fr;
+    transition:grid-template-columns 0.3s ease;
     height:100vh; overflow:hidden; font-family:var(--font-body); background:var(--bg); color:var(--ink-800);
   }
   .fwd-app h1,.fwd-app h2,.fwd-app h3,.fwd-app h4,.fwd-app h5 { font-family:var(--font-head); color:var(--ink-900); margin:0; letter-spacing:-.015em; }
@@ -38,7 +39,7 @@ const FWD_CSS = `
   .fwd-strip i { flex:1; }
 
   /* Sidebar */
-  .fwd-app .sidebar { background:var(--surface); border-right:1px solid var(--line); display:flex; flex-direction:column; padding:26px 16px 16px; gap:6px; position:relative; z-index:5; overflow-y:auto; }
+  .fwd-app .sidebar { background:var(--surface); border-right:1px solid var(--line); display:flex; flex-direction:column; padding:26px 0 16px; gap:6px; position:relative; z-index:5; overflow-y:auto; }
   .fwd-app .sb-brand { display:flex; align-items:center; gap:11px; padding:4px 8px 18px; }
   .fwd-app .sb-section { font-family:var(--font-head); font-size:10.5px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; color:var(--ink-400); padding:14px 12px 7px; }
   .fwd-app .nav-item { display:flex; align-items:center; gap:11px; padding:10px 12px; border-radius:var(--r-sm); color:var(--ink-600); font-weight:500; font-size:14px; position:relative; transition:background .15s, color .15s; width:100%; text-align:left; }

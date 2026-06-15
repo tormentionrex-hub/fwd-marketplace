@@ -22,7 +22,7 @@ export async function POST(request: Request) {
 
   const parseo = await parsearBody(request, registerSchema);
   if (!parseo.ok) return parseo.respuesta;
-  const { firstName, lastName, secondLastName, identificationNumber, age, companyName, email, password } = parseo.data;
+  const { firstName, lastName, secondLastName, age, companyName, email, password } = parseo.data;
 
   const nombre = `${firstName} ${lastName}`.trim();
 
@@ -30,7 +30,6 @@ export async function POST(request: Request) {
     const resultado = await registrarEmpresario(nombre, email, password, {
       segundoApellido: secondLastName,
       nombreEmpresa: companyName,
-      numeroIdentificacion: identificationNumber,
       edad: age,
     });
     if (!resultado) {

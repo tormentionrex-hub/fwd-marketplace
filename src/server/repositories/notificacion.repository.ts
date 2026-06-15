@@ -26,11 +26,19 @@ export function marcarTodasLeidas(idUsuario: string) {
   });
 }
 
+// Marca una notificación específica como leída asegurando ownership.
+export function marcarUnaLeida(idUsuario: string, idNotificacion: string) {
+  return db.notificaciones.updateMany({
+    where: { id: idNotificacion, id_usuario: idUsuario, leida: false },
+    data: { leida: true },
+  });
+}
+
 // Crea una notificación para un usuario. La consumen los flujos que generan
 // avisos (solicitudes de mensaje, mensajes nuevos, etc.).
-export function crearNotificacion(idUsuario: string, tipo: string, mensaje: string) {
+export function crearNotificacion(datos: { idUsuario: string; tipo: string; mensaje: string }) {
   return db.notificaciones.create({
-    data: { id_usuario: idUsuario, tipo, mensaje },
+    data: { id_usuario: datos.idUsuario, tipo: datos.tipo, mensaje: datos.mensaje },
     select: { id: true },
   });
 }
