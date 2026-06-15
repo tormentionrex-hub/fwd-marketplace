@@ -1,26 +1,42 @@
-import { listarUsuarios } from "@/server/repositories/usuario.repository";
-import { getUser } from "@/server/auth/get-user";
-import { LogoutButton } from "@/components/features/admin/logout-button";
-import { UsuariosTabla } from "@/components/features/admin/usuarios-tabla";
+import { Link } from "@/i18n/navigation";
+import {
+  listarUsuarios,
+  contarUsuariosPendientes,
+} from "@/server/repositories/usuario.repository";
+import { AdminPageShell } from "@/components/features/admin/admin-page-header";
 import AnimatedProjectsTitle from "@/components/AnimatedProjectsTitle";
 
-// Panel de administración (presentación / solo lectura + borrado).
+// Ícono de alerta (SVG propio — sin emojis, conforme a la guía del proyecto).
+function AlertIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden
+    >
+      <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+      <path d="M12 9v4" />
+      <path d="M12 17h.01" />
+    </svg>
+  );
+}
+
+// Panel de administración — Dashboard (resumen general).
 // URL: /es/admin — protegido por (admin)/layout.tsx (solo rol admin).
 export default async function AdminPage() {
-  const [data, me] = await Promise.all([listarUsuarios(), getUser()]);
-
-  const usuarios = data.map((u) => ({
-    id: u.id,
-    nombre: u.nombre,
-    correo: u.correo,
-    rol: u.roles.nombre,
-    estado: u.estado,
-    creado: u.creado.toISOString(),
-  }));
+  const [usuarios, pendientes] = await Promise.all([
+    listarUsuarios(),
+    contarUsuariosPendientes(),
+  ]);
 
   const conteo = { estudiante: 0, empresario: 0, admin: 0 };
   for (const u of usuarios) {
-    const rol = u.rol as keyof typeof conteo;
+    const rol = u.roles.nombre as keyof typeof conteo;
     if (rol in conteo) conteo[rol] += 1;
   }
 
@@ -32,80 +48,82 @@ export default async function AdminPage() {
   ];
 
   return (
-    <section className="mx-auto flex w-full max-w-5xl flex-col gap-8 p-6 sm:p-10">
-      {/* Hero morado — paleta FWD, tipografía y efecto de letras del home,
-          con el patrón de flechas (elemento gráfico secundario de la marca). */}
-      <header
-        className="relative overflow-hidden rounded-3xl p-8 shadow-lg sm:p-10"
-        style={{
-          background:
-            "linear-gradient(135deg, #662D91 0%, #4a2070 55%, #7d3aad 100%)",
-        }}
-      >
-        {/* Diseñitos: flechas de avance multicolor, en patrón sutil */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 overflow-hidden opacity-[0.13]"
-        >
-          <div className="grid grid-cols-8 gap-5 rotate-[-8deg] scale-125 p-6">
-            {Array.from({ length: 40 }).map((_, i) => (
-              <svg key={i} viewBox="0 0 100 100" className="h-7 w-7">
-                <polygon
-                  points="22,15 85,50 22,85"
-                  fill={
-                    [
-                      "#20BEC6",
-                      "#FFCB05",
-                      "#EC008C",
-                      "#008FD4",
-                      "#F7901E",
-                      "#FFFFFF",
-                    ][i % 6]
-                  }
-                />
-              </svg>
-            ))}
-          </div>
-        </div>
-        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <p className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-fwd-turquoise">
-              <span className="text-fwd-blue">▶▶</span> FWD · Costa Rica
-            </p>
-            <AnimatedProjectsTitle
-              text="Panel de administración"
-              className="!text-3xl sm:!text-4xl"
-            />
-            <p className="mt-3 max-w-md text-gray-300">
-              Gestión de usuarios registrados.
-            </p>
-          </div>
-          <LogoutButton />
-        </div>
+    <AdminPageShell>
+      <header>
+        <p className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-fwd-turquoise">
+          <span className="text-fwd-blue">&#9654;&#9654;</span> FWD · Costa Rica
+        </p>
+        <AnimatedProjectsTitle
+          text="Panel de administración"
+          className="!text-3xl sm:!text-4xl"
+        />
+        <p className="mt-2 text-white/50">
+          Resumen general. Usá el menú lateral para gestionar cada área.
+        </p>
       </header>
 
-      {/* Tarjetas de resumen */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {tarjetas.map((t) => (
-          <div
-            key={t.rol}
-            className="relative overflow-hidden rounded-2xl border border-fwd-ink/10 bg-white p-5 shadow-sm"
-          >
-            <span
-              className="absolute inset-y-0 left-0 w-1.5"
-              style={{ backgroundColor: t.color }}
-              aria-hidden
-            />
-            <p className="text-sm text-fwd-ink/55">{t.rol}</p>
-            <p className="mt-1 text-3xl font-black tabular-nums text-fwd-ink">
-              {t.total}
-            </p>
+      {/* Alerta de pendientes de validación */}
+      <Link
+        href="/admin/validaciones"
+        className={`group relative block overflow-hidden rounded-2xl p-5 shadow-lg transition hover:scale-[1.01] ${
+          pendientes > 0 ? "" : "border border-white/10 bg-white/[0.04]"
+        }`}
+        style={
+          pendientes > 0
+            ? { background: "linear-gradient(135deg, #F7901E, #EC008C)" }
+            : undefined
+        }
+      >
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            {pendientes > 0 && <AlertIcon className="h-7 w-7 text-white" />}
+            <div>
+              <p
+                className={`text-sm font-medium ${
+                  pendientes > 0 ? "text-white/90" : "text-white/60"
+                }`}
+              >
+                Cuentas pendientes de validación
+              </p>
+              <p className="text-3xl font-black tabular-nums text-white">
+                {pendientes}
+              </p>
+            </div>
           </div>
-        ))}
-      </div>
+          <span
+            className={`text-sm font-semibold ${
+              pendientes > 0 ? "text-white" : "text-fwd-turquoise"
+            }`}
+          >
+            {pendientes > 0 ? "Revisar ahora" : "Ver validaciones"} &rarr;
+          </span>
+        </div>
+      </Link>
 
-      {/* Tabla con filtros por rol, buscador, orden y borrado */}
-      <UsuariosTabla usuarios={usuarios} currentUserId={me?.id ?? ""} />
-    </section>
+      {/* Usuarios por rol */}
+      <div>
+        <h2 className="mb-3 font-display text-lg font-bold text-white">
+          Usuarios registrados
+        </h2>
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          {tarjetas.map((t) => (
+            <div
+              key={t.rol}
+              className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] p-5"
+            >
+              <span
+                className="absolute inset-y-0 left-0 w-1.5"
+                style={{ backgroundColor: t.color }}
+                aria-hidden
+              />
+              <p className="text-sm text-white/50">{t.rol}</p>
+              <p className="mt-1 text-3xl font-black tabular-nums text-white">
+                {t.total}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </AdminPageShell>
   );
 }

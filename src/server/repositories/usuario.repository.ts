@@ -105,6 +105,37 @@ export function crearEstudiante(datos: {
   });
 }
 
+// Crea un estudiante por AUTO-REGISTRO: estado 'pendiente' (no invitado).
+// Requiere aprobación del admin antes de poder acceder.
+export function crearEstudiantePendiente(datos: {
+  nombre: string;
+  segundoApellido?: string | undefined;
+  generacionFwd?: number | undefined;
+  correo: string;
+  hash: string;
+  idRol: bigint;
+}) {
+  return db.usuarios.create({
+    data: {
+      nombre: datos.nombre,
+      segundo_apellido: datos.segundoApellido ?? null,
+      correo: datos.correo,
+      hash_contrasena: datos.hash,
+      id_rol: datos.idRol,
+      estado: 'pendiente',
+      perfiles_estudiante: {
+        create: { generacion_fwd: datos.generacionFwd ?? null },
+      },
+    },
+    select: {
+      id: true,
+      nombre: true,
+      correo: true,
+      image_url: true,
+    },
+  });
+}
+
 // Actualiza el hash de contraseña de un usuario. Lo usa el flujo de recuperación
 // tras verificar el código OTP. Devuelve id + correo para el correo de confirmación.
 export function actualizarHashContrasena(id: string, hashContrasena: string) {
