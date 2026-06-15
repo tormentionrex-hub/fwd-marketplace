@@ -159,6 +159,7 @@ export const getPerfilPublico = cache(async (username: string): Promise<PerfilPu
   const verificado = !BLOQUEANTES.has((pe.estado_verificacion ?? "").toLowerCase().trim());
 
   return {
+    id: real.id,
     username,
     nombre: real.nombre,
     rol: pe.titulo_profesional ?? "Estudiante FWD",
@@ -198,6 +199,7 @@ function perfilDemo(username: string): PerfilPublico {
       .join(" ") || "Estudiante FWD";
 
   return {
+    id: null,
     username,
     nombre,
     rol: "Desarrollador Full-Stack",

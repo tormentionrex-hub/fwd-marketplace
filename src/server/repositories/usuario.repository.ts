@@ -11,6 +11,13 @@ export function buscarUsuarioPorCorreo(correo: string) {
   });
 }
 
+export function registrarUltimaSesion(id: string) {
+  return db.usuarios.update({
+    where: { id },
+    data: { ultima_sesion: new Date() },
+  });
+}
+
 export function buscarUsuarioPorId(id: string) {
   return db.usuarios.findUnique({
     where: { id },
@@ -34,19 +41,27 @@ export function crearEmpresario(datos: {
   nombre: string;
   segundoApellido?: string | undefined;
   nombreEmpresa?: string | undefined;
+  numeroIdentificacion?: string | undefined;
+  edad?: number | undefined;
   correo: string;
   hash: string;
   idRol: bigint;
+  imageUrl?: string | undefined;
 }) {
   return db.usuarios.create({
     data: {
       nombre: datos.nombre,
       segundo_apellido: datos.segundoApellido ?? null,
+      edad: datos.edad ?? null,
       correo: datos.correo,
       hash_contrasena: datos.hash,
       id_rol: datos.idRol,
+      image_url: datos.imageUrl ?? null,
       perfiles_empresario: {
-        create: { nombre_empresa: datos.nombreEmpresa ?? null },
+        create: {
+          nombre_empresa: datos.nombreEmpresa ?? null,
+          numero_identificacion: datos.numeroIdentificacion ?? null,
+        },
       },
     },
     select: {
@@ -148,3 +163,4 @@ export function registrarUltimaSesion(id: string) {
 export function eliminarUsuario(id: string) {
   return db.usuarios.delete({ where: { id } });
 }
+

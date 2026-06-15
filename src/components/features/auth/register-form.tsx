@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { TextField } from "@/components/ui/text-field";
+import { IconArrowRight } from "@/components/ui/icons";
 import { SocialAuthButtons } from "@/components/features/auth/social-auth-buttons";
 
 // Persistencia del form en sessionStorage: si el usuario navega a /terminos y
@@ -94,6 +95,8 @@ export function RegisterForm() {
     const firstName = String(formData.get("firstName") ?? "");
     const lastName = String(formData.get("lastName") ?? "");
     const secondLastName = String(formData.get("secondLastName") ?? "").trim();
+    const identificationNumber = String(formData.get("identificationNumber") ?? "").trim();
+    const age = String(formData.get("age") ?? "").trim();
     const companyName = String(formData.get("companyName") ?? "").trim();
     const email = String(formData.get("email") ?? "");
     const password = String(formData.get("password") ?? "");
@@ -106,6 +109,8 @@ export function RegisterForm() {
           firstName,
           lastName,
           secondLastName: secondLastName || undefined,
+          identificationNumber: identificationNumber || undefined,
+          age: age ? Number(age) : undefined,
           companyName: companyName || undefined,
           email,
           password,
@@ -348,7 +353,7 @@ export function RegisterForm() {
           }`}
         >
           {loading ? "Avanzando…" : "Crear cuenta"}
-          <span className="transition-transform group-hover:translate-x-1">▶</span>
+          <IconArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
         </button>
       </form>
 

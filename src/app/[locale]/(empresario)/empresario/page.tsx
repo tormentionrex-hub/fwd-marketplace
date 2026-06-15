@@ -8,6 +8,8 @@ import {
   type ActividadTipo,
 } from '@/server/services/proyecto.service';
 import { ProyectoRow } from '@/components/features/empresario/lista-proyectos';
+import BuscadorProyectos from '@/components/features/empresario/buscador-proyectos';
+import DashboardRefresher from '@/components/features/empresario/dashboard-refresher';
 import { tiempoRelativo } from '@/lib/tiempo';
 import {
   IconFolder,
@@ -15,12 +17,11 @@ import {
   IconLayers,
   IconTrophy,
   IconPlus,
-  IconSearch,
-  IconBell,
   IconSpark,
   IconArrowR,
   IconUpload,
   IconCheckCircle,
+  IconTrend,
 } from '@/components/ui/fwd-icons';
 
 // Estilo (icono + color de marca) por tipo de evento del feed de actividad.
@@ -49,11 +50,14 @@ export default async function DashboardEmpresarioPage({
     actividadRecienteEmpresario(user.id),
   ]);
 
+  // `delta` = novedades reales de los últimos 7 días (0 = sin chip). El diseño
+  // solo muestra tendencia en las cards con movimiento; el resto va sin chip.
+  // `href` = vista filtrada a la que lleva la card al hacer clic (#5).
   const stats = [
-    { label: 'Proyectos activos', value: resumen.activos, Icon: IconFolder, color: 'var(--azul)' },
-    { label: 'Ofertas recibidas', value: resumen.ofertasRecibidas, Icon: IconSend, color: 'var(--magenta)' },
-    { label: 'En desarrollo', value: resumen.enDesarrollo, Icon: IconLayers, color: 'var(--naranja)' },
-    { label: 'Proyectos cerrados', value: resumen.cerrados, Icon: IconTrophy, color: 'var(--turquesa)' },
+    { label: 'Proyectos activos', value: resumen.activos, Icon: IconFolder, color: 'var(--azul)', delta: resumen.nuevosActivosSemana, href: '/empresario/proyectos?estado=publicado' },
+    { label: 'Ofertas recibidas', value: resumen.ofertasRecibidas, Icon: IconSend, color: 'var(--magenta)', delta: resumen.nuevasOfertasSemana, href: '/empresario/proyectos' },
+    { label: 'En desarrollo', value: resumen.enDesarrollo, Icon: IconLayers, color: 'var(--naranja)', delta: 0, href: '/empresario/proyectos?estado=en_desarrollo' },
+    { label: 'Proyectos cerrados', value: resumen.cerrados, Icon: IconTrophy, color: 'var(--turquesa)', delta: 0, href: '/empresario/proyectos?estado=cerrado' },
   ];
 
   const primerNombre = user.nombre.split(' ')[0];
@@ -61,6 +65,9 @@ export default async function DashboardEmpresarioPage({
 
   return (
     <>
+      {/* Refresco automático del dashboard (foco de pestaña + cada 60s) */}
+      <DashboardRefresher />
+
       {/* Topbar */}
       <div className="topbar">
         <div>
@@ -71,27 +78,21 @@ export default async function DashboardEmpresarioPage({
           </div>
         </div>
         <div className="tb-spacer" />
-        <div className="tb-search">
-          <IconSearch size={17} />
-          <input placeholder="Buscar proyectos, ofertas…" />
-        </div>
+        <BuscadorProyectos />
         <Link href="/empresario/nuevo-proyecto" className="btn btn-primary">
           <IconPlus size={17} />
           Publicar nuevo proyecto
         </Link>
-        <div className="tb-icon">
-          <IconBell size={18} />
-          <span className="dot" />
-        </div>
       </div>
 
       <div className="page fade-in">
         {/* Tarjetas resumen (datos reales de resumenEmpresario) */}
         <div className="stat-grid" style={{ marginBottom: 28 }}>
           {stats.map((s) => (
-            <div
+            <Link
               key={s.label}
-              className="card card-pad"
+              href={s.href}
+              className="card card-pad fwd-stat"
               style={{ display: 'flex', flexDirection: 'column', gap: 14 }}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -108,6 +109,25 @@ export default async function DashboardEmpresarioPage({
                 >
                   <s.Icon size={21} />
                 </div>
+                {s.delta > 0 && (
+                  <span
+                    title="Nuevas en los últimos 7 días"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 5,
+                      fontFamily: 'var(--font-head)',
+                      fontWeight: 600,
+                      fontSize: 12.5,
+                      padding: '4px 10px',
+                      borderRadius: 'var(--r-pill)',
+                      background: 'var(--azul-tint)',
+                      color: 'var(--azul-700)',
+                    }}
+                  >
+                    <IconTrend size={13} />+{s.delta}
+                  </span>
+                )}
               </div>
               <div>
                 <div
@@ -120,7 +140,7 @@ export default async function DashboardEmpresarioPage({
                   {s.label}
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
 
@@ -197,8 +217,10 @@ export default async function DashboardEmpresarioPage({
                 actividad.map((a: ActividadItem, i) => {
                   const { Icon, color } = ACTIVIDAD_ESTILO[a.tipo];
                   return (
-                    <div
+                    <Link
                       key={a.id}
+                      href={`/empresario/gestion-proyectos/${a.idProyecto}`}
+                      className="fwd-act"
                       style={{
                         display: 'flex',
                         gap: 12,
@@ -222,7 +244,7 @@ export default async function DashboardEmpresarioPage({
                       </div>
                       <div style={{ minWidth: 0 }}>
                         <div
-                          className="font-display"
+                          className="font-display fwd-act-t"
                           style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink-800)' }}
                         >
                           {a.titulo}
@@ -231,7 +253,7 @@ export default async function DashboardEmpresarioPage({
                           {a.proyecto} · {a.cuando}
                         </div>
                       </div>
-                    </div>
+                    </Link>
                   );
                 })
               )}
