@@ -1,8 +1,17 @@
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import { getUser } from '@/server/auth/get-user';
 import { guardarPerfilEmpresario } from '@/server/services/perfil-empresario.service';
 
-// PUT /api/empresario/perfil — guarda el nombre de la empresa y la foto de perfil.
+const bodySchema = z.object({
+  nombre: z.string().optional(),
+  nombreEmpresa: z.string().optional(),
+  fotoUrl: z.string().nullable().optional(),
+  descripcion: z.string().nullable().optional(),
+  sector: z.string().nullable().optional(),
+});
+
+// PUT /api/empresario/perfil — guarda nombre, empresa, foto, descripcion y sector.
 export async function PUT(request: Request) {
   const user = await getUser();
   if (!user) {
@@ -19,10 +28,19 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: 'Cuerpo inválido' }, { status: 400 });
   }
 
-  const resultado = await guardarPerfilEmpresario(
-    user.id,
-    body as Parameters<typeof guardarPerfilEmpresario>[1],
-  );
+  const parsed = bodySchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Datos inválidos' }, { status: 422 });
+  }
+
+  const d = parsed.data;
+  const resultado = await guardarPerfilEmpresario(user.id, {
+    ...(d.nombre !== undefined && { nombre: d.nombre }),
+    ...(d.nombreEmpresa !== undefined && { nombreEmpresa: d.nombreEmpresa }),
+    ...(d.fotoUrl !== undefined && { fotoUrl: d.fotoUrl }),
+    ...(d.descripcion !== undefined && { descripcion: d.descripcion }),
+    ...(d.sector !== undefined && { sector: d.sector }),
+  });
 
   if (resultado === 'datos_invalidos') {
     return NextResponse.json({ error: 'Datos inválidos' }, { status: 422 });
