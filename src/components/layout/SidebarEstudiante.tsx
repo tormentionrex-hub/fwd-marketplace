@@ -87,11 +87,11 @@ export default function SidebarEstudiante({
   return (
     <aside
       className={cn(
-        "lg:sticky lg:top-6 lg:h-fit lg:shrink-0 transition-all duration-300 ease-in-out",
+        "lg:sticky lg:top-0 lg:h-screen lg:shrink-0 transition-all duration-300 ease-in-out",
         isCollapsed ? "lg:w-[72px]" : "lg:w-64"
       )}
     >
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-fwd-morado via-fwd-azul to-fwd-azul p-3 shadow-xl shadow-fwd-morado/25 lg:p-4">
+      <div className="relative h-full overflow-hidden rounded-b-3xl lg:rounded-none lg:rounded-r-3xl bg-gradient-to-b from-fwd-morado via-fwd-azul to-fwd-azul p-3 shadow-xl shadow-fwd-morado/25 lg:p-4 flex flex-col">
         <div aria-hidden className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-white/15 blur-2xl" />
         <div aria-hidden className="pointer-events-none absolute -bottom-16 -left-10 h-40 w-40 rounded-full bg-fwd-turquesa/30 blur-2xl" />
 
@@ -138,7 +138,7 @@ export default function SidebarEstudiante({
           </button>
         </div>
 
-        <nav className="relative z-10 flex gap-1 overflow-x-auto lg:flex-col lg:overflow-visible">
+        <nav className="relative z-10 flex gap-1 overflow-x-auto lg:flex-col lg:overflow-y-auto lg:flex-1 hide-scrollbar">
           {enlaces.map(({ href, label, Icon, exact }) => {
             const activo = exact ? pathname === href : pathname.startsWith(href);
             return (
