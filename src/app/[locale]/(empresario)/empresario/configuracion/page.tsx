@@ -1,11 +1,9 @@
 import { redirect } from 'next/navigation';
 import { getUser } from '@/server/auth/get-user';
 import { obtenerPerfilEmpresarioDTO } from '@/server/services/perfil-empresario.service';
+import { obtenerPreferencias } from '@/server/repositories/perfil-empresario.repository';
 import ConfiguracionEmpresario from '@/components/features/empresario/configuracion';
 
-// "Configuración" del empresario (pantalla del prototipo FWD). RSC: valida sesión
-// y rol, trae los datos reales de identidad (nombre, empresa, correo, sello de
-// verificación) y monta el panel de preferencias (cliente).
 export default async function ConfiguracionPage({
   params,
 }: {
@@ -17,7 +15,10 @@ export default async function ConfiguracionPage({
   if (!user) redirect(`/${locale}/login`);
   if (user.roles.nombre !== 'empresario') redirect(`/${locale}`);
 
-  const perfil = await obtenerPerfilEmpresarioDTO(user.id);
+  const [perfil, preferencias] = await Promise.all([
+    obtenerPerfilEmpresarioDTO(user.id),
+    obtenerPreferencias(user.id),
+  ]);
 
   return (
     <ConfiguracionEmpresario
@@ -25,6 +26,7 @@ export default async function ConfiguracionPage({
       empresa={perfil?.empresa ?? user.nombre}
       correo={user.correo}
       verificado={user.estado === 'activo'}
+      preferenciasIniciales={preferencias}
     />
   );
 }
