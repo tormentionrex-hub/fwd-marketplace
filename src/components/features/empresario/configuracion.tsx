@@ -20,6 +20,7 @@ type Props = {
   correo: string;
   verificado: boolean;
   preferenciasIniciales: Preferencias;
+  cedulaJuridica: string;
 };
 
 const labelStyle: React.CSSProperties = {
@@ -190,13 +191,18 @@ const TABS = [
 
 type TabId = (typeof TABS)[number]['id'];
 
-export default function ConfiguracionEmpresario({ nombre, empresa, correo, verificado, preferenciasIniciales }: Props) {
+export default function ConfiguracionEmpresario({ nombre, empresa, correo, verificado, preferenciasIniciales, cedulaJuridica }: Props) {
   const [tab, setTab] = useState<TabId>('cuenta');
   const [notif, setNotif] = useState(preferenciasIniciales.notif);
   const [priv, setPriv] = useState(preferenciasIniciales.priv);
-  const [idioma, setIdioma] = useState('Español (Costa Rica)');
   const [aviso, setAviso] = useState<{ tipo: 'ok' | 'error'; texto: string } | null>(null);
   const [guardando, setGuardando] = useState(false);
+
+  // Cuenta
+  const [nombreContacto, setNombreContacto] = useState(nombre);
+  const [nombreEmpresa, setNombreEmpresa] = useState(empresa);
+  const [cedula, setCedula] = useState(cedulaJuridica);
+  const [guardandoCuenta, setGuardandoCuenta] = useState(false);
 
   // Contraseña
   const [pwActual, setPwActual] = useState('');
@@ -207,6 +213,32 @@ export default function ConfiguracionEmpresario({ nombre, empresa, correo, verif
 
   const tn = (k: keyof typeof notif) => setNotif((s) => ({ ...s, [k]: !s[k] }));
   const tp = (k: keyof typeof priv) => setPriv((s) => ({ ...s, [k]: !s[k] }));
+
+  async function guardarCuenta() {
+    setGuardandoCuenta(true);
+    setAviso(null);
+    try {
+      const res = await fetch('/api/empresario/perfil', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nombre: nombreContacto,
+          nombreEmpresa,
+          numeroIdentificacion: cedula || null,
+        }),
+      });
+      if (res.ok) {
+        setAviso({ tipo: 'ok', texto: 'Datos de cuenta actualizados.' });
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setAviso({ tipo: 'error', texto: (data as { error?: string }).error ?? 'No se pudieron guardar los datos.' });
+      }
+    } catch {
+      setAviso({ tipo: 'error', texto: 'Error de red. Intentá de nuevo.' });
+    } finally {
+      setGuardandoCuenta(false);
+    }
+  }
 
   async function guardar() {
     if (tab !== 'notif' && tab !== 'priv') return;
@@ -267,6 +299,12 @@ export default function ConfiguracionEmpresario({ nombre, empresa, correo, verif
           <div className="tb-sub">Administra tu cuenta y preferencias</div>
         </div>
         <div className="tb-spacer" />
+        {tab === 'cuenta' && (
+          <button className="btn btn-primary" onClick={guardarCuenta} disabled={guardandoCuenta}>
+            <IconCheck size={16} />
+            {guardandoCuenta ? 'Guardando...' : 'Guardar cambios'}
+          </button>
+        )}
         {(tab === 'notif' || tab === 'priv') && (
           <button className="btn btn-primary" onClick={guardar} disabled={guardando}>
             <IconCheck size={16} />
@@ -350,30 +388,33 @@ export default function ConfiguracionEmpresario({ nombre, empresa, correo, verif
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                     <Campo label="Nombre de contacto">
-                      <input style={inputStyle} defaultValue={nombre} />
+                      <input
+                        style={inputStyle}
+                        value={nombreContacto}
+                        onChange={(e) => setNombreContacto(e.target.value)}
+                      />
                     </Campo>
                     <Campo label="Nombre de la empresa">
-                      <input style={inputStyle} defaultValue={empresa} />
+                      <input
+                        style={inputStyle}
+                        value={nombreEmpresa}
+                        onChange={(e) => setNombreEmpresa(e.target.value)}
+                      />
                     </Campo>
                     <Campo label="Correo electrónico">
-                      <input style={inputStyle} defaultValue={correo} />
-                    </Campo>
-                    <Campo label="Teléfono">
-                      <input style={inputStyle} placeholder="+506 0000 0000" />
+                      <input
+                        style={{ ...inputStyle, background: 'var(--surface-2)', color: 'var(--ink-500)', cursor: 'not-allowed' }}
+                        value={correo}
+                        readOnly
+                      />
                     </Campo>
                     <Campo label="Cédula jurídica">
-                      <input style={inputStyle} placeholder="3-101-000000" />
-                    </Campo>
-                    <Campo label="Idioma">
-                      <select
+                      <input
                         style={inputStyle}
-                        value={idioma}
-                        onChange={(e) => setIdioma(e.target.value)}
-                      >
-                        <option>Español (Costa Rica)</option>
-                        <option>Español (Latinoamérica)</option>
-                        <option>English</option>
-                      </select>
+                        value={cedula}
+                        onChange={(e) => setCedula(e.target.value)}
+                        placeholder="3-101-000000"
+                      />
                     </Campo>
                   </div>
                 </CfgCard>

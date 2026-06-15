@@ -145,6 +145,7 @@ export function actualizarPerfilEmpresario(
     imageUrl: string | null;
     descripcion: string | null;
     sector: string | null;
+    numeroIdentificacion?: string | null;
   },
 ) {
   return db.perfiles_empresario.update({
@@ -153,6 +154,7 @@ export function actualizarPerfilEmpresario(
       nombre_empresa: datos.nombreEmpresa,
       descripcion: datos.descripcion,
       sector: datos.sector,
+      ...(datos.numeroIdentificacion !== undefined && { numero_identificacion: datos.numeroIdentificacion }),
       usuarios: { update: { nombre: datos.nombre, image_url: datos.imageUrl } },
     },
   });

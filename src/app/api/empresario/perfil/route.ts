@@ -9,6 +9,7 @@ const bodySchema = z.object({
   fotoUrl: z.string().nullable().optional(),
   descripcion: z.string().nullable().optional(),
   sector: z.string().nullable().optional(),
+  numeroIdentificacion: z.string().nullable().optional(),
 });
 
 // PUT /api/empresario/perfil — guarda nombre, empresa, foto, descripcion y sector.
@@ -40,6 +41,7 @@ export async function PUT(request: Request) {
     ...(d.fotoUrl !== undefined && { fotoUrl: d.fotoUrl }),
     ...(d.descripcion !== undefined && { descripcion: d.descripcion }),
     ...(d.sector !== undefined && { sector: d.sector }),
+    ...(d.numeroIdentificacion !== undefined && { numeroIdentificacion: d.numeroIdentificacion }),
   });
 
   if (resultado === 'datos_invalidos') {

@@ -217,6 +217,7 @@ export async function guardarPerfilEmpresario(
     fotoUrl?: string | null;
     descripcion?: string | null;
     sector?: string | null;
+    numeroIdentificacion?: string | null;
   },
 ): Promise<ResultadoGuardarEmpresario> {
   const nombre = (entrada.nombre ?? '').trim();
@@ -234,6 +235,13 @@ export async function guardarPerfilEmpresario(
   const sector = (entrada.sector ?? '').trim();
   if (sector.length > 150) return 'datos_invalidos';
 
+  const numeroIdentificacion = entrada.numeroIdentificacion !== undefined
+    ? (entrada.numeroIdentificacion ?? '').trim() || null
+    : undefined;
+  if (numeroIdentificacion !== undefined && numeroIdentificacion !== null) {
+    if (numeroIdentificacion.length < 6 || numeroIdentificacion.length > 50) return 'datos_invalidos';
+  }
+
   try {
     await actualizarPerfilEmpresario(idUsuario, {
       nombre,
@@ -241,6 +249,7 @@ export async function guardarPerfilEmpresario(
       imageUrl: fotoUrl || null,
       descripcion: descripcion || null,
       sector: sector || null,
+      ...(numeroIdentificacion !== undefined && { numeroIdentificacion }),
     });
     return { ok: true };
   } catch (e) {
