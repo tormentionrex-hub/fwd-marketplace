@@ -1,13 +1,16 @@
 import { Link } from '@/i18n/navigation';
 import type { FilaProyectoEmpresario } from '@/server/services/proyecto.service';
-import { IconSend, IconClock, IconChevR } from '@/components/ui/fwd-icons';
+import { IconSend, IconClock, IconChevR, IconCheck } from '@/components/ui/fwd-icons';
 
 // Estado de proyecto -> clase de badge (design system FWD del layout) + texto.
 export const ESTADO_BADGE: Record<string, { cls: string; label: string }> = {
   borrador: { cls: 'borrador', label: 'Borrador' },
   publicado: { cls: 'publicado', label: 'Publicado' },
+  recepcion: { cls: 'recepcion', label: 'En recepción' },
+  adjudicado: { cls: 'adjudicado', label: 'Adjudicado' },
   en_desarrollo: { cls: 'en_desarrollo', label: 'En desarrollo' },
   cerrado: { cls: 'cerrado', label: 'Cerrado' },
+  cancelado: { cls: 'cancelado', label: 'Cancelado' },
 };
 
 export function textoPlazo(p: FilaProyectoEmpresario): string {
@@ -23,7 +26,7 @@ export function textoPlazo(p: FilaProyectoEmpresario): string {
 export function ProyectoRow({ p }: { p: FilaProyectoEmpresario }) {
   const badge = ESTADO_BADGE[p.estado] ?? { cls: 'borrador', label: p.estado };
   return (
-    <Link href={`/empresario/proyectos/${p.id}`} className="fwd-row">
+    <Link href={`/empresario/gestion-proyectos/${p.id}`} className="fwd-row">
       <div style={{ minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 7 }}>
           <span
@@ -53,6 +56,14 @@ export function ProyectoRow({ p }: { p: FilaProyectoEmpresario }) {
             <IconClock size={13} />
             {textoPlazo(p)}
           </span>
+          {p.adjudicadoA && (
+            <span style={{ display: 'inline-flex', gap: 5, alignItems: 'center' }}>
+              <span style={{ color: 'var(--turquesa)', display: 'inline-flex' }}>
+                <IconCheck size={13} />
+              </span>
+              {p.adjudicadoA}
+            </span>
+          )}
         </div>
       </div>
       <span style={{ color: 'var(--ink-300)', display: 'inline-flex' }}>

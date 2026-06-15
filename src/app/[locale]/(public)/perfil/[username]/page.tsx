@@ -12,6 +12,7 @@ import Certifications from "@/components/features/perfil/Certifications";
 import Achievements from "@/components/features/perfil/Achievements";
 import ProfileLinks from "@/components/features/perfil/ProfileLinks";
 import CvPublicoSection from "@/components/features/perfil/CvPublicoSection";
+import ContactarEstudianteButton from "@/components/features/solicitudes/ContactarEstudianteButton";
 import { getUser } from "@/server/auth/get-user";
 import { metadataCvPublico } from "@/server/services/curriculum.service";
 import {
@@ -92,6 +93,12 @@ export default async function PerfilPublicoPage({ params }: PerfilPublicoPagePro
       />
 
       <ProfileHeader perfil={perfil} profilePath={`/${locale}/perfil/${perfil.username}`} />
+
+      {viewer?.roles.nombre === "empresario" && perfil.id && (
+        <div className="mt-6 flex justify-end">
+          <ContactarEstudianteButton idEstudiante={perfil.id} nombreEstudiante={perfil.nombre} />
+        </div>
+      )}
 
       {cvPublico && (
         <div className="mt-8">

@@ -2,6 +2,10 @@ import 'server-only';
 import {
   listarProyectosDeEmpresario,
   obtenerProyectoConDetalle,
+  ofertasRecientesDeEmpresario,
+  entregablesRecientesDeEmpresario,
+  proyectosCerradosDeEmpresario,
+  contarOfertasDesde,
 } from '@/server/repositories/proyecto.repository';
 import type { EstadoProyecto } from '@/types/sefora';
 
@@ -14,6 +18,10 @@ export type ResumenEmpresario = {
   ofertasRecibidas: number;
   enDesarrollo: number;
   cerrados: number;
+  // Deltas reales "esta semana" (últimos 7 días) para los chips de tendencia
+  // del dashboard. 0 si no hubo novedad — la UI oculta el chip en ese caso.
+  nuevosActivosSemana: number;
+  nuevasOfertasSemana: number;
 };
 
 export type FilaProyectoEmpresario = {
@@ -22,6 +30,7 @@ export type FilaProyectoEmpresario = {
   estado: string;
   candidatos: number;
   fechaLimite: string | null; // ISO; null si el proyecto no tiene plazo definido
+  adjudicadoA: string | null; // nombre del estudiante adjudicado, o null
 };
 
 // Deriva la fecha límite a partir de `cierre`, o de `publicado` + `plazo_dias`
@@ -42,7 +51,11 @@ export async function dashboardEmpresario(idEmpresario: string): Promise<{
   resumen: ResumenEmpresario;
   proyectos: FilaProyectoEmpresario[];
 }> {
-  const filas = await listarProyectosDeEmpresario(idEmpresario);
+  const hace7Dias = new Date(Date.now() - 7 * 86400000);
+  const [filas, nuevasOfertasSemana] = await Promise.all([
+    listarProyectosDeEmpresario(idEmpresario),
+    contarOfertasDesde(idEmpresario, hace7Dias),
+  ]);
 
   const proyectos: FilaProyectoEmpresario[] = filas.map((p) => ({
     id: p.id,
@@ -50,6 +63,7 @@ export async function dashboardEmpresario(idEmpresario: string): Promise<{
     estado: p.estado,
     candidatos: p._count.ofertas,
     fechaLimite: calcularFechaLimite(p),
+    adjudicadoA: p.ofertas[0]?.perfiles_estudiante?.usuarios?.nombre ?? null,
   }));
 
   const resumen: ResumenEmpresario = {
@@ -57,9 +71,106 @@ export async function dashboardEmpresario(idEmpresario: string): Promise<{
     enDesarrollo: filas.filter((p) => p.estado === 'en_desarrollo').length,
     cerrados: filas.filter((p) => p.estado === 'cerrado').length,
     ofertasRecibidas: filas.reduce((acc, p) => acc + p._count.ofertas, 0),
+    nuevosActivosSemana: filas.filter(
+      (p) =>
+        p.estado === 'publicado' &&
+        p.publicado != null &&
+        p.publicado.getTime() >= hace7Dias.getTime(),
+    ).length,
+    nuevasOfertasSemana,
   };
 
   return { resumen, proyectos };
+}
+
+// ── Actividad reciente del empresario (Dashboard, Página 12) ────────────────
+// Mezcla ofertas, entregas y cierres en un feed ordenado por fecha. La hora se
+// resuelve a un texto relativo en el servidor (RSC), listo para la UI.
+
+export type ActividadTipo = 'oferta' | 'entrega' | 'cierre';
+
+export type ActividadItem = {
+  id: string;
+  tipo: ActividadTipo;
+  titulo: string; // p. ej. "Nueva oferta de Valeria Mora"
+  proyecto: string; // título del proyecto (subtítulo)
+  cuando: string; // texto relativo, p. ej. "hace 2 h"
+  idProyecto: string; // para enlazar a la gestión del proyecto
+};
+
+function tiempoRelativo(fecha: Date): string {
+  const min = Math.floor((Date.now() - fecha.getTime()) / 60_000);
+  if (min < 1) return 'hace un momento';
+  if (min < 60) return `hace ${min} min`;
+  const horas = Math.floor(min / 60);
+  if (horas < 24) return `hace ${horas} h`;
+  const dias = Math.floor(horas / 24);
+  if (dias === 1) return 'ayer';
+  if (dias < 7) return `hace ${dias} días`;
+  const semanas = Math.floor(dias / 7);
+  if (semanas < 5) return `hace ${semanas} sem`;
+  const meses = Math.floor(dias / 30);
+  return `hace ${meses} ${meses === 1 ? 'mes' : 'meses'}`;
+}
+
+export async function actividadRecienteEmpresario(
+  idEmpresario: string,
+  limite = 5,
+): Promise<ActividadItem[]> {
+  const [ofertas, entregas, cerrados] = await Promise.all([
+    ofertasRecientesDeEmpresario(idEmpresario, limite),
+    entregablesRecientesDeEmpresario(idEmpresario, limite),
+    proyectosCerradosDeEmpresario(idEmpresario, limite),
+  ]);
+
+  const eventos: { orden: number; item: ActividadItem }[] = [];
+
+  for (const o of ofertas) {
+    const nombre = o.perfiles_estudiante?.usuarios?.nombre ?? 'Un estudiante';
+    eventos.push({
+      orden: o.enviado.getTime(),
+      item: {
+        id: `oferta-${o.id}`,
+        tipo: 'oferta',
+        titulo: `Nueva oferta de ${nombre}`,
+        proyecto: o.proyectos?.titulo ?? 'Proyecto',
+        cuando: tiempoRelativo(o.enviado),
+        idProyecto: o.id_proyecto,
+      },
+    });
+  }
+
+  for (const e of entregas) {
+    const nombre = e.perfiles_estudiante?.usuarios?.nombre ?? 'Un estudiante';
+    eventos.push({
+      orden: e.creado.getTime(),
+      item: {
+        id: `entrega-${e.id}`,
+        tipo: 'entrega',
+        titulo: `${nombre} subió una entrega`,
+        proyecto: e.proyectos?.titulo ?? 'Proyecto',
+        cuando: tiempoRelativo(e.creado),
+        idProyecto: e.id_proyecto,
+      },
+    });
+  }
+
+  for (const c of cerrados) {
+    if (!c.cierre) continue;
+    eventos.push({
+      orden: c.cierre.getTime(),
+      item: {
+        id: `cierre-${c.id}`,
+        tipo: 'cierre',
+        titulo: 'Proyecto cerrado y evaluado',
+        proyecto: c.titulo,
+        cuando: tiempoRelativo(c.cierre),
+        idProyecto: c.id,
+      },
+    });
+  }
+
+  return eventos.sort((a, b) => b.orden - a.orden).slice(0, limite).map((e) => e.item);
 }
 
 // ── Ficha pública del proyecto ──────────────────────────────────────────────

@@ -19,7 +19,7 @@ La skill está en [.claude/skills/commit/SKILL.md](.claude/skills/commit/SKILL.m
 - Las reglas de Conventional Commits específicas de este repo
 - Los tipos permitidos (`feat`, `fix`, `docs`, `refactor`, `chore`, etc.)
 - Cómo redactar el mensaje para que pase commitlint
-- El flujo paso a paso (revisar diff, stagear con cuidado, redactar, commit)
+- El flujo paso a paso (revisar diff, stagear con cuidado, redactar, commit)  
 
 **No improvises mensajes de commit.** El repo tiene Husky + commitlint configurado: si el mensaje no cumple el formato exacto, el commit es rechazado. La skill conoce las reglas exactas y evita que pierdas tiempo en intentos fallidos.
 
@@ -47,6 +47,16 @@ La skill está en [.claude/skills/pull/SKILL.md](.claude/skills/pull/SKILL.md) y
 3. Hacer un commit NUEVO (no `--amend` salvo que el usuario lo pida explícito)
 
 Los hooks existen para mantener calidad — saltarlos es engañar al equipo.
+
+---
+
+## REGLA #2.5 — Claude NUNCA debe figurar como autor ni co-autor
+
+Los commits los firman las **personas del equipo** (Christopher y sus compañeros). Eso es normal y esperado: cualquier desarrollador humano puede ser autor. Lo **ÚNICO prohibido** es que Claude / el agente IA aparezca en la autoría.
+
+- **NUNCA** agregues el trailer `Co-Authored-By: Claude ...` (ni ningún `Co-Authored-By` de un modelo de IA) al mensaje de commit.
+- **NUNCA** te pongas como autor o committer vía `--author`, `GIT_AUTHOR_*`, `GIT_COMMITTER_*`, ni cambiando `user.name`/`user.email` a una identidad de IA.
+- El autor/committer debe quedar siempre como el desarrollador humano cuyo git está configurado. Dejá el `user.name`/`user.email` tal cual está; no lo toques.
 
 ---
 

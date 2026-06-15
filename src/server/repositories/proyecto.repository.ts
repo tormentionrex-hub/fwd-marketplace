@@ -16,26 +16,25 @@ export function listarProyectosDeEmpresario(idEmpresario: string) {
       publicado: true,
       cierre: true,
       _count: { select: { ofertas: true } },
+      // Estudiante adjudicado (si lo hay): se deriva de la oferta 'adjudicada'.
+      // Una sola query (take:1 filtrado) — sin N+1.
+      ofertas: {
+        where: { estado: 'adjudicada' },
+        select: {
+          perfiles_estudiante: { select: { usuarios: { select: { nombre: true } } } },
+        },
+        take: 1,
+      },
     },
     orderBy: { publicado: 'desc' },
   });
 }
 
-// Lista todos los proyectos para el panel admin: empresario, estado y nº de
-// ofertas. Solo lectura, acotado a los más recientes.
-export function listarProyectosAdmin() {
-  return db.proyectos.findMany({
-    take: 50,
-    orderBy: { publicado: 'desc' },
-    select: {
-      id: true,
-      titulo: true,
-      estado: true,
-      publicado: true,
-      cierre: true,
-      perfiles_empresario: { select: { usuarios: { select: { nombre: true } } } },
-      _count: { select: { ofertas: true } },
-    },
+// Cuenta las ofertas recibidas en los proyectos del empresario desde `desde`
+// (para el delta "nuevas esta semana" del dashboard). Una query agregada.
+export function contarOfertasDesde(idEmpresario: string, desde: Date) {
+  return db.ofertas.count({
+    where: { proyectos: { id_empresario: idEmpresario }, enviado: { gte: desde } },
   });
 }
 
@@ -63,6 +62,52 @@ export function obtenerProyectoConDetalle(id: string) {
         select: { tecnologias: { select: { nombre: true } } },
       },
     },
+  });
+}
+
+// ── Actividad reciente del empresario (Dashboard, Página 12) ────────────────
+// Tres consultas acotadas a los proyectos del empresario; la capa de servicio
+// las mezcla y ordena. Cada una trae solo lo que la UI muestra.
+
+// Últimas ofertas recibidas en los proyectos del empresario (con autor y proyecto).
+export function ofertasRecientesDeEmpresario(idEmpresario: string, limite: number) {
+  return db.ofertas.findMany({
+    where: { proyectos: { id_empresario: idEmpresario } },
+    select: {
+      id: true,
+      enviado: true,
+      id_proyecto: true,
+      proyectos: { select: { titulo: true } },
+      perfiles_estudiante: { select: { usuarios: { select: { nombre: true } } } },
+    },
+    orderBy: { enviado: 'desc' },
+    take: limite,
+  });
+}
+
+// Últimas entregas subidas en los proyectos del empresario.
+export function entregablesRecientesDeEmpresario(idEmpresario: string, limite: number) {
+  return db.entregables.findMany({
+    where: { proyectos: { id_empresario: idEmpresario } },
+    select: {
+      id: true,
+      creado: true,
+      id_proyecto: true,
+      proyectos: { select: { titulo: true } },
+      perfiles_estudiante: { select: { usuarios: { select: { nombre: true } } } },
+    },
+    orderBy: { creado: 'desc' },
+    take: limite,
+  });
+}
+
+// Últimos proyectos cerrados del empresario.
+export function proyectosCerradosDeEmpresario(idEmpresario: string, limite: number) {
+  return db.proyectos.findMany({
+    where: { id_empresario: idEmpresario, estado: 'cerrado', cierre: { not: null } },
+    select: { id: true, titulo: true, cierre: true },
+    orderBy: { cierre: 'desc' },
+    take: limite,
   });
 }
 

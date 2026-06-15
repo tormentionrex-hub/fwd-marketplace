@@ -4,6 +4,8 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { TextField } from "@/components/ui/text-field";
+import { IconArrowRight, IconCheck } from "@/components/ui/icons";
+import { tiempoRelativo } from "@/lib/tiempo";
 
 type Paso = "solicitar" | "verificar" | "nueva" | "exito";
 
@@ -44,6 +46,7 @@ export function RecuperarFlow() {
   const [paso, setPaso] = useState<Paso>("solicitar");
   const [email, setEmail] = useState("");
   const [resetToken, setResetToken] = useState("");
+  const [ultimaSesion, setUltimaSesion] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -65,12 +68,14 @@ export function RecuperarFlow() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: valor }),
       });
+      const d = await res.json().catch(() => ({}));
       if (!res.ok) {
-        const d = await res.json().catch(() => ({}));
+        // 404 → el correo no está registrado; mostramos el mensaje del servidor.
         setError(d.error ?? "No se pudo enviar el código.");
         return;
       }
       setEmail(valor);
+      setUltimaSesion(typeof d.ultimaSesion === "string" ? d.ultimaSesion : null);
       setPaso("verificar");
     } catch {
       setError("Error de red. Intentá de nuevo.");
@@ -112,7 +117,7 @@ export function RecuperarFlow() {
                 />
                 <button type="submit" disabled={loading} className={`${botonClass} bg-fwd-blue hover:bg-fwd-purple`}>
                   {loading ? "Enviando…" : "Enviar código"}
-                  <span className="transition-transform group-hover:translate-x-1">▶</span>
+                  <IconArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </button>
               </form>
               <p className="mt-8 text-center text-sm text-fwd-ink/60">
@@ -126,6 +131,7 @@ export function RecuperarFlow() {
           {paso === "verificar" && (
             <PasoVerificar
               email={email}
+              ultimaSesion={ultimaSesion}
               onError={setError}
               error={error}
               onVerificado={(tok) => {
@@ -167,7 +173,7 @@ export function RecuperarFlow() {
                 className={`${botonClass} mx-auto mt-8 bg-fwd-blue hover:bg-fwd-purple`}
               >
                 Ir a iniciar sesión
-                <span className="transition-transform group-hover:translate-x-1">▶</span>
+                <IconArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </button>
             </div>
           )}
@@ -180,11 +186,13 @@ export function RecuperarFlow() {
 // ---------- Paso 2: verificar OTP ----------
 function PasoVerificar({
   email,
+  ultimaSesion,
   error,
   onError,
   onVerificado,
 }: {
   email: string;
+  ultimaSesion: string | null;
   error: string | null;
   onError: (m: string | null) => void;
   onVerificado: (resetToken: string) => void;
@@ -208,6 +216,7 @@ function PasoVerificar({
   }, []);
 
   const code = digits.join("");
+  const ultimaSesionTexto = tiempoRelativo(ultimaSesion);
 
   async function verificar(codigo: string) {
     onError(null);
@@ -287,6 +296,11 @@ function PasoVerificar({
         >
           Hemos enviado un código de verificación a tu correo electrónico.
         </p>
+        <p className="rounded-xl border border-fwd-ink/10 bg-fwd-mist/40 px-4 py-3 text-sm text-fwd-ink/70">
+          {ultimaSesionTexto
+            ? <>Última sesión de esta cuenta: <strong className="text-fwd-ink">{ultimaSesionTexto}</strong>.</>
+            : "Esta cuenta todavía no ha iniciado sesión."}
+        </p>
         {error && <ErrorBanner msg={error} />}
 
         <div className="flex justify-between gap-2" role="group" aria-label="Código de verificación">
@@ -329,7 +343,7 @@ function PasoVerificar({
           className={`${botonClass} bg-fwd-blue hover:bg-fwd-purple`}
         >
           {loading ? "Verificando…" : "Verificar código"}
-          <span className="transition-transform group-hover:translate-x-1">▶</span>
+          <IconArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
         </button>
       </div>
     </div>
@@ -439,7 +453,11 @@ function PasoNueva({
                       key={rule.id}
                       className={`flex items-center gap-1.5 text-xs ${ok ? "text-green-600" : "text-fwd-ink/45"}`}
                     >
-                      <span className={ok ? "text-green-500" : "text-fwd-ink/30"}>{ok ? "✓" : "○"}</span>
+                      {ok ? (
+                        <IconCheck className="h-3.5 w-3.5 text-green-500" />
+                      ) : (
+                        <span className="block h-3.5 w-3.5 rounded-full border border-fwd-ink/30" />
+                      )}
                       {rule.label}
                     </li>
                   );
@@ -471,7 +489,7 @@ function PasoNueva({
 
         <button type="submit" disabled={!puede} className={`${botonClass} bg-fwd-blue hover:bg-fwd-purple`}>
           {loading ? "Guardando…" : "Cambiar contraseña"}
-          <span className="transition-transform group-hover:translate-x-1">▶</span>
+          <IconArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
         </button>
       </form>
     </div>

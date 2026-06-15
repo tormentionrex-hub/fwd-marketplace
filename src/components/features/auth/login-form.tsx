@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { TextField } from "@/components/ui/text-field";
-import { PasswordToggle } from "@/components/ui/password-toggle";
+import { IconArrowRight } from "@/components/ui/icons";
 import { SocialAuthButtons } from "@/components/features/auth/social-auth-buttons";
 
 export function LoginForm() {
@@ -125,7 +125,7 @@ export function LoginForm() {
           className="group mt-1 flex h-12 items-center justify-center gap-2 rounded-full bg-fwd-blue px-6 font-semibold text-white shadow-sm transition hover:bg-fwd-purple disabled:opacity-60"
         >
           {loading ? "Avanzando…" : "Iniciar sesión"}
-          <span className="transition-transform group-hover:translate-x-1">▶</span>
+          <IconArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
         </button>
       </form>
 

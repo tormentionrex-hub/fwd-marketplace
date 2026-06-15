@@ -65,7 +65,41 @@ interface OpcionesCorreo {
   replyTo?: string;
 }
 
+// Identificador de la imagen inline del logo (referenciada como cid:logofwd).
+const LOGO_CID = "logofwd";
+const LOGO_FILENAME = "fwd-marketplace.png";
+// Wordmark de texto: respaldo si no se pudo descargar el PNG del logo.
+const WORDMARK =
+  `<span style="font-size:26px;font-weight:bold;letter-spacing:1px;color:#008FD4;">FWD <span style="color:#662D91;">Marketplace</span></span>`;
+
+// Descarga (una vez, cacheada en memoria) el PNG del logo para adjuntarlo inline
+// por CID. Gmail bloquea las imágenes REMOTAS de remitentes desconocidos; en
+// cambio la imagen embebida se muestra sin pedir permiso.
+let logoBufCache: Buffer | null = null;
+let logoIntentado = false;
+async function getLogoBuffer(): Promise<Buffer | null> {
+  if (logoIntentado) return logoBufCache;
+  logoIntentado = true;
+  const url = logoUrl();
+  if (!url) return null;
+  try {
+    const res = await fetch(url);
+    if (res.ok) logoBufCache = Buffer.from(await res.arrayBuffer());
+    else console.error("[email] logo no disponible:", res.status);
+  } catch (err) {
+    console.error("[email] no se pudo descargar el logo:", err);
+  }
+  return logoBufCache;
+}
+
 async function enviar({ to, subject, html, text, replyTo }: OpcionesCorreo) {
+  // Logo embebido (CID). Si no se pudo descargar, se sustituye la imagen por el
+  // wordmark de texto para no dejar una imagen rota en el correo.
+  const logo = await getLogoBuffer();
+  const htmlFinal = logo
+    ? html
+    : html.replace(/<img[^>]*data-fwd-logo="1"[^>]*>/g, WORDMARK);
+
   // 1) Resend (API HTTP, sin dependencias): la opción más simple.
   const resendKey = process.env.RESEND_API_KEY;
   if (esReal(resendKey)) {
@@ -80,8 +114,20 @@ async function enviar({ to, subject, html, text, replyTo }: OpcionesCorreo) {
           from: fromResend(),
           to,
           subject,
-          html,
+          html: htmlFinal,
           text,
+          ...(logo
+            ? {
+                attachments: [
+                  {
+                    filename: LOGO_FILENAME,
+                    content: logo.toString("base64"),
+                    content_id: LOGO_CID,
+                    content_type: "image/png",
+                  },
+                ],
+              }
+            : {}),
           ...(replyTo ? { reply_to: replyTo } : {}),
         }),
       });
@@ -109,8 +155,15 @@ async function enviar({ to, subject, html, text, replyTo }: OpcionesCorreo) {
       from: fromSmtp(),
       to,
       subject,
-      html,
+      html: htmlFinal,
       text,
+      ...(logo
+        ? {
+            attachments: [
+              { filename: LOGO_FILENAME, content: logo, cid: LOGO_CID, contentType: "image/png" },
+            ],
+          }
+        : {}),
       ...(replyTo ? { replyTo } : {}),
     });
     console.info("[email] enviado vía SMTP");
@@ -119,10 +172,9 @@ async function enviar({ to, subject, html, text, replyTo }: OpcionesCorreo) {
   }
 }
 
-// URL pública del logo (Gmail/Outlook cargan imágenes remotas de forma
-// confiable; las imágenes embebidas por CID son inconsistentes en Gmail web).
-// Prioridad: EMAIL_LOGO_URL → logo en Supabase Storage (bucket público) →
-// vacío (la plantilla usa un texto de marca como respaldo).
+// URL pública del logo (se descarga para embeberlo inline por CID; ver
+// getLogoBuffer). Prioridad: EMAIL_LOGO_URL → logo en Supabase Storage (bucket
+// público) → vacío (la plantilla cae al wordmark de texto).
 function logoUrl(): string {
   const override = (process.env.EMAIL_LOGO_URL || "").trim();
   if (esReal(override) && /^https?:\/\//.test(override)) return override;
@@ -146,13 +198,11 @@ function escaparHtml(s: string): string {
 
 // ---- Plantilla base de marca (HTML a prueba de balas, basado en tablas) ----
 // Usa tablas + estilos inline (lo único que Gmail/Outlook renderizan de forma
-// consistente). El logo se carga por URL pública; si no hay URL, cae a un
-// wordmark de texto que siempre se ve.
+// consistente). El logo se referencia como imagen inline (cid:logofwd); enviar()
+// la adjunta. Si no se pudo descargar, enviar() reemplaza la <img> por el
+// wordmark de texto (marcado con data-fwd-logo="1").
 function plantilla(titulo: string, cuerpo: string): string {
-  const logo = logoUrl();
-  const cabecera = logo
-    ? `<img src="${logo}" alt="FWD Marketplace" width="180" style="display:block;width:180px;max-width:80%;height:auto;border:0;outline:none;text-decoration:none;" />`
-    : `<span style="font-size:26px;font-weight:bold;letter-spacing:1px;color:#008FD4;">FWD <span style="color:#662D91;">Marketplace</span></span>`;
+  const cabecera = `<img src="cid:${LOGO_CID}" alt="FWD Marketplace" width="180" data-fwd-logo="1" style="display:block;width:180px;max-width:80%;height:auto;border:0;outline:none;text-decoration:none;" />`;
 
   return `<!DOCTYPE html>
 <html lang="es">

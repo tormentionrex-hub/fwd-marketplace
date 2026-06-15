@@ -11,6 +11,13 @@ export function buscarUsuarioPorCorreo(correo: string) {
   });
 }
 
+export function registrarUltimaSesion(id: string) {
+  return db.usuarios.update({
+    where: { id },
+    data: { ultima_sesion: new Date() },
+  });
+}
+
 export function buscarUsuarioPorId(id: string) {
   return db.usuarios.findUnique({
     where: { id },
@@ -21,6 +28,7 @@ export function buscarUsuarioPorId(id: string) {
       image_url: true,
       estado: true,
       id_rol: true,
+      ultima_sesion: true,
       roles: { select: { nombre: true } },
     },
   });
@@ -33,20 +41,27 @@ export function crearEmpresario(datos: {
   nombre: string;
   segundoApellido?: string | undefined;
   nombreEmpresa?: string | undefined;
+  numeroIdentificacion?: string | undefined;
+  edad?: number | undefined;
   correo: string;
   hash: string;
   idRol: bigint;
+  imageUrl?: string | undefined;
 }) {
   return db.usuarios.create({
     data: {
       nombre: datos.nombre,
       segundo_apellido: datos.segundoApellido ?? null,
+      edad: datos.edad ?? null,
       correo: datos.correo,
       hash_contrasena: datos.hash,
       id_rol: datos.idRol,
-      estado: 'pendiente', // auto-registro: requiere aprobación del admin
+      image_url: datos.imageUrl ?? null,
       perfiles_empresario: {
-        create: { nombre_empresa: datos.nombreEmpresa ?? null },
+        create: {
+          nombre_empresa: datos.nombreEmpresa ?? null,
+          numero_identificacion: datos.numeroIdentificacion ?? null,
+        },
       },
     },
     select: {
@@ -163,37 +178,20 @@ export function listarUsuarios() {
   });
 }
 
+// Registra la marca de tiempo de la sesión actual (último login exitoso).
+// Lo llama el servicio de auth tras validar credenciales. Devuelve la cantidad
+// de filas afectadas vía Prisma update; el llamador no necesita el resultado.
+export function registrarUltimaSesion(id: string) {
+  return db.usuarios.update({
+    where: { id },
+    data: { ultima_sesion: new Date() },
+    select: { id: true },
+  });
+}
+
 // Elimina un usuario por id. Los perfiles y datos relacionados se borran en
 // cascada según las FK del esquema. Lo usa el panel admin.
 export function eliminarUsuario(id: string) {
   return db.usuarios.delete({ where: { id } });
 }
 
-// Lista las cuentas pendientes de validación (auto-registradas, sin aprobar).
-// Las usa la sección Validaciones del panel admin.
-export function listarUsuariosPendientes() {
-  return db.usuarios.findMany({
-    where: { estado: 'pendiente' },
-    orderBy: { creado: 'desc' },
-    select: {
-      id: true,
-      nombre: true,
-      correo: true,
-      creado: true,
-      roles: { select: { nombre: true } },
-    },
-  });
-}
-
-// Cuenta las cuentas pendientes de validación (para alertas/resumen).
-export function contarUsuariosPendientes() {
-  return db.usuarios.count({ where: { estado: 'pendiente' } });
-}
-
-// Rechaza una cuenta pendiente: estado 'rechazado' (no puede iniciar sesión).
-export function rechazarUsuario(id: string) {
-  return db.usuarios.update({
-    where: { id },
-    data: { estado: 'rechazado' },
-  });
-}
