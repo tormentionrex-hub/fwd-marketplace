@@ -12,6 +12,7 @@ export function obtenerPerfilEmpresario(idUsuario: string) {
       tipo: true,
       sector: true,
       descripcion: true,
+      reputacion: true,
       usuarios: {
         select: {
           nombre: true,
@@ -24,6 +25,16 @@ export function obtenerPerfilEmpresario(idUsuario: string) {
       proyectos: {
         select: { id: true, titulo: true, area_negocio: true, estado: true },
         orderBy: { publicado: 'desc' },
+      },
+      evaluaciones_empresa: {
+        orderBy: { creado: 'desc' },
+        select: {
+          puntuacion: true,
+          comentario: true,
+          creado: true,
+          proyectos: { select: { titulo: true } },
+          perfiles_estudiante: { select: { usuarios: { select: { nombre: true } } } },
+        },
       },
     },
   });
@@ -78,17 +89,32 @@ export function actualizarDatosCompletitud(
   });
 }
 
+export function actualizarReputacionEmpresa(idEmpresario: string, reputacion: number) {
+  return db.perfiles_empresario.update({
+    where: { id_usuario: idEmpresario },
+    data: { reputacion },
+  });
+}
+
 // Actualiza el nombre del empresario (usuarios.nombre) y la foto de perfil
 // (usuarios.image_url), más el nombre de la empresa (perfiles_empresario), en
 // una sola operación. Lo usa el CRUD "Editar perfil".
 export function actualizarPerfilEmpresario(
   idUsuario: string,
-  datos: { nombre: string; nombreEmpresa: string | null; imageUrl: string | null },
+  datos: {
+    nombre: string;
+    nombreEmpresa: string | null;
+    imageUrl: string | null;
+    descripcion: string | null;
+    sector: string | null;
+  },
 ) {
   return db.perfiles_empresario.update({
     where: { id_usuario: idUsuario },
     data: {
       nombre_empresa: datos.nombreEmpresa,
+      descripcion: datos.descripcion,
+      sector: datos.sector,
       usuarios: { update: { nombre: datos.nombre, image_url: datos.imageUrl } },
     },
   });
