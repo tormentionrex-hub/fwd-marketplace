@@ -89,6 +89,44 @@ export function actualizarDatosCompletitud(
   });
 }
 
+export const DEFAULT_PREFERENCIAS = {
+  notif: { ofertas: true, mensajes: true, hitos: true, resumen: true, marketing: false },
+  priv: { perfilPublico: true, mostrarRating: true, contactoDirecto: false },
+};
+
+export type Preferencias = typeof DEFAULT_PREFERENCIAS;
+
+export async function obtenerPreferencias(idUsuario: string): Promise<Preferencias> {
+  const row = await db.perfiles_empresario.findUnique({
+    where: { id_usuario: idUsuario },
+    select: { preferencias: true },
+  });
+  const raw = row?.preferencias;
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return DEFAULT_PREFERENCIAS;
+  const r = raw as Record<string, unknown>;
+  const notifRaw = (typeof r.notif === 'object' && r.notif && !Array.isArray(r.notif))
+    ? r.notif as Record<string, unknown>
+    : {};
+  const privRaw = (typeof r.priv === 'object' && r.priv && !Array.isArray(r.priv))
+    ? r.priv as Record<string, unknown>
+    : {};
+  return {
+    notif: { ...DEFAULT_PREFERENCIAS.notif, ...Object.fromEntries(
+      Object.keys(DEFAULT_PREFERENCIAS.notif).map((k) => [k, typeof notifRaw[k] === 'boolean' ? notifRaw[k] : DEFAULT_PREFERENCIAS.notif[k as keyof typeof DEFAULT_PREFERENCIAS.notif]])
+    ) } as Preferencias['notif'],
+    priv: { ...DEFAULT_PREFERENCIAS.priv, ...Object.fromEntries(
+      Object.keys(DEFAULT_PREFERENCIAS.priv).map((k) => [k, typeof privRaw[k] === 'boolean' ? privRaw[k] : DEFAULT_PREFERENCIAS.priv[k as keyof typeof DEFAULT_PREFERENCIAS.priv]])
+    ) } as Preferencias['priv'],
+  };
+}
+
+export function guardarPreferencias(idUsuario: string, preferencias: Preferencias) {
+  return db.perfiles_empresario.update({
+    where: { id_usuario: idUsuario },
+    data: { preferencias },
+  });
+}
+
 export function actualizarReputacionEmpresa(idEmpresario: string, reputacion: number) {
   return db.perfiles_empresario.update({
     where: { id_usuario: idEmpresario },
@@ -107,6 +145,7 @@ export function actualizarPerfilEmpresario(
     imageUrl: string | null;
     descripcion: string | null;
     sector: string | null;
+    numeroIdentificacion?: string | null;
   },
 ) {
   return db.perfiles_empresario.update({
@@ -115,6 +154,7 @@ export function actualizarPerfilEmpresario(
       nombre_empresa: datos.nombreEmpresa,
       descripcion: datos.descripcion,
       sector: datos.sector,
+      ...(datos.numeroIdentificacion !== undefined && { numero_identificacion: datos.numeroIdentificacion }),
       usuarios: { update: { nombre: datos.nombre, image_url: datos.imageUrl } },
     },
   });

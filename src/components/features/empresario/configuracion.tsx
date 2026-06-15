@@ -12,18 +12,15 @@ import {
   IconUpload,
   IconX,
 } from '@/components/ui/fwd-icons';
-
-// "Configuración" del empresario (pantalla portada del prototipo FWD).
-// Pantalla de preferencias: las pestañas Cuenta/Notificaciones/Privacidad/
-// Seguridad son UI de demostración (toggles locales). No persiste todavía: el
-// botón "Guardar" muestra un aviso, igual que el resto del panel. Los datos de
-// identidad (nombre, empresa, correo, verificación) sí son reales.
+import type { Preferencias } from '@/server/repositories/perfil-empresario.repository';
 
 type Props = {
   nombre: string;
   empresa: string;
   correo: string;
   verificado: boolean;
+  preferenciasIniciales: Preferencias;
+  cedulaJuridica: string;
 };
 
 const labelStyle: React.CSSProperties = {
@@ -194,26 +191,104 @@ const TABS = [
 
 type TabId = (typeof TABS)[number]['id'];
 
-export default function ConfiguracionEmpresario({ nombre, empresa, correo, verificado }: Props) {
+export default function ConfiguracionEmpresario({ nombre, empresa, correo, verificado, preferenciasIniciales, cedulaJuridica }: Props) {
   const [tab, setTab] = useState<TabId>('cuenta');
-  const [notif, setNotif] = useState({
-    ofertas: true,
-    mensajes: true,
-    hitos: true,
-    marketing: false,
-    resumen: true,
-  });
-  const [priv, setPriv] = useState({
-    perfilPublico: true,
-    mostrarRating: true,
-    contactoDirecto: false,
-  });
-  const [idioma, setIdioma] = useState('Español (Costa Rica)');
-  const [aviso, setAviso] = useState<string | null>(null);
+  const [notif, setNotif] = useState(preferenciasIniciales.notif);
+  const [priv, setPriv] = useState(preferenciasIniciales.priv);
+  const [aviso, setAviso] = useState<{ tipo: 'ok' | 'error'; texto: string } | null>(null);
+  const [guardando, setGuardando] = useState(false);
+
+  // Cuenta
+  const [nombreContacto, setNombreContacto] = useState(nombre);
+  const [nombreEmpresa, setNombreEmpresa] = useState(empresa);
+  const [cedula, setCedula] = useState(cedulaJuridica);
+  const [guardandoCuenta, setGuardandoCuenta] = useState(false);
+
+  // Contraseña
+  const [pwActual, setPwActual] = useState('');
+  const [pwNueva, setPwNueva] = useState('');
+  const [pwConfirmar, setPwConfirmar] = useState('');
+  const [pwGuardando, setPwGuardando] = useState(false);
+  const [pwAviso, setPwAviso] = useState<{ tipo: 'ok' | 'error'; texto: string } | null>(null);
 
   const tn = (k: keyof typeof notif) => setNotif((s) => ({ ...s, [k]: !s[k] }));
   const tp = (k: keyof typeof priv) => setPriv((s) => ({ ...s, [k]: !s[k] }));
-  const guardar = () => setAviso('Tu configuración se actualizó.');
+
+  async function guardarCuenta() {
+    setGuardandoCuenta(true);
+    setAviso(null);
+    try {
+      const res = await fetch('/api/empresario/perfil', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nombre: nombreContacto,
+          nombreEmpresa,
+          numeroIdentificacion: cedula || null,
+        }),
+      });
+      if (res.ok) {
+        setAviso({ tipo: 'ok', texto: 'Datos de cuenta actualizados.' });
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setAviso({ tipo: 'error', texto: (data as { error?: string }).error ?? 'No se pudieron guardar los datos.' });
+      }
+    } catch {
+      setAviso({ tipo: 'error', texto: 'Error de red. Intentá de nuevo.' });
+    } finally {
+      setGuardandoCuenta(false);
+    }
+  }
+
+  async function guardar() {
+    if (tab !== 'notif' && tab !== 'priv') return;
+    setGuardando(true);
+    setAviso(null);
+    try {
+      const res = await fetch('/api/empresario/configuracion', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notif, priv }),
+      });
+      if (res.ok) {
+        setAviso({ tipo: 'ok', texto: 'Tu configuración se actualizó.' });
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setAviso({ tipo: 'error', texto: (data as { error?: string }).error ?? 'No se pudieron guardar los cambios.' });
+      }
+    } catch {
+      setAviso({ tipo: 'error', texto: 'Error de red. Intentá de nuevo.' });
+    } finally {
+      setGuardando(false);
+    }
+  }
+
+  async function cambiarContrasena() {
+    setPwAviso(null);
+    if (!pwActual || !pwNueva || !pwConfirmar) {
+      setPwAviso({ tipo: 'error', texto: 'Completá todos los campos.' });
+      return;
+    }
+    setPwGuardando(true);
+    try {
+      const res = await fetch('/api/empresario/cambiar-contrasena', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ actual: pwActual, nueva: pwNueva, confirmar: pwConfirmar }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setPwAviso({ tipo: 'ok', texto: 'Contraseña actualizada correctamente.' });
+        setPwActual(''); setPwNueva(''); setPwConfirmar('');
+      } else {
+        setPwAviso({ tipo: 'error', texto: (data as { message?: string; error?: string }).message ?? (data as { error?: string }).error ?? 'No se pudo actualizar la contraseña.' });
+      }
+    } catch {
+      setPwAviso({ tipo: 'error', texto: 'Error de red. Intentá de nuevo.' });
+    } finally {
+      setPwGuardando(false);
+    }
+  }
 
   return (
     <>
@@ -224,10 +299,18 @@ export default function ConfiguracionEmpresario({ nombre, empresa, correo, verif
           <div className="tb-sub">Administra tu cuenta y preferencias</div>
         </div>
         <div className="tb-spacer" />
-        <button className="btn btn-primary" onClick={guardar}>
-          <IconCheck size={16} />
-          Guardar cambios
-        </button>
+        {tab === 'cuenta' && (
+          <button className="btn btn-primary" onClick={guardarCuenta} disabled={guardandoCuenta}>
+            <IconCheck size={16} />
+            {guardandoCuenta ? 'Guardando...' : 'Guardar cambios'}
+          </button>
+        )}
+        {(tab === 'notif' || tab === 'priv') && (
+          <button className="btn btn-primary" onClick={guardar} disabled={guardando}>
+            <IconCheck size={16} />
+            {guardando ? 'Guardando...' : 'Guardar cambios'}
+          </button>
+        )}
       </div>
 
       <div className="page fade-in" style={{ maxWidth: 960 }}>
@@ -235,9 +318,9 @@ export default function ConfiguracionEmpresario({ nombre, empresa, correo, verif
           <div
             className="card card-pad"
             style={{
-              background: '#DEF5F6',
-              borderColor: '#A7E3C2',
-              color: '#0E7A80',
+              background: aviso.tipo === 'ok' ? '#DEF5F6' : '#FCE3F1',
+              borderColor: aviso.tipo === 'ok' ? '#A7E3C2' : '#F8CCE3',
+              color: aviso.tipo === 'ok' ? '#0E7A80' : 'var(--magenta)',
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
@@ -245,9 +328,12 @@ export default function ConfiguracionEmpresario({ nombre, empresa, correo, verif
             }}
           >
             <span>
-              <strong style={{ fontFamily: 'var(--font-head)' }}>Cambios guardados.</strong> {aviso}
+              <strong style={{ fontFamily: 'var(--font-head)' }}>
+                {aviso.tipo === 'ok' ? 'Cambios guardados.' : 'Error.'}
+              </strong>{' '}
+              {aviso.texto}
             </span>
-            <button onClick={() => setAviso(null)} aria-label="Cerrar" style={{ color: '#0E7A80', display: 'inline-flex' }}>
+            <button onClick={() => setAviso(null)} aria-label="Cerrar" style={{ color: 'inherit', display: 'inline-flex' }}>
               <IconX size={16} />
             </button>
           </div>
@@ -302,30 +388,33 @@ export default function ConfiguracionEmpresario({ nombre, empresa, correo, verif
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                     <Campo label="Nombre de contacto">
-                      <input style={inputStyle} defaultValue={nombre} />
+                      <input
+                        style={inputStyle}
+                        value={nombreContacto}
+                        onChange={(e) => setNombreContacto(e.target.value)}
+                      />
                     </Campo>
                     <Campo label="Nombre de la empresa">
-                      <input style={inputStyle} defaultValue={empresa} />
+                      <input
+                        style={inputStyle}
+                        value={nombreEmpresa}
+                        onChange={(e) => setNombreEmpresa(e.target.value)}
+                      />
                     </Campo>
                     <Campo label="Correo electrónico">
-                      <input style={inputStyle} defaultValue={correo} />
-                    </Campo>
-                    <Campo label="Teléfono">
-                      <input style={inputStyle} placeholder="+506 0000 0000" />
+                      <input
+                        style={{ ...inputStyle, background: 'var(--surface-2)', color: 'var(--ink-500)', cursor: 'not-allowed' }}
+                        value={correo}
+                        readOnly
+                      />
                     </Campo>
                     <Campo label="Cédula jurídica">
-                      <input style={inputStyle} placeholder="3-101-000000" />
-                    </Campo>
-                    <Campo label="Idioma">
-                      <select
+                      <input
                         style={inputStyle}
-                        value={idioma}
-                        onChange={(e) => setIdioma(e.target.value)}
-                      >
-                        <option>Español (Costa Rica)</option>
-                        <option>Español (Latinoamérica)</option>
-                        <option>English</option>
-                      </select>
+                        value={cedula}
+                        onChange={(e) => setCedula(e.target.value)}
+                        placeholder="3-101-000000"
+                      />
                     </Campo>
                   </div>
                 </CfgCard>
@@ -423,27 +512,53 @@ export default function ConfiguracionEmpresario({ nombre, empresa, correo, verif
                 <CfgCard Icon={IconSettings} titulo="Seguridad" desc="Protege el acceso a tu cuenta">
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 6 }}>
                     <Campo label="Contraseña actual">
-                      <input style={inputStyle} type="password" placeholder="Tu contraseña actual" />
+                      <input
+                        style={inputStyle}
+                        type="password"
+                        placeholder="Tu contraseña actual"
+                        value={pwActual}
+                        onChange={(e) => setPwActual(e.target.value)}
+                      />
                     </Campo>
                     <div />
                     <Campo label="Nueva contraseña">
-                      <input style={inputStyle} type="password" placeholder="Mínimo 8 caracteres" />
+                      <input
+                        style={inputStyle}
+                        type="password"
+                        placeholder="Mínimo 8 caracteres"
+                        value={pwNueva}
+                        onChange={(e) => setPwNueva(e.target.value)}
+                      />
                     </Campo>
                     <Campo label="Confirmar contraseña">
-                      <input style={inputStyle} type="password" placeholder="Repite la contraseña" />
+                      <input
+                        style={inputStyle}
+                        type="password"
+                        placeholder="Repite la contraseña"
+                        value={pwConfirmar}
+                        onChange={(e) => setPwConfirmar(e.target.value)}
+                      />
                     </Campo>
                   </div>
-                  <button className="btn btn-ghost btn-sm" type="button" style={{ marginTop: 6 }}>
-                    Actualizar contraseña
+                  {pwAviso && (
+                    <p style={{ fontSize: 12.5, fontWeight: 500, color: pwAviso.tipo === 'ok' ? '#0E7A80' : 'var(--magenta)', margin: '4px 0 8px' }}>
+                      {pwAviso.texto}
+                    </p>
+                  )}
+                  <button
+                    className="btn btn-ghost btn-sm"
+                    type="button"
+                    style={{ marginTop: 6 }}
+                    onClick={cambiarContrasena}
+                    disabled={pwGuardando}
+                  >
+                    {pwGuardando ? 'Actualizando...' : 'Actualizar contraseña'}
                   </button>
                 </CfgCard>
 
                 <CfgCard Icon={IconCheckCircle} titulo="Verificación en dos pasos" desc="Añade una capa extra de seguridad">
                   <CfgRow first titulo="Activar 2FA" desc="Recibe un código por correo al iniciar sesión.">
-                    <Toggle
-                      on={false}
-                      onClick={() => setAviso('Te enviaremos un código para configurar la verificación en dos pasos.')}
-                    />
+                    <span className="muted" style={{ fontSize: 12, fontStyle: 'italic' }}>Proximamente</span>
                   </CfgRow>
                 </CfgCard>
 
@@ -468,16 +583,9 @@ export default function ConfiguracionEmpresario({ nombre, empresa, correo, verif
                         Eliminar cuenta
                       </div>
                       <div className="muted" style={{ fontSize: 12.5 }}>
-                        Esta acción es permanente y no se puede deshacer.
+                        Para solicitar la eliminacion de tu cuenta, contacta al equipo de FWD.
                       </div>
                     </div>
-                    <button
-                      className="btn btn-sm"
-                      type="button"
-                      style={{ background: '#FCE3F1', color: 'var(--magenta)' }}
-                    >
-                      Eliminar
-                    </button>
                   </div>
                 </div>
               </>

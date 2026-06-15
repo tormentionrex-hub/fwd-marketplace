@@ -129,6 +129,14 @@ export function crearEstudiantePendiente(datos: {
   });
 }
 
+export async function obtenerHashContrasena(id: string): Promise<string | null> {
+  const row = await db.usuarios.findUnique({
+    where: { id },
+    select: { hash_contrasena: true },
+  });
+  return row?.hash_contrasena ?? null;
+}
+
 // Actualiza el hash de contraseña de un usuario. Lo usa el flujo de recuperación
 // tras verificar el código OTP. Devuelve id + correo para el correo de confirmación.
 export function actualizarHashContrasena(id: string, hashContrasena: string) {
