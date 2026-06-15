@@ -106,7 +106,7 @@ export default function Footer() {
                 alt="FWD Marketplace"
                 width={1412}
                 height={1114}
-                className="h-16 w-auto object-contain"
+                className="h-28 w-auto object-contain"
               />
               <p className="text-white/60 text-xs mt-2 leading-relaxed">
                 Conectamos empresarios con talento tecnológico para una mejor comunidad.

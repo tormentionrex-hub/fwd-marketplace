@@ -76,7 +76,7 @@ export async function obtenerPerfilEmpresarioDTO(
     descripcion: perfil.descripcion,
     verificado: u?.estado === 'activo',
     miembroDesde: u?.creado ? capitalizar(fmtMesAnio.format(u.creado)) : '—',
-    ratingCliente: null,
+    ratingCliente: perfil.reputacion > 0 ? perfil.reputacion : null,
     stats: {
       publicados: proyectos.length,
       enCurso: proyectos.filter((p) => p.estado === 'en_desarrollo').length,
@@ -88,7 +88,12 @@ export async function obtenerPerfilEmpresarioDTO(
       area: p.area_negocio?.trim() || 'General',
       estado: p.estado,
     })),
-    resenas: [],
+    resenas: perfil.evaluaciones_empresa.map((ev) => ({
+      de: ev.perfiles_estudiante?.usuarios?.nombre ?? 'Estudiante',
+      texto: ev.comentario ?? '',
+      rating: ev.puntuacion,
+      proyecto: ev.proyectos?.titulo ?? '—',
+    })),
   };
 }
 
@@ -199,7 +204,14 @@ function esUrlValida(v: string): boolean {
 
 export async function guardarPerfilEmpresario(
   idUsuario: string,
-  entrada: { nombre?: string; nombreEmpresa?: string; fotoUrl?: string | null },
+  entrada: {
+    nombre?: string;
+    nombreEmpresa?: string;
+    fotoUrl?: string | null;
+    descripcion?: string | null;
+    sector?: string | null;
+    numeroIdentificacion?: string | null;
+  },
 ): Promise<ResultadoGuardarEmpresario> {
   const nombre = (entrada.nombre ?? '').trim();
   if (!nombre || nombre.length > 150) return 'datos_invalidos';
@@ -210,11 +222,27 @@ export async function guardarPerfilEmpresario(
   const fotoUrl = (entrada.fotoUrl ?? '').trim();
   if (fotoUrl && !esUrlValida(fotoUrl)) return 'datos_invalidos';
 
+  const descripcion = (entrada.descripcion ?? '').trim();
+  if (descripcion.length > 1000) return 'datos_invalidos';
+
+  const sector = (entrada.sector ?? '').trim();
+  if (sector.length > 150) return 'datos_invalidos';
+
+  const numeroIdentificacion = entrada.numeroIdentificacion !== undefined
+    ? (entrada.numeroIdentificacion ?? '').trim() || null
+    : undefined;
+  if (numeroIdentificacion !== undefined && numeroIdentificacion !== null) {
+    if (numeroIdentificacion.length < 6 || numeroIdentificacion.length > 50) return 'datos_invalidos';
+  }
+
   try {
     await actualizarPerfilEmpresario(idUsuario, {
       nombre,
       nombreEmpresa: nombreEmpresa || null,
       imageUrl: fotoUrl || null,
+      descripcion: descripcion || null,
+      sector: sector || null,
+      ...(numeroIdentificacion !== undefined && { numeroIdentificacion }),
     });
     return { ok: true };
   } catch (e) {

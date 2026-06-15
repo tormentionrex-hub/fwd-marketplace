@@ -9,6 +9,15 @@ export type CategoriaProducto =
 
 export type EstadoProducto = "Disponible" | "Destacado" | "Nuevo" | "Agotado";
 
+export type TipoProyecto =
+  | "Turismo"
+  | "Skills"
+  | "Resolución de problemas"
+  | "Automatizaciones";
+
+export type Prioridad = "Alta" | "Media" | "Baja";
+export type Complejidad = "Principiante" | "Intermedio" | "Avanzado";
+
 export interface ProductoMarketplace {
   id: string;
   nombre: string;
@@ -21,6 +30,10 @@ export interface ProductoMarketplace {
   color: string;
   calificacion: number;
   destacado?: boolean;
+  lenguajes?: string[];
+  tipoProyecto?: TipoProyecto;
+  prioridad?: Prioridad;
+  complejidad?: Complejidad;
 }
 
 export interface EmpresaCard {

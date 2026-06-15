@@ -73,6 +73,7 @@ export const registerSchema = z.object({
     .regex(/[a-z]/, "Debe incluir al menos una minúscula")
     .regex(/[0-9]/, "Debe incluir al menos un número")
     .regex(/[^A-Za-z0-9]/, "Debe incluir al menos un carácter especial"),
+  role: z.enum(["estudiante", "empresario"]).optional(),
 });
 export type RegisterInput = z.infer<typeof registerSchema>;
 

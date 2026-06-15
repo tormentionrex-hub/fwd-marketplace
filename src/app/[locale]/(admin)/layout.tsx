@@ -1,11 +1,13 @@
 import { redirect } from "next/navigation";
 import { getUser } from "@/server/auth/get-user";
-import { SinPermiso } from "@/components/layout/sin-permiso";
+import { rutaPorRol } from "@/server/auth/rutas";
+import { AdminSidebar } from "@/components/features/admin/admin-sidebar";
 
-// Guard del grupo (admin): solo entra quien tenga rol 'admin'.
-// - Sin sesión -> a /login.
-// - Logueado con otro rol -> NO redirige; renderiza <SinPermiso>, que vuelve a la
-//   página anterior del historial y dispara la alerta de permisos insuficientes.
+// Guard del grupo (admin): SOLO entra quien tenga rol 'admin'. Protege /admin y
+// todas sus sub-rutas (se ejecuta en el servidor antes de renderizar, con el rol
+// verificado contra la DB vía getUser — no se confía en la cookie del cliente).
+// - Sin sesión        -> /login.
+// - Logueado, no-admin -> a SU propio dashboard según el rol (rutaPorRol).
 export default async function AdminLayout({
   children,
   params,
@@ -21,8 +23,14 @@ export default async function AdminLayout({
   }
 
   if (user.roles.nombre !== "admin") {
-    return <SinPermiso locale={locale} />;
+    // estudiante -> /dashboard/estudiante · empresario -> /empresario · etc.
+    redirect(`/${locale}${rutaPorRol(user.roles.nombre)}`);
   }
 
-  return <>{children}</>;
+  return (
+    <div className="min-h-screen bg-[#0b1120] text-white">
+      <AdminSidebar />
+      <main className="min-h-screen lg:pl-[240px]">{children}</main>
+    </div>
+  );
 }

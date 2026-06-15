@@ -5,12 +5,11 @@ import { setRequestLocale, getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import { RoleBadge } from '@/components/layout/role-badge';
+import { AdminDashboardButton } from '@/components/layout/admin-dashboard-button';
 import { AlertaGlobal } from '@/components/layout/alerta-global';
-import WhatsAppButton from '@/components/WhatsAppButton';
 import SmoothScroll from '@/components/SmoothScroll';
 import AnimationsInit from '@/components/AnimationsInit';
 import CursorGlow from '@/components/CursorGlow';
-import WelcomeOnboarding from '@/components/WelcomeOnboarding';
 import PageLoader from '@/components/PageLoader';
 
 export const metadata: Metadata = {
@@ -42,13 +41,12 @@ export default async function LocaleLayout({
       <SmoothScroll />
       <AnimationsInit />
       <CursorGlow />
-      <WelcomeOnboarding />
       <NextIntlClientProvider messages={messages}>
         {children}
+        <AdminDashboardButton />
         <RoleBadge />
         <AlertaGlobal />
       </NextIntlClientProvider>
-      <WhatsAppButton />
     </>
   );
 }

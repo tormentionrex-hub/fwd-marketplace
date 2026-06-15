@@ -2,13 +2,24 @@
 
 import { Link } from "@/i18n/navigation";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import SettingsPanel from "@/components/SettingsPanel";
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const t = useTranslations("Nav");
+
+  // Sesión iniciada: el login guarda el perfil público en localStorage.
+  // Si existe, ocultamos "Iniciar sesión" y "Registrarse".
+  const [logueado, setLogueado] = useState(false);
+  useEffect(() => {
+    try {
+      setLogueado(!!localStorage.getItem("fwd_perfil"));
+    } catch {
+      /* modo privado / sin storage: dejar botones visibles */
+    }
+  }, []);
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 px-6 py-4">
@@ -52,23 +63,27 @@ export default function Navbar() {
           >
             {t("proyectos")}
           </Link>
-          <Link
-            href="/login"
-            className="text-white/80 hover:text-[#20BEC7] text-base font-semibold transition-colors duration-200"
-          >
-            {t("iniciarSesion")}
-          </Link>
+          {!logueado && (
+            <Link
+              href="/login"
+              className="text-white/80 hover:text-[#20BEC7] text-base font-semibold transition-colors duration-200"
+            >
+              {t("iniciarSesion")}
+            </Link>
+          )}
         </nav>
 
         {/* CTA + Settings */}
         <div className="hidden md:flex items-center gap-3 flex-shrink-0">
           <SettingsPanel />
-          <Link
-            href="/register"
-            className="bg-[#FFCB05] hover:bg-[#FFCB05]/90 text-[#0e1628] text-base font-black px-8 py-3 rounded-full transition-all duration-200 hover:scale-105 active:scale-95 shadow-md"
-          >
-            {t("registrarse")}
-          </Link>
+          {!logueado && (
+            <Link
+              href="/register"
+              className="bg-[#FFCB05] hover:bg-[#FFCB05]/90 text-[#0e1628] text-base font-black px-8 py-3 rounded-full transition-all duration-200 hover:scale-105 active:scale-95 shadow-md"
+            >
+              {t("registrarse")}
+            </Link>
+          )}
         </div>
 
         {/* Mobile hamburger */}
@@ -92,16 +107,20 @@ export default function Navbar() {
           <Link href="/proyectos" className="text-white/80 text-base font-semibold py-1 hover:text-[#20BEC7] transition-colors" onClick={() => setMenuOpen(false)}>
             {t("proyectos")}
           </Link>
-          <Link href="/login" className="text-white/80 text-base font-semibold py-1 hover:text-[#20BEC7] transition-colors" onClick={() => setMenuOpen(false)}>
-            {t("iniciarSesion")}
-          </Link>
-          <Link
-            href="/register"
-            className="bg-[#FFCB05] text-[#0e1628] text-base font-black px-5 py-3 rounded-full text-center hover:bg-[#FFCB05]/90 transition-all"
-            onClick={() => setMenuOpen(false)}
-          >
-            {t("registrarse")}
-          </Link>
+          {!logueado && (
+            <>
+              <Link href="/login" className="text-white/80 text-base font-semibold py-1 hover:text-[#20BEC7] transition-colors" onClick={() => setMenuOpen(false)}>
+                {t("iniciarSesion")}
+              </Link>
+              <Link
+                href="/register"
+                className="bg-[#FFCB05] text-[#0e1628] text-base font-black px-5 py-3 rounded-full text-center hover:bg-[#FFCB05]/90 transition-all"
+                onClick={() => setMenuOpen(false)}
+              >
+                {t("registrarse")}
+              </Link>
+            </>
+          )}
         </div>
       )}
     </header>

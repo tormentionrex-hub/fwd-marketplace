@@ -280,6 +280,92 @@ div:hover > .shine-sweep {
   50%       { transform: translateY(-14px) rotate(8deg); }
 }
 
+/* ── Estilos de impresión para Términos y Condiciones ── */
+@media print {
+  /* Forzar colores */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    cursor: default !important;
+  }
+
+  /* Ocultar UI de navegación */
+  header, nav, footer,
+  .footer-wave-wrap, .cursor-dot, .cursor-ring,
+  button, aside {
+    display: none !important;
+  }
+
+  /* Mostrar encabezado de impresión */
+  .print-only { display: block !important; }
+
+  /* Ocultar hero y CTA */
+  section { display: none !important; }
+
+  /* Mostrar solo contenido */
+  section.print-content {
+    display: block !important;
+    background: white !important;
+    padding: 0 16px !important;
+  }
+
+  /* Quitar flex del layout de contenido */
+  section.print-content > div { padding: 0 !important; }
+  section.print-content > div > div { display: block !important; gap: 0 !important; }
+
+  /* Cards */
+  .bg-white {
+    box-shadow: none !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 8px !important;
+    margin-bottom: 12px !important;
+    padding: 16px 20px !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Barras laterales de color */
+  span[style*="background-color"] {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Franja de colores en encabezado de impresión */
+  .print-stripe {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body {
+    background: white !important;
+    font-size: 11px;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* margin: 0 elimina la URL y encabezados del navegador */
+  @page {
+    size: A4;
+    margin: 0;
+  }
+}
+
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-70px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes bounce-x {
+  0%, 100% { transform: translateX(0); }
+  50%       { transform: translateX(-6px); }
+}
+
 @keyframes gradientShift {
   0%   { background-position: 0% center; }
   100% { background-position: 100% center; }
