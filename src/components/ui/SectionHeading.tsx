@@ -1,5 +1,9 @@
+"use client";
+
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils/cn";
+
+const HOVER_COLORS = ["#008FD5", "#20BEC6", "#662D91", "#ED008C", "#FFCB05", "#F7901E"];
 
 interface SectionHeadingProps {
   eyebrow?: string;
@@ -30,9 +34,29 @@ export default function SectionHeading({
           {eyebrow}
         </span>
       )}
+
       <h2 className="font-display text-3xl font-bold tracking-tight text-text sm:text-4xl">
-        {title}
+        {typeof title === "string"
+          ? title.split(" ").map((word, i) => (
+              <span
+                key={i}
+                className="inline-block mr-[0.25em] cursor-default transition-all duration-200 hover:-translate-y-1 hover:font-black"
+                onMouseEnter={(e) => {
+                  const color = HOVER_COLORS[i % HOVER_COLORS.length] ?? "#008FD5";
+                  (e.currentTarget as HTMLElement).style.color = color;
+                  (e.currentTarget as HTMLElement).style.textShadow = `0 0 24px ${color}66`;
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.color = "";
+                  (e.currentTarget as HTMLElement).style.textShadow = "none";
+                }}
+              >
+                {word}
+              </span>
+            ))
+          : title}
       </h2>
+
       {description && (
         <p
           className={cn(

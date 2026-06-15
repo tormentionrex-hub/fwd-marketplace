@@ -19,7 +19,7 @@ La skill está en [.claude/skills/commit/SKILL.md](.claude/skills/commit/SKILL.m
 - Las reglas de Conventional Commits específicas de este repo
 - Los tipos permitidos (`feat`, `fix`, `docs`, `refactor`, `chore`, etc.)
 - Cómo redactar el mensaje para que pase commitlint
-- El flujo paso a paso (revisar diff, stagear con cuidado, redactar, commit)
+- El flujo paso a paso (revisar diff, stagear con cuidado, redactar, commit)  
 
 **No improvises mensajes de commit.** El repo tiene Husky + commitlint configurado: si el mensaje no cumple el formato exacto, el commit es rechazado. La skill conoce las reglas exactas y evita que pierdas tiempo en intentos fallidos.
 

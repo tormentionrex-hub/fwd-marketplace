@@ -18,6 +18,7 @@ export default function WhatsAppButton() {
         }
         .wa-btn { animation: wa-pulse 2.2s ease-in-out infinite, wa-bounce 3s ease-in-out infinite; }
         .wa-btn:hover { animation: none; transform: scale(1.12); }
+        @media print { .wa-btn { display: none !important; } }
         .wa-ring {
           animation: wa-ping 2.2s ease-out infinite;
           position: absolute; inset: 0;
