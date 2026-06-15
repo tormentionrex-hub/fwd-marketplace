@@ -11,13 +11,6 @@ export function buscarUsuarioPorCorreo(correo: string) {
   });
 }
 
-export function registrarUltimaSesion(id: string) {
-  return db.usuarios.update({
-    where: { id },
-    data: { ultima_sesion: new Date() },
-  });
-}
-
 export function buscarUsuarioPorId(id: string) {
   return db.usuarios.findUnique({
     where: { id },
@@ -186,6 +179,34 @@ export function registrarUltimaSesion(id: string) {
     where: { id },
     data: { ultima_sesion: new Date() },
     select: { id: true },
+  });
+}
+
+// Cuenta los usuarios con estado 'pendiente' para el badge de alertas del admin.
+export function contarUsuariosPendientes() {
+  return db.usuarios.count({ where: { estado: 'pendiente' } });
+}
+
+// Lista los usuarios con estado 'pendiente' para la pantalla de validaciones del admin.
+export function listarUsuariosPendientes() {
+  return db.usuarios.findMany({
+    where: { estado: 'pendiente' },
+    orderBy: { creado: 'asc' },
+    select: {
+      id: true,
+      nombre: true,
+      correo: true,
+      creado: true,
+      roles: { select: { nombre: true } },
+    },
+  });
+}
+
+// Rechaza una cuenta pendiente cambiando su estado a 'rechazado'. Lo usa el admin.
+export function rechazarUsuario(id: string) {
+  return db.usuarios.update({
+    where: { id },
+    data: { estado: 'rechazado' },
   });
 }
 
