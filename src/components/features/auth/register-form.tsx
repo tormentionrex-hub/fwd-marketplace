@@ -5,6 +5,7 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { TextField } from "@/components/ui/text-field";
 import { IconArrowRight } from "@/components/ui/icons";
 import { SocialAuthButtons } from "@/components/features/auth/social-auth-buttons";
+import AnimatedFormTitle from "@/components/features/auth/AnimatedFormTitle";
 
 // Persistencia del form en sessionStorage: si el usuario navega a /terminos y
 // vuelve, recupera lo que llevaba escrito (excepto password). Se limpia al
@@ -148,10 +149,12 @@ export function RegisterForm() {
   return (
     <div>
       <header className="mb-8">
-        <h1 className="font-display text-3xl font-black text-fwd-ink">
-          Crea tu cuenta
-        </h1>
-        <p className="mt-2 text-fwd-ink/60">
+        <AnimatedFormTitle
+          text="Crea tu cuenta"
+          accentFrom="#ED008C"
+          accentTo="#662D91"
+        />
+        <p className="mt-1 text-fwd-ink/60 pl-4 border-l-2 border-fwd-ink/8">
           Forma parte de la comunidad que avanza hacia el futuro.
         </p>
       </header>
@@ -346,14 +349,23 @@ export function RegisterForm() {
         <button
           type="submit"
           disabled={!canSubmit}
-          className={`group mt-1 flex h-12 items-center justify-center gap-2 rounded-full px-6 font-semibold text-white shadow-sm transition ${
-            canSubmit
-              ? "bg-fwd-blue hover:bg-fwd-purple"
-              : "cursor-not-allowed bg-fwd-ink/25"
-          }`}
+          className="group relative mt-1 flex h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-full px-6 font-bold text-white transition-all duration-300 hover:scale-[1.02] hover:brightness-110 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+          style={{
+            background: canSubmit
+              ? "linear-gradient(135deg, #ED008C, #662D91)"
+              : "rgba(0,0,0,0.15)",
+            boxShadow: canSubmit ? "0 4px 20px rgba(237,0,140,0.35)" : "none",
+          }}
+          onMouseEnter={(e) => {
+            if (canSubmit) e.currentTarget.style.boxShadow = "0 8px 30px rgba(102,45,145,0.55)";
+          }}
+          onMouseLeave={(e) => {
+            if (canSubmit) e.currentTarget.style.boxShadow = "0 4px 20px rgba(237,0,140,0.35)";
+          }}
         >
-          {loading ? "Avanzando…" : "Crear cuenta"}
-          <IconArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+          {canSubmit && <span className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] bg-white/20 skew-x-[-20deg] transition-transform duration-700 pointer-events-none" />}
+          <span className="relative z-10">{loading ? "Avanzando…" : "Crear cuenta"}</span>
+          <IconArrowRight className="relative z-10 h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
         </button>
       </form>
 
@@ -365,7 +377,10 @@ export function RegisterForm() {
         ¿Ya tienes cuenta?{" "}
         <Link
           href="/login"
-          className="font-semibold text-fwd-blue hover:text-fwd-purple transition"
+          className="font-bold transition-all duration-200"
+          style={{ color: "#008FD5" }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "#662D91"; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "#008FD5"; }}
         >
           Inicia sesión
         </Link>

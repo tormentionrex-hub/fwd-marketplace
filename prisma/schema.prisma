@@ -139,28 +139,6 @@ model notificaciones {
   @@index([leida], map: "idx_notificaciones_leida")
 }
 
-/// Solicitud de mensaje: un empresario pide contactar a un estudiante. El chat
-/// solo se habilita cuando el estudiante la acepta. Migración SQL en
-/// prisma/sql/add_solicitudes_mensaje.sql.
-model solicitudes_mensaje {
-  id                  String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  id_empresario       String              @db.Uuid
-  id_estudiante       String              @db.Uuid
-  id_proyecto         String?             @db.Uuid
-  asunto              String              @db.VarChar(200)
-  mensaje             String
-  estado              String              @default("pendiente") @db.VarChar(20)
-  creado              DateTime            @default(now()) @db.Timestamptz(6)
-  actualizado         DateTime            @default(now()) @db.Timestamptz(6)
-  perfiles_empresario perfiles_empresario @relation(fields: [id_empresario], references: [id_usuario], onDelete: Cascade, map: "fk_solicitudes_empresario")
-  perfiles_estudiante perfiles_estudiante @relation(fields: [id_estudiante], references: [id_usuario], onDelete: Cascade, map: "fk_solicitudes_estudiante")
-  proyectos           proyectos?          @relation(fields: [id_proyecto], references: [id], onDelete: SetNull, map: "fk_solicitudes_proyecto")
-
-  @@index([id_estudiante], map: "idx_solicitudes_estudiante")
-  @@index([id_empresario], map: "idx_solicitudes_empresario")
-  @@index([estado], map: "idx_solicitudes_estado")
-}
-
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model ofertas {
   id                  String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -197,11 +175,12 @@ model pending_verifications {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model perfiles_empresario {
-  id_usuario        String              @id @db.Uuid
-  tipo              String?             @db.VarChar(100)
-  sector            String?             @db.VarChar(150)
-  descripcion       String?
-  nombre_empresa    String?             @db.VarChar(200)
+  id_usuario             String              @id @db.Uuid
+  tipo                   String?             @db.VarChar(100)
+  sector                 String?             @db.VarChar(150)
+  descripcion            String?
+  nombre_empresa         String?             @db.VarChar(200)
+  numero_identificacion  String?             @db.VarChar(50)
   chats             chats[]
   conversaciones_ia conversaciones_ia[]
   cv_accesos        cv_accesos[]

@@ -11,13 +11,6 @@ export function buscarUsuarioPorCorreo(correo: string) {
   });
 }
 
-export function registrarUltimaSesion(id: string) {
-  return db.usuarios.update({
-    where: { id },
-    data: { ultima_sesion: new Date() },
-  });
-}
-
 export function buscarUsuarioPorId(id: string) {
   return db.usuarios.findUnique({
     where: { id },
