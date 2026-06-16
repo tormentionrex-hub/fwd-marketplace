@@ -284,6 +284,7 @@ model proyectos {
   entregables           entregables[]
   evaluaciones          evaluaciones[]
   ofertas               ofertas[]
+  evaluaciones_empresa  evaluaciones_empresa[]
   proyecto_mejoras      proyecto_mejoras[]
   perfiles_empresario   perfiles_empresario     @relation(fields: [id_empresario], references: [id_usuario], map: "fk_proyectos_empresario")
   proyectos_tecnologias proyectos_tecnologias[]
@@ -358,6 +359,23 @@ model usuarios {
 
   @@index([estado], map: "idx_usuarios_estado")
   @@index([id_rol], map: "idx_usuarios_id_rol")
+}
+
+/// Evaluación del estudiante hacia la empresa al cerrar un proyecto.
+model evaluaciones_empresa {
+  id                  String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id_proyecto         String              @db.Uuid
+  id_estudiante       String              @db.Uuid
+  id_empresario       String              @db.Uuid
+  puntuacion          Int
+  comentario          String?
+  creado              DateTime            @default(now()) @db.Timestamptz(6)
+  perfiles_empresario perfiles_empresario @relation(fields: [id_empresario], references: [id_usuario], onDelete: Cascade, map: "fk_ev_empresa_empresario")
+  perfiles_estudiante perfiles_estudiante @relation(fields: [id_estudiante], references: [id_usuario], onDelete: Cascade, map: "fk_ev_empresa_estudiante")
+  proyectos           proyectos           @relation(fields: [id_proyecto], references: [id], onDelete: Cascade, map: "fk_ev_empresa_proyecto")
+
+  @@unique([id_proyecto, id_estudiante], map: "unique_ev_empresa_proyecto_estudiante")
+  @@index([id_empresario], map: "idx_ev_empresa_id_empresario")
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.

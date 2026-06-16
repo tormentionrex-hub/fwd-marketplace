@@ -1,11 +1,13 @@
 import 'server-only';
 import { buscarProyectoActivoDeEstudiante } from '@/server/repositories/oferta.repository';
+import { buscarEvaluacionEmpresa } from '@/server/repositories/evaluacion-empresa.repository';
 import { mapearEstadoProyecto } from '@/server/services/proyecto.service';
 import type { EstadoProyecto } from '@/types/sefora';
 
 export interface ProyectoActivoDTO {
   ofertaId: string;
   proyectoId: string;
+  empresarioId: string;
   titulo: string;
   empresario: string;
   sector: string;
@@ -14,6 +16,8 @@ export interface ProyectoActivoDTO {
   fechaFin: string | null;
   /** Progreso 0-100 estimado por tiempo transcurrido (o 100 si ya cerró). */
   progreso: number;
+  /** Calificación que el estudiante ya dio a la empresa (null si no calificó). */
+  evaluacionEmpresa: { puntuacion: number; comentario: string } | null;
 }
 
 // Devuelve el proyecto adjudicado en curso del estudiante, o null si no tiene.
@@ -37,9 +41,17 @@ export async function obtenerProyectoActivo(
     }
   }
 
+  const empresarioId = p.perfiles_empresario?.id_usuario ?? '';
+
+  const evaluacionEmpresaRaw =
+    estado !== 'abierto' && empresarioId
+      ? await buscarEvaluacionEmpresa(p.id, idEstudiante)
+      : null;
+
   return {
     ofertaId: fila.id,
     proyectoId: p.id,
+    empresarioId,
     titulo: p.titulo,
     empresario: p.perfiles_empresario?.usuarios?.nombre ?? 'Empresa',
     sector: p.perfiles_empresario?.sector ?? '—',
@@ -47,5 +59,8 @@ export async function obtenerProyectoActivo(
     fechaInicio: p.publicado ? p.publicado.toISOString() : null,
     fechaFin: p.cierre ? p.cierre.toISOString() : null,
     progreso,
+    evaluacionEmpresa: evaluacionEmpresaRaw
+      ? { puntuacion: evaluacionEmpresaRaw.puntuacion, comentario: evaluacionEmpresaRaw.comentario ?? '' }
+      : null,
   };
 }

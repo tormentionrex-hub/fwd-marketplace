@@ -68,14 +68,11 @@ export function SocialAuthButtons() {
     }
   }
 
-  const baseBtn =
-    "flex h-12 items-center justify-center gap-2.5 rounded-full border border-fwd-ink/15 bg-white px-4 text-sm font-semibold text-fwd-ink transition hover:bg-fwd-mist/60 disabled:cursor-not-allowed disabled:opacity-60";
-
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-3">
         <span className="h-px flex-1 bg-fwd-ink/10" />
-        <span className="text-xs font-medium uppercase tracking-wider text-fwd-ink/40">
+        <span className="text-xs font-medium uppercase tracking-wider text-fwd-ink/35">
           o continúa con
         </span>
         <span className="h-px flex-1 bg-fwd-ink/10" />
@@ -92,18 +89,36 @@ export function SocialAuthButtons() {
           type="button"
           onClick={() => handleOAuth("google")}
           disabled={loading !== null}
-          className={baseBtn}
+          className="group relative flex h-12 items-center justify-center gap-2.5 overflow-hidden rounded-full border border-fwd-ink/12 bg-white px-4 text-sm font-semibold text-fwd-ink transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = "#4285F4";
+            e.currentTarget.style.boxShadow = "0 4px 16px rgba(66,133,244,0.2)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = "";
+            e.currentTarget.style.boxShadow = "";
+          }}
         >
-          <GoogleIcon className="h-5 w-5" />
+          <GoogleIcon className="h-5 w-5 transition-transform duration-200 group-hover:scale-110" />
           {loading === "google" ? "Conectando…" : "Google"}
         </button>
         <button
           type="button"
           onClick={() => handleOAuth("github")}
           disabled={loading !== null}
-          className={baseBtn}
+          className="group relative flex h-12 items-center justify-center gap-2.5 overflow-hidden rounded-full border border-fwd-ink/12 bg-white px-4 text-sm font-semibold text-fwd-ink transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = "#24292e";
+            e.currentTarget.style.boxShadow = "0 4px 16px rgba(36,41,46,0.15)";
+            e.currentTarget.style.background = "#f6f8fa";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = "";
+            e.currentTarget.style.boxShadow = "";
+            e.currentTarget.style.background = "";
+          }}
         >
-          <GitHubIcon className="h-5 w-5" />
+          <GitHubIcon className="h-5 w-5 transition-transform duration-200 group-hover:scale-110" />
           {loading === "github" ? "Conectando…" : "GitHub"}
         </button>
       </div>

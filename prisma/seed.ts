@@ -36,6 +36,50 @@ async function main() {
   });
 
   console.log(`Cuenta admin lista: ${admin.correo} (id ${admin.id})`);
+
+  // --- Seed Estudiante ---
+  const rolEstudiante = await db.roles.findUnique({ where: { nombre: 'estudiante' } });
+  if (rolEstudiante) {
+    const estudiante = await db.usuarios.upsert({
+      where: { correo: 'estudiante@fwd.cr' },
+      update: {},
+      create: {
+        nombre: 'Estudiante Prueba',
+        correo: 'estudiante@fwd.cr',
+        hash_contrasena: hashPassword('TestPassword123!'),
+        id_rol: rolEstudiante.id,
+        estado: 'activo',
+        perfiles_estudiante: {
+          create: {},
+        },
+      },
+      select: { id: true, correo: true },
+    });
+    console.log(`Cuenta estudiante lista: ${estudiante.correo} (id ${estudiante.id})`);
+  }
+
+  // --- Seed Empresario ---
+  const rolEmpresario = await db.roles.findUnique({ where: { nombre: 'empresario' } });
+  if (rolEmpresario) {
+    const empresario = await db.usuarios.upsert({
+      where: { correo: 'empresario@fwd.cr' },
+      update: {},
+      create: {
+        nombre: 'Empresario Prueba',
+        correo: 'empresario@fwd.cr',
+        hash_contrasena: hashPassword('TestPassword123!'),
+        id_rol: rolEmpresario.id,
+        estado: 'activo',
+        perfiles_empresario: {
+          create: {
+            nombre_empresa: 'Empresa Test S.A.',
+          },
+        },
+      },
+      select: { id: true, correo: true },
+    });
+    console.log(`Cuenta empresario lista: ${empresario.correo} (id ${empresario.id})`);
+  }
 }
 
 main()

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useRouter } from '@/i18n/navigation';
 import {
   IconSend,
@@ -47,8 +47,14 @@ type Props = {
   ofertasIniciales: OfertaVM[];
   entregablesIniciales: EntregableVM[];
   calificacionInicial: number;
+  chatIdInicial: string | null;
 };
 type ChatMsg = { id: string; mio: boolean; texto: string; hora: string };
+
+function formatHora(iso: string): string {
+  const d = new Date(iso);
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 const AV_COLS = ['#008FD4', '#662D91', '#20BEC6', '#F7901E', '#EC008C', '#0469A0'];
@@ -254,6 +260,7 @@ export default function GestionProyecto({
   ofertasIniciales,
   entregablesIniciales,
   calificacionInicial,
+  chatIdInicial,
 }: Props) {
   const router = useRouter();
 
@@ -287,19 +294,78 @@ export default function GestionProyecto({
   const faseActual = cerrado ? 3 : hayAdjudicada || estadoProyecto === 'en_desarrollo' ? 2 : 0;
   const [fase, setFase] = useState(faseActual);
 
-  // Chat (solo visual): mensajes locales con el estudiante adjudicado.
+  // Chat real con el estudiante adjudicado.
   const [chatAbierto, setChatAbierto] = useState(false);
   const [chatTexto, setChatTexto] = useState('');
-  const [chatMsgs, setChatMsgs] = useState<ChatMsg[]>([
-    { id: 'c1', mio: true, texto: '¡Hola! Bienvenido al proyecto. ¿Pudiste revisar los requerimientos?', hora: '09:14' },
-    { id: 'c2', mio: false, texto: 'Hola, sí. Ya tengo el primer hito avanzado, lo subo hoy.', hora: '09:32' },
-    { id: 'c3', mio: true, texto: 'Perfecto. Cualquier duda me escribís por acá.', hora: '09:35' },
-  ]);
-  function enviarChat() {
-    if (!chatTexto.trim()) return;
-    setChatMsgs((m) => [...m, { id: `m${m.length}`, mio: true, texto: chatTexto.trim(), hora: 'ahora' }]);
-    setChatTexto('');
+  const [chatMsgs, setChatMsgs] = useState<ChatMsg[]>([]);
+  const [chatId, setChatId] = useState<string | null>(chatIdInicial);
+  const [chatCargando, setChatCargando] = useState(false);
+  const [chatError, setChatError] = useState<string | null>(null);
+  const chatBottomRef = useRef<HTMLDivElement>(null);
+
+  async function cargarMensajes(id: string) {
+    const r = await fetch(`/api/chats/${id}/mensajes`);
+    if (!r.ok) return;
+    const data = await r.json();
+    setChatMsgs(
+      (data.mensajes ?? []).map((m: { id: string; mio: boolean; contenido: string | null; creado: string }) => ({
+        id: m.id,
+        mio: m.mio,
+        texto: m.contenido ?? '',
+        hora: formatHora(m.creado),
+      })),
+    );
   }
+
+  async function abrirChat() {
+    setChatError(null);
+    setChatCargando(true);
+    let id = chatId;
+    if (!id) {
+      const r = await fetch(`/api/chats/proyecto/${proyecto.id}`, { method: 'POST' });
+      if (!r.ok) {
+        setChatError('No se pudo abrir el chat. El proyecto no tiene estudiante adjudicado.');
+        setChatCargando(false);
+        return;
+      }
+      const data = await r.json();
+      id = data.chatId as string;
+      setChatId(id);
+    }
+    await cargarMensajes(id);
+    setChatCargando(false);
+    setChatAbierto(true);
+  }
+
+  async function enviarChat() {
+    if (!chatTexto.trim() || !chatId) return;
+    const texto = chatTexto.trim();
+    setChatTexto('');
+    const r = await fetch(`/api/chats/${chatId}/mensajes`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contenido: texto }),
+    });
+    if (!r.ok) return;
+    const data = await r.json();
+    const m = data.mensaje;
+    setChatMsgs((prev) => [
+      ...prev,
+      { id: m.id, mio: true, texto: m.contenido ?? '', hora: formatHora(m.creado) },
+    ]);
+  }
+
+  // Polling de mensajes nuevos mientras el chat está abierto.
+  useEffect(() => {
+    if (!chatAbierto || !chatId) return;
+    const timer = setInterval(() => cargarMensajes(chatId), 8000);
+    return () => clearInterval(timer);
+  }, [chatAbierto, chatId]);
+
+  // Scroll al último mensaje cuando se abren o llegan mensajes nuevos.
+  useEffect(() => {
+    if (chatAbierto) chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatMsgs, chatAbierto]);
 
   function ok(msg: string) {
     setAviso(msg);
@@ -539,7 +605,7 @@ export default function GestionProyecto({
             <div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '6px 0 16px' }}>
                 <h3 style={{ fontSize: 17, fontWeight: 700 }}>Entregables e hitos</h3>
-                <button className="btn btn-soft btn-sm" onClick={() => setChatAbierto(true)}>
+                <button className="btn btn-soft btn-sm" onClick={() => abrirChat()}>
                   <IconMessage size={14} />Abrir chat
                 </button>
               </div>
@@ -647,7 +713,7 @@ export default function GestionProyecto({
               <div style={{ height: 8, background: 'var(--bg-2)', borderRadius: 9, marginTop: 16, overflow: 'hidden' }}>
                 <div style={{ width: `${entregables.length ? Math.round((aprobados / entregables.length) * 100) : 0}%`, height: '100%', background: 'linear-gradient(90deg, var(--azul), var(--turquesa))', borderRadius: 9 }} />
               </div>
-              <button className="btn btn-ghost btn-block" style={{ marginTop: 18 }} onClick={() => setChatAbierto(true)}>
+              <button className="btn btn-ghost btn-block" style={{ marginTop: 18 }} onClick={() => abrirChat()}>
                 <IconMessage size={15} />Mensaje al estudiante
               </button>
             </div>
@@ -749,6 +815,17 @@ export default function GestionProyecto({
             </div>
 
             <div style={{ flex: 1, overflowY: 'auto', padding: 20, background: 'var(--bg)' }}>
+              {chatCargando && (
+                <p style={{ textAlign: 'center', color: 'var(--ink-400)', fontSize: 13 }}>Cargando mensajes…</p>
+              )}
+              {chatError && (
+                <p style={{ textAlign: 'center', color: 'var(--magenta)', fontSize: 13 }}>{chatError}</p>
+              )}
+              {!chatCargando && !chatError && chatMsgs.length === 0 && (
+                <p style={{ textAlign: 'center', color: 'var(--ink-400)', fontSize: 13 }}>
+                  Aún no hay mensajes. Escribí el primero.
+                </p>
+              )}
               {chatMsgs.map((m) => (
                 <div key={m.id} style={{ display: 'flex', gap: 10, flexDirection: m.mio ? 'row-reverse' : 'row', marginBottom: 16 }}>
                   <Avatar name={m.mio ? 'Tú' : (adjudicado ?? 'Estudiante')} size={32} />
@@ -772,6 +849,7 @@ export default function GestionProyecto({
                   </div>
                 </div>
               ))}
+              <div ref={chatBottomRef} />
             </div>
 
             <div style={{ padding: 14, borderTop: '1px solid var(--line)', display: 'flex', gap: 10, flexShrink: 0 }}>
