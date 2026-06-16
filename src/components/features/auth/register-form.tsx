@@ -7,6 +7,7 @@ import { IconArrowRight } from "@/components/ui/icons";
 import { SocialAuthButtons } from "@/components/features/auth/social-auth-buttons";
 import { PasswordToggle } from "@/components/ui/password-toggle";
 import AnimatedFormTitle from "@/components/features/auth/AnimatedFormTitle";
+import Swal from "sweetalert2";
 
 // Persistencia del form en sessionStorage: si el usuario navega a /terminos y
 // vuelve, recupera lo que llevaba escrito (excepto password). Se limpia al
@@ -77,7 +78,6 @@ export function RegisterForm() {
   const [initial] = useState<PersistedState>(() => loadPersisted());
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState<string | null>(null);
-  const [pendingMsg, setPendingMsg] = useState<string | null>(null);
   const [password, setPassword] = useState("");
   const [terms, setTerms]       = useState<boolean>(initial.terms ?? false);
   const [showPwd, setShowPwd]   = useState(false);
@@ -92,18 +92,31 @@ export function RegisterForm() {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!canSubmit) return;
-    setLoading(true);
-    setError(null);
 
     const formData = new FormData(e.currentTarget);
-    const firstName = String(formData.get("firstName") ?? "");
-    const lastName = String(formData.get("lastName") ?? "");
+    const firstName = String(formData.get("firstName") ?? "").trim();
+    const lastName = String(formData.get("lastName") ?? "").trim();
     const secondLastName = String(formData.get("secondLastName") ?? "").trim();
     const identificationNumber = String(formData.get("identificationNumber") ?? "").trim();
     const age = String(formData.get("age") ?? "").trim();
     const companyName = String(formData.get("companyName") ?? "").trim();
-    const email = String(formData.get("email") ?? "");
+    const email = String(formData.get("email") ?? "").trim();
     const password = String(formData.get("password") ?? "");
+
+    const camposRequeridos = [firstName, lastName, identificationNumber, age, companyName, email];
+    if (camposRequeridos.some((v) => !v)) {
+      await Swal.fire({
+        title: "Datos insuficientes",
+        text: "Por favor completá todos los campos obligatorios antes de continuar.",
+        icon: "warning",
+        confirmButtonText: "Entendido",
+        confirmButtonColor: "#008FD5",
+      });
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
 
     try {
       const res = await fetch("/api/auth/register", {
@@ -135,16 +148,6 @@ export function RegisterForm() {
         /* ignorar */
       }
 
-      // Cuenta creada pero PENDIENTE de aprobación del admin: no hay sesión,
-      // mostramos un mensaje en vez de redirigir.
-      if (data?.pending) {
-        setPendingMsg(
-          data?.mensaje ??
-            "Tu cuenta está pendiente de aprobación por un administrador.",
-        );
-        return;
-      }
-
       // Perfil público (nombre, foto) -> localStorage. Lo privado va en la cookie.
       if (data?.perfil) {
         localStorage.setItem("fwd_perfil", JSON.stringify(data.perfil));
@@ -157,38 +160,6 @@ export function RegisterForm() {
     } finally {
       setLoading(false);
     }
-  }
-
-  if (pendingMsg) {
-    return (
-      <div className="text-center">
-        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-fwd-yellow/20 text-fwd-orange">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="h-7 w-7"
-            aria-hidden
-          >
-            <circle cx="12" cy="12" r="9" />
-            <path d="M12 7v5l3 2" />
-          </svg>
-        </div>
-        <h1 className="font-display text-2xl font-black text-fwd-ink">
-          Cuenta pendiente de aprobación
-        </h1>
-        <p className="mx-auto mt-3 max-w-sm text-fwd-ink/60">{pendingMsg}</p>
-        <Link
-          href="/login"
-          className="mt-7 inline-flex h-12 items-center justify-center gap-2 rounded-full bg-fwd-blue px-6 font-semibold text-white transition hover:bg-fwd-purple"
-        >
-          Ir a iniciar sesión
-        </Link>
-      </div>
-    );
   }
 
   return (
@@ -204,7 +175,7 @@ export function RegisterForm() {
         </p>
       </header>
 
-      <form onSubmit={handleSubmit} onInput={handleFormInput} className="flex flex-col gap-5">
+      <form onSubmit={handleSubmit} onInput={handleFormInput} noValidate className="flex flex-col gap-5">
         {error && (
           <p
             role="alert"

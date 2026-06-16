@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { registrarEmpresario } from '@/server/services/auth.service';
+import { crearCookieSesion } from '@/server/auth/session';
+import { rutaPorRol } from '@/server/auth/rutas';
 import { permitido } from '@/server/auth/rate-limit';
 import { clienteIp, mismoOrigen } from '@/server/http/request';
 import { error, errorInterno, parsearBody } from '@/server/http/responder';
@@ -35,12 +37,22 @@ export async function POST(request: Request) {
       return error('Ese correo ya está registrado', 409);
     }
 
-    // La cuenta queda PENDIENTE de aprobación del admin: NO se crea sesión.
-    // El usuario no puede acceder hasta que un administrador la valide.
+    // Crear sesión inmediatamente — el empresario entra al dashboard en estado
+    // 'pendiente' con acceso limitado hasta que el admin apruebe la cuenta.
+    await crearCookieSesion({
+      uid: resultado.usuario.id,
+      rol: resultado.usuario.rol,
+      correo: resultado.usuario.correo,
+      token: resultado.token,
+    });
+
     return NextResponse.json({
-      pending: true,
-      mensaje:
-        'Tu cuenta fue creada y está pendiente de aprobación por un administrador. Te avisaremos cuando esté lista.',
+      perfil: {
+        nombre: resultado.usuario.nombre,
+        image_url: resultado.usuario.image_url,
+      },
+      pendiente: true,
+      redirectTo: rutaPorRol(resultado.usuario.rol),
     });
   } catch (e) {
     return errorInterno('auth/register', e);
