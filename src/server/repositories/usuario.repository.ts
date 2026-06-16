@@ -205,27 +205,6 @@ export function listarUsuarios() {
   });
 }
 
-// Lista las cuentas pendientes de validación (auto-registradas, sin aprobar).
-// Las usa la sección Validaciones del panel admin.
-export function listarUsuariosPendientes() {
-  return db.usuarios.findMany({
-    where: { estado: 'pendiente' },
-    orderBy: { creado: 'desc' },
-    select: {
-      id: true,
-      nombre: true,
-      correo: true,
-      creado: true,
-      roles: { select: { nombre: true } },
-    },
-  });
-}
-
-// Cuenta las cuentas pendientes de validación (para alertas/resumen).
-export function contarUsuariosPendientes() {
-  return db.usuarios.count({ where: { estado: 'pendiente' } });
-}
-
 // Registra la marca de tiempo de la sesión actual (último login exitoso).
 // Lo llama el servicio de auth tras validar credenciales. Devuelve la cantidad
 // de filas afectadas vía Prisma update; el llamador no necesita el resultado.
@@ -241,13 +220,5 @@ export function registrarUltimaSesion(id: string) {
 // cascada según las FK del esquema. Lo usa el panel admin.
 export function eliminarUsuario(id: string) {
   return db.usuarios.delete({ where: { id } });
-}
-
-// Rechaza una cuenta pendiente: estado 'rechazado' (no puede iniciar sesión).
-export function rechazarUsuario(id: string) {
-  return db.usuarios.update({
-    where: { id },
-    data: { estado: 'rechazado' },
-  });
 }
 

@@ -208,7 +208,6 @@ model perfiles_empresario {
   usuarios              usuarios              @relation(fields: [id_usuario], references: [id], onDelete: Cascade, map: "fk_perfiles_empresario_usuario")
   proyectos             proyectos[]
   solicitudes_mensaje   solicitudes_mensaje[]
-  evaluaciones_empresa  evaluaciones_empresa[]
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
