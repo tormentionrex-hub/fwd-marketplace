@@ -55,25 +55,6 @@ export function contarOfertasDesde(idEmpresario: string, desde: Date) {
   });
 }
 
-// Lista los proyectos para el panel admin con su empresario y conteo de ofertas.
-export function listarProyectosAdmin() {
-  return db.proyectos.findMany({
-    orderBy: { publicado: 'desc' },
-    select: {
-      id: true,
-      titulo: true,
-      estado: true,
-      publicado: true,
-      perfiles_empresario: {
-        select: {
-          usuarios: { select: { nombre: true } },
-        },
-      },
-      _count: { select: { ofertas: true } },
-    },
-  });
-}
-
 // Trae un proyecto con su empresario (nombre + sector) y sus tecnologías
 // (ficha pública del proyecto).
 export function obtenerProyectoConDetalle(id: string) {

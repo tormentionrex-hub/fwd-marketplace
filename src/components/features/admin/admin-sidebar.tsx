@@ -5,7 +5,6 @@ import { Link, usePathname } from "@/i18n/navigation";
 
 /* ── Íconos SVG inline (sin emojis, REGLA #6) ───────────────── */
 type IcoProps = { d: string; extra?: string | undefined; className?: string };
-type IcoProps = { d: string; extra?: string | undefined; className?: string | undefined };
 function Ico({ d, extra, className }: IcoProps) {
   return (
     <svg
