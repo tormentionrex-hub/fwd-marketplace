@@ -205,6 +205,7 @@ model perfiles_empresario {
   conversaciones_ia     conversaciones_ia[]
   cv_accesos            cv_accesos[]
   evaluaciones          evaluaciones[]
+  evaluaciones_empresa  evaluaciones_empresa[]
   usuarios              usuarios              @relation(fields: [id_usuario], references: [id], onDelete: Cascade, map: "fk_perfiles_empresario_usuario")
   proyectos             proyectos[]
   solicitudes_mensaje   solicitudes_mensaje[]
@@ -225,6 +226,7 @@ model perfiles_estudiante {
   entregables             entregables[]
   estudiantes_habilidades estudiantes_habilidades[]
   evaluaciones            evaluaciones[]
+  evaluaciones_empresa    evaluaciones_empresa[]
   ofertas                 ofertas[]
   usuarios                usuarios                  @relation(fields: [id_usuario], references: [id], onDelete: Cascade, map: "fk_perfiles_estudiante_usuario")
   portafolio_proyectos    portafolio_proyectos[]

@@ -6,13 +6,11 @@ import { FwdLogo } from '@/components/ui/fwd-logo';
 import {
   IconBriefcase,
   IconUsers,
-  IconLogout,
   IconSettings,
   IconGrid,
   IconFolder,
   IconSpark,
 } from '@/components/ui/fwd-icons';
-import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 // LocalStorage key for the collapsed state of the Empresario sidebar
 const STORAGE_KEY = 'fwd_empresario_sidebar_collapsed';

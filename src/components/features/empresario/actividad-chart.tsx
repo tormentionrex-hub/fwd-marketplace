@@ -7,8 +7,20 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  TooltipProps,
 } from 'recharts';
+
+interface TooltipEntry {
+  dataKey?: string | number;
+  color?: string;
+  name?: string;
+  value?: number;
+}
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: TooltipEntry[];
+  label?: string;
+}
 
 export type ActividadDataPoint = {
   mes: string;
@@ -20,7 +32,7 @@ interface ActividadChartProps {
   data: ActividadDataPoint[];
 }
 
-const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
+const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
     return (
       <div
