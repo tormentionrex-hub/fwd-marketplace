@@ -7,6 +7,7 @@ import { IconArrowRight } from "@/components/ui/icons";
 import { SocialAuthButtons } from "@/components/features/auth/social-auth-buttons";
 import { PasswordToggle } from "@/components/ui/password-toggle";
 import AnimatedFormTitle from "@/components/features/auth/AnimatedFormTitle";
+import { PasswordToggle } from "@/components/ui/password-toggle";
 
 export function LoginForm() {
   const router = useRouter();
@@ -86,7 +87,7 @@ export function LoginForm() {
 
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center justify-between">
-            <label htmlFor="password" className="text-sm font-medium text-fwd-ink/80">
+            <label htmlFor="password" className="text-sm font-medium text-fwd-ink/80 dark:text-white/80">
               Contraseña
             </label>
             <Link
@@ -107,7 +108,7 @@ export function LoginForm() {
               placeholder="••••••••"
               autoComplete="current-password"
               required
-              className="w-full rounded-xl border border-fwd-ink/12 bg-fwd-mist/40 px-4 py-3 pr-11 text-[0.95rem] text-fwd-ink outline-none transition placeholder:text-fwd-ink/35 focus:border-fwd-blue focus:bg-white focus:ring-4 focus:ring-fwd-blue/15"
+              className="w-full rounded-xl border border-fwd-ink/12 bg-fwd-mist/40 dark:bg-white/5 dark:border-white/15 dark:text-white px-4 py-3 pr-11 text-[0.95rem] text-fwd-ink outline-none transition placeholder:text-fwd-ink/35 dark:placeholder:text-white/35 focus:border-fwd-blue focus:bg-white dark:focus:bg-white/10 focus:ring-4 focus:ring-fwd-blue/15"
             />
             <PasswordToggle
               visible={showPwd}
@@ -116,7 +117,7 @@ export function LoginForm() {
           </div>
         </div>
 
-        <label className="flex items-center gap-2 text-sm text-fwd-ink/70">
+        <label className="flex items-center gap-2 text-sm text-fwd-ink/70 dark:text-white/70">
           <input
             type="checkbox"
             className="h-4 w-4 rounded border-fwd-ink/25 accent-fwd-blue"
@@ -149,7 +150,7 @@ export function LoginForm() {
         <SocialAuthButtons />
       </div>
 
-      <p className="mt-8 text-center text-sm text-fwd-ink/60">
+      <p className="mt-8 text-center text-sm text-fwd-ink/60 dark:text-white/60">
         ¿Aún no tienes cuenta?{" "}
         <Link
           href="/register"

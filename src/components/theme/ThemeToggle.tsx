@@ -5,6 +5,7 @@ import { useTheme } from "next-themes";
 import { AnimatePresence, motion } from "framer-motion";
 import { IconMoon, IconSun } from "@/components/ui/icons";
 import { cn } from "@/lib/utils/cn";
+import { usePathname } from "next/navigation";
 
 interface ThemeToggleProps {
   className?: string;
@@ -15,16 +16,22 @@ interface ThemeToggleProps {
 export default function ThemeToggle({ className, variant = "inline" }: ThemeToggleProps) {
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => setMounted(true), []);
 
+  const isHomepage = pathname === "/" || pathname === "/es" || pathname === "/en" || pathname === "/es/" || pathname === "/en/";
   const isDark = resolvedTheme === "dark";
 
   const base = cn(
     "grid h-10 w-10 place-items-center rounded-full border border-border bg-surface text-text-muted shadow-sm transition-colors hover:text-fwd-azul hover:border-fwd-azul/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fwd-azul",
-    variant === "floating" && "fixed bottom-5 right-5 z-50 glass shadow-lg",
+    variant === "floating" && "fixed bottom-5 left-5 z-[9999] glass shadow-lg",
     className,
   );
+
+  if (isHomepage) {
+    return null;
+  }
 
   if (!mounted) {
     // Placeholder con el mismo tamaño para evitar saltos / mismatch de hidratación.
