@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Link, usePathname } from "@/i18n/navigation";
 
 /* ── Íconos SVG inline (sin emojis, REGLA #6) ───────────────── */
-type IcoProps = { d: string; extra?: string; className?: string };
+type IcoProps = { d: string; extra?: string | undefined; className?: string };
 function Ico({ d, extra, className }: IcoProps) {
   return (
     <svg
@@ -120,7 +120,7 @@ export function AdminSidebar() {
                   <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-fwd-magenta" />
                 )}
                 <span className={activo ? "text-fwd-magenta" : ""}>
-                  <Ico d={item.icon.d} extra={"extra" in item.icon ? item.icon.extra : undefined} />
+                  <Ico d={item.icon.d} {...("extra" in item.icon ? { extra: item.icon.extra } : {})} />
                 </span>
                 {item.label}
               </Link>

@@ -119,7 +119,11 @@ export function buscarProyectoActivoDeEstudiante(idEstudiante: string) {
           publicado: true,
           cierre: true,
           perfiles_empresario: {
-            select: { sector: true, usuarios: { select: { nombre: true } } },
+            select: {
+              id_usuario: true,
+              sector: true,
+              usuarios: { select: { nombre: true } },
+            },
           },
         },
       },

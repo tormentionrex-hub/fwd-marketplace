@@ -41,7 +41,8 @@ function textoPreview(m?: { contenido: string | null; document_url: string | nul
 // Lista las conversaciones del usuario con el otro participante y no leídos.
 export async function listarConversaciones(idUsuario: string): Promise<ConversacionDTO[]> {
   const chats = await listarChatsDeUsuario(idUsuario);
-  return chats.map((c) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return chats.map((c: any) => {
     let otroPerfil: { usuarios?: { nombre: string; image_url: string | null } | null } | null | undefined = null;
     if (c.id_estudiante_destino) {
       if (c.id_estudiante === idUsuario) otroPerfil = c.perfiles_estudiante_destino;

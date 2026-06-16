@@ -96,6 +96,8 @@ export default async function PerfilEmpresarioPage({
           nombreEmpresaInicial={perfil.nombreEmpresaRaw}
           fotoUrlInicial={perfil.fotoUrl}
           inicialesFallback={inicialesDe(perfil.empresa)}
+          descripcionInicial={perfil.descripcion}
+          sectorInicial={perfil.sector}
         />
       </div>
 
