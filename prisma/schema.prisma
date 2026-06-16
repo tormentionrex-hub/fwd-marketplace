@@ -201,6 +201,8 @@ model perfiles_empresario {
   descripcion           String?
   nombre_empresa        String?               @db.VarChar(200)
   numero_identificacion String?               @db.VarChar(50)
+  reputacion            Int                   @default(0)
+  preferencias          Json?
   chats                 chats[]
   conversaciones_ia     conversaciones_ia[]
   cv_accesos            cv_accesos[]
