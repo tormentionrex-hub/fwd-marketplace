@@ -19,17 +19,16 @@ export function contarNoLeidas(idUsuario: string) {
   });
 }
 
-export function marcarTodasLeidas(idUsuario: string) {
+export function marcarUnaLeida(idUsuario: string, idNotificacion: string) {
   return db.notificaciones.updateMany({
-    where: { id_usuario: idUsuario, leida: false },
+    where: { id: idNotificacion, id_usuario: idUsuario },
     data: { leida: true },
   });
 }
 
-// Marca una notificación específica como leída asegurando ownership.
-export function marcarUnaLeida(idUsuario: string, idNotificacion: string) {
+export function marcarTodasLeidas(idUsuario: string) {
   return db.notificaciones.updateMany({
-    where: { id: idNotificacion, id_usuario: idUsuario },
+    where: { id_usuario: idUsuario, leida: false },
     data: { leida: true },
   });
 }

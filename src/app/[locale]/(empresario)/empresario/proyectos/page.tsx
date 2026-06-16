@@ -3,6 +3,7 @@ import { Link } from '@/i18n/navigation';
 import { getUser } from '@/server/auth/get-user';
 import { dashboardEmpresario } from '@/server/services/proyecto.service';
 import { ProyectoRow } from '@/components/features/empresario/lista-proyectos';
+import { ProyectosTablaMock } from '@/components/features/empresario/proyectos-tabla-mock';
 import { IconPlus } from '@/components/ui/fwd-icons';
 
 const FILTROS: Array<[string, string]> = [
@@ -65,61 +66,7 @@ export default async function MisProyectosPage({
       </div>
 
       <div className="page fade-in">
-        {/* Filtros por estado */}
-        <div style={{ display: 'flex', gap: 8, marginBottom: 18, flexWrap: 'wrap' }}>
-          {FILTROS.map(([k, label]) => {
-            const on = activo === k;
-            return (
-              <Link
-                key={k || 'todos'}
-                href={hrefFiltro(k)}
-                className="btn btn-sm"
-                style={
-                  on
-                    ? { background: 'var(--ink-900)', color: '#fff' }
-                    : { background: 'var(--surface)', color: 'var(--ink-600)', border: '1px solid var(--line)' }
-                }
-              >
-                {label}
-              </Link>
-            );
-          })}
-        </div>
-
-        {consulta && (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 10,
-              marginBottom: 14,
-              fontSize: 13,
-              color: 'var(--ink-600)',
-            }}
-          >
-            <span>
-              Resultados para <strong style={{ color: 'var(--ink-900)' }}>&ldquo;{consulta}&rdquo;</strong>
-            </span>
-            <Link
-              href={filtro ? `/empresario/proyectos?estado=${filtro}` : '/empresario/proyectos'}
-              style={{ color: 'var(--azul-700)', fontWeight: 600 }}
-            >
-              Limpiar búsqueda
-            </Link>
-          </div>
-        )}
-
-        <div className="card">
-          {lista.length === 0 ? (
-            <div className="muted" style={{ padding: 48, textAlign: 'center' }}>
-              {consulta
-                ? 'No encontramos proyectos que coincidan con tu búsqueda.'
-                : 'No hay proyectos en este estado.'}
-            </div>
-          ) : (
-            lista.map((p) => <ProyectoRow key={p.id} p={p} />)
-          )}
-        </div>
+        <ProyectosTablaMock />
       </div>
     </>
   );

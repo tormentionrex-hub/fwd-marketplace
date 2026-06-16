@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ChevronRight, Info, X, Clock, Shield } from "lucide-react";
@@ -17,6 +17,20 @@ export function SolicitarAccesoCliente() {
 
   const whatsappUrl = `https://wa.me/50672025228?text=${encodeURIComponent("Hola, envié mi solicitud de invitación para unirme al FWD Marketplace. Mi correo es (coloca tu correo aquí).")}`;
   const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${CORREO}&su=${encodeURIComponent("Solicitud de invitación a FWD Marketplace")}&body=${encodeURIComponent("Hola equipo FWD,\n\nEnvié mi solicitud de invitación para unirme al Marketplace. Quedo atento a la aprobación.\n\nMi correo es: ")}`;
+
+  useEffect(() => {
+    if (modalOpen) {
+      document.body.style.overflow = "hidden";
+      document.documentElement.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
+    };
+  }, [modalOpen]);
 
   useGSAP(
     () => {
@@ -36,6 +50,13 @@ export function SolicitarAccesoCliente() {
   );
 
   return (
+    <>
+    <style>{`
+      .modal-info-scroll::-webkit-scrollbar { width: 5px; }
+      .modal-info-scroll::-webkit-scrollbar-track { background: transparent; }
+      .modal-info-scroll::-webkit-scrollbar-thumb { background: rgba(109,40,217,0.7); border-radius: 4px; }
+      .modal-info-scroll::-webkit-scrollbar-thumb:hover { background: rgba(109,40,217,0.9); }
+    `}</style>
     <div
       ref={containerRef}
       className="relative flex min-h-screen flex-col overflow-hidden"
@@ -53,7 +74,7 @@ export function SolicitarAccesoCliente() {
       >
         <div className="flex w-full items-center justify-between px-2" style={{ height: "90px" }}>
           <div className="flex items-center gap-4">
-            <img src="/imagenes/logo-azul.png" alt="FWD Costa Rica" className="h-48 w-auto" style={{ marginTop: "20px" }} />
+            <img src="/imagenes/logo-azul.png" alt="FWD Costa Rica" className="h-48 w-auto" style={{ marginTop: "1px", transform: "translateX(18px)" }} />
             <div className="flex items-center gap-4">
               <div className="h-8 w-px bg-white/20" />
               <div className="flex flex-col gap-1.5">
@@ -96,8 +117,8 @@ export function SolicitarAccesoCliente() {
       {/* ── Burbuja "más info" ── */}
       <button
         onClick={() => setModalOpen(true)}
-        className="js-bubble absolute left-[53%] top-5 z-20 flex items-center gap-2 rounded-full border border-white/30 bg-white/15 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/25"
-        style={{ animation: "bounce-x 2s ease-in-out infinite" }}
+        className="js-bubble absolute z-20 flex items-center gap-2 rounded-full border border-white/30 bg-white/15 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/25"
+        style={{ animation: "bounce-x 2s ease-in-out infinite", top: "20px", left: "46%" }}
       >
         <Info className="h-4 w-4 shrink-0 text-fwd-teal" />
         <span>¿Necesitas más info? Pulsa aquí</span>
@@ -124,7 +145,7 @@ export function SolicitarAccesoCliente() {
 
           {/* Modal */}
           <div
-            className="relative w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl"
+            className="relative w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
             style={{
               backgroundImage: "url('/imagenes/modal-fordy.png')",
               backgroundSize: "cover",
@@ -134,7 +155,10 @@ export function SolicitarAccesoCliente() {
             {/* Capa semitransparente para legibilidad sobre fondo claro */}
             <div className="absolute inset-0 bg-fwd-purple/88" />
 
-            <div className="relative z-10 px-8 py-10 text-white">
+            <div
+              className="modal-info-scroll relative z-10 px-6 py-7 text-white overflow-y-auto flex-1 min-h-0"
+              style={{ scrollbarWidth: "thin", scrollbarColor: "rgba(109,40,217,0.7) transparent", overscrollBehavior: "contain" }}
+            >
               {/* Botón cerrar */}
               <button
                 onClick={() => setModalOpen(false)}
@@ -152,7 +176,7 @@ export function SolicitarAccesoCliente() {
               </h2>
 
               {/* Sección principal */}
-              <div className="mt-5 space-y-4 font-body text-sm font-semibold leading-relaxed text-white drop-shadow-sm">
+              <div className="mt-4 space-y-3 font-body text-sm font-semibold leading-relaxed text-white drop-shadow-sm">
                 <p>
                   Un administrador de FWD Marketplace revisará tu solicitud y,
                   una vez aprobada, recibirás acceso a la plataforma. Este proceso
@@ -168,7 +192,7 @@ export function SolicitarAccesoCliente() {
               </div>
 
               {/* Canales de contacto */}
-              <div className="mt-6 rounded-xl border border-white/20 bg-white/10 p-4">
+              <div className="mt-4 rounded-xl border border-white/20 bg-white/10 p-3">
                 <p className="mb-3 font-heading text-xs font-bold uppercase tracking-widest text-white/60">
                   Podés contactar por
                 </p>
@@ -212,7 +236,7 @@ export function SolicitarAccesoCliente() {
               </div>
 
               {/* Tiempo de espera */}
-              <div className="mt-4 flex items-start gap-3 rounded-xl border border-fwd-teal/30 bg-fwd-teal/10 p-4">
+              <div className="mt-3 flex items-start gap-3 rounded-xl border border-fwd-teal/30 bg-fwd-teal/10 p-3">
                 <Clock className="mt-0.5 h-4 w-4 shrink-0 text-fwd-teal" />
                 <p className="font-body text-sm font-semibold leading-relaxed text-white drop-shadow-sm">
                   El tiempo de aprobación es normalmente de{" "}
@@ -222,7 +246,7 @@ export function SolicitarAccesoCliente() {
               </div>
 
               {/* Nota de seguridad */}
-              <div className="mt-4 flex items-start gap-3 rounded-xl border border-white/10 bg-white/5 p-4">
+              <div className="mt-3 flex items-start gap-3 rounded-xl border border-white/10 bg-white/5 p-3">
                 <Shield className="mt-0.5 h-4 w-4 shrink-0 text-white/50" />
                 <p className="font-body text-xs font-semibold leading-relaxed text-white/90 drop-shadow-sm">
                   Este método de invitación existe para asegurar que únicamente
@@ -235,7 +259,7 @@ export function SolicitarAccesoCliente() {
               {/* Botón cerrar */}
               <button
                 onClick={() => setModalOpen(false)}
-                className="mt-7 w-full rounded-full py-2.5 font-heading text-sm font-bold text-white/70 transition-colors hover:bg-white/10 hover:text-white border border-white/20"
+                className="mt-5 w-full rounded-full py-2 font-heading text-sm font-bold text-white/70 transition-colors hover:bg-white/10 hover:text-white border border-white/20"
               >
                 Entendido, cerrar
               </button>
@@ -363,5 +387,6 @@ export function SolicitarAccesoCliente() {
         </div>
       </main>
     </div>
+    </>
   );
 }

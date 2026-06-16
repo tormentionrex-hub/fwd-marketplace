@@ -135,6 +135,22 @@ export function buscarEstudianteAdjudicado(idProyecto: string) {
   });
 }
 
+// Lista todos los proyectos para el panel admin con nombre del empresario y conteo de ofertas.
+export function listarProyectosAdmin() {
+  return db.proyectos.findMany({
+    orderBy: { publicado: 'desc' },
+    select: {
+      id: true,
+      titulo: true,
+      estado: true,
+      perfiles_empresario: {
+        select: { usuarios: { select: { nombre: true } } },
+      },
+      _count: { select: { ofertas: true } },
+    },
+  });
+}
+
 // Cierra el proyecto: estado 'cerrado' y marca la fecha de cierre.
 export function cerrarProyectoRepo(idProyecto: string) {
   return db.proyectos.update({
@@ -143,19 +159,3 @@ export function cerrarProyectoRepo(idProyecto: string) {
   });
 }
 
-// Lista todos los proyectos para el panel admin con conteo de ofertas y datos
-// del empresario.
-export function listarProyectosAdmin() {
-  return db.proyectos.findMany({
-    orderBy: { publicado: 'desc' },
-    select: {
-      id: true,
-      titulo: true,
-      estado: true,
-      _count: { select: { ofertas: true } },
-      perfiles_empresario: {
-        select: { usuarios: { select: { nombre: true } } },
-      },
-    },
-  });
-}
