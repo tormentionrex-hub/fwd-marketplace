@@ -5,7 +5,6 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { TextField } from "@/components/ui/text-field";
 import { IconArrowRight } from "@/components/ui/icons";
 import { SocialAuthButtons } from "@/components/features/auth/social-auth-buttons";
-import { PasswordToggle } from "@/components/ui/password-toggle";
 import AnimatedFormTitle from "@/components/features/auth/AnimatedFormTitle";
 import { PasswordToggle } from "@/components/ui/password-toggle";
 
@@ -28,6 +27,7 @@ export function LoginForm() {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ email, password }),
       });
 
