@@ -391,3 +391,4 @@ model cv_accesos {
   @@index([id_curriculum], map: "idx_cv_accesos_curriculum")
   @@index([id_empresario], map: "idx_cv_accesos_empresario")
 }
+

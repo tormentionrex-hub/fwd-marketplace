@@ -71,16 +71,18 @@ export default async function EstudianteShell({ locale, children }: EstudianteSh
         </svg>
       </div>
 
-      <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
-          <SidebarEstudiante
-            locale={locale}
-            nombre={user.nombre}
-            fotoUrl={user.image_url || generarAvatar(user.nombre)}
-            reputacion={resumen.reputacion}
-            nivel={nivel}
-          />
-          <div className="min-w-0 flex-1">{children}</div>
+      <div className="flex min-h-screen flex-col lg:flex-row">
+        <SidebarEstudiante
+          locale={locale}
+          nombre={user.nombre}
+          fotoUrl={user.image_url || generarAvatar(user.nombre)}
+          reputacion={resumen.reputacion}
+          nivel={nivel}
+        />
+        <div className="min-w-0 flex-1 px-4 py-8 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-6xl">
+            {children}
+          </div>
         </div>
       </div>
     </div>
