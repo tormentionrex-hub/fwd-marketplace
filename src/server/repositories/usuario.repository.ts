@@ -216,65 +216,9 @@ export function registrarUltimaSesion(id: string) {
   });
 }
 
-// Cuenta los usuarios con estado 'pendiente' para el badge de alertas del admin.
-export function contarUsuariosPendientes() {
-  return db.usuarios.count({ where: { estado: 'pendiente' } });
-}
-
-// Lista los usuarios con estado 'pendiente' para la pantalla de validaciones del admin.
-export function listarUsuariosPendientes() {
-  return db.usuarios.findMany({
-    where: { estado: 'pendiente' },
-    orderBy: { creado: 'asc' },
-    select: {
-      id: true,
-      nombre: true,
-      correo: true,
-      creado: true,
-      roles: { select: { nombre: true } },
-    },
-  });
-}
-
-// Rechaza una cuenta pendiente cambiando su estado a 'rechazado'. Lo usa el admin.
-export function rechazarUsuario(id: string) {
-  return db.usuarios.update({
-    where: { id },
-    data: { estado: 'rechazado' },
-  });
-}
-
 // Elimina un usuario por id. Los perfiles y datos relacionados se borran en
 // cascada según las FK del esquema. Lo usa el panel admin.
 export function eliminarUsuario(id: string) {
   return db.usuarios.delete({ where: { id } });
-}
-
-// Cuenta cuántos usuarios tienen estado 'pendiente' (en espera de aprobación).
-export function contarUsuariosPendientes() {
-  return db.usuarios.count({ where: { estado: 'pendiente' } });
-}
-
-// Lista los usuarios con estado 'pendiente' para el panel de validaciones.
-export function listarUsuariosPendientes() {
-  return db.usuarios.findMany({
-    where: { estado: 'pendiente' },
-    orderBy: { creado: 'asc' },
-    select: {
-      id: true,
-      nombre: true,
-      correo: true,
-      creado: true,
-      roles: { select: { nombre: true } },
-    },
-  });
-}
-
-// Rechaza un usuario pendiente marcando su estado como 'rechazado'.
-export function rechazarUsuario(id: string) {
-  return db.usuarios.update({
-    where: { id },
-    data: { estado: 'rechazado' },
-  });
 }
 

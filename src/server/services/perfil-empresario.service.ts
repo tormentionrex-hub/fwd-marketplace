@@ -76,7 +76,9 @@ export async function obtenerPerfilEmpresarioDTO(
     descripcion: perfil.descripcion,
     verificado: u?.estado === 'activo',
     miembroDesde: u?.creado ? capitalizar(fmtMesAnio.format(u.creado)) : '—',
-    ratingCliente: perfil.reputacion > 0 ? perfil.reputacion : null,
+    ratingCliente: perfil.evaluaciones_empresa.length > 0
+      ? Number((perfil.evaluaciones_empresa.reduce((sum, ev) => sum + ev.puntuacion, 0) / perfil.evaluaciones_empresa.length).toFixed(1))
+      : null,
     stats: {
       publicados: proyectos.length,
       enCurso: proyectos.filter((p) => p.estado === 'en_desarrollo').length,

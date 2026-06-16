@@ -12,7 +12,6 @@ export function obtenerPerfilEmpresario(idUsuario: string) {
       tipo: true,
       sector: true,
       descripcion: true,
-      reputacion: true,
       usuarios: {
         select: {
           nombre: true,
@@ -46,6 +45,7 @@ export function obtenerDatosCompletitud(idUsuario: string) {
     where: { id_usuario: idUsuario },
     select: {
       nombre_empresa: true,
+      numero_identificacion: true,
       usuarios: {
         select: {
           nombre: true,
@@ -94,7 +94,9 @@ export const DEFAULT_PREFERENCIAS = {
 export type Preferencias = typeof DEFAULT_PREFERENCIAS;
 
 export async function obtenerPreferencias(idUsuario: string): Promise<Preferencias> {
-  const row = await db.perfiles_empresario.findUnique({
+  // TODO: columna `preferencias Json?` falta en schema.prisma — añadir cuando se sincronice el schema.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const row = await (db.perfiles_empresario as any).findUnique({
     where: { id_usuario: idUsuario },
     select: { preferencias: true },
   });
@@ -118,14 +120,16 @@ export async function obtenerPreferencias(idUsuario: string): Promise<Preferenci
 }
 
 export function guardarPreferencias(idUsuario: string, preferencias: Preferencias) {
-  return db.perfiles_empresario.update({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (db.perfiles_empresario as any).update({
     where: { id_usuario: idUsuario },
     data: { preferencias },
   });
 }
 
 export function actualizarReputacionEmpresa(idEmpresario: string, reputacion: number) {
-  return db.perfiles_empresario.update({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (db.perfiles_empresario as any).update({
     where: { id_usuario: idEmpresario },
     data: { reputacion },
   });
