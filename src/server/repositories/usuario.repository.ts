@@ -5,8 +5,8 @@ import { db } from '@/lib/db';
 // negocio; solo lee/escribe. La usan los services.
 
 export function buscarUsuarioPorCorreo(correo: string) {
-  return db.usuarios.findUnique({
-    where: { correo },
+  return db.usuarios.findFirst({
+    where: { correo: { equals: correo, mode: 'insensitive' } },
     include: { roles: { select: { nombre: true } } },
   });
 }
