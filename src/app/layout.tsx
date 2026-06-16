@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Figtree, Outfit, Inter, Space_Grotesk, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
+import ThemeToggle from "@/components/theme/ThemeToggle";
 import "./globals.css";
 
 const figtree = Figtree({
@@ -55,6 +56,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {children}
+          <ThemeToggle variant="floating" className="!fixed !bottom-5 !left-5 !right-auto z-[9999]" />
         </ThemeProvider>
       </body>
     </html>

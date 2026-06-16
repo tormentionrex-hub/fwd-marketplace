@@ -28,6 +28,8 @@ import { obtenerVerificacionEstudiante } from "@/server/services/verificacion.se
 import { resumenDashboardEstudiante } from "@/server/services/dashboard.service";
 import { listarMisOfertas } from "@/server/services/oferta.service";
 import { cargarPerfilEditable } from "@/server/services/perfil-estudiante.service";
+import { obtenerMiCv } from "@/server/services/curriculum.service";
+import MatchEmpleabilidad from "@/components/features/dashboard/MatchEmpleabilidad";
 
 const GRADIENTES_PROYECTO = [
   "linear-gradient(135deg,#008FD4,#20BEC6)",
@@ -110,10 +112,11 @@ export default async function DashboardEstudiantePage({
     );
   }
 
-  const [resumen, misOfertas, perfil] = await Promise.all([
+  const [resumen, misOfertas, perfil, cv] = await Promise.all([
     resumenDashboardEstudiante(user.id),
     listarMisOfertas(user.id),
     cargarPerfilEditable(user.id),
+    obtenerMiCv(user.id),
   ]);
   const ofertasRecientes = misOfertas.slice(0, 5);
 
@@ -126,6 +129,17 @@ export default async function DashboardEstudiantePage({
   ];
   const perfilCompletado = Math.round((señales.filter(Boolean).length / señales.length) * 100);
   const habilidadesVerificadas = perfil.habilidades.length;
+
+  let nivelEstudiante = "🌱 Talento Emergente";
+  if (resumen.proyectosCompletados >= 10 || resumen.reputacion >= 4.5) {
+    nivelEstudiante = "👑 Talento Elite FWD";
+  } else if (resumen.proyectosCompletados >= 5 || resumen.reputacion >= 4.0) {
+    nivelEstudiante = "🏆 Profesional Avanzado";
+  } else if (resumen.proyectosCompletados >= 3 || resumen.reputacion >= 3.0) {
+    nivelEstudiante = "⭐ Profesional Intermedio";
+  } else if (resumen.proyectosCompletados >= 1 || resumen.reputacion >= 1.0) {
+    nivelEstudiante = "🚀 Profesional Junior";
+  }
 
   return (
     <div className="flex flex-col gap-8">
@@ -172,6 +186,16 @@ export default async function DashboardEstudiantePage({
         <StatTile label="Completados" value={resumen.proyectosCompletados} icon={<IconAward width={24} height={24} />} gradient="linear-gradient(135deg,#662D91,#EC008C)" i={2} />
         <StatTile label="Reputación" value={resumen.reputacion.toFixed(1)} icon={<IconStar width={24} height={24} />} gradient="linear-gradient(135deg,#F7901E,#FFCB05)" i={3} />
       </div>
+
+      <MatchEmpleabilidad 
+        locale={locale}
+        perfilCompletado={perfilCompletado}
+        nivel={nivelEstudiante}
+        habilidades={perfil.habilidades.map(h => perfil.catalogo.find(c => c.id === h.id)?.nombre || "")}
+        tieneCV={Boolean(cv)}
+        tienePortafolio={perfil.portafolio.length > 0}
+        proyectosCompletados={resumen.proyectosCompletados}
+      />
 
       <section className="animate-in fade-in slide-in-from-bottom-3 duration-500">
         <SeccionTitulo
