@@ -51,6 +51,7 @@ export function crearEmpresario(datos: {
       hash_contrasena: datos.hash,
       id_rol: datos.idRol,
       image_url: datos.imageUrl ?? null,
+      estado: 'pendiente',
       perfiles_empresario: {
         create: {
           nombre_empresa: datos.nombreEmpresa ?? null,
