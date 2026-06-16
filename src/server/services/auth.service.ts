@@ -75,6 +75,7 @@ export async function registrarEmpresario(
   extra: {
     segundoApellido?: string | undefined;
     nombreEmpresa?: string | undefined;
+    numeroIdentificacion?: string | undefined;
     edad?: number | undefined;
   } = {}
 ): Promise<ResultadoAuth | null> {
@@ -88,6 +89,7 @@ export async function registrarEmpresario(
     nombre,
     segundoApellido: extra.segundoApellido,
     nombreEmpresa: extra.nombreEmpresa,
+    numeroIdentificacion: extra.numeroIdentificacion,
     edad: extra.edad,
     correo,
     hash: hashPassword(password),
