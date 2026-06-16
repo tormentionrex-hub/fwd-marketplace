@@ -10,7 +10,8 @@ export function buscarChatEntre(
   idEmpresario: string,
 ) {
   return db.chats.findFirst({
-    where: { id_proyecto: idProyecto, id_estudiante: idEstudiante, id_empresario: idEmpresario },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    where: { id_proyecto: idProyecto as any, id_estudiante: idEstudiante, id_empresario: idEmpresario },
     select: { id: true },
   });
 }

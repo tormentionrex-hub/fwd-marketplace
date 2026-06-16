@@ -135,7 +135,7 @@ export function buscarEstudianteAdjudicado(idProyecto: string) {
   });
 }
 
-// Lista todos los proyectos con empresario y conteo de ofertas para el panel admin.
+// Lista todos los proyectos para el panel admin con nombre del empresario y conteo de ofertas.
 export function listarProyectosAdmin() {
   return db.proyectos.findMany({
     orderBy: { publicado: 'desc' },
@@ -143,10 +143,10 @@ export function listarProyectosAdmin() {
       id: true,
       titulo: true,
       estado: true,
-      _count: { select: { ofertas: true } },
       perfiles_empresario: {
         select: { usuarios: { select: { nombre: true } } },
       },
+      _count: { select: { ofertas: true } },
     },
   });
 }
