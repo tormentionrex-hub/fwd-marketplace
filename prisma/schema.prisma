@@ -360,6 +360,7 @@ model usuarios {
   perfiles_empresario perfiles_empresario?
   perfiles_estudiante perfiles_estudiante?
   roles               roles                @relation(fields: [id_rol], references: [id], map: "fk_usuarios_roles")
+  suspensiones        suspensiones[]
 
   @@index([estado], map: "idx_usuarios_estado")
   @@index([id_rol], map: "idx_usuarios_id_rol")
