@@ -27,6 +27,7 @@ const FWD_CSS = `
     --sidebar-w:264px;
     --font-head:'Figtree',system-ui,sans-serif; --font-body:'Outfit',system-ui,sans-serif;
     position:relative; display:grid; grid-template-columns:var(--sidebar-w) 1fr;
+    transition:grid-template-columns 0.3s ease;
     height:100vh; overflow:hidden; font-family:var(--font-body); background:var(--bg); color:var(--ink-800);
     transition: background-color 0.3s ease, color 0.3s ease;
   }

@@ -76,7 +76,7 @@ export async function obtenerPerfilEmpresarioDTO(
     descripcion: perfil.descripcion,
     verificado: u?.estado === 'activo',
     miembroDesde: u?.creado ? capitalizar(fmtMesAnio.format(u.creado)) : '—',
-    ratingCliente: null,
+    ratingCliente: perfil.reputacion > 0 ? perfil.reputacion : null,
     stats: {
       publicados: proyectos.length,
       enCurso: proyectos.filter((p) => p.estado === 'en_desarrollo').length,
@@ -88,7 +88,12 @@ export async function obtenerPerfilEmpresarioDTO(
       area: p.area_negocio?.trim() || 'General',
       estado: p.estado,
     })),
-    resenas: [],
+    resenas: perfil.evaluaciones_empresa.map((ev) => ({
+      de: ev.perfiles_estudiante?.usuarios?.nombre ?? 'Estudiante',
+      texto: ev.comentario ?? '',
+      rating: ev.puntuacion,
+      proyecto: ev.proyectos?.titulo ?? '—',
+    })),
   };
 }
 
@@ -108,7 +113,6 @@ export interface DatosCompletitudDTO {
   segundoApellido: string;
   edad: number | null;
   correo: string;
-  numeroIdentificacion: string;
   nombreEmpresa: string;
 }
 
@@ -123,18 +127,16 @@ export async function estadoCompletitudEmpresario(
   const firstName = partes[0] ?? '';
   const lastName = partes.slice(1).join(' ');
 
-  const numeroIdentificacion = perfil.numero_identificacion?.trim() ?? '';
   const nombreEmpresa = perfil.nombre_empresa?.trim() ?? '';
 
   return {
-    completo: numeroIdentificacion !== '' && nombreEmpresa !== '',
+    completo: nombreEmpresa !== '',
     firstName,
     lastName,
     segundoNombre: u?.segundo_nombre?.trim() ?? '',
     segundoApellido: u?.segundo_apellido?.trim() ?? '',
     edad: u?.edad ?? null,
     correo: u?.correo ?? '',
-    numeroIdentificacion,
     nombreEmpresa,
   };
 }
@@ -154,7 +156,6 @@ export async function completarPerfilEmpresario(
     segundoApellido?: string | undefined;
     edad?: number | null | undefined;
     nombreEmpresa: string;
-    numeroIdentificacion: string;
   },
 ): Promise<ResultadoCompletarPerfil> {
   const firstName = entrada.firstName.trim();
@@ -163,7 +164,6 @@ export async function completarPerfilEmpresario(
   const segundoApellido = (entrada.segundoApellido ?? '').trim();
   const edad = entrada.edad ?? null;
   const nombreEmpresa = entrada.nombreEmpresa.trim();
-  const numeroIdentificacion = entrada.numeroIdentificacion.trim();
 
   if (!firstName || firstName.length > 50 || !NAME_RE.test(firstName)) return 'datos_invalidos';
   if (!lastName || lastName.length > 50 || !NAME_RE.test(lastName)) return 'datos_invalidos';
@@ -171,7 +171,6 @@ export async function completarPerfilEmpresario(
   if (segundoApellido && (segundoApellido.length > 50 || !NAME_RE.test(segundoApellido))) return 'datos_invalidos';
   if (edad !== null && (edad < 18 || edad > 99)) return 'datos_invalidos';
   if (!nombreEmpresa || nombreEmpresa.length > 200) return 'datos_invalidos';
-  if (!numeroIdentificacion || numeroIdentificacion.length < 6 || numeroIdentificacion.length > 50) return 'datos_invalidos';
 
   const nombre = `${firstName} ${lastName}`.trim();
 
@@ -182,7 +181,6 @@ export async function completarPerfilEmpresario(
       segundoApellido: segundoApellido || null,
       edad,
       nombreEmpresa,
-      numeroIdentificacion,
     });
     return { ok: true };
   } catch (e) {
@@ -206,7 +204,14 @@ function esUrlValida(v: string): boolean {
 
 export async function guardarPerfilEmpresario(
   idUsuario: string,
-  entrada: { nombre?: string; nombreEmpresa?: string; fotoUrl?: string | null },
+  entrada: {
+    nombre?: string;
+    nombreEmpresa?: string;
+    fotoUrl?: string | null;
+    descripcion?: string | null;
+    sector?: string | null;
+    numeroIdentificacion?: string | null;
+  },
 ): Promise<ResultadoGuardarEmpresario> {
   const nombre = (entrada.nombre ?? '').trim();
   if (!nombre || nombre.length > 150) return 'datos_invalidos';
@@ -217,11 +222,27 @@ export async function guardarPerfilEmpresario(
   const fotoUrl = (entrada.fotoUrl ?? '').trim();
   if (fotoUrl && !esUrlValida(fotoUrl)) return 'datos_invalidos';
 
+  const descripcion = (entrada.descripcion ?? '').trim();
+  if (descripcion.length > 1000) return 'datos_invalidos';
+
+  const sector = (entrada.sector ?? '').trim();
+  if (sector.length > 150) return 'datos_invalidos';
+
+  const numeroIdentificacion = entrada.numeroIdentificacion !== undefined
+    ? (entrada.numeroIdentificacion ?? '').trim() || null
+    : undefined;
+  if (numeroIdentificacion !== undefined && numeroIdentificacion !== null) {
+    if (numeroIdentificacion.length < 6 || numeroIdentificacion.length > 50) return 'datos_invalidos';
+  }
+
   try {
     await actualizarPerfilEmpresario(idUsuario, {
       nombre,
       nombreEmpresa: nombreEmpresa || null,
       imageUrl: fotoUrl || null,
+      descripcion: descripcion || null,
+      sector: sector || null,
+      ...(numeroIdentificacion !== undefined && { numeroIdentificacion }),
     });
     return { ok: true };
   } catch (e) {

@@ -1,55 +1,154 @@
 'use client';
 
 import { Link, usePathname } from '@/i18n/navigation';
+import { useState, useEffect } from 'react';
 import { FwdLogo } from '@/components/ui/fwd-logo';
 import {
+  IconBriefcase,
+  IconUsers,
+  IconLogout,
+  IconSettings,
   IconGrid,
   IconFolder,
   IconSpark,
-  IconSettings,
-  IconBriefcase,
-  IconUsers,
 } from '@/components/ui/fwd-icons';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 
-// Menú lateral del empresario (diseño FWD). Se monta una sola vez desde
-// (empresario)/layout.tsx, así lo comparten las páginas 12 y 14.
-// Las clases (.sidebar, .nav-item, .sb-*) están en el design system scoped del layout.
+// LocalStorage key for the collapsed state of the Empresario sidebar
+const STORAGE_KEY = 'fwd_empresario_sidebar_collapsed';
+
 export default function Sidebar({
   nombre,
   fotoUrl,
+  locale = 'es',
 }: {
   nombre: string;
   fotoUrl?: string | null;
+  locale?: string;
 }) {
-  const pathname = usePathname(); // sin prefijo de locale (next-intl)
+  const pathname = usePathname();
 
-  const iniciales =
-    nombre
-      .trim()
-      .split(' ')
-      .slice(0, 2)
-      .map((w) => w[0])
-      .join('')
-      .toUpperCase() || 'E';
+  const [collapsed, setCollapsed] = useState<boolean>(false);
 
+  // Load persisted collapsed state on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved === 'true') setCollapsed(true);
+    }
+  }, []);
+
+  // Sync CSS variable and persist changes when collapsed toggles
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.documentElement.style.setProperty('--sidebar-w', collapsed ? '72px' : '264px');
+    }
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(STORAGE_KEY, String(collapsed));
+    }
+  }, [collapsed]);
+
+  const toggleSidebar = () => setCollapsed(prev => !prev);
   const isActive = (href: string) => pathname === href;
 
-  return (
-    <aside className="sidebar">
-      <Link href="/empresario" className="sb-brand">
-        <FwdLogo />
-      </Link>
+  // Compute initials for avatar fallback
+  const iniciales = nombre
+    .trim()
+    .split(' ')
+    .slice(0, 2)
+    .map(w => w[0])
+    .join('')
+    .toUpperCase() || 'E';
 
-      {/* Pill de rol */}
+  return (
+    <aside
+      className="sidebar"
+      style={{ width: collapsed ? 72 : 264, transition: 'width 0.3s ease', overflow: 'hidden' }}
+    >
+      {/* Brand and toggle button */}
       <div
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: 9,
+          justifyContent: collapsed ? 'center' : 'space-between',
+          padding: '4px 8px 18px',
+          gap: 8,
+        }}
+      >
+        <Link
+          href="/empresario"
+          className="sb-brand"
+          style={{
+            padding: 0,
+            overflow: 'hidden',
+            width: collapsed ? 0 : 'auto',
+            opacity: collapsed ? 0 : 1,
+            pointerEvents: collapsed ? 'none' : 'auto',
+            transition: 'width 0.3s ease, opacity 0.2s ease',
+            flexShrink: 0,
+          }}
+        >
+          <FwdLogo />
+        </Link>
+        <button
+          type="button"
+          onClick={toggleSidebar}
+          aria-label={collapsed ? 'Expandir menú' : 'Colapsar menú'}
+          title={collapsed ? 'Expandir menú' : 'Colapsar menú'}
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: 10,
+            background: 'var(--bg)',
+            border: '1px solid var(--line)',
+            display: 'grid',
+            placeItems: 'center',
+            cursor: 'pointer',
+            color: 'var(--ink-600)',
+            flexShrink: 0,
+            transition: 'background 0.15s, color 0.15s',
+          }}
+          onMouseEnter={e => {
+            (e.currentTarget as HTMLElement).style.background = 'var(--azul-tint)';
+            (e.currentTarget as HTMLElement).style.color = 'var(--azul)';
+          }}
+          onMouseLeave={e => {
+            (e.currentTarget as HTMLElement).style.background = 'var(--bg)';
+            (e.currentTarget as HTMLElement).style.color = 'var(--ink-600)';
+          }}
+        >
+          {/* Chevron that rotates */}
+          <svg
+            width={15}
+            height={15}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2.2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+            style={{ transform: collapsed ? 'rotate(0deg)' : 'rotate(180deg)', transition: 'transform 0.3s ease' }}
+          >
+            <path d="m9 6 6 6-6 6" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Role pill */}
+      <div
+        title={collapsed ? 'Empresario · Cuenta activa' : undefined}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: collapsed ? 0 : 9,
           padding: '9px 12px',
           borderRadius: 10,
           background: 'var(--azul-tint)',
           marginBottom: 14,
+          overflow: 'hidden',
+          justifyContent: collapsed ? 'center' : 'flex-start',
+          transition: 'padding 0.3s ease',
         }}
       >
         <span
@@ -66,7 +165,16 @@ export default function Sidebar({
         >
           <IconBriefcase size={14} />
         </span>
-        <div style={{ lineHeight: 1.15 }}>
+        <div
+          style={{
+            lineHeight: 1.15,
+            overflow: 'hidden',
+            width: collapsed ? 0 : 'auto',
+            opacity: collapsed ? 0 : 1,
+            transition: 'width 0.3s ease, opacity 0.2s ease',
+            whiteSpace: 'nowrap',
+          }}
+        >
           <div className="font-display" style={{ fontWeight: 700, fontSize: 13, color: 'var(--ink-900)' }}>
             Empresario
           </div>
@@ -74,33 +182,95 @@ export default function Sidebar({
         </div>
       </div>
 
-      <div className="sb-section">Gestión</div>
-      <Link href="/empresario" className={`nav-item ${isActive('/empresario') ? 'on' : ''}`}>
+      {/* Management section */}
+      {!collapsed && <div className="sb-section">Gestión</div>}
+
+      <Link
+        href="/empresario"
+        title={collapsed ? 'Dashboard' : undefined}
+        className={`nav-item ${isActive('/empresario') ? 'on' : ''}`}
+        style={{ justifyContent: collapsed ? 'center' : 'flex-start', gap: collapsed ? 0 : 11, overflow: 'hidden', transition: 'gap 0.2s' }}
+      >
         <IconGrid size={19} />
-        Dashboard
+        <span
+          style={{
+            overflow: 'hidden',
+            width: collapsed ? 0 : 'auto',
+            opacity: collapsed ? 0 : 1,
+            whiteSpace: 'nowrap',
+            transition: 'width 0.3s ease, opacity 0.2s ease',
+          }}
+        >
+          Dashboard
+        </span>
       </Link>
+
       <Link
         href="/empresario/proyectos"
+        title={collapsed ? 'Mis proyectos' : undefined}
         className={`nav-item ${isActive('/empresario/proyectos') ? 'on' : ''}`}
+        style={{ justifyContent: collapsed ? 'center' : 'flex-start', gap: collapsed ? 0 : 11, overflow: 'hidden', transition: 'gap 0.2s' }}
       >
         <IconFolder size={19} />
-        Mis proyectos
+        <span
+          style={{
+            overflow: 'hidden',
+            width: collapsed ? 0 : 'auto',
+            opacity: collapsed ? 0 : 1,
+            whiteSpace: 'nowrap',
+            transition: 'width 0.3s ease, opacity 0.2s ease',
+          }}
+        >
+          Mis proyectos
+        </span>
       </Link>
+
       <Link
         href="/empresario/nuevo-proyecto"
+        title={collapsed ? 'Crear con IA' : undefined}
         className={`nav-item ${isActive('/empresario/nuevo-proyecto') ? 'on' : ''}`}
+        style={{ justifyContent: collapsed ? 'center' : 'flex-start', gap: collapsed ? 0 : 11, overflow: 'hidden', transition: 'gap 0.2s' }}
       >
         <IconSpark size={19} />
-        Crear con IA
+        <span
+          style={{
+            overflow: 'hidden',
+            width: collapsed ? 0 : 'auto',
+            opacity: collapsed ? 0 : 1,
+            whiteSpace: 'nowrap',
+            transition: 'width 0.3s ease, opacity 0.2s ease',
+          }}
+        >
+          Crear con IA
+        </span>
       </Link>
+
       <Link
         href="/empresario/perfil"
+        title={collapsed ? 'Mi perfil' : undefined}
         className={`nav-item ${isActive('/empresario/perfil') ? 'on' : ''}`}
+        style={{ justifyContent: collapsed ? 'center' : 'flex-start', gap: collapsed ? 0 : 11, overflow: 'hidden', transition: 'gap 0.2s' }}
       >
         <IconUsers size={19} />
-        Mi perfil
+        <span
+          style={{
+            overflow: 'hidden',
+            width: collapsed ? 0 : 'auto',
+            opacity: collapsed ? 0 : 1,
+            whiteSpace: 'nowrap',
+            transition: 'width 0.3s ease, opacity 0.2s ease',
+          }}
+        >
+          Mi perfil
+        </span>
       </Link>
-      <Link href="/mensajes" className={`nav-item ${isActive('/mensajes') ? 'on' : ''}`}>
+
+      <Link
+        href="/mensajes"
+        title={collapsed ? 'Mensajes' : undefined}
+        className={`nav-item ${isActive('/mensajes') ? 'on' : ''}`}
+        style={{ justifyContent: collapsed ? 'center' : 'flex-start', gap: collapsed ? 0 : 11, overflow: 'hidden', transition: 'gap 0.2s' }}
+      >
         <svg
           width={19}
           height={19}
@@ -115,20 +285,45 @@ export default function Sidebar({
           <rect x="3" y="5" width="18" height="14" rx="2" />
           <path d="m3 7 9 6 9-6" />
         </svg>
-        Mensajes
+        <span
+          style={{
+            overflow: 'hidden',
+            width: collapsed ? 0 : 'auto',
+            opacity: collapsed ? 0 : 1,
+            whiteSpace: 'nowrap',
+            transition: 'width 0.3s ease, opacity 0.2s ease',
+          }}
+        >
+          Mensajes
+        </span>
       </Link>
 
-      <div className="sb-section">Cuenta</div>
+      {/* Account section */}
+      {!collapsed && <div className="sb-section">Cuenta</div>}
+
       <Link
         href="/empresario/configuracion"
+        title={collapsed ? 'Configuración' : undefined}
         className={`nav-item ${isActive('/empresario/configuracion') ? 'on' : ''}`}
+        style={{ justifyContent: collapsed ? 'center' : 'flex-start', gap: collapsed ? 0 : 11, overflow: 'hidden', transition: 'gap 0.2s' }}
       >
         <IconSettings size={19} />
-        Configuración
+        <span
+          style={{
+            overflow: 'hidden',
+            width: collapsed ? 0 : 'auto',
+            opacity: collapsed ? 0 : 1,
+            whiteSpace: 'nowrap',
+            transition: 'width 0.3s ease, opacity 0.2s ease',
+          }}
+        >
+          Configuración
+        </span>
       </Link>
 
+      {/* Footer with user info */}
       <div className="sb-foot">
-        <div className="sb-user">
+        <div className="sb-user" title={collapsed ? nombre : undefined} style={{ justifyContent: collapsed ? 'center' : 'flex-start', gap: collapsed ? 0 : 11, overflow: 'hidden', transition: 'gap 0.2s' }}>
           {fotoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -137,11 +332,21 @@ export default function Sidebar({
               style={{ width: 38, height: 38, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
             />
           ) : (
-            <div className="avatar" style={{ width: 38, height: 38, fontSize: 14, background: 'var(--azul)' }}>
+            <div className="avatar" style={{ width: 38, height: 38, fontSize: 14, background: 'var(--azul)', flexShrink: 0 }}>
               {iniciales}
             </div>
           )}
-          <div style={{ flex: 1, minWidth: 0 }}>
+          <div
+            style={{
+              flex: 1,
+              minWidth: 0,
+              overflow: 'hidden',
+              width: collapsed ? 0 : 'auto',
+              opacity: collapsed ? 0 : 1,
+              transition: 'width 0.3s ease, opacity 0.2s ease',
+              whiteSpace: 'nowrap',
+            }}
+          >
             <div className="nm">{nombre}</div>
             <div className="rl">Empresario</div>
           </div>

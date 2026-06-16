@@ -14,7 +14,6 @@ const completarPerfilSchema = z.object({
   segundoApellido:      nameField(50).optional().or(z.literal('').transform(() => undefined)),
   edad:                 z.coerce.number().int().min(18).max(99).nullable().optional(),
   nombreEmpresa:        z.string().trim().min(2).max(200),
-  numeroIdentificacion: z.string().trim().min(6).max(50).regex(/^[A-Za-z0-9\-]+$/, 'Solo letras, números y guiones'),
 });
 
 export async function POST(request: Request) {

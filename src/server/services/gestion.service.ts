@@ -11,7 +11,8 @@ import {
   solicitarCambiosEntregable,
   existeFinalAprobado,
 } from '@/server/repositories/entregable.repository';
-import { upsertEvaluacion } from '@/server/repositories/evaluacion.repository';
+import { upsertEvaluacion, promedioReputacion } from '@/server/repositories/evaluacion.repository';
+import { actualizarReputacion } from '@/server/repositories/perfil-estudiante.repository';
 
 // Lógica de negocio de la gestión del proyecto (Página 14). Cada acción valida
 // que el proyecto sea del empresario y devuelve una unión discriminada.
@@ -86,6 +87,8 @@ export async function cerrarProyectoService(datos: {
     puntuacion: datos.puntuacion,
     comentario: datos.comentario ?? null,
   });
+  const nuevaReputacion = await promedioReputacion(adj.id_estudiante);
+  await actualizarReputacion(adj.id_estudiante, nuevaReputacion);
   await cerrarProyectoRepo(datos.idProyecto);
   return { ok: true };
 }
