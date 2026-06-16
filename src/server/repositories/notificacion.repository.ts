@@ -26,10 +26,9 @@ export function marcarTodasLeidas(idUsuario: string) {
   });
 }
 
-// Marca UNA notificación como leída, verificando pertenencia al usuario.
 export function marcarUnaLeida(idUsuario: string, idNotificacion: string) {
   return db.notificaciones.updateMany({
-    where: { id: idNotificacion, id_usuario: idUsuario, leida: false },
+    where: { id: idNotificacion, id_usuario: idUsuario },
     data: { leida: true },
   });
 }
