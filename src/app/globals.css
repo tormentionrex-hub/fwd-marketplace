@@ -350,22 +350,6 @@ div:hover > .shine-sweep {
   }
 }
 
-@keyframes slide-down {
-  from {
-    opacity: 0;
-    transform: translateY(-70px) scale(0.94);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes bounce-x {
-  0%, 100% { transform: translateX(0); }
-  50%       { transform: translateX(-6px); }
-}
-
 @keyframes gradientShift {
   0%   { background-position: 0% center; }
   100% { background-position: 100% center; }
