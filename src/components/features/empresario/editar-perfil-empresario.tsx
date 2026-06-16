@@ -43,11 +43,15 @@ export default function EditarPerfilEmpresario({
   nombreEmpresaInicial,
   fotoUrlInicial,
   inicialesFallback,
+  descripcionInicial,
+  sectorInicial,
 }: {
   nombreInicial: string;
   nombreEmpresaInicial: string;
   fotoUrlInicial: string | null;
   inicialesFallback: string;
+  descripcionInicial: string | null;
+  sectorInicial: string | null;
 }) {
   const router = useRouter();
   const [host, setHost] = useState<HTMLElement | null>(null);
@@ -55,6 +59,8 @@ export default function EditarPerfilEmpresario({
   const [nombre, setNombre] = useState(nombreInicial);
   const [nombreEmpresa, setNombreEmpresa] = useState(nombreEmpresaInicial);
   const [fotoUrl, setFotoUrl] = useState<string | null>(fotoUrlInicial);
+  const [descripcion, setDescripcion] = useState(descripcionInicial ?? '');
+  const [sector, setSector] = useState(sectorInicial ?? '');
   const [subiendo, setSubiendo] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState('');
@@ -68,6 +74,8 @@ export default function EditarPerfilEmpresario({
     setNombre(nombreInicial);
     setNombreEmpresa(nombreEmpresaInicial);
     setFotoUrl(fotoUrlInicial);
+    setDescripcion(descripcionInicial ?? '');
+    setSector(sectorInicial ?? '');
     setError('');
     setAbierto(true);
   }
@@ -118,7 +126,13 @@ export default function EditarPerfilEmpresario({
       const res = await fetch('/api/empresario/perfil', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nombre, nombreEmpresa, fotoUrl }),
+        body: JSON.stringify({
+          nombre,
+          nombreEmpresa,
+          fotoUrl,
+          descripcion: descripcion.trim() || null,
+          sector: sector.trim() || null,
+        }),
       });
       if (!res.ok) {
         const data: { error?: string } = await res.json().catch(() => ({}));
@@ -287,6 +301,41 @@ export default function EditarPerfilEmpresario({
               onChange={(e) => setNombreEmpresa(e.target.value)}
               style={inputStyle}
             />
+          </div>
+
+          {/* Sector */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+            <label htmlFor="sector-empresa" style={labelStyle}>
+              Sector
+            </label>
+            <input
+              id="sector-empresa"
+              type="text"
+              value={sector}
+              maxLength={150}
+              placeholder="Ej. Logística, Tecnología, Finanzas…"
+              onChange={(e) => setSector(e.target.value)}
+              style={inputStyle}
+            />
+          </div>
+
+          {/* Descripción */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+            <label htmlFor="descripcion-empresa" style={labelStyle}>
+              Descripción de la empresa
+            </label>
+            <textarea
+              id="descripcion-empresa"
+              value={descripcion}
+              maxLength={1000}
+              rows={4}
+              placeholder="Contá brevemente a qué se dedica tu empresa y qué tipo de proyectos buscás…"
+              onChange={(e) => setDescripcion(e.target.value)}
+              style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.55 }}
+            />
+            <div style={{ fontSize: 11.5, color: 'var(--ink-400)', textAlign: 'right' }}>
+              {descripcion.length}/1000
+            </div>
           </div>
 
           {error && <p style={{ color: 'var(--magenta)', fontSize: 12.5, fontWeight: 500 }}>{error}</p>}

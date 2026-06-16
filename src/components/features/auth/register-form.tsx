@@ -76,8 +76,11 @@ export function RegisterForm() {
   const [initial] = useState<PersistedState>(() => loadPersisted());
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState<string | null>(null);
+  const [pendingMsg, setPendingMsg] = useState<string | null>(null);
   const [password, setPassword] = useState("");
   const [terms, setTerms]       = useState<boolean>(initial.terms ?? false);
+  const [role, setRole]         = useState<"estudiante" | "empresario">("estudiante");
+  const [showPwd, setShowPwd]   = useState(false);
 
   const passwordValid = PASSWORD_RULES.every((r) => r.test(password));
   const canSubmit     = passwordValid && terms && !loading;
@@ -115,6 +118,7 @@ export function RegisterForm() {
           companyName: companyName || undefined,
           email,
           password,
+          role,
         }),
       });
 
@@ -125,16 +129,26 @@ export function RegisterForm() {
         return;
       }
 
-      // Perfil público (nombre, foto) -> localStorage. Lo privado va en la cookie.
-      if (data?.perfil) {
-        localStorage.setItem("fwd_perfil", JSON.stringify(data.perfil));
-      }
-
       // Limpiar el borrador del form: ya quedó creada la cuenta.
       try {
         sessionStorage.removeItem(STORAGE_KEY);
       } catch {
         /* ignorar */
+      }
+
+      // Cuenta creada pero PENDIENTE de aprobación del admin: no hay sesión,
+      // mostramos un mensaje en vez de redirigir.
+      if (data?.pending) {
+        setPendingMsg(
+          data?.mensaje ??
+            "Tu cuenta está pendiente de aprobación por un administrador.",
+        );
+        return;
+      }
+
+      // Perfil público (nombre, foto) -> localStorage. Lo privado va en la cookie.
+      if (data?.perfil) {
+        localStorage.setItem("fwd_perfil", JSON.stringify(data.perfil));
       }
 
       router.push(data?.redirectTo ?? "/empresario");
@@ -144,6 +158,38 @@ export function RegisterForm() {
     } finally {
       setLoading(false);
     }
+  }
+
+  if (pendingMsg) {
+    return (
+      <div className="text-center">
+        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-fwd-yellow/20 text-fwd-orange">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-7 w-7"
+            aria-hidden
+          >
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 7v5l3 2" />
+          </svg>
+        </div>
+        <h1 className="font-display text-2xl font-black text-fwd-ink">
+          Cuenta pendiente de aprobación
+        </h1>
+        <p className="mx-auto mt-3 max-w-sm text-fwd-ink/60">{pendingMsg}</p>
+        <Link
+          href="/login"
+          className="mt-7 inline-flex h-12 items-center justify-center gap-2 rounded-full bg-fwd-blue px-6 font-semibold text-white transition hover:bg-fwd-purple"
+        >
+          Ir a iniciar sesión
+        </Link>
+      </div>
+    );
   }
 
   return (
@@ -168,6 +214,42 @@ export function RegisterForm() {
             {error}
           </p>
         )}
+
+        <fieldset className="flex flex-col gap-1.5">
+          <legend className="mb-1.5 text-sm font-medium text-fwd-ink/80">
+            Quiero registrarme como
+          </legend>
+          <div className="grid grid-cols-2 gap-2 rounded-xl bg-fwd-mist/60 p-1">
+            {(
+              [
+                { value: "estudiante", label: "Soy Estudiante" },
+                { value: "empresario", label: "Soy Empresario" },
+              ] as const
+            ).map((opt) => {
+              const active = role === opt.value;
+              return (
+                <label
+                  key={opt.value}
+                  className={`flex cursor-pointer items-center justify-center rounded-lg px-3 py-2.5 text-center text-sm font-medium transition ${
+                    active
+                      ? "bg-fwd-blue text-white shadow-sm"
+                      : "text-fwd-ink/70 hover:text-fwd-ink"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="role"
+                    value={opt.value}
+                    checked={active}
+                    onChange={() => setRole(opt.value)}
+                    className="sr-only"
+                  />
+                  {opt.label}
+                </label>
+              );
+            })}
+          </div>
+        </fieldset>
 
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <TextField
@@ -243,17 +325,19 @@ export function RegisterForm() {
           required
         />
 
-        <TextField
-          id="companyName"
-          name="companyName"
-          label="Nombre de empresa"
-          placeholder="FWD Costa Rica S.A."
-          autoComplete="organization"
-          minLength={2}
-          maxLength={200}
-          defaultValue={initial.companyName ?? ""}
-          required
-        />
+        {role === "empresario" && (
+          <TextField
+            id="companyName"
+            name="companyName"
+            label="Nombre de empresa"
+            placeholder="FWD Costa Rica S.A."
+            autoComplete="organization"
+            minLength={2}
+            maxLength={200}
+            defaultValue={initial.companyName ?? ""}
+            required
+          />
+        )}
 
         <TextField
           id="email"
@@ -277,7 +361,7 @@ export function RegisterForm() {
             <input
               id="password"
               name="password"
-              type="password"
+              type={showPwd ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Mínimo 8 caracteres"
@@ -286,7 +370,7 @@ export function RegisterForm() {
               maxLength={128}
               required
               aria-invalid={password.length > 0 && !passwordValid}
-              className={`w-full rounded-xl border bg-fwd-mist/40 px-4 py-3 pr-11 text-[0.95rem] text-fwd-ink outline-none transition placeholder:text-fwd-ink/35 focus:bg-white focus:ring-4 ${
+              className={`w-full rounded-xl border bg-fwd-mist/40 px-4 py-3 pr-20 text-[0.95rem] text-fwd-ink outline-none transition placeholder:text-fwd-ink/35 focus:bg-white focus:ring-4 ${
                 passwordValid
                   ? "border-green-500 focus:border-green-500 focus:ring-green-500/15"
                   : "border-fwd-ink/12 focus:border-fwd-blue focus:ring-fwd-blue/15"
@@ -294,12 +378,16 @@ export function RegisterForm() {
             />
             {passwordValid ? (
               <span
-                className="absolute right-3 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full bg-green-500 text-white"
+                className="absolute right-11 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full bg-green-500 text-white"
                 aria-label="Contraseña válida"
               >
                 <CheckIcon className="h-4 w-4" />
               </span>
             ) : null}
+            <PasswordToggle
+              visible={showPwd}
+              onToggle={() => setShowPwd((v) => !v)}
+            />
           </div>
 
           <ul className="mt-1.5 grid grid-cols-2 gap-x-3 gap-y-1">

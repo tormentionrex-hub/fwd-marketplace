@@ -13,9 +13,9 @@ export type UsuarioFila = {
 };
 
 const colorRol: Record<string, string> = {
-  estudiante: "bg-fwd-blue/10 text-fwd-blue",
-  empresario: "bg-fwd-purple/10 text-fwd-purple",
-  admin: "bg-fwd-magenta/10 text-fwd-magenta",
+  estudiante: "bg-fwd-blue/15 text-fwd-blue",
+  empresario: "bg-fwd-purple/20 text-fwd-purple",
+  admin: "bg-fwd-magenta/15 text-fwd-magenta",
 };
 
 const TABS = [
@@ -119,8 +119,8 @@ export function UsuariosTabla({
               onClick={() => setRolFiltro(t.key)}
               className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${
                 activo
-                  ? "bg-fwd-blue text-white shadow-sm"
-                  : "bg-fwd-mist/60 text-fwd-ink/70 hover:text-fwd-ink"
+                  ? "bg-fwd-magenta text-white shadow-sm"
+                  : "bg-white/5 text-white/60 hover:text-white"
               }`}
             >
               {t.label}
@@ -136,9 +136,9 @@ export function UsuariosTabla({
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Buscar por nombre, correo o rol…"
-          className="w-full rounded-full border border-fwd-ink/12 bg-fwd-mist/40 px-4 py-2.5 text-sm text-fwd-ink outline-none transition placeholder:text-fwd-ink/35 focus:border-fwd-blue focus:bg-white focus:ring-4 focus:ring-fwd-blue/15 sm:max-w-xs"
+          className="w-full rounded-full border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white outline-none transition placeholder:text-white/35 focus:border-fwd-blue focus:bg-white/10 focus:ring-4 focus:ring-fwd-blue/20 sm:max-w-xs"
         />
-        <p className="text-sm text-fwd-ink/50">
+        <p className="text-sm text-white/50">
           {visibles.length} de {usuarios.length} usuario
           {usuarios.length === 1 ? "" : "s"}
         </p>
@@ -147,22 +147,22 @@ export function UsuariosTabla({
       {error && (
         <p
           role="alert"
-          className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+          className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300"
         >
           {error}
         </p>
       )}
 
-      <div className="overflow-x-auto rounded-2xl border border-fwd-ink/10 bg-white shadow-sm">
+      <div className="overflow-x-auto rounded-2xl border border-white/10 bg-white/[0.03]">
         <table className="w-full text-left text-sm">
-          <thead className="bg-fwd-mist/70 text-fwd-ink/60">
+          <thead className="bg-white/5 text-white/50">
             <tr>
               {COLUMNS.map((c) => (
                 <th key={c.key} className="px-4 py-3 font-semibold">
                   <button
                     type="button"
                     onClick={() => ordenarPor(c.key)}
-                    className="inline-flex items-center gap-1 transition hover:text-fwd-ink"
+                    className="inline-flex items-center gap-1 transition hover:text-white"
                   >
                     {c.label}
                     <span className="text-xs">
@@ -174,10 +174,10 @@ export function UsuariosTabla({
               <th className="px-4 py-3 text-right font-semibold">Acciones</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-fwd-ink/8">
+          <tbody className="divide-y divide-white/[0.07]">
             {visibles.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-10 text-center text-fwd-ink/40">
+                <td colSpan={6} className="px-4 py-10 text-center text-white/40">
                   {usuarios.length === 0
                     ? "Aún no hay usuarios registrados."
                     : "Ningún usuario coincide con el filtro."}
@@ -187,24 +187,24 @@ export function UsuariosTabla({
               visibles.map((u) => {
                 const esYo = u.id === currentUserId;
                 return (
-                  <tr key={u.id} className="transition-colors hover:bg-fwd-mist/40">
-                    <td className="px-4 py-3 font-medium text-fwd-ink">
+                  <tr key={u.id} className="transition-colors hover:bg-white/5">
+                    <td className="px-4 py-3 font-medium text-white">
                       {u.nombre}
                     </td>
-                    <td className="px-4 py-3 text-fwd-ink/60">{u.correo}</td>
+                    <td className="px-4 py-3 text-white/55">{u.correo}</td>
                     <td className="px-4 py-3">
                       <span
                         className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ${
-                          colorRol[u.rol] ?? "bg-fwd-ink/10 text-fwd-ink/70"
+                          colorRol[u.rol] ?? "bg-white/10 text-white/70"
                         }`}
                       >
                         {u.rol}
                       </span>
                     </td>
-                    <td className="px-4 py-3 capitalize text-fwd-ink/70">
+                    <td className="px-4 py-3 capitalize text-white/65">
                       {u.estado}
                     </td>
-                    <td className="px-4 py-3 text-fwd-ink/50">
+                    <td className="px-4 py-3 text-white/45">
                       {new Date(u.creado).toLocaleDateString("es-CR")}
                     </td>
                     <td className="px-4 py-3 text-right">
@@ -213,7 +213,7 @@ export function UsuariosTabla({
                         onClick={() => eliminar(u)}
                         disabled={esYo || deletingId === u.id}
                         title={esYo ? "No puedes eliminar tu propia cuenta" : "Eliminar usuario"}
-                        className="rounded-lg px-2.5 py-1 text-xs font-semibold text-fwd-magenta transition hover:bg-fwd-magenta/10 disabled:cursor-not-allowed disabled:text-fwd-ink/25 disabled:hover:bg-transparent"
+                        className="rounded-lg px-2.5 py-1 text-xs font-semibold text-fwd-magenta transition hover:bg-fwd-magenta/15 disabled:cursor-not-allowed disabled:text-white/25 disabled:hover:bg-transparent"
                       >
                         {deletingId === u.id ? "Eliminando…" : "Eliminar"}
                       </button>

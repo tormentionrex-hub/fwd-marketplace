@@ -5,6 +5,7 @@ import EmptyState from "@/components/ui/EmptyState";
 import { IconArrowRight, IconBriefcase } from "@/components/ui/icons";
 import { getUser } from "@/server/auth/get-user";
 import { obtenerProyectoActivo } from "@/server/services/proyecto-activo.service";
+import CalificarEmpresa from "@/components/features/estudiante/CalificarEmpresa";
 
 interface ProyectoActivoPageProps {
   params: Promise<{ locale: string }>;
@@ -42,6 +43,7 @@ export default async function ProyectoActivoPage({ params }: ProyectoActivoPageP
           action={<Button href={`/${locale}/marketplace`}>Explorar proyectos</Button>}
         />
       ) : (
+        <>
         <Card className="flex flex-col gap-5 p-6">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
@@ -96,6 +98,15 @@ export default async function ProyectoActivoPage({ params }: ProyectoActivoPageP
             </Button>
           </div>
         </Card>
+
+        {activo.estado !== "abierto" && activo.empresarioId && (
+          <CalificarEmpresa
+            proyectoId={activo.proyectoId}
+            empresario={activo.empresario}
+            calificacionInicial={activo.evaluacionEmpresa}
+          />
+        )}
+        </>
       )}
     </div>
   );
