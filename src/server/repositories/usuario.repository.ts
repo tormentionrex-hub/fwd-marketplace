@@ -175,7 +175,7 @@ export async function buscarRolIdPorNombre(nombre: string): Promise<bigint | nul
 export function listarUsuariosPendientes() {
   return db.usuarios.findMany({
     where: { estado: 'pendiente' },
-    orderBy: { creado: 'asc' },
+    orderBy: { creado: 'desc' },
     select: {
       id: true,
       nombre: true,
@@ -221,35 +221,6 @@ export function registrarUltimaSesion(id: string) {
 // cascada según las FK del esquema. Lo usa el panel admin.
 export function eliminarUsuario(id: string) {
   return db.usuarios.delete({ where: { id } });
-}
-
-// Lista las cuentas pendientes de validación (auto-registradas, sin aprobar).
-// Las usa la sección Validaciones del panel admin.
-export function listarUsuariosPendientes() {
-  return db.usuarios.findMany({
-    where: { estado: 'pendiente' },
-    orderBy: { creado: 'desc' },
-    select: {
-      id: true,
-      nombre: true,
-      correo: true,
-      creado: true,
-      roles: { select: { nombre: true } },
-    },
-  });
-}
-
-// Cuenta las cuentas pendientes de validación (para alertas/resumen).
-export function contarUsuariosPendientes() {
-  return db.usuarios.count({ where: { estado: 'pendiente' } });
-}
-
-// Rechaza una cuenta pendiente: estado 'rechazado' (no puede iniciar sesión).
-export function rechazarUsuario(id: string) {
-  return db.usuarios.update({
-    where: { id },
-    data: { estado: 'rechazado' },
-  });
 }
 
 // ─── Gestión de suspensiones / reactivaciones ───────────────────────────
