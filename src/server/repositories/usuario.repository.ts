@@ -35,6 +35,7 @@ export function crearEmpresario(datos: {
   nombre: string;
   segundoApellido?: string | undefined;
   nombreEmpresa?: string | undefined;
+  numeroIdentificacion?: string | undefined;
   edad?: number | undefined;
   correo: string;
   hash: string;
@@ -53,6 +54,7 @@ export function crearEmpresario(datos: {
       perfiles_empresario: {
         create: {
           nombre_empresa: datos.nombreEmpresa ?? null,
+          numero_identificacion: datos.numeroIdentificacion ?? null,
         },
       },
     },
