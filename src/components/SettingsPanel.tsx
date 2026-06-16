@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Link } from "@/i18n/navigation";
+import { useTheme } from "next-themes";
+import { usePathname } from "next/navigation";
 
 type Lang = "es" | "en";
 
@@ -111,12 +113,16 @@ function GradientDivider() {
 
 /* ── Componente principal ────────────────────────── */
 export default function SettingsPanel() {
+  const { resolvedTheme, setTheme } = useTheme();
   const [open, setOpen]         = useState(false);
   const [lang, setLang]         = useState<Lang>("es");
-  const [darkMode, setDarkMode] = useState(false);
   const [fontSize, setFontSize] = useState(100);
   const [showA11y, setShowA11y] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
+
+  const isHomepage = pathname === "/" || pathname === "/es" || pathname === "/en" || pathname === "/es/" || pathname === "/en/";
+  const isDark = resolvedTheme === "dark";
 
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
@@ -128,10 +134,6 @@ export default function SettingsPanel() {
     if (open) document.addEventListener("mousedown", onClickOutside);
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, [open]);
-
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", darkMode);
-  }, [darkMode]);
 
   useEffect(() => {
     document.documentElement.style.fontSize = `${fontSize}%`;
@@ -246,20 +248,22 @@ export default function SettingsPanel() {
               <div className="px-4 pt-3 pb-3">
                 <SectionLabel accent="linear-gradient(180deg, #662D91, #ED008C)">Apariencia e Inclusión</SectionLabel>
 
-                <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150"
-                  onMouseEnter={(e) => (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)"}
-                  onMouseLeave={(e) => (e.currentTarget as HTMLElement).style.background = "transparent"}
-                >
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style={{ background: "linear-gradient(135deg,#008FD5,#20BEC6)" }}>
-                    <span className="text-white"><IconMoon /></span>
+                {!isHomepage && (
+                  <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150"
+                    onMouseEnter={(e) => (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)"}
+                    onMouseLeave={(e) => (e.currentTarget as HTMLElement).style.background = "transparent"}
+                  >
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                      style={{ background: "linear-gradient(135deg,#008FD5,#20BEC6)" }}>
+                      <span className="text-white"><IconMoon /></span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-white text-sm leading-tight">Modo Oscuro</p>
+                      <p className="text-[11px] text-white/40">Cambia el tema visual</p>
+                    </div>
+                    <Toggle on={isDark} onToggle={() => setTheme(isDark ? "light" : "dark")} />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-white text-sm leading-tight">Modo Oscuro</p>
-                    <p className="text-[11px] text-white/40">Cambia el tema visual</p>
-                  </div>
-                  <Toggle on={darkMode} onToggle={() => setDarkMode(!darkMode)} />
-                </div>
+                )}
 
                 <button onClick={() => setShowA11y(true)}
                   className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 w-full mt-1"

@@ -11,6 +11,7 @@ import AnimatedHeroTitle from "@/components/AnimatedHeroTitle";
 import TiltCard from "@/components/TiltCard";
 import AnimatedSubtitle from "@/components/AnimatedSubtitle";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import { ThemeProvider } from "@/components/theme/ThemeProvider";
 
 /* ─── Hardcoded data ─────────────────────────────── */
 
@@ -56,7 +57,8 @@ export default async function Home() {
   const pasosEstudiante = [hw("paso1Est"), hw("paso2Est"), hw("paso3Est"), hw("paso4Est")];
 
   return (
-    <div className="flex flex-col min-h-screen relative overflow-x-hidden">
+    <ThemeProvider attribute="class" forcedTheme="light">
+      <div className="flex flex-col min-h-screen relative overflow-x-hidden">
       <FloatingTriangles />
       <Navbar />
 
@@ -103,7 +105,7 @@ export default async function Home() {
       {/* Sin `relative`: si la sección se posiciona, su fondo pinta ENCIMA de la capa
           de FloatingTriangles (z-0) y la franja pierde la decoración. El div interno
           ya es `relative` y mantiene el contenido por encima. */}
-      <section className="py-28 overflow-hidden" style={{ background: "#f7f6f4" }}>
+      <section className="py-28 overflow-hidden bg-[#f7f6f4]">
 
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
 
@@ -296,5 +298,6 @@ export default async function Home() {
       <Footer />
       <WhatsAppButton />
     </div>
+    </ThemeProvider>
   );
 }

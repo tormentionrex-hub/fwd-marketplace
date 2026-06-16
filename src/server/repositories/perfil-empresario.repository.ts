@@ -46,6 +46,7 @@ export function obtenerDatosCompletitud(idUsuario: string) {
     where: { id_usuario: idUsuario },
     select: {
       nombre_empresa: true,
+      numero_identificacion: true,
       usuarios: {
         select: {
           nombre: true,
