@@ -5,8 +5,8 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { TextField } from "@/components/ui/text-field";
 import { IconArrowRight } from "@/components/ui/icons";
 import { SocialAuthButtons } from "@/components/features/auth/social-auth-buttons";
-import AnimatedFormTitle from "@/components/features/auth/AnimatedFormTitle";
 import { PasswordToggle } from "@/components/ui/password-toggle";
+import AnimatedFormTitle from "@/components/features/auth/AnimatedFormTitle";
 
 // Persistencia del form en sessionStorage: si el usuario navega a /terminos y
 // vuelve, recupera lo que llevaba escrito (excepto password). Se limpia al
@@ -347,8 +347,6 @@ export function RegisterForm() {
           label="Correo electrónico"
           placeholder="tu@correo.com"
           autoComplete="email"
-          minLength={11}
-          maxLength={30}
           defaultValue={initial.email ?? ""}
           required
         />

@@ -69,14 +69,12 @@ export function actualizarDatosCompletitud(
     segundoApellido: string | null;
     edad: number | null;
     nombreEmpresa: string;
-    numeroIdentificacion: string;
   },
 ) {
   return db.perfiles_empresario.update({
     where: { id_usuario: idUsuario },
     data: {
       nombre_empresa: datos.nombreEmpresa,
-      numero_identificacion: datos.numeroIdentificacion,
       usuarios: {
         update: {
           nombre: datos.nombre,

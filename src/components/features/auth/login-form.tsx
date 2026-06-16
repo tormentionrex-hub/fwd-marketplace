@@ -5,8 +5,8 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { TextField } from "@/components/ui/text-field";
 import { IconArrowRight } from "@/components/ui/icons";
 import { SocialAuthButtons } from "@/components/features/auth/social-auth-buttons";
-import AnimatedFormTitle from "@/components/features/auth/AnimatedFormTitle";
 import { PasswordToggle } from "@/components/ui/password-toggle";
+import AnimatedFormTitle from "@/components/features/auth/AnimatedFormTitle";
 
 export function LoginForm() {
   const router = useRouter();
@@ -81,8 +81,6 @@ export function LoginForm() {
           label="Correo electrónico"
           placeholder="tu@correo.com"
           autoComplete="email"
-          minLength={11}
-          maxLength={30}
           required
         />
 

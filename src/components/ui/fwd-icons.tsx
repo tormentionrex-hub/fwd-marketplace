@@ -213,6 +213,16 @@ export const IconTrend = make(
     <path d="M17 7h4v4" />
   </>,
 );
+export const IconFilter = make(
+  <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z" />
+);
+export const IconExternalLink = make(
+  <>
+    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+    <path d="M15 3h6v6" />
+    <path d="M10 14L21 3" />
+  </>
+);
 
 // Icono Comunidad FWD — seis flechas radiales multicolor (empty states).
 export function IconComunidad({ size = 64 }: { size?: number }) {

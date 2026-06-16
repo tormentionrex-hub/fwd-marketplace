@@ -6,8 +6,8 @@ import { z } from "zod";
 export const loginSchema = z.object({
   email: z
     .string()
-    .min(11, "Mínimo 11 caracteres")
-    .max(30, "Máximo 30 caracteres")
+    .min(5, "Ingresá un correo electrónico válido")
+    .max(254, "Correo demasiado largo")
     .email("Ingresá un correo electrónico válido"),
   password: z.string().min(1, "Faltan credenciales").max(128),
 });
@@ -53,14 +53,7 @@ export const registerSchema = z.object({
     .max(200, "Máximo 200 caracteres")
     .optional()
     .or(z.literal("").transform(() => undefined)),
-  identificationNumber: z
-    .string()
-    .trim()
-    .min(6, "Mínimo 6 caracteres")
-    .max(50, "Máximo 50 caracteres")
-    .regex(/^[A-Za-z0-9\-]+$/, "Solo letras, números y guiones")
-    .optional()
-    .or(z.literal("").transform(() => undefined)),
+
   age: z.coerce
     .number({ invalid_type_error: "Debe ser un número" })
     .int("Debe ser un número entero")
@@ -69,8 +62,8 @@ export const registerSchema = z.object({
     .optional(),
   email: z
     .string()
-    .min(11, "Mínimo 11 caracteres")
-    .max(30, "Máximo 30 caracteres")
+    .min(5, "Ingresá un correo electrónico válido")
+    .max(254, "Correo demasiado largo")
     .email("Ingresá un correo electrónico válido"),
   password: z
     .string()
