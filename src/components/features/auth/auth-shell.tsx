@@ -51,8 +51,8 @@ export function AuthShell({ highlight, logo, children }: AuthShellProps) {
       {/* Botón de inicio (vuelve al home, respeta el locale) */}
       <AuthHomeButton />
 
-      {/* Panel de marca */}
-      <aside className="relative hidden overflow-hidden bg-fwd-navy lg:flex lg:w-[46%] lg:flex-col lg:p-12 xl:p-16">
+      {/* Panel de marca — sticky: queda fijo mientras el lado derecho scrollea */}
+      <aside className="relative hidden overflow-hidden bg-fwd-navy lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-[46%] lg:flex-shrink-0 lg:flex-col lg:p-12 xl:p-16">
         {/* Degradado de marca (portada navy → morado → magenta) */}
         <div className="absolute inset-0 bg-gradient-to-br from-fwd-navy via-fwd-purple/40 to-fwd-magenta/40" />
         <ArrowPattern />
@@ -86,15 +86,17 @@ export function AuthShell({ highlight, logo, children }: AuthShellProps) {
         </div>
       </aside>
 
-      {/* Panel de formulario */}
-      <main className="flex flex-1 flex-col items-center justify-center bg-white dark:bg-[#0b1120] px-6 py-10 sm:px-10">
-        {/* Logo compacto solo visible en móvil/tablet */}
-        <div className="mb-8 lg:hidden">
-          <Link href="/" aria-label="Ir al inicio" className="inline-flex">
-            {logo ?? <FwdLogo />}
-          </Link>
+      {/* Panel de formulario — scrollea con el documento normalmente */}
+      <main className="flex flex-1 flex-col bg-white dark:bg-[#0b1120]">
+        <div className="flex min-h-screen flex-col items-center justify-center px-6 py-10 sm:px-10">
+          {/* Logo compacto solo visible en móvil/tablet */}
+          <div className="mb-8 lg:hidden">
+            <Link href="/" aria-label="Ir al inicio" className="inline-flex">
+              {logo ?? <FwdLogo />}
+            </Link>
+          </div>
+          <div className="w-full max-w-md">{children}</div>
         </div>
-        <div className="w-full max-w-md">{children}</div>
       </main>
     </div>
   );
