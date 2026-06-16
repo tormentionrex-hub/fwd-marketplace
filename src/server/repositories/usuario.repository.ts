@@ -11,12 +11,6 @@ export function buscarUsuarioPorCorreo(correo: string) {
   });
 }
 
-export function registrarUltimaSesion(id: string) {
-  return db.usuarios.update({
-    where: { id },
-    data: { ultima_sesion: new Date() },
-  });
-}
 
 export function buscarUsuarioPorId(id: string) {
   return db.usuarios.findUnique({
@@ -195,3 +189,117 @@ export function eliminarUsuario(id: string) {
   return db.usuarios.delete({ where: { id } });
 }
 
+// Lista las cuentas pendientes de validación (auto-registradas, sin aprobar).
+// Las usa la sección Validaciones del panel admin.
+export function listarUsuariosPendientes() {
+  return db.usuarios.findMany({
+    where: { estado: 'pendiente' },
+    orderBy: { creado: 'desc' },
+    select: {
+      id: true,
+      nombre: true,
+      correo: true,
+      creado: true,
+      roles: { select: { nombre: true } },
+    },
+  });
+}
+
+// Cuenta las cuentas pendientes de validación (para alertas/resumen).
+export function contarUsuariosPendientes() {
+  return db.usuarios.count({ where: { estado: 'pendiente' } });
+}
+
+// Rechaza una cuenta pendiente: estado 'rechazado' (no puede iniciar sesión).
+export function rechazarUsuario(id: string) {
+  return db.usuarios.update({
+    where: { id },
+    data: { estado: 'rechazado' },
+  });
+}
+
+// ─── Gestión de suspensiones / reactivaciones ───────────────────────────
+
+// Suspende una cuenta (estado 'suspendido') y registra en el historial.
+export async function suspenderUsuario(
+  id: string,
+  motivo: string,
+  adminId: string,
+  adminNombre: string
+) {
+  return db.$transaction([
+    db.usuarios.update({
+      where: { id },
+      data: { estado: 'suspendido' },
+    }),
+    db.suspensiones.create({
+      data: {
+        id_usuario: id,
+        accion: 'suspender',
+        motivo,
+        id_admin: adminId,
+        nombre_admin: adminNombre,
+      },
+    }),
+  ]);
+}
+
+// Reactiva una cuenta suspendida (estado 'activo') y registra en el historial.
+export async function reactivarUsuario(
+  id: string,
+  motivo: string | null,
+  adminId: string,
+  adminNombre: string
+) {
+  return db.$transaction([
+    db.usuarios.update({
+      where: { id },
+      data: { estado: 'activo' },
+    }),
+    db.suspensiones.create({
+      data: {
+        id_usuario: id,
+        accion: 'reactivar',
+        motivo,
+        id_admin: adminId,
+        nombre_admin: adminNombre,
+      },
+    }),
+  ]);
+}
+
+// Historial de suspensiones/reactivaciones de un usuario específico.
+export function historialSuspensiones(idUsuario: string) {
+  return db.suspensiones.findMany({
+    where: { id_usuario: idUsuario },
+    orderBy: { creado: 'desc' },
+    select: {
+      id: true,
+      accion: true,
+      motivo: true,
+      nombre_admin: true,
+      creado: true,
+    },
+  });
+}
+
+// Lista todos los usuarios suspendidos.
+export function listarUsuariosSuspendidos() {
+  return db.usuarios.findMany({
+    where: { estado: 'suspendido' },
+    orderBy: { creado: 'desc' },
+    select: {
+      id: true,
+      nombre: true,
+      correo: true,
+      estado: true,
+      creado: true,
+      roles: { select: { nombre: true } },
+    },
+  });
+}
+
+// Cuenta las cuentas suspendidas actualmente.
+export function contarUsuariosSuspendidos() {
+  return db.usuarios.count({ where: { estado: 'suspendido' } });
+}
