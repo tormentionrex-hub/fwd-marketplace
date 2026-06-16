@@ -37,7 +37,8 @@ export async function login(
   correo: string,
   password: string
 ): Promise<ResultadoAuth | null> {
-  const usuario = await buscarUsuarioPorCorreo(correo);
+  const emailNorm = correo.trim().toLowerCase();
+  const usuario = await buscarUsuarioPorCorreo(emailNorm);
   if (!usuario) return null;
 
   if (!verifyPassword(password, usuario.hash_contrasena)) return null;
