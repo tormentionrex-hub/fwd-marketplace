@@ -1,8 +1,5 @@
 import { NextResponse } from 'next/server';
-import {
-  registrarEmpresario,
-  registrarEstudianteLibre,
-} from '@/server/services/auth.service';
+import { registrarEmpresario } from '@/server/services/auth.service';
 import { permitido } from '@/server/auth/rate-limit';
 import { clienteIp, mismoOrigen } from '@/server/http/request';
 import { error, errorInterno, parsearBody } from '@/server/http/responder';
