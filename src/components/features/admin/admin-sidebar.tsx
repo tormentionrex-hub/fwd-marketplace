@@ -5,6 +5,7 @@ import { Link, usePathname } from "@/i18n/navigation";
 
 /* ── Íconos SVG inline (sin emojis, REGLA #6) ───────────────── */
 type IcoProps = { d: string; extra?: string | undefined; className?: string };
+type IcoProps = { d: string; extra?: string | undefined; className?: string | undefined };
 function Ico({ d, extra, className }: IcoProps) {
   return (
     <svg
@@ -36,6 +37,9 @@ const ICON = {
     d: "M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z",
     extra: "M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z",
   },
+  gestionCuentas: {
+    d: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z",
+  },
   inicio: { d: "M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z" },
   menu: { d: "M3 6h18M3 12h18M3 18h18" },
   close: { d: "M18 6 6 18M6 6l12 12" },
@@ -47,6 +51,7 @@ const NAV = [
   { href: "/admin/proyectos", label: "Proyectos", icon: ICON.proyectos },
   { href: "/admin/ofertas", label: "Ofertas", icon: ICON.ofertas },
   { href: "/admin/validaciones", label: "Validaciones", icon: ICON.validaciones },
+  { href: "/admin/gestion-cuentas", label: "Gestión cuentas", icon: ICON.gestionCuentas },
   { href: "/admin/configuracion", label: "Configuración", icon: ICON.configuracion },
 ] as const;
 

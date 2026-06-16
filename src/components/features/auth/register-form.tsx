@@ -80,7 +80,6 @@ export function RegisterForm() {
   const [pendingMsg, setPendingMsg] = useState<string | null>(null);
   const [password, setPassword] = useState("");
   const [terms, setTerms]       = useState<boolean>(initial.terms ?? false);
-  const [role, setRole]         = useState<"estudiante" | "empresario">("estudiante");
   const [showPwd, setShowPwd]   = useState(false);
 
   const passwordValid = PASSWORD_RULES.every((r) => r.test(password));
@@ -119,7 +118,6 @@ export function RegisterForm() {
           companyName: companyName || undefined,
           email,
           password,
-          role,
         }),
       });
 
@@ -216,42 +214,6 @@ export function RegisterForm() {
           </p>
         )}
 
-        <fieldset className="flex flex-col gap-1.5">
-          <legend className="mb-1.5 text-sm font-medium text-fwd-ink/80">
-            Quiero registrarme como
-          </legend>
-          <div className="grid grid-cols-2 gap-2 rounded-xl bg-fwd-mist/60 p-1">
-            {(
-              [
-                { value: "estudiante", label: "Soy Estudiante" },
-                { value: "empresario", label: "Soy Empresario" },
-              ] as const
-            ).map((opt) => {
-              const active = role === opt.value;
-              return (
-                <label
-                  key={opt.value}
-                  className={`flex cursor-pointer items-center justify-center rounded-lg px-3 py-2.5 text-center text-sm font-medium transition ${
-                    active
-                      ? "bg-fwd-blue text-white shadow-sm"
-                      : "text-fwd-ink/70 hover:text-fwd-ink"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="role"
-                    value={opt.value}
-                    checked={active}
-                    onChange={() => setRole(opt.value)}
-                    className="sr-only"
-                  />
-                  {opt.label}
-                </label>
-              );
-            })}
-          </div>
-        </fieldset>
-
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <TextField
             id="firstName"
@@ -326,19 +288,17 @@ export function RegisterForm() {
           required
         />
 
-        {role === "empresario" && (
-          <TextField
-            id="companyName"
-            name="companyName"
-            label="Nombre de empresa"
-            placeholder="FWD Costa Rica S.A."
-            autoComplete="organization"
-            minLength={2}
-            maxLength={200}
-            defaultValue={initial.companyName ?? ""}
-            required
-          />
-        )}
+        <TextField
+          id="companyName"
+          name="companyName"
+          label="Nombre de empresa"
+          placeholder="FWD Costa Rica S.A."
+          autoComplete="organization"
+          minLength={2}
+          maxLength={200}
+          defaultValue={initial.companyName ?? ""}
+          required
+        />
 
         <TextField
           id="email"

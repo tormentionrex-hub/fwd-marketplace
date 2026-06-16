@@ -12,6 +12,7 @@ export function obtenerPerfilEmpresario(idUsuario: string) {
       tipo: true,
       sector: true,
       descripcion: true,
+      reputacion: true,
       usuarios: {
         select: {
           nombre: true,
@@ -94,9 +95,7 @@ export const DEFAULT_PREFERENCIAS = {
 export type Preferencias = typeof DEFAULT_PREFERENCIAS;
 
 export async function obtenerPreferencias(idUsuario: string): Promise<Preferencias> {
-  // TODO: columna `preferencias Json?` falta en schema.prisma — añadir cuando se sincronice el schema.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const row = await (db.perfiles_empresario as any).findUnique({
+  const row = await db.perfiles_empresario.findUnique({
     where: { id_usuario: idUsuario },
     select: { preferencias: true },
   });
@@ -120,16 +119,14 @@ export async function obtenerPreferencias(idUsuario: string): Promise<Preferenci
 }
 
 export function guardarPreferencias(idUsuario: string, preferencias: Preferencias) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (db.perfiles_empresario as any).update({
+  return db.perfiles_empresario.update({
     where: { id_usuario: idUsuario },
     data: { preferencias },
   });
 }
 
 export function actualizarReputacionEmpresa(idEmpresario: string, reputacion: number) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (db.perfiles_empresario as any).update({
+  return db.perfiles_empresario.update({
     where: { id_usuario: idEmpresario },
     data: { reputacion },
   });
