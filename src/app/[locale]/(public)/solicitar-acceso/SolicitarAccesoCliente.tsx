@@ -14,9 +14,15 @@ export function SolicitarAccesoCliente() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [canalOpen, setCanalOpen] = useState(false);
+  const [correoSolicitud, setCorreoSolicitud] = useState("");
 
-  const whatsappUrl = `https://wa.me/50672025228?text=${encodeURIComponent("Hola, envié mi solicitud de invitación para unirme al FWD Marketplace. Mi correo es (coloca tu correo aquí).")}`;
-  const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${CORREO}&su=${encodeURIComponent("Solicitud de invitación a FWD Marketplace")}&body=${encodeURIComponent("Hola equipo FWD,\n\nEnvié mi solicitud de invitación para unirme al Marketplace. Quedo atento a la aprobación.\n\nMi correo es: ")}`;
+  const correoTexto = correoSolicitud.trim() || "(coloca tu correo aquí)";
+  const whatsappUrl = `https://wa.me/50672025228?text=${encodeURIComponent(`Hola, envié mi solicitud de invitación para unirme al FWD Marketplace. Mi correo es ${correoTexto}.`)}`;
+  const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${CORREO}&su=${encodeURIComponent("Solicitud de invitación a FWD Marketplace")}&body=${encodeURIComponent(`Hola equipo FWD,\n\nEnvié mi solicitud de invitación para unirme al Marketplace. Quedo atento a la aprobación.\n\nMi correo es: ${correoSolicitud.trim()}`)}`;
+
+  function handleEnviarSolicitud() {
+    setCanalOpen(true);
+  }
 
   useEffect(() => {
     if (modalOpen) {
@@ -358,10 +364,43 @@ export function SolicitarAccesoCliente() {
             todavía no recibiste tu invitación, escribinos y con gusto revisamos
             tu solicitud.
           </p>
+
+          <div className="mt-6 text-left">
+            <label htmlFor="correo-solicitud" className="block font-heading text-[11px] font-bold uppercase tracking-[0.2em] text-fwd-ink/50 mb-2">
+              Tu correo electrónico
+            </label>
+            <input
+              id="correo-solicitud"
+              type="text"
+              value={correoSolicitud}
+              onChange={(e) => setCorreoSolicitud(e.target.value)}
+              maxLength={25}
+              placeholder="tucorreo@fwd.cr"
+              className="w-full rounded-xl border border-fwd-ink/15 bg-fwd-ink/[0.03] px-4 py-3 font-body text-sm text-fwd-ink placeholder:text-fwd-ink/30 focus:border-fwd-blue/50 focus:outline-none focus:ring-2 focus:ring-fwd-blue/15 transition-all"
+            />
+            <p className="mt-1.5 text-right font-body text-[11px] text-fwd-ink/30">
+              {correoSolicitud.length}/25
+            </p>
+          </div>
+
+          <button
+            onClick={handleEnviarSolicitud}
+            disabled={correoSolicitud.trim().length === 0}
+            className="mt-2 inline-flex w-full h-11 items-center justify-center gap-2 rounded-full font-heading font-bold text-white transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
+            style={{ backgroundColor: "#1a1633" }}
+          >
+            Enviar solicitud de invitación
+          </button>
+
+          <div className="mt-5 border-t border-fwd-ink/10 pt-5">
+            <p className="font-heading text-[11px] font-bold uppercase tracking-[0.2em] text-fwd-ink/35 mb-3">
+              O contactanos directamente
+            </p>
+          </div>
+
           <button
             onClick={() => setCanalOpen(true)}
-            className="mt-7 inline-flex w-full h-11 items-center justify-center gap-2 rounded-full font-heading font-bold text-white transition-transform hover:scale-[1.02] active:scale-[0.98]"
-            style={{ backgroundColor: "#1a1633" }}
+            className="inline-flex w-full h-11 items-center justify-center gap-2 rounded-full border border-fwd-ink/15 font-heading font-bold text-fwd-ink/70 transition-all hover:scale-[1.02] hover:border-fwd-ink/30 hover:text-fwd-ink active:scale-[0.98]"
           >
             Escribir al equipo FWD
             <ChevronRight className="h-4 w-4" strokeWidth={2.5} />
