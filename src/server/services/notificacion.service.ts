@@ -62,11 +62,11 @@ async function notificarEventoEnProyecto(
     // id_empresario referencia al usuario del empresario (dueño) -> destinatario.
     if (!proyecto?.id_empresario) return;
     const nombre = estudiante?.nombre?.trim() || 'Un estudiante';
-    await crearNotificacion(
-      proyecto.id_empresario,
+    await crearNotificacion({
+      idUsuario: proyecto.id_empresario,
       tipo,
-      construirMensaje(nombre, proyecto.titulo),
-    );
+      mensaje: construirMensaje(nombre, proyecto.titulo),
+    });
   } catch (e) {
     console.error('[notificacion] no se pudo generar la notificación', e);
   }

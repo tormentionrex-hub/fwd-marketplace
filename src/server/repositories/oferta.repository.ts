@@ -1,6 +1,24 @@
 import 'server-only';
 import { db } from '@/lib/db';
 
+// Lista las ofertas más recientes para el panel admin: proyecto, estudiante y
+// estado. Solo lectura.
+export function listarOfertasAdmin() {
+  return db.ofertas.findMany({
+    take: 50,
+    orderBy: { enviado: 'desc' },
+    select: {
+      id: true,
+      estado: true,
+      enviado: true,
+      proyectos: { select: { titulo: true } },
+      perfiles_estudiante: {
+        select: { usuarios: { select: { nombre: true } } },
+      },
+    },
+  });
+}
+
 // Trae los campos del proyecto necesarios para la página de oferta.
 export function buscarProyectoParaOferta(id: string) {
   return db.proyectos.findUnique({
@@ -101,7 +119,11 @@ export function buscarProyectoActivoDeEstudiante(idEstudiante: string) {
           publicado: true,
           cierre: true,
           perfiles_empresario: {
-            select: { sector: true, usuarios: { select: { nombre: true } } },
+            select: {
+              id_usuario: true,
+              sector: true,
+              usuarios: { select: { nombre: true } },
+            },
           },
         },
       },

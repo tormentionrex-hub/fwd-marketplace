@@ -6,11 +6,13 @@ import { TextField } from "@/components/ui/text-field";
 import { IconArrowRight } from "@/components/ui/icons";
 import { SocialAuthButtons } from "@/components/features/auth/social-auth-buttons";
 import AnimatedFormTitle from "@/components/features/auth/AnimatedFormTitle";
+import { PasswordToggle } from "@/components/ui/password-toggle";
 
 export function LoginForm() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPwd, setShowPwd] = useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -99,15 +101,21 @@ export function LoginForm() {
               ¿La olvidaste?
             </Link>
           </div>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            placeholder="••••••••"
-            autoComplete="current-password"
-            required
-            className="w-full rounded-xl border border-fwd-ink/12 bg-fwd-mist/40 px-4 py-3 text-[0.95rem] text-fwd-ink outline-none transition placeholder:text-fwd-ink/35 focus:border-fwd-blue focus:bg-white focus:ring-4 focus:ring-fwd-blue/15"
-          />
+          <div className="relative">
+            <input
+              id="password"
+              name="password"
+              type={showPwd ? "text" : "password"}
+              placeholder="••••••••"
+              autoComplete="current-password"
+              required
+              className="w-full rounded-xl border border-fwd-ink/12 bg-fwd-mist/40 px-4 py-3 pr-11 text-[0.95rem] text-fwd-ink outline-none transition placeholder:text-fwd-ink/35 focus:border-fwd-blue focus:bg-white focus:ring-4 focus:ring-fwd-blue/15"
+            />
+            <PasswordToggle
+              visible={showPwd}
+              onToggle={() => setShowPwd((v) => !v)}
+            />
+          </div>
         </div>
 
         <label className="flex items-center gap-2 text-sm text-fwd-ink/70">

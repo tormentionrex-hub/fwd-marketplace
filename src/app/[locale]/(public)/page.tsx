@@ -56,7 +56,7 @@ export default async function Home() {
   const pasosEstudiante = [hw("paso1Est"), hw("paso2Est"), hw("paso3Est"), hw("paso4Est")];
 
   return (
-    <div className="flex flex-col min-h-screen relative overflow-hidden">
+    <div className="flex flex-col min-h-screen relative overflow-x-hidden">
       <FloatingTriangles />
       <Navbar />
 
