@@ -135,8 +135,6 @@ export function RegisterEstudianteForm() {
             label="Correo de invitación"
             placeholder="tu@correo.com"
             autoComplete="email"
-            minLength={11}
-            maxLength={30}
             required
           />
 

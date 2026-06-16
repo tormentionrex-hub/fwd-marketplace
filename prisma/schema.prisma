@@ -10,16 +10,14 @@ datasource db {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model chats {
-  id                  String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  id_proyecto         String?              @db.Uuid
-  id_estudiante       String               @db.Uuid
-  id_empresario       String?              @db.Uuid
-  id_estudiante_destino String?            @db.Uuid
-  creado              DateTime             @default(now()) @db.Timestamptz(6)
-  ultimo_mensaje      DateTime?            @db.Timestamptz(6)
-  perfiles_empresario perfiles_empresario? @relation(fields: [id_empresario], references: [id_usuario], onDelete: Cascade, map: "fk_chats_empresario")
-  perfiles_estudiante perfiles_estudiante  @relation("chats_origen", fields: [id_estudiante], references: [id_usuario], onDelete: Cascade, map: "fk_chats_estudiante")
-  perfiles_estudiante_destino perfiles_estudiante? @relation("chats_destino", fields: [id_estudiante_destino], references: [id_usuario], onDelete: Cascade, map: "fk_chats_estudiante_destino")
+  id                  String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id_proyecto         String?             @db.Uuid
+  id_estudiante       String              @db.Uuid
+  id_empresario       String              @db.Uuid
+  creado              DateTime            @default(now()) @db.Timestamptz(6)
+  ultimo_mensaje      DateTime?           @db.Timestamptz(6)
+  perfiles_empresario perfiles_empresario @relation(fields: [id_empresario], references: [id_usuario], onDelete: Cascade, map: "fk_chats_empresario")
+  perfiles_estudiante perfiles_estudiante @relation("chats_origen", fields: [id_estudiante], references: [id_usuario], onDelete: Cascade, map: "fk_chats_estudiante")
   proyectos           proyectos?          @relation(fields: [id_proyecto], references: [id], onDelete: Cascade, map: "fk_chats_proyecto")
   mensajes            mensajes[]
 
@@ -152,9 +150,9 @@ model solicitudes_mensaje {
   estado              String              @default("pendiente") @db.VarChar(20)
   creado              DateTime            @default(now()) @db.Timestamptz(6)
   actualizado         DateTime            @default(now()) @db.Timestamptz(6)
-  perfiles_empresario perfiles_empresario @relation(fields: [id_empresario], references: [id_usuario], onDelete: Cascade, map: "fk_solicitudes_empresario")
-  perfiles_estudiante perfiles_estudiante @relation(fields: [id_estudiante], references: [id_usuario], onDelete: Cascade, map: "fk_solicitudes_estudiante")
-  proyectos           proyectos?          @relation(fields: [id_proyecto], references: [id], onDelete: SetNull, map: "fk_solicitudes_proyecto")
+  perfiles_empresario perfiles_empresario @relation(fields: [id_empresario], references: [id_usuario], onDelete: Cascade, onUpdate: NoAction, map: "fk_solicitudes_empresario")
+  perfiles_estudiante perfiles_estudiante @relation(fields: [id_estudiante], references: [id_usuario], onDelete: Cascade, onUpdate: NoAction, map: "fk_solicitudes_estudiante")
+  proyectos           proyectos?          @relation(fields: [id_proyecto], references: [id], onUpdate: NoAction, map: "fk_solicitudes_proyecto")
 
   @@index([id_estudiante], map: "idx_solicitudes_estudiante")
   @@index([id_empresario], map: "idx_solicitudes_empresario")
@@ -203,10 +201,13 @@ model perfiles_empresario {
   descripcion           String?
   nombre_empresa        String?               @db.VarChar(200)
   numero_identificacion String?               @db.VarChar(50)
+  reputacion            Int                   @default(0)
+  preferencias          Json?
   chats                 chats[]
   conversaciones_ia     conversaciones_ia[]
   cv_accesos            cv_accesos[]
   evaluaciones          evaluaciones[]
+  evaluaciones_empresa  evaluaciones_empresa[]
   usuarios              usuarios              @relation(fields: [id_usuario], references: [id], onDelete: Cascade, map: "fk_perfiles_empresario_usuario")
   proyectos             proyectos[]
   solicitudes_mensaje   solicitudes_mensaje[]
@@ -222,17 +223,16 @@ model perfiles_estudiante {
   descripcion             String?
   document_url            String?
   generacion_fwd          Int?
-  curriculums             curriculums?
   chats_iniciados         chats[]                   @relation("chats_origen")
-  chats_recibidos         chats[]                   @relation("chats_destino")
+  curriculums             curriculums?
   entregables             entregables[]
   estudiantes_habilidades estudiantes_habilidades[]
   evaluaciones            evaluaciones[]
+  evaluaciones_empresa    evaluaciones_empresa[]
   ofertas                 ofertas[]
+  usuarios                usuarios                  @relation(fields: [id_usuario], references: [id], onDelete: Cascade, map: "fk_perfiles_estudiante_usuario")
   portafolio_proyectos    portafolio_proyectos[]
   solicitudes_mensaje     solicitudes_mensaje[]
-  usuarios                usuarios                  @relation(fields: [id_usuario], references: [id], onDelete: Cascade, map: "fk_perfiles_estudiante_usuario")
-
 
   @@index([reputacion], map: "idx_perfiles_estudiante_reputacion")
 }
@@ -288,6 +288,7 @@ model proyectos {
   entregables           entregables[]
   evaluaciones          evaluaciones[]
   ofertas               ofertas[]
+  evaluaciones_empresa  evaluaciones_empresa[]
   proyecto_mejoras      proyecto_mejoras[]
   perfiles_empresario   perfiles_empresario     @relation(fields: [id_empresario], references: [id_usuario], map: "fk_proyectos_empresario")
   proyectos_tecnologias proyectos_tecnologias[]
@@ -347,12 +348,12 @@ model usuarios {
   image_url           String?
   estado              String               @default("activo") @db.VarChar(50)
   id_rol              BigInt
-  segundo_nombre      String?              @db.VarChar(150)
-  edad                Int?                 @db.SmallInt
   fecha_nacimiento    DateTime?            @db.Date
   creado              DateTime             @default(now()) @db.Timestamptz(6)
   segundo_apellido    String?              @db.VarChar(150)
   ultima_sesion       DateTime?            @db.Timestamptz(6)
+  segundo_nombre      String?              @db.VarChar(150)
+  edad                Int?                 @db.SmallInt
   mensajes            mensajes[]
   notificaciones      notificaciones[]
   password_resets     password_resets[]
@@ -365,20 +366,21 @@ model usuarios {
   @@index([id_rol], map: "idx_usuarios_id_rol")
 }
 
-/// Historial de suspensiones y reactivaciones de cuentas.
-/// Cada fila registra una acción (suspender/reactivar) con motivo y admin que la ejecutó.
-model suspensiones {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  id_usuario   String   @db.Uuid
-  accion       String   @db.VarChar(20) // 'suspender' | 'reactivar'
-  motivo       String?
-  id_admin     String   @db.Uuid
-  nombre_admin String   @db.VarChar(150)
-  creado       DateTime @default(now()) @db.Timestamptz(6)
-  usuarios     usuarios @relation(fields: [id_usuario], references: [id], onDelete: Cascade, map: "fk_suspensiones_usuario")
+/// Evaluación del estudiante hacia la empresa al cerrar un proyecto.
+model evaluaciones_empresa {
+  id                  String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id_proyecto         String              @db.Uuid
+  id_estudiante       String              @db.Uuid
+  id_empresario       String              @db.Uuid
+  puntuacion          Int
+  comentario          String?
+  creado              DateTime            @default(now()) @db.Timestamptz(6)
+  perfiles_empresario perfiles_empresario @relation(fields: [id_empresario], references: [id_usuario], onDelete: Cascade, map: "fk_ev_empresa_empresario")
+  perfiles_estudiante perfiles_estudiante @relation(fields: [id_estudiante], references: [id_usuario], onDelete: Cascade, map: "fk_ev_empresa_estudiante")
+  proyectos           proyectos           @relation(fields: [id_proyecto], references: [id], onDelete: Cascade, map: "fk_ev_empresa_proyecto")
 
-  @@index([id_usuario], map: "idx_suspensiones_id_usuario")
-  @@index([accion], map: "idx_suspensiones_accion")
+  @@unique([id_proyecto, id_estudiante], map: "unique_ev_empresa_proyecto_estudiante")
+  @@index([id_empresario], map: "idx_ev_empresa_id_empresario")
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.

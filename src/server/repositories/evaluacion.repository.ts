@@ -35,6 +35,15 @@ export function upsertEvaluacion(datos: {
   });
 }
 
+// Promedio de puntuaciones recibidas por un estudiante (para recalcular reputación).
+export async function promedioReputacion(idEstudiante: string): Promise<number> {
+  const result = await db.evaluaciones.aggregate({
+    where: { id_estudiante: idEstudiante },
+    _avg: { puntuacion: true },
+  });
+  return Math.round(result._avg.puntuacion ?? 0);
+}
+
 // Busca la evaluación existente de un (proyecto, estudiante, empresario).
 export function buscarEvaluacion(
   idProyecto: string,

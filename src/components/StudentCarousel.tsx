@@ -250,6 +250,25 @@ export default function StudentCarousel() {
           <p className="text-gray-500 text-lg max-w-xl mx-auto">
             Conocé a los talentos que transforman ideas en soluciones reales.
           </p>
+
+          {/* Video de testimonios */}
+          <div className="mt-10 max-w-3xl mx-auto">
+            <div
+              className="relative rounded-2xl overflow-hidden shadow-2xl"
+              style={{ boxShadow: "0 20px 60px rgba(0,143,213,0.2), 0 4px 20px rgba(102,45,145,0.15)" }}
+            >
+              {/* Barra superior decorativa */}
+              <div className="h-1 w-full" style={{ background: "linear-gradient(90deg, #20BEC6, #008FD5, #662D91, #ED008C)" }} />
+              <video
+                className="w-full block"
+                controls
+                preload="metadata"
+                style={{ background: "#0e1628" }}
+              >
+                <source src="/videos/fwd-testimonios.mp4" type="video/mp4" />
+              </video>
+            </div>
+          </div>
         </div>
 
         {/* Cards — GSAP anima la salida/entrada; key por posición para que React

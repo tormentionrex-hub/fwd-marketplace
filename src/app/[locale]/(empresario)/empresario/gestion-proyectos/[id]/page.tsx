@@ -7,6 +7,7 @@ import {
 } from '@/server/repositories/oferta-gestion.repository';
 import { listarEntregablesDeProyecto } from '@/server/repositories/entregable.repository';
 import { buscarEvaluacion } from '@/server/repositories/evaluacion.repository';
+import { buscarChatEntre } from '@/server/repositories/chat.repository';
 import { tiempoRelativo } from '@/lib/tiempo';
 import GestionProyecto from '@/components/features/marketplace/GestionProyecto';
 
@@ -40,6 +41,7 @@ export default async function GestionProyectoPage({
   ]);
 
   const evaluacion = adj ? await buscarEvaluacion(id, adj.id_estudiante, user.id) : null;
+  const chat = adj ? await buscarChatEntre(id, adj.id_estudiante, user.id) : null;
 
   // Mapeo snake_case (DB) -> camelCase plano para el Client Component.
   const ofertas = ofertasRaw.map((o) => ({
@@ -72,6 +74,7 @@ export default async function GestionProyectoPage({
       ofertasIniciales={ofertas}
       entregablesIniciales={entregables}
       calificacionInicial={evaluacion?.puntuacion ?? 0}
+      chatIdInicial={chat?.id ?? null}
     />
   );
 }

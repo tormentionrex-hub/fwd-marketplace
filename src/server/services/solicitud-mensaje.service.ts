@@ -48,11 +48,11 @@ export async function enviarSolicitud(datos: {
 
   const empresario = await buscarUsuarioPorId(datos.idEmpresario);
   const nombreEmpresario = empresario?.nombre ?? 'Un empresario';
-  await crearNotificacion(
-    datos.idEstudiante,
-    'solicitud_mensaje',
-    `${nombreEmpresario} desea contactarte para hablar sobre una oportunidad laboral o proyecto.`,
-  );
+  await crearNotificacion({
+    idUsuario: datos.idEstudiante,
+    tipo: 'solicitud_mensaje',
+    mensaje: `${nombreEmpresario} desea contactarte para hablar sobre una oportunidad laboral o proyecto.`,
+  });
 
   return { ok: true, id: solicitud.id };
 }
@@ -101,17 +101,17 @@ export async function responderSolicitud(
     if (!existente) {
       await crearChat(solicitud.id_proyecto, solicitud.id_estudiante, solicitud.id_empresario);
     }
-    await crearNotificacion(
-      solicitud.id_empresario,
-      'solicitud_aceptada',
-      `${nombreEstudiante} ha aceptado tu solicitud de contacto.`,
-    );
+    await crearNotificacion({
+      idUsuario: solicitud.id_empresario,
+      tipo: 'solicitud_aceptada',
+      mensaje: `${nombreEstudiante} ha aceptado tu solicitud de contacto.`,
+    });
   } else {
-    await crearNotificacion(
-      solicitud.id_empresario,
-      'solicitud_rechazada',
-      `${nombreEstudiante} no aceptó tu solicitud de contacto por ahora.`,
-    );
+    await crearNotificacion({
+      idUsuario: solicitud.id_empresario,
+      tipo: 'solicitud_rechazada',
+      mensaje: `${nombreEstudiante} no aceptó tu solicitud de contacto por ahora.`,
+    });
   }
 
   return { ok: true, estado: nuevoEstado };

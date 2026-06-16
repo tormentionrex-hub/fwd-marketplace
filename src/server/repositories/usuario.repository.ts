@@ -35,7 +35,6 @@ export function crearEmpresario(datos: {
   nombre: string;
   segundoApellido?: string | undefined;
   nombreEmpresa?: string | undefined;
-  numeroIdentificacion?: string | undefined;
   edad?: number | undefined;
   correo: string;
   hash: string;
@@ -54,7 +53,6 @@ export function crearEmpresario(datos: {
       perfiles_empresario: {
         create: {
           nombre_empresa: datos.nombreEmpresa ?? null,
-          numero_identificacion: datos.numeroIdentificacion ?? null,
         },
       },
     },
@@ -130,6 +128,14 @@ export function crearEstudiantePendiente(datos: {
   });
 }
 
+export async function obtenerHashContrasena(id: string): Promise<string | null> {
+  const row = await db.usuarios.findUnique({
+    where: { id },
+    select: { hash_contrasena: true },
+  });
+  return row?.hash_contrasena ?? null;
+}
+
 // Actualiza el hash de contraseña de un usuario. Lo usa el flujo de recuperación
 // tras verificar el código OTP. Devuelve id + correo para el correo de confirmación.
 export function actualizarHashContrasena(id: string, hashContrasena: string) {
@@ -148,6 +154,14 @@ export function activarUsuario(id: string) {
   });
 }
 
+// Rechaza un usuario cambiando su estado a 'rechazado'. Lo llama el admin al denegar.
+export function rechazarUsuario(id: string) {
+  return db.usuarios.update({
+    where: { id },
+    data: { estado: 'rechazado' },
+  });
+}
+
 // Busca el id (BigInt) de un rol por su nombre único. Evita hardcodear ids.
 export async function buscarRolIdPorNombre(nombre: string): Promise<bigint | null> {
   const rol = await db.roles.findUnique({
@@ -155,6 +169,26 @@ export async function buscarRolIdPorNombre(nombre: string): Promise<bigint | nul
     select: { id: true },
   });
   return rol?.id ?? null;
+}
+
+// Lista los usuarios con estado 'pendiente' para la página de validaciones del admin.
+export function listarUsuariosPendientes() {
+  return db.usuarios.findMany({
+    where: { estado: 'pendiente' },
+    orderBy: { creado: 'asc' },
+    select: {
+      id: true,
+      nombre: true,
+      correo: true,
+      creado: true,
+      roles: { select: { nombre: true } },
+    },
+  });
+}
+
+// Cuenta los usuarios con estado 'pendiente' para la alerta del dashboard admin.
+export async function contarUsuariosPendientes(): Promise<number> {
+  return db.usuarios.count({ where: { estado: 'pendiente' } });
 }
 
 // Lista todos los usuarios con su rol (solo lectura) para el panel admin.

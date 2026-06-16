@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 import { Link } from "@/i18n/navigation";
 import { FwdLogo, FwdIsotipo } from "@/components/ui/fwd-logo";
-import { IconHome } from "@/components/ui/icons";
+import AuthAnimatedTitle from "@/components/features/auth/AuthAnimatedTitle";
+import AuthHomeButton from "@/components/features/auth/AuthHomeButton";
 
 /** Patrón decorativo de flechas multicolor (sistema gráfico, pág. 11). */
 function ArrowPattern() {
@@ -48,13 +49,7 @@ export function AuthShell({ highlight, logo, children }: AuthShellProps) {
   return (
     <div className="relative flex min-h-screen flex-col lg:flex-row">
       {/* Botón de inicio (vuelve al home, respeta el locale) */}
-      <Link
-        href="/"
-        className="absolute right-4 top-4 z-20 inline-flex items-center gap-1.5 rounded-full border border-fwd-ink/15 bg-white/85 px-4 py-2 text-sm font-medium text-fwd-ink shadow-sm backdrop-blur transition hover:border-fwd-blue hover:text-fwd-blue lg:right-6 lg:top-6"
-      >
-        <IconHome width={16} height={16} />
-        Inicio
-      </Link>
+      <AuthHomeButton />
 
       {/* Panel de marca */}
       <aside className="relative hidden overflow-hidden bg-fwd-navy lg:flex lg:w-[46%] lg:flex-col lg:p-12 xl:p-16">
@@ -82,14 +77,7 @@ export function AuthShell({ highlight, logo, children }: AuthShellProps) {
           <p className="font-display text-xs font-bold uppercase tracking-[0.3em] text-fwd-teal">
             FWD · Costa Rica
           </p>
-          <h2 className="mt-4 font-display text-4xl font-black leading-tight text-white xl:text-5xl">
-            Avancemos hacia{" "}
-            <span className="text-fwd-yellow">{highlight}</span> juntos.
-          </h2>
-          <p className="mt-5 text-base leading-relaxed text-white/70">
-            Una comunidad que avanza en una misma dirección. Únete al
-            marketplace que impulsa el progreso de Costa Rica.
-          </p>
+          <AuthAnimatedTitle highlight={highlight} />
         </div>
 
         <div className="relative z-10 mt-auto flex items-center gap-3 text-sm text-white/50">
@@ -99,7 +87,7 @@ export function AuthShell({ highlight, logo, children }: AuthShellProps) {
       </aside>
 
       {/* Panel de formulario */}
-      <main className="flex flex-1 flex-col items-center justify-center bg-white px-6 py-10 sm:px-10">
+      <main className="flex flex-1 flex-col items-center justify-center bg-white dark:bg-[#0b1120] px-6 py-10 sm:px-10">
         {/* Logo compacto solo visible en móvil/tablet */}
         <div className="mb-8 lg:hidden">
           <Link href="/" aria-label="Ir al inicio" className="inline-flex">
