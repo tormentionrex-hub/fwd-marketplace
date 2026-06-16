@@ -87,7 +87,7 @@ export function AuthShell({ highlight, logo, children }: AuthShellProps) {
       </aside>
 
       {/* Panel de formulario */}
-      <main className="flex flex-1 flex-col items-center justify-center bg-white px-6 py-10 sm:px-10">
+      <main className="flex flex-1 flex-col items-center justify-center bg-white dark:bg-[#0b1120] px-6 py-10 sm:px-10">
         {/* Logo compacto solo visible en móvil/tablet */}
         <div className="mb-8 lg:hidden">
           <Link href="/" aria-label="Ir al inicio" className="inline-flex">

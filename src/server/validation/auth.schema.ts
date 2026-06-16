@@ -46,6 +46,14 @@ export const registerSchema = z.object({
     .min(1, "Mínimo 1")
     .max(50, "Máximo 50")
     .optional(),
+  identificationNumber: z
+    .string()
+    .trim()
+    .min(8, "Mínimo 8 caracteres")
+    .max(20, "Máximo 20 caracteres")
+    .regex(/^[A-Za-z0-9\-]+$/, "Solo letras, números y guiones")
+    .optional()
+    .or(z.literal("").transform(() => undefined)),
   companyName: z
     .string()
     .trim()
