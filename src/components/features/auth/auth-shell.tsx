@@ -3,6 +3,7 @@ import { Link } from "@/i18n/navigation";
 import { FwdLogo, FwdIsotipo } from "@/components/ui/fwd-logo";
 import AuthAnimatedTitle from "@/components/features/auth/AuthAnimatedTitle";
 import AuthHomeButton from "@/components/features/auth/AuthHomeButton";
+import { getUser } from "@/server/auth/get-user";
 
 /** Patrón decorativo de flechas multicolor (sistema gráfico, pág. 11). */
 function ArrowPattern() {
@@ -45,11 +46,13 @@ type AuthShellProps = {
  * Estructura de autenticación: panel de marca (navy) + panel de formulario (claro).
  * Responsive: el panel de marca se oculta en móvil y deja un encabezado compacto.
  */
-export function AuthShell({ highlight, logo, children }: AuthShellProps) {
+export async function AuthShell({ highlight, logo, children }: AuthShellProps) {
+  const user = await getUser();
+
   return (
     <div className="relative flex min-h-screen flex-col lg:flex-row">
       {/* Botón de inicio (vuelve al home, respeta el locale) */}
-      <AuthHomeButton />
+      <AuthHomeButton userRole={user?.roles.nombre ?? null} />
 
       {/* Panel de marca — sticky: queda fijo mientras el lado derecho scrollea */}
       <aside className="relative hidden overflow-hidden bg-fwd-navy lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-[46%] lg:flex-shrink-0 lg:flex-col lg:p-12 xl:p-16">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { TextField } from "@/components/ui/text-field";
 import { IconArrowRight } from "@/components/ui/icons";
@@ -81,6 +81,15 @@ export function RegisterForm() {
   const [password, setPassword] = useState("");
   const [terms, setTerms]       = useState<boolean>(initial.terms ?? false);
   const [showPwd, setShowPwd]   = useState(false);
+  const [profilePicture, setProfilePicture] = useState<File | null>(null);
+  const previewUrl = profilePicture ? URL.createObjectURL(profilePicture) : null;
+
+  // Cleanup preview URL when component unmounts or picture changes
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
 
   const passwordValid = PASSWORD_RULES.every((r) => r.test(password));
   const canSubmit     = passwordValid && terms && !loading;
@@ -282,8 +291,31 @@ export function RegisterForm() {
           required
         />
 
-        {/* Contraseña con validación en vivo y check al ser válida */}
-        <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-2">
+            {/* Upload profile picture */}
+            <label className="text-sm font-medium text-fwd-ink/80" htmlFor="profilePicture">
+              Foto de Perfil
+            </label>
+            <input
+              id="profilePicture"
+              name="profilePicture"
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0] ?? null;
+                setProfilePicture(file);
+              }}
+              className="file:mr-4 file:rounded-full file:border-0 file:bg-fwd-blue file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-fwd-purple"
+            />
+            {previewUrl && (
+              <img
+                src={previewUrl}
+                alt="Preview"
+                className="mt-2 h-24 w-24 rounded-full object-cover border-2 border-fwd-ink/20"
+              />
+            )}
+          </div>
+          <div className="flex flex-col gap-1.5">
           <label htmlFor="password" className="text-sm font-medium text-fwd-ink/80">
             Contraseña
           </label>
