@@ -3,6 +3,7 @@ import Footer from "@/components/Footer";
 import { Link } from "@/i18n/navigation";
 import AnimatedProjectsTitle from "@/components/AnimatedProjectsTitle";
 import DescargaPDFButton from "@/components/DescargaPDFButton";
+import { FwdMarketplaceLogo } from "@/components/ui/fwd-logo";
 import Image from "next/image";
 import type { ReactNode } from "react";
 
@@ -43,7 +44,7 @@ export default function TerminosPage() {
           marginBottom: "24px",
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-            <Image src="/imagenes/fwd-marketplace.png" alt="FWD Marketplace" width={200} height={158} style={{ height: "48px", width: "auto" }} />
+            <FwdMarketplaceLogo forceLight={true} />
           </div>
           <div style={{ textAlign: "right" }}>
             <p style={{ color: "#20BEC6", fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", margin: 0 }}>Documento Legal</p>

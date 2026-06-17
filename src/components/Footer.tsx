@@ -1,6 +1,7 @@
 "use client";
 
 import { Link } from "@/i18n/navigation";
+import { FwdMarketplaceLogo } from "@/components/ui/fwd-logo";
 import Image from "next/image";
 import { useState } from "react";
 
@@ -101,13 +102,7 @@ export default function Footer() {
           {/* ── Columna 1: Marca + Legal */}
           <div className="flex flex-col gap-3">
             <div>
-              <Image
-                src="/imagenes/fwd-marketplace.png"
-                alt="FWD Marketplace"
-                width={1412}
-                height={1114}
-                className="h-28 w-auto object-contain"
-              />
+              <FwdMarketplaceLogo forceLight={true} className="mb-2" />
               <p className="text-white/60 text-xs mt-2 leading-relaxed">
                 Conectamos empresarios con talento tecnológico para una mejor comunidad.
               </p>

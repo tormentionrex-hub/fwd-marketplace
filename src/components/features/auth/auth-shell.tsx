@@ -1,8 +1,9 @@
 import type { ReactNode } from "react";
 import { Link } from "@/i18n/navigation";
-import { FwdLogo, FwdIsotipo } from "@/components/ui/fwd-logo";
+import { FwdLogo, FwdIsotipo, FwdMarketplaceLogo } from "@/components/ui/fwd-logo";
 import AuthAnimatedTitle from "@/components/features/auth/AuthAnimatedTitle";
 import AuthHomeButton from "@/components/features/auth/AuthHomeButton";
+import ParticleBackground from "@/components/ParticleBackground";
 
 /** Patrón decorativo de flechas multicolor (sistema gráfico, pág. 11). */
 function ArrowPattern() {
@@ -55,6 +56,7 @@ export function AuthShell({ highlight, logo, children }: AuthShellProps) {
       <aside className="relative hidden overflow-hidden bg-fwd-navy lg:flex lg:w-[46%] lg:flex-col lg:p-12 xl:p-16">
         {/* Degradado de marca (portada navy → morado → magenta) */}
         <div className="absolute inset-0 bg-gradient-to-br from-fwd-navy via-fwd-purple/40 to-fwd-magenta/40" />
+        <ParticleBackground />
         <ArrowPattern />
 
         <div className="relative z-10">
@@ -66,9 +68,9 @@ export function AuthShell({ highlight, logo, children }: AuthShellProps) {
             <Link
               href="/"
               aria-label="Ir al inicio"
-              className="inline-flex rounded-2xl bg-white px-5 py-3 shadow-lg transition hover:shadow-xl"
+              className="inline-flex rounded-2xl bg-white dark:bg-slate-900 px-5 py-3 shadow-lg transition hover:shadow-xl"
             >
-              <FwdLogo />
+              <FwdMarketplaceLogo />
             </Link>
           )}
         </div>
@@ -87,14 +89,17 @@ export function AuthShell({ highlight, logo, children }: AuthShellProps) {
       </aside>
 
       {/* Panel de formulario */}
-      <main className="flex flex-1 flex-col items-center justify-center bg-white dark:bg-[#0b1120] px-6 py-10 sm:px-10">
+      <main className="relative flex flex-1 flex-col items-center justify-center bg-white dark:bg-[#060913] px-4 py-8 sm:px-10">
+        {/* Grid tecnológico en modo oscuro */}
+        <div className="absolute inset-0 hidden dark:block pointer-events-none bg-[linear-gradient(to_right,rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_50%,transparent_100%)] z-0" />
+
         {/* Logo compacto solo visible en móvil/tablet */}
-        <div className="mb-8 lg:hidden">
+        <div className="relative z-10 mb-8 lg:hidden">
           <Link href="/" aria-label="Ir al inicio" className="inline-flex">
-            {logo ?? <FwdLogo />}
+            {logo ?? <FwdMarketplaceLogo />}
           </Link>
         </div>
-        <div className="w-full max-w-md">{children}</div>
+        <div className="relative z-10 w-full max-w-md">{children}</div>
       </main>
     </div>
   );

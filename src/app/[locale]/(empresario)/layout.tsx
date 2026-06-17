@@ -185,7 +185,155 @@ const FWD_CSS = `
   @media (max-width:1100px) {
     .fwd-app .stat-grid { grid-template-columns:repeat(2,1fr); }
   }
+
+  @media (max-width: 1024px) {
+    .fwd-app {
+      grid-template-columns: 1fr !important;
+    }
+    .fwd-app .sidebar {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      bottom: 0 !important;
+      height: 100vh !important;
+      width: 264px !important;
+      z-index: 100 !important;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease-in-out !important;
+      box-shadow: var(--sh) !important;
+    }
+    .fwd-app .sidebar.mobile-open {
+      transform: translateX(0) !important;
+    }
+    .fwd-app .topbar {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 16px 16px 16px 64px !important;
+    }
+    .fwd-app .topbar .tb-spacer {
+      display: none;
+    }
+    .topbar-controls {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .fwd-app .tb-actions {
+      right: 16px !important;
+      top: 16px !important;
+    }
+    .fwd-app .page {
+      padding: 20px 16px 80px !important;
+    }
+    .empresario-workspace-grid {
+      grid-template-columns: 1fr !important;
+    }
+    .empresario-sidebar-panel {
+      position: relative !important;
+      top: 0 !important;
+      height: auto !important;
+    }
+    .resumen-banner {
+      flex-direction: column;
+      align-items: flex-start !important;
+      padding: 20px 24px !important;
+      gap: 16px;
+    }
+    .resumen-banner a {
+      width: 100%;
+      text-align: center;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .fwd-app .stat-grid {
+      grid-template-columns: 1fr !important;
+    }
+    .topbar-controls {
+      width: 100%;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 8px;
+    }
+    .topbar-controls > div {
+      width: 100%;
+    }
+    .topbar-controls a {
+      width: 100% !important;
+      justify-content: center;
+    }
+    .grid-2col-responsive {
+      grid-template-columns: 1fr !important;
+    }
+    .sticky-col-responsive {
+      position: relative !important;
+      top: 0 !important;
+    }
+    .grid-3col-responsive {
+      grid-template-columns: 1fr !important;
+    }
+    .config-layout-grid {
+      grid-template-columns: 1fr !important;
+    }
+    .config-tabs-sidebar {
+      position: relative !important;
+      top: 0 !important;
+      flex-direction: row !important;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      gap: 8px;
+    }
+    .config-tabs-sidebar::-webkit-scrollbar {
+      display: none;
+    }
+    .config-tabs-sidebar .nav-item {
+      white-space: nowrap;
+      width: auto !important;
+      flex-shrink: 0;
+    }
+    .config-inputs-grid {
+      grid-template-columns: 1fr !important;
+    }
+    .crear-con-ia-grid {
+      grid-template-columns: 1fr !important;
+      height: auto !important;
+      min-height: auto !important;
+    }
+    .fwd-table-header {
+      display: none !important;
+    }
+    .fwd-table-row {
+      grid-template-columns: 1fr 1fr !important;
+      gap: 12px !important;
+      padding: 16px 20px !important;
+    }
+    .fwd-table-row > *:nth-child(1) {
+      grid-column: span 2;
+      font-size: 15px !important;
+    }
+    .fwd-table-row > *:nth-child(7) {
+      display: none !important;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .fwd-app .fwd-row > div > div:first-child {
+      flex-direction: column;
+      align-items: flex-start !important;
+      gap: 6px !important;
+    }
+  }
+
+  /* Ocultar badge de rol flotante dentro del dashboard */
+  body:has(.fwd-app) .role-badge,
+  body:has(.fwd-admin-layout) .role-badge,
+  body:has(.fwd-student-layout) .role-badge {
+    display: none !important;
+  }
 `;
+
 
 // Layout del grupo empresario: monta el Sidebar FWD una sola vez junto a {children},
 // de modo que las páginas 12 y 14 (y futuras) lo comparten sin repetir markup.

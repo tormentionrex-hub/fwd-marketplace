@@ -50,7 +50,7 @@ export default function AnimatedFormTitle({
 
       {/* Título con letras individuales */}
       <h1
-        className="font-display text-3xl font-black text-fwd-ink"
+        className="font-display text-2xl font-black text-fwd-ink sm:text-3xl"
         style={{ perspective: "500px" }}
       >
         {text.split("").map((char, i) => (

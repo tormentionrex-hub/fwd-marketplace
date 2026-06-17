@@ -79,7 +79,7 @@ export default async function DashboardEmpresarioPage({
           </div>
         </div>
         <div className="tb-spacer" />
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        <div className="topbar-controls">
           {/* El buscador puede recibir estilos via class o globales, pero en la imagen se ve redondeado y gris claro. */}
           <div style={{ 
             background: 'var(--surface)', 
@@ -109,16 +109,7 @@ export default async function DashboardEmpresarioPage({
 
       <div className="page fade-in">
         {/* Banner Resumen Ejecutivo */}
-        <div style={{
-          background: 'linear-gradient(90deg, #0082c8 0%, #800080 50%, #e6007e 100%)',
-          borderRadius: 16,
-          padding: '20px 32px',
-          color: 'white',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 24,
-        }}>
+        <div className="resumen-banner">
           <div>
             <div style={{ fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4, color: 'rgba(255,255,255,0.9)' }}>
               Resumen Ejecutivo
@@ -222,7 +213,7 @@ export default async function DashboardEmpresarioPage({
         </div>
 
         {/* Workspace: proyectos recientes + panel lateral */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 24, alignItems: 'start' }}>
+        <div className="empresario-workspace-grid">
           <div className="card">
             <div
               style={{
@@ -246,7 +237,7 @@ export default async function DashboardEmpresarioPage({
             )}
           </div>
 
-          <div style={{ position: 'sticky', top: 90, height: 'calc(100vh - 120px)', zIndex: 2 }}>
+          <div className="empresario-sidebar-panel">
             <div 
               className="panel-scroll"
               style={{ 

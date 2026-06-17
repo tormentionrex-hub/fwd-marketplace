@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { FwdIsotipo } from "@/components/ui/fwd-logo";
 
 export default function PageLoader() {
   const [visible, setVisible] = useState(true);
@@ -34,8 +35,7 @@ export default function PageLoader() {
     >
       {/* Logo FWD pequeño arriba */}
       <div className="fwd-spin mb-12" style={{ filter: "drop-shadow(0 0 20px #20BEC688)" }}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/imagenes/logo-removebg-preview.png" alt="FWD" width={72} height={72} />
+        <FwdIsotipo className="h-16 w-auto" />
       </div>
 
       {/* Animación de círculos */}

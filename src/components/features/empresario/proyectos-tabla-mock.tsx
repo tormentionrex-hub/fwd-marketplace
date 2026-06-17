@@ -87,7 +87,7 @@ export function ProyectosTablaMock() {
       </div>
 
       {/* Table Headers */}
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1fr 40px', gap: 16, padding: '16px 30px', borderBottom: '1px solid var(--line)', background: 'rgba(244,246,251,0.3)', fontSize: 12, fontWeight: 700, color: 'var(--ink-500)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+      <div className="fwd-table-header" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1fr 40px', gap: 16, padding: '16px 30px', borderBottom: '1px solid var(--line)', background: 'rgba(244,246,251,0.3)', fontSize: 12, fontWeight: 700, color: 'var(--ink-500)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
         <div>PROYECTO</div>
         <div>CATEGORÍA</div>
         <div>OFERTAS</div>
@@ -100,7 +100,7 @@ export function ProyectosTablaMock() {
       {/* Table Rows */}
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         {MOCK_PROYECTOS.map((p, idx) => (
-          <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1fr 40px', gap: 16, padding: '20px 30px', alignItems: 'center', borderBottom: idx < MOCK_PROYECTOS.length - 1 ? '1px solid var(--line)' : 'none', transition: 'background 0.2s', cursor: 'pointer' }} className="hover-bg-surface">
+          <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1fr 40px', gap: 16, padding: '20px 30px', alignItems: 'center', borderBottom: idx < MOCK_PROYECTOS.length - 1 ? '1px solid var(--line)' : 'none', transition: 'background 0.2s', cursor: 'pointer' }} className="fwd-table-row hover-bg-surface">
             <div style={{ fontSize: 14.5, fontWeight: 600, color: 'var(--ink-900)' }}>{p.titulo}</div>
             
             <div>

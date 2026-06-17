@@ -54,13 +54,13 @@ export function LoginForm() {
 
   return (
     <div>
-      <header className="mb-8">
+      <header className="mb-6 sm:mb-8">
         <AnimatedFormTitle
           text="Inicia sesión"
           accentFrom="#20BEC6"
           accentTo="#662D91"
         />
-        <p className="mt-1 text-fwd-ink/60 pl-4 border-l-2 border-fwd-ink/8">
+        <p className="mt-1 text-sm text-fwd-ink/60 pl-4 border-l-2 border-fwd-ink/8">
           Bienvenido de vuelta. Sigamos avanzando.
         </p>
       </header>

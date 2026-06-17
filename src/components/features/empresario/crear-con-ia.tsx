@@ -184,7 +184,7 @@ export default function CrearConIA({ nombre }: { nombre: string }) {
           </span>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 440px', gap: 24, alignItems: 'start', height: 'calc(100vh - 230px)', minHeight: 480 }}>
+        <div className="crear-con-ia-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 440px', gap: 24, alignItems: 'start', height: 'calc(100vh - 230px)', minHeight: 480 }}>
           {/* Columna chat */}
           <div className="card" style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
             <div style={{ padding: '15px 20px', borderBottom: '1px solid var(--line)', display: 'flex', alignItems: 'center', gap: 10 }}>

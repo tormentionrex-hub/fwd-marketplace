@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
+    "dev:network": "next dev --turbopack -H 0.0.0.0",
     "dev:clean": "node -e \"require('fs').rmSync('.next',{recursive:true,force:true})\" && next dev --turbopack",
     "build": "next build",
     "start": "next start",
@@ -13,7 +14,13 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",
     "prisma:studio": "prisma studio",
-    "prepare": "husky"
+    "prepare": "husky",
+    "cap:sync": "npx cap sync",
+    "cap:open:ios": "npx cap open ios",
+    "cap:open:android": "npx cap open android",
+    "cap:copy": "npx cap copy",
+    "cap:build:ios": "next build && npx cap sync ios && npx cap open ios",
+    "cap:build:android": "next build && npx cap sync android && npx cap open android"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx,mjs}": "eslint --fix --no-warn-ignored"
@@ -22,6 +29,12 @@
     "seed": "npx tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@capacitor/android": "^8.4.0",
+    "@capacitor/app": "^8.1.0",
+    "@capacitor/browser": "^8.0.3",
+    "@capacitor/cli": "^8.4.0",
+    "@capacitor/core": "^8.4.0",
+    "@capacitor/ios": "^8.4.0",
     "@gsap/react": "^2.1.2",
     "@prisma/client": "^6.19.3",
     "@supabase/ssr": "^0.10.3",

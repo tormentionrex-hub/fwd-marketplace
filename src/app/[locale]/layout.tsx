@@ -11,6 +11,7 @@ import SmoothScroll from '@/components/SmoothScroll';
 import AnimationsInit from '@/components/AnimationsInit';
 import CursorGlow from '@/components/CursorGlow';
 import PageLoader from '@/components/PageLoader';
+import CapacitorInit from '@/components/CapacitorInit';
 
 export const metadata: Metadata = {
   title: 'FWD · Costa Rica — Marketplace',
@@ -37,6 +38,7 @@ export default async function LocaleLayout({
 
   return (
     <>
+      <CapacitorInit />
       <PageLoader />
       <SmoothScroll />
       <AnimationsInit />

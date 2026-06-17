@@ -1,8 +1,8 @@
 'use client';
 
-import { Link, usePathname } from '@/i18n/navigation';
+import { Link, usePathname, useRouter } from '@/i18n/navigation';
 import { useState, useEffect } from 'react';
-import { FwdLogo } from '@/components/ui/fwd-logo';
+import { FwdMarketplaceLogo } from '@/components/ui/fwd-logo';
 import {
   IconBriefcase,
   IconUsers,
@@ -25,8 +25,31 @@ export default function Sidebar({
   locale?: string;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
 
   const [collapsed, setCollapsed] = useState<boolean>(false);
+  const [mobileOpen, setMobileOpen] = useState<boolean>(false);
+  const [loggingOut, setLoggingOut] = useState<boolean>(false);
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('fwd_perfil');
+      }
+      router.push('/login');
+      router.refresh();
+    } catch (err) {
+      console.error(err);
+      setLoggingOut(false);
+    }
+  };
+
+  // Auto-close sidebar on mobile when pathname changes
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
 
   // Load persisted collapsed state on mount
   useEffect(() => {
@@ -59,79 +82,147 @@ export default function Sidebar({
     .toUpperCase() || 'E';
 
   return (
-    <aside
-      className="sidebar"
-      style={{ width: collapsed ? 72 : 264, transition: 'width 0.3s ease', overflow: 'hidden' }}
-    >
-      {/* Brand and toggle button */}
-      <div
+    <>
+      {/* Botón hamburguesa — solo mobile */}
+      <button
+        type="button"
+        onClick={() => setMobileOpen(true)}
+        className="fixed left-4 top-4 z-40 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-line bg-surface text-ink-600 shadow-md lg:hidden"
+        aria-label="Abrir menú"
         style={{
           display: 'flex',
           alignItems: 'center',
-          justifyContent: collapsed ? 'center' : 'space-between',
-          padding: '4px 8px 18px',
-          gap: 8,
+          justifyContent: 'center',
         }}
       >
-        <Link
-          href="/empresario"
-          className="sb-brand"
+        <svg
+          width={20}
+          height={20}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M3 12h18M3 6h18M3 18h18" />
+        </svg>
+      </button>
+
+      {/* Backdrop mobile */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/60 lg:hidden"
+          onClick={() => setMobileOpen(false)}
+          aria-hidden
+        />
+      )}
+
+      <aside
+        className={`sidebar ${mobileOpen ? 'mobile-open' : ''}`}
+        style={{ width: collapsed ? 72 : 264, transition: 'width 0.3s ease', overflow: 'hidden' }}
+      >
+        {/* Brand and toggle button */}
+        <div
           style={{
-            padding: 0,
-            overflow: 'hidden',
-            width: collapsed ? 0 : 'auto',
-            opacity: collapsed ? 0 : 1,
-            pointerEvents: collapsed ? 'none' : 'auto',
-            transition: 'width 0.3s ease, opacity 0.2s ease',
-            flexShrink: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: collapsed ? 'center' : 'space-between',
+            padding: '4px 8px 18px',
+            gap: 8,
           }}
         >
-          <FwdLogo />
-        </Link>
-        <button
-          type="button"
-          onClick={toggleSidebar}
-          aria-label={collapsed ? 'Expandir menú' : 'Colapsar menú'}
-          title={collapsed ? 'Expandir menú' : 'Colapsar menú'}
-          style={{
-            width: 32,
-            height: 32,
-            borderRadius: 10,
-            background: 'var(--bg)',
-            border: '1px solid var(--line)',
-            display: 'grid',
-            placeItems: 'center',
-            cursor: 'pointer',
-            color: 'var(--ink-600)',
-            flexShrink: 0,
-            transition: 'background 0.15s, color 0.15s',
-          }}
-          onMouseEnter={e => {
-            (e.currentTarget as HTMLElement).style.background = 'var(--azul-tint)';
-            (e.currentTarget as HTMLElement).style.color = 'var(--azul)';
-          }}
-          onMouseLeave={e => {
-            (e.currentTarget as HTMLElement).style.background = 'var(--bg)';
-            (e.currentTarget as HTMLElement).style.color = 'var(--ink-600)';
-          }}
-        >
-          {/* Chevron that rotates */}
-          <svg
-            width={15}
-            height={15}
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2.2}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-            style={{ transform: collapsed ? 'rotate(0deg)' : 'rotate(180deg)', transition: 'transform 0.3s ease' }}
+          <Link
+            href="/empresario"
+            className="sb-brand"
+            style={{
+              padding: 0,
+              overflow: 'hidden',
+              width: collapsed ? 0 : 'auto',
+              opacity: collapsed ? 0 : 1,
+              pointerEvents: collapsed ? 'none' : 'auto',
+              transition: 'width 0.3s ease, opacity 0.2s ease',
+              flexShrink: 0,
+            }}
           >
-            <path d="m9 6 6 6-6 6" />
-          </svg>
-        </button>
-      </div>
+            <FwdMarketplaceLogo />
+          </Link>
+          
+          {/* Botón de cierre para móvil */}
+          <button
+            type="button"
+            onClick={() => setMobileOpen(false)}
+            className="lg:hidden text-ink-600 hover:text-ink-900"
+            aria-label="Cerrar menú"
+            style={{
+              width: 32,
+              height: 32,
+              display: mobileOpen ? 'grid' : 'none',
+              placeItems: 'center',
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+            }}
+          >
+            <svg
+              width={20}
+              height={20}
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M18 6 6 18M6 6l12 12" />
+            </svg>
+          </button>
+
+          <button
+            type="button"
+            onClick={toggleSidebar}
+            className="sb-collapse-btn"
+            aria-label={collapsed ? 'Expandir menú' : 'Colapsar menú'}
+            title={collapsed ? 'Expandir menú' : 'Colapsar menú'}
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: 10,
+              background: 'var(--bg)',
+              border: '1px solid var(--line)',
+              display: 'grid',
+              placeItems: 'center',
+              cursor: 'pointer',
+              color: 'var(--ink-600)',
+              flexShrink: 0,
+              transition: 'background 0.15s, color 0.15s',
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLElement).style.background = 'var(--azul-tint)';
+              (e.currentTarget as HTMLElement).style.color = 'var(--azul)';
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLElement).style.background = 'var(--bg)';
+              (e.currentTarget as HTMLElement).style.color = 'var(--ink-600)';
+            }}
+          >
+            {/* Chevron that rotates */}
+            <svg
+              width={15}
+              height={15}
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2.2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+              style={{ transform: collapsed ? 'rotate(0deg)' : 'rotate(180deg)', transition: 'transform 0.3s ease' }}
+            >
+              <path d="m9 6 6 6-6 6" />
+            </svg>
+          </button>
+        </div>
 
       {/* Role pill */}
       <div
@@ -319,6 +410,54 @@ export default function Sidebar({
         </span>
       </Link>
 
+      <button
+        type="button"
+        onClick={handleLogout}
+        disabled={loggingOut}
+        title={collapsed ? 'Cerrar sesión' : undefined}
+        className="nav-item text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-950/20 disabled:opacity-60"
+        style={{
+          justifyContent: collapsed ? 'center' : 'flex-start',
+          gap: collapsed ? 0 : 11,
+          overflow: 'hidden',
+          transition: 'gap 0.2s',
+          border: 'none',
+          background: 'transparent',
+          cursor: 'pointer',
+          width: '100%',
+          textAlign: 'left',
+          marginTop: 4,
+          padding: '10px 12px',
+        }}
+      >
+        <svg
+          width={19}
+          height={19}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={1.75}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+          <polyline points="16 17 21 12 16 7" />
+          <line x1="21" y1="12" x2="9" y2="12" />
+        </svg>
+        <span
+          style={{
+            overflow: 'hidden',
+            width: collapsed ? 0 : 'auto',
+            opacity: collapsed ? 0 : 1,
+            whiteSpace: 'nowrap',
+            transition: 'width 0.3s ease, opacity 0.2s ease',
+          }}
+        >
+          {loggingOut ? 'Saliendo…' : 'Cerrar sesión'}
+        </span>
+      </button>
+
       {/* Footer with user info */}
       <div className="sb-foot">
         <div className="sb-user" title={collapsed ? nombre : undefined} style={{ justifyContent: collapsed ? 'center' : 'flex-start', gap: collapsed ? 0 : 11, overflow: 'hidden', transition: 'gap 0.2s' }}>
@@ -351,5 +490,6 @@ export default function Sidebar({
         </div>
       </div>
     </aside>
+    </>
   );
 }

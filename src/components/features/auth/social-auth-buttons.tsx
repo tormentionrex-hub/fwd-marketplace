@@ -51,18 +51,44 @@ export function SocialAuthButtons() {
     setError(null);
     try {
       const supabase = createClient();
-      const { error: oauthError } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: {
-          redirectTo: `${window.location.origin}/api/auth/callback`,
-        },
-      });
-      if (oauthError) {
-        setError("No se pudo conectar con el proveedor. Intentá de nuevo.");
-        setLoading(null);
+      
+      let isNative = false;
+      if (typeof window !== "undefined") {
+        const { Capacitor } = await import("@capacitor/core");
+        isNative = Capacitor.isNativePlatform();
       }
-      // Si no hay error, el navegador redirige al proveedor.
-    } catch {
+
+      if (isNative) {
+        const { data, error: oauthError } = await supabase.auth.signInWithOAuth({
+          provider,
+          options: {
+            redirectTo: `${window.location.origin}/api/auth/callback?mobile=true`,
+            skipBrowserRedirect: true,
+          },
+        });
+
+        if (oauthError || !data?.url) {
+          setError("No se pudo iniciar sesión con este proveedor. Intentá de nuevo.");
+          setLoading(null);
+          return;
+        }
+
+        const { Browser } = await import("@capacitor/browser");
+        await Browser.open({ url: data.url, windowName: "_self" });
+      } else {
+        const { error: oauthError } = await supabase.auth.signInWithOAuth({
+          provider,
+          options: {
+            redirectTo: `${window.location.origin}/api/auth/callback`,
+          },
+        });
+        if (oauthError) {
+          setError("No se pudo conectar con el proveedor. Intentá de nuevo.");
+          setLoading(null);
+        }
+      }
+    } catch (err) {
+      console.error("OAuth error:", err);
       setError("No se pudo conectar con el proveedor. Intentá de nuevo.");
       setLoading(null);
     }

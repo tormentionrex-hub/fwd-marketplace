@@ -12,6 +12,14 @@ export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
   const errorParam = searchParams.get('error');
+  const mobile = searchParams.get('mobile');
+
+  if (mobile === 'true') {
+    if (errorParam || !code) {
+      return NextResponse.redirect(`fwdmarketplace://api/auth/callback?error=${errorParam || 'oauth'}`);
+    }
+    return NextResponse.redirect(`fwdmarketplace://api/auth/callback?code=${code}`);
+  }
 
   if (errorParam || !code) {
     return NextResponse.redirect(`${origin}/login?error=oauth`);

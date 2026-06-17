@@ -46,6 +46,42 @@ export function FwdIsotipo({
   );
 }
 
+/**
+ * Logo Circular FWD — Flor de flechas superpuestas formando un hexágono.
+ * Utiliza simetría de 6 pliegues con rotaciones para recrear la identidad oficial del app launcher.
+ */
+export function FwdCircularLogo({
+  className,
+  ...props
+}: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 100 100"
+      role="img"
+      aria-label="Logo Circular FWD"
+      className={className}
+      {...props}
+    >
+      <defs>
+        <g id="fwd-circular-spoke">
+          {/* Triángulo exterior cyan */}
+          <polygon points="50,13 35,29 65,29" fill="#20BEC6" />
+          {/* Triángulo intermedio amarillo */}
+          <polygon points="50,25 40,36 60,36" fill="#FFCB05" />
+          {/* Spoke interior magenta */}
+          <polygon points="50,33 43,43 57,43" fill="#EC008C" />
+        </g>
+      </defs>
+      <use href="#fwd-circular-spoke" />
+      <use href="#fwd-circular-spoke" transform="rotate(60 50 50)" />
+      <use href="#fwd-circular-spoke" transform="rotate(120 50 50)" />
+      <use href="#fwd-circular-spoke" transform="rotate(180 50 50)" />
+      <use href="#fwd-circular-spoke" transform="rotate(240 50 50)" />
+      <use href="#fwd-circular-spoke" transform="rotate(300 50 50)" />
+    </svg>
+  );
+}
+
 type FwdLogoProps = {
   className?: string;
 };
@@ -71,7 +107,44 @@ export function FwdLogo({ className }: FwdLogoProps) {
           COSTA RICA
         </span>
       </div>
-      <FwdIsotipo className="h-9 w-auto" />
+      <FwdCircularLogo className="h-9 w-auto" />
     </div>
   );
 }
+
+/**
+ * Logotipo oficial de FWD Marketplace: wordmark FWD + Marketplace con degradado + isotipo.
+ * Soporta forceLight para renderizar en encabezados/fondos oscuros.
+ */
+export function FwdMarketplaceLogo({
+  className,
+  forceLight = false,
+}: {
+  className?: string;
+  forceLight?: boolean;
+}) {
+  return (
+    <div className={`flex items-center gap-2.5 ${className ?? ""}`}>
+      <FwdCircularLogo className="h-8 w-auto shrink-0" />
+      <div className="flex flex-col leading-none">
+        <span
+          className={`font-display text-2xl font-black tracking-tighter ${
+            forceLight ? "text-white" : "text-[#008FD4] dark:text-white"
+          }`}
+        >
+          FWD
+        </span>
+        <span
+          className={`font-display text-[0.58rem] font-extrabold tracking-[0.15em] uppercase bg-clip-text text-transparent ${
+            forceLight
+              ? "bg-gradient-to-r from-[#20BEC6] to-[#FFCB05]"
+              : "bg-gradient-to-r from-[#008FD4] via-[#662D91] to-[#EC008C] dark:from-[#20BEC6] dark:to-[#FFCB05]"
+          }`}
+        >
+          Marketplace
+        </span>
+      </div>
+    </div>
+  );
+}
+

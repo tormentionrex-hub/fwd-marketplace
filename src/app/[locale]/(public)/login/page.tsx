@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Image from "next/image";
+import { FwdMarketplaceLogo } from "@/components/ui/fwd-logo";
 import { AuthShell } from "@/components/features/auth/auth-shell";
 import { LoginForm } from "@/components/features/auth/login-form";
 
@@ -12,14 +12,7 @@ export default function LoginPage() {
     <AuthShell
       highlight="el futuro"
       logo={
-        <Image
-          src="/imagenes/fwd-marketplace.png"
-          alt="FWD Marketplace"
-          width={1412}
-          height={1114}
-          priority
-          className="h-28 w-auto object-contain lg:h-36"
-        />
+        <FwdMarketplaceLogo className="h-10 lg:h-12" forceLight={true} />
       }
     >
       <LoginForm />

@@ -1,7 +1,7 @@
 "use client";
 
 import { Link } from "@/i18n/navigation";
-import Image from "next/image";
+import { FwdCircularLogo } from "@/components/ui/fwd-logo";
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import SettingsPanel from "@/components/SettingsPanel";
@@ -29,24 +29,26 @@ export default function Navbar() {
         <span className="pointer-events-none absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] bg-white/10 skew-x-[-20deg] transition-transform duration-700 z-0 rounded-full" style={{ clipPath: "inset(0 round 9999px)" }} />
 
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-3 flex-shrink-0">
-          <div className="w-14 h-14 flex-shrink-0 fwd-spin">
-            <Image
-              src="/imagenes/logo-removebg-preview.png"
-              alt="FWD Costa Rica"
-              width={56}
-              height={56}
-              className="w-full h-full object-contain"
-            />
+        <Link href="/" className="flex items-center gap-3 flex-shrink-0 hover:opacity-90 transition-opacity">
+          <div className="w-11 h-11 flex-shrink-0 fwd-spin">
+            <FwdCircularLogo className="w-full h-full" />
           </div>
-          <Image
-            src="/imagenes/fwd-marketplace.png"
-            alt="FWD Marketplace"
-            width={1412}
-            height={1114}
-            priority
-            className="h-16 w-auto object-contain"
-          />
+          <div className="flex flex-col leading-none">
+            <span className="font-display text-2xl font-black tracking-tighter text-white">
+              FWD
+            </span>
+            <span
+              className="font-display text-[0.6rem] font-extrabold tracking-[0.15em] uppercase bg-clip-text text-transparent"
+              style={{
+                background: "linear-gradient(90deg, #20BEC6 0%, #FFCB05 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}
+            >
+              Marketplace
+            </span>
+          </div>
         </Link>
 
         {/* Desktop links */}

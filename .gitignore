@@ -48,3 +48,7 @@ next-env.d.ts
 # playwright testing artifacts
 .playwright-mcp/
 *.playwright-mcp.*
+
+# capacitor native platforms
+/ios/
+/android/

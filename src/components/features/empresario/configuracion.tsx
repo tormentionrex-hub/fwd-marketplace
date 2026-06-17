@@ -339,9 +339,9 @@ export default function ConfiguracionEmpresario({ nombre, empresa, correo, verif
           </div>
         )}
 
-        <div style={{ display: 'grid', gridTemplateColumns: '210px 1fr', gap: 24, alignItems: 'start' }}>
+        <div className="config-layout-grid" style={{ display: 'grid', gridTemplateColumns: '210px 1fr', gap: 24, alignItems: 'start' }}>
           {/* Pestañas laterales */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 3, position: 'sticky', top: 20 }}>
+          <div className="config-tabs-sidebar" style={{ display: 'flex', flexDirection: 'column', gap: 3, position: 'sticky', top: 20 }}>
             {TABS.map((t) => (
               <button
                 key={t.id}
@@ -391,7 +391,7 @@ export default function ConfiguracionEmpresario({ nombre, empresa, correo, verif
                       <div className="muted" style={{ fontSize: 12.5, marginTop: 2 }}>{correo}</div>
                     </div>
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                  <div className="config-inputs-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                     <Campo label="Nombre de contacto">
                       <input
                         style={inputStyle}
@@ -515,7 +515,7 @@ export default function ConfiguracionEmpresario({ nombre, empresa, correo, verif
             {tab === 'seg' && (
               <>
                 <CfgCard Icon={IconSettings} titulo="Seguridad" desc="Protege el acceso a tu cuenta">
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 6 }}>
+                  <div className="config-inputs-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 6 }}>
                     <Campo label="Contraseña actual">
                       <input
                         style={inputStyle}

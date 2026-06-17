@@ -102,9 +102,9 @@ export default async function PerfilEmpresarioPage({
       </div>
 
       <div className="page fade-in">
-        <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: 24, alignItems: 'start' }}>
+        <div className="grid-2col-responsive" style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: 24, alignItems: 'start' }}>
           {/* Columna izquierda — identidad */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 18, position: 'sticky', top: 20 }}>
+          <div className="sticky-col-responsive" style={{ display: 'flex', flexDirection: 'column', gap: 18, position: 'sticky', top: 20 }}>
             <div className="card card-pad" style={{ textAlign: 'center' }}>
               <div style={{ position: 'relative', width: 92, height: 92, margin: '0 auto 14px' }}>
                 {perfil.fotoUrl ? (
@@ -241,7 +241,7 @@ export default async function PerfilEmpresarioPage({
             </div>
 
             {/* Resumen de actividad */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+            <div className="grid-3col-responsive" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
               {resumen.map((r) => (
                 <div key={r.l} className="card card-pad" style={{ display: 'flex', alignItems: 'center', gap: 13 }}>
                   <div

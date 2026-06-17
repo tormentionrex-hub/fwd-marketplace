@@ -12,6 +12,7 @@ import TiltCard from "@/components/TiltCard";
 import AnimatedSubtitle from "@/components/AnimatedSubtitle";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
+import ParticleBackground from "@/components/ParticleBackground";
 
 /* ─── Hardcoded data ─────────────────────────────── */
 
@@ -64,6 +65,7 @@ export default async function Home() {
 
       {/* ── HERO ─────────────────────────────────── */}
       <section className="relative overflow-hidden flex-1 bg-[#0e1628]">
+        <ParticleBackground />
         <HeroCarousel />
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-16 md:pt-36 md:pb-24">
