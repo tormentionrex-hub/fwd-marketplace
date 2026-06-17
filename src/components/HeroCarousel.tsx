@@ -4,10 +4,10 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 
 const imagenes = [
-  "/imagenes/estudiante1.png",
-  "/imagenes/estudiante2.png",
-  "/imagenes/estudiante3.png",
-  "/imagenes/estudiante4.png",
+  "/imagenes/estudiante%20(1).jpeg",
+  "/imagenes/estudiante%20(2).jpeg",
+  "/imagenes/estudiante%20(3).jpeg",
+  "/imagenes/estudiante%20(4).jpeg",
 ];
 
 export default function HeroCarousel() {

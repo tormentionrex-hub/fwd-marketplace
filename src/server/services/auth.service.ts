@@ -19,6 +19,7 @@ import {
 
 export interface ResultadoAuth {
   token: string;
+  pendiente?: boolean;
   usuario: {
     id: string;
     nombre: string;
@@ -30,19 +31,19 @@ export interface ResultadoAuth {
 
 // ─── LOGIN ────────────────────────────────────────────────────────────────────
 // Retornos:
-//   null        → credenciales incorrectas (no distinguimos cuál)
-//   'pendiente' → credenciales ok, pero la cuenta aún no fue aprobada
-//   ResultadoAuth → login exitoso
+//   null              → credenciales incorrectas, cuenta rechazada o suspendida
+//   ResultadoAuth     → login exitoso (pendiente?: true si aún no fue aprobada)
 export async function login(
   correo: string,
   password: string
-): Promise<ResultadoAuth | 'pendiente' | null> {
-  const usuario = await buscarUsuarioPorCorreo(correo);
+): Promise<ResultadoAuth | null> {
+  const emailNorm = correo.trim().toLowerCase();
+  const usuario = await buscarUsuarioPorCorreo(emailNorm);
   if (!usuario) return null;
 
   if (!verifyPassword(password, usuario.hash_contrasena)) return null;
 
-  if (usuario.estado === 'pendiente') return 'pendiente';
+  if (usuario.estado === 'rechazado' || usuario.estado === 'suspendido') return null;
 
   // Marca el inicio de esta sesión. No bloquea el login si la escritura falla:
   // registrar la sesión es secundario frente a dejar entrar al usuario.
@@ -54,6 +55,7 @@ export async function login(
 
   return {
     token: generarToken(),
+    ...(usuario.estado === 'pendiente' && { pendiente: true }),
     usuario: {
       id: usuario.id,
       nombre: usuario.nombre,
@@ -74,6 +76,7 @@ export async function registrarEmpresario(
   extra: {
     segundoApellido?: string | undefined;
     nombreEmpresa?: string | undefined;
+    numeroIdentificacion?: string | undefined;
     edad?: number | undefined;
   } = {}
 ): Promise<ResultadoAuth | null> {
@@ -87,6 +90,7 @@ export async function registrarEmpresario(
     nombre,
     segundoApellido: extra.segundoApellido,
     nombreEmpresa: extra.nombreEmpresa,
+    numeroIdentificacion: extra.numeroIdentificacion,
     edad: extra.edad,
     correo,
     hash: hashPassword(password),

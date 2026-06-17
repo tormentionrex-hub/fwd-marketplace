@@ -5,8 +5,8 @@ import { db } from '@/lib/db';
 // negocio; solo lee/escribe. La usan los services.
 
 export function buscarUsuarioPorCorreo(correo: string) {
-  return db.usuarios.findUnique({
-    where: { correo },
+  return db.usuarios.findFirst({
+    where: { correo: { equals: correo, mode: 'insensitive' } },
     include: { roles: { select: { nombre: true } } },
   });
 }
@@ -35,6 +35,7 @@ export function crearEmpresario(datos: {
   nombre: string;
   segundoApellido?: string | undefined;
   nombreEmpresa?: string | undefined;
+  numeroIdentificacion?: string | undefined;
   edad?: number | undefined;
   correo: string;
   hash: string;
@@ -50,9 +51,11 @@ export function crearEmpresario(datos: {
       hash_contrasena: datos.hash,
       id_rol: datos.idRol,
       image_url: datos.imageUrl ?? null,
+      estado: 'pendiente',
       perfiles_empresario: {
         create: {
           nombre_empresa: datos.nombreEmpresa ?? null,
+          numero_identificacion: datos.numeroIdentificacion ?? null,
         },
       },
     },
