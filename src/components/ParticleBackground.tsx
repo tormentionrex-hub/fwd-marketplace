@@ -67,8 +67,7 @@ export default function ParticleBackground() {
     };
 
     const loop = () => {
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       particles.forEach((p) => { p.update(); p.draw(ctx); });
 

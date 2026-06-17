@@ -2,6 +2,7 @@ import { Link } from "@/i18n/navigation";
 import {
   listarUsuarios,
   contarUsuariosPendientes,
+  contarUsuariosSuspendidos,
 } from "@/server/repositories/usuario.repository";
 import { AdminPageShell } from "@/components/features/admin/admin-page-header";
 import AnimatedProjectsTitle from "@/components/AnimatedProjectsTitle";
@@ -29,9 +30,10 @@ function AlertIcon({ className }: { className?: string }) {
 // Panel de administración — Dashboard (resumen general).
 // URL: /es/admin — protegido por (admin)/layout.tsx (solo rol admin).
 export default async function AdminPage() {
-  const [usuarios, pendientes] = await Promise.all([
+  const [usuarios, pendientes, suspendidos] = await Promise.all([
     listarUsuarios(),
     contarUsuariosPendientes(),
+    contarUsuariosSuspendidos(),
   ]);
 
   const conteo = { estudiante: 0, empresario: 0, admin: 0 };
@@ -96,6 +98,42 @@ export default async function AdminPage() {
             }`}
           >
             {pendientes > 0 ? "Revisar ahora" : "Ver validaciones"} &rarr;
+          </span>
+        </div>
+      </Link>
+
+      {/* Alerta de cuentas suspendidas */}
+      <Link
+        href="/admin/gestion-cuentas"
+        className={`group relative block overflow-hidden rounded-2xl p-5 shadow-lg transition hover:scale-[1.01] ${
+          suspendidos > 0
+            ? "border border-amber-500/30 bg-amber-500/10"
+            : "border border-white/10 bg-white/[0.04]"
+        }`}
+      >
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div>
+              <p
+                className={`text-sm font-medium ${
+                  suspendidos > 0 ? "text-amber-300/80" : "text-white/60"
+                }`}
+              >
+                Cuentas suspendidas
+              </p>
+              <p className={`text-3xl font-black tabular-nums ${
+                suspendidos > 0 ? "text-amber-300" : "text-white"
+              }`}>
+                {suspendidos}
+              </p>
+            </div>
+          </div>
+          <span
+            className={`text-sm font-semibold ${
+              suspendidos > 0 ? "text-amber-300" : "text-fwd-turquoise"
+            }`}
+          >
+            Gestionar cuentas &rarr;
           </span>
         </div>
       </Link>

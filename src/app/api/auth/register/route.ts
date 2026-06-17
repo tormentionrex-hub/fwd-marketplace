@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
-import {
-  registrarEmpresario,
-  registrarEstudianteLibre,
-} from '@/server/services/auth.service';
+import { registrarEmpresario } from '@/server/services/auth.service';
+import { crearCookieSesion } from '@/server/auth/session';
+import { rutaPorRol } from '@/server/auth/rutas';
 import { permitido } from '@/server/auth/rate-limit';
 import { clienteIp, mismoOrigen } from '@/server/http/request';
 import { error, errorInterno, parsearBody } from '@/server/http/responder';
@@ -23,7 +22,7 @@ export async function POST(request: Request) {
 
   const parseo = await parsearBody(request, registerSchema);
   if (!parseo.ok) return parseo.respuesta;
-  const { firstName, lastName, secondLastName, age, companyName, email, password } = parseo.data;
+  const { firstName, lastName, secondLastName, identificationNumber, age, companyName, email, password } = parseo.data;
 
   const nombre = `${firstName} ${lastName}`.trim();
 
@@ -31,18 +30,29 @@ export async function POST(request: Request) {
     const resultado = await registrarEmpresario(nombre, email, password, {
       segundoApellido: secondLastName,
       nombreEmpresa: companyName,
+      numeroIdentificacion: identificationNumber,
       edad: age,
     });
     if (!resultado) {
       return error('Ese correo ya está registrado', 409);
     }
 
-    // La cuenta queda PENDIENTE de aprobación del admin: NO se crea sesión.
-    // El usuario no puede acceder hasta que un administrador la valide.
+    // Crear sesión inmediatamente — el empresario entra al dashboard en estado
+    // 'pendiente' con acceso limitado hasta que el admin apruebe la cuenta.
+    await crearCookieSesion({
+      uid: resultado.usuario.id,
+      rol: resultado.usuario.rol,
+      correo: resultado.usuario.correo,
+      token: resultado.token,
+    });
+
     return NextResponse.json({
-      pending: true,
-      mensaje:
-        'Tu cuenta fue creada y está pendiente de aprobación por un administrador. Te avisaremos cuando esté lista.',
+      perfil: {
+        nombre: resultado.usuario.nombre,
+        image_url: resultado.usuario.image_url,
+      },
+      pendiente: true,
+      redirectTo: rutaPorRol(resultado.usuario.rol),
     });
   } catch (e) {
     return errorInterno('auth/register', e);

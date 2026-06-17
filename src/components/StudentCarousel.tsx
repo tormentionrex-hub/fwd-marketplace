@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import Image from "next/image";
 import { gsap } from "gsap";
 import { generarAvatar } from "@/lib/avatar";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -150,6 +151,8 @@ function AnimatedStudentsTitle() {
 
 export default function StudentCarousel() {
   const [current, setCurrent] = useState(0);
+  const [videoEnded, setVideoEnded] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const gridRef  = useRef<HTMLDivElement>(null);
   const hoverRef = useRef(false); // autoplay en pausa mientras el cursor está sobre las cards
   const animRef  = useRef(false); // bloquea la navegación durante una transición
@@ -259,14 +262,58 @@ export default function StudentCarousel() {
             >
               {/* Barra superior decorativa */}
               <div className="h-1 w-full" style={{ background: "linear-gradient(90deg, #20BEC6, #008FD5, #662D91, #ED008C)" }} />
-              <video
-                className="w-full block"
-                controls
-                preload="metadata"
-                style={{ background: "#0e1628" }}
-              >
-                <source src="/videos/fwd-testimonios.mp4" type="video/mp4" />
-              </video>
+
+              <div className="relative">
+                <video
+                  ref={videoRef}
+                  className="w-full block"
+                  controls
+                  preload="metadata"
+                  style={{ background: "#0e1628" }}
+                  onEnded={() => setVideoEnded(true)}
+                >
+                  <source src="/videos/fwd-testimonios.mp4" type="video/mp4" />
+                </video>
+
+                {/* Pantalla de publicidad al terminar el video */}
+                {videoEnded && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center"
+                    style={{ background: "rgba(14,22,40,0.92)" }}
+                  >
+                    <div className="relative w-full h-full">
+                      <Image
+                        src="/imagenes/publicidad.png"
+                        alt="FWD Marketplace"
+                        fill
+                        className="object-contain"
+                      />
+                    </div>
+
+                    {/* Botón volver a ver */}
+                    <button
+                      onClick={() => {
+                        setVideoEnded(false);
+                        if (videoRef.current) {
+                          videoRef.current.currentTime = 0;
+                          videoRef.current.play();
+                        }
+                      }}
+                      className="absolute bottom-4 right-4 group flex items-center gap-2 rounded-full px-6 py-3 text-sm font-bold text-white transition-all duration-300 hover:scale-105 active:scale-95"
+                      style={{
+                        background: "linear-gradient(135deg, #008FD5, #662D91)",
+                        boxShadow: "0 4px 20px rgba(0,143,213,0.5)",
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 8px 30px rgba(102,45,145,0.6)"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "0 4px 20px rgba(0,143,213,0.5)"; }}
+                    >
+                      <svg className="w-4 h-4 transition-transform duration-200 group-hover:-rotate-12" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+                        <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/>
+                      </svg>
+                      Volver a ver
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

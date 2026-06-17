@@ -29,6 +29,23 @@ export function listarProyectosDeEmpresario(idEmpresario: string) {
     orderBy: { publicado: 'desc' },
   });
 }
+// Lista todos los proyectos para el panel admin: empresario, estado y nº de
+// ofertas. Solo lectura, acotado a los más recientes.
+export function listarProyectosAdmin() {
+  return db.proyectos.findMany({
+    take: 50,
+    orderBy: { publicado: 'desc' },
+    select: {
+      id: true,
+      titulo: true,
+      estado: true,
+      publicado: true,
+      cierre: true,
+      perfiles_empresario: { select: { usuarios: { select: { nombre: true } } } },
+      _count: { select: { ofertas: true } },
+    },
+  });
+}
 
 // Cuenta las ofertas recibidas en los proyectos del empresario desde `desde`
 // (para el delta "nuevas esta semana" del dashboard). Una query agregada.
@@ -152,22 +169,6 @@ export function buscarEstudianteAdjudicado(idProyecto: string) {
   return db.ofertas.findFirst({
     where: { id_proyecto: idProyecto, estado: 'adjudicada' },
     select: { id_estudiante: true },
-  });
-}
-
-// Lista todos los proyectos para el panel admin con nombre del empresario y conteo de ofertas.
-export function listarProyectosAdmin() {
-  return db.proyectos.findMany({
-    orderBy: { publicado: 'desc' },
-    select: {
-      id: true,
-      titulo: true,
-      estado: true,
-      perfiles_empresario: {
-        select: { usuarios: { select: { nombre: true } } },
-      },
-      _count: { select: { ofertas: true } },
-    },
   });
 }
 
