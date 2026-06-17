@@ -85,7 +85,7 @@ export async function dashboardEmpresario(idEmpresario: string): Promise<{
     nuevasOfertasSemana,
   };
 
-  const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+  const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'] as const;
   const chartDataMap = new Map<string, { mes: string; proyectos: number; ofertas: number }>();
   
   // Rellenar con los últimos 6 meses
@@ -93,7 +93,7 @@ export async function dashboardEmpresario(idEmpresario: string): Promise<{
   for (let i = 5; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const key = `${d.getFullYear()}-${d.getMonth()}`;
-    chartDataMap.set(key, { mes: meses[d.getMonth()], proyectos: 0, ofertas: 0 });
+    chartDataMap.set(key, { mes: meses[d.getMonth()] ?? '—', proyectos: 0, ofertas: 0 });
   }
 
   for (const p of proyectos6M) {
