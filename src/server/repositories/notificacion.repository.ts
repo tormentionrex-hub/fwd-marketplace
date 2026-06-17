@@ -33,13 +33,6 @@ export function marcarTodasLeidas(idUsuario: string) {
   });
 }
 
-export function marcarUnaLeida(idUsuario: string, idNotificacion: string) {
-  return db.notificaciones.updateMany({
-    where: { id: idNotificacion, id_usuario: idUsuario, leida: false },
-    data: { leida: true },
-  });
-}
-
 
 // Crea una notificación para un usuario. La consumen los flujos que generan
 // avisos (solicitudes de mensaje, mensajes nuevos, etc.).
