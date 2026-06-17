@@ -152,6 +152,7 @@ export default async function DashboardEstudiantePage({
           <div className="min-w-0">
             <h1 className="font-display text-3xl font-extrabold tracking-tight drop-shadow-sm sm:text-4xl">
               Hola, {nombre}
+              <Button href={`/${locale}/dashboard/estudiante/perfil`} className="ml-4 bg-white text-fwd-azul hover:bg-white/90">Editar perfil</Button>
             </h1>
             <p className="mt-2 max-w-lg text-sm leading-relaxed text-white/85 sm:text-base">
               Bienvenido a tu centro de oportunidades profesionales. Descubrí proyectos, gestioná
