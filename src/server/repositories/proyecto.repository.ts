@@ -86,6 +86,26 @@ export function contarOfertasDesde(idEmpresario: string, desde: Date) {
   });
 }
 
+// Obtiene fechas de proyectos y ofertas de los últimos 6 meses
+export function obtenerActividadSeisMeses(idEmpresario: string) {
+  const hace6Meses = new Date();
+  hace6Meses.setMonth(hace6Meses.getMonth() - 5);
+  hace6Meses.setDate(1);
+  hace6Meses.setHours(0, 0, 0, 0);
+
+  const proyectos = db.proyectos.findMany({
+    where: { id_empresario: idEmpresario, publicado: { gte: hace6Meses } },
+    select: { publicado: true },
+  });
+
+  const ofertas = db.ofertas.findMany({
+    where: { proyectos: { id_empresario: idEmpresario }, enviado: { gte: hace6Meses } },
+    select: { enviado: true },
+  });
+
+  return Promise.all([proyectos, ofertas]);
+}
+
 // Trae un proyecto con su empresario (nombre + sector) y sus tecnologías
 // (ficha pública del proyecto).
 export function obtenerProyectoConDetalle(id: string) {

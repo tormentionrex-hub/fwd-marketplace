@@ -6,6 +6,7 @@ import {
   entregablesRecientesDeEmpresario,
   proyectosCerradosDeEmpresario,
   contarOfertasDesde,
+  obtenerActividadSeisMeses,
 } from '@/server/repositories/proyecto.repository';
 import type { EstadoProyecto } from '@/types/sefora';
 
@@ -31,6 +32,7 @@ export type FilaProyectoEmpresario = {
   candidatos: number;
   fechaLimite: string | null; // ISO; null si el proyecto no tiene plazo definido
   adjudicadoA: string | null; // nombre del estudiante adjudicado, o null
+  publicado: string | null;
 };
 
 // Deriva la fecha límite a partir de `cierre`, o de `publicado` + `plazo_dias`
@@ -50,11 +52,13 @@ function calcularFechaLimite(p: {
 export async function dashboardEmpresario(idEmpresario: string): Promise<{
   resumen: ResumenEmpresario;
   proyectos: FilaProyectoEmpresario[];
+  chartData: { mes: string; proyectos: number; ofertas: number }[];
 }> {
   const hace7Dias = new Date(Date.now() - 7 * 86400000);
-  const [filas, nuevasOfertasSemana] = await Promise.all([
+  const [filas, nuevasOfertasSemana, [proyectos6M, ofertas6M]] = await Promise.all([
     listarProyectosDeEmpresario(idEmpresario),
     contarOfertasDesde(idEmpresario, hace7Dias),
+    obtenerActividadSeisMeses(idEmpresario),
   ]);
 
   const proyectos: FilaProyectoEmpresario[] = filas.map((p) => ({
@@ -64,6 +68,7 @@ export async function dashboardEmpresario(idEmpresario: string): Promise<{
     candidatos: p._count.ofertas,
     fechaLimite: calcularFechaLimite(p),
     adjudicadoA: p.ofertas[0]?.perfiles_estudiante?.usuarios?.nombre ?? null,
+    publicado: p.publicado ? p.publicado.toISOString() : null,
   }));
 
   const resumen: ResumenEmpresario = {
@@ -80,7 +85,34 @@ export async function dashboardEmpresario(idEmpresario: string): Promise<{
     nuevasOfertasSemana,
   };
 
-  return { resumen, proyectos };
+  const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'] as const;
+  const chartDataMap = new Map<string, { mes: string; proyectos: number; ofertas: number }>();
+  
+  // Rellenar con los últimos 6 meses
+  const now = new Date();
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const key = `${d.getFullYear()}-${d.getMonth()}`;
+    chartDataMap.set(key, { mes: meses[d.getMonth()] ?? '—', proyectos: 0, ofertas: 0 });
+  }
+
+  for (const p of proyectos6M) {
+    if (!p.publicado) continue;
+    const key = `${p.publicado.getFullYear()}-${p.publicado.getMonth()}`;
+    const entry = chartDataMap.get(key);
+    if (entry) entry.proyectos++;
+  }
+
+  for (const o of ofertas6M) {
+    if (!o.enviado) continue;
+    const key = `${o.enviado.getFullYear()}-${o.enviado.getMonth()}`;
+    const entry = chartDataMap.get(key);
+    if (entry) entry.ofertas++;
+  }
+
+  const chartData = Array.from(chartDataMap.values());
+
+  return { resumen, proyectos, chartData };
 }
 
 // ── Actividad reciente del empresario (Dashboard, Página 12) ────────────────
