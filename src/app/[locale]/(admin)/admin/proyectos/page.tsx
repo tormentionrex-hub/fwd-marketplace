@@ -5,14 +5,16 @@ import {
   AdminPageHeader,
 } from "@/components/features/admin/admin-page-header";
 import { GestionProyectosPanel } from "@/components/features/admin/gestion-proyectos-panel";
+import type { ProyectoAdmin } from "@/components/features/admin/gestion-proyectos-panel";
 
 
 // URL: /es/admin/proyectos — resumen operativo + listado de proyectos.
 export default async function AdminProyectosPage() {
-  const [stats, proyectos] = await Promise.all([
+  const [stats, rawProyectos] = await Promise.all([
     obtenerEstadisticasAdmin(),
     listarProyectosAdmin(),
   ]);
+  const proyectos = rawProyectos as ProyectoAdmin[];
 
   const operativas = [
     {
@@ -47,8 +49,7 @@ export default async function AdminProyectosPage() {
         {operativas.map((m) => (
           <div
             key={m.label}
-            className="rounded-2xl p-5 shadow-lg"
-            style={{ backgroundColor: m.color }}
+            className="rounded-2xl p-5 shadow-lg bg-fwd-azul"
           >
             <p className="text-sm font-medium text-white/80">{m.label}</p>
             <p className="mt-1 text-4xl font-black tabular-nums text-white">
