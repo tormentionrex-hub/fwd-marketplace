@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Link, usePathname } from "@/i18n/navigation";
+import { LogoutButton } from "@/components/layout/logout-button";
 
 /* ── Íconos SVG inline (sin emojis, REGLA #6) ───────────────── */
 type IcoProps = { d: string; extra?: string | undefined; className?: string };
@@ -42,6 +43,7 @@ const ICON = {
   inicio: { d: "M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z" },
   menu: { d: "M3 6h18M3 12h18M3 18h18" },
   close: { d: "M18 6 6 18M6 6l12 12" },
+  logout: { d: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4", extra: "M16 17l5-5-5-5M21 12H9" },
 } as const;
 
 const NAV = [
@@ -133,14 +135,23 @@ export function AdminSidebar() {
         </nav>
 
         {/* Salir del panel — visualmente distinto, al fondo */}
-        <Link
-          href="/"
-          onClick={() => setOpen(false)}
-          className="mt-4 flex items-center gap-3 rounded-xl border border-white/15 bg-white/5 px-3 py-2.5 text-sm font-semibold text-white/80 transition hover:border-fwd-turquoise/50 hover:bg-fwd-turquoise/10 hover:text-white"
-        >
-          <Ico d={ICON.inicio.d} />
-          Ir al inicio
-        </Link>
+        <div className="mt-4 flex gap-2">
+          <Link
+            href="/"
+            onClick={() => setOpen(false)}
+            className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 px-2.5 py-2.5 text-xs font-semibold text-white/80 transition hover:border-fwd-turquoise/50 hover:bg-fwd-turquoise/10 hover:text-white"
+          >
+            <Ico d={ICON.inicio.d} />
+            Inicio
+          </Link>
+          <LogoutButton
+            className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-2.5 py-2.5 text-xs font-semibold text-red-200 transition hover:border-red-500/40 hover:bg-red-500/20 disabled:opacity-60"
+            label="Salir"
+          >
+            <Ico d={ICON.logout.d} extra={ICON.logout.extra} />
+            Salir
+          </LogoutButton>
+        </div>
       </aside>
     </>
   );

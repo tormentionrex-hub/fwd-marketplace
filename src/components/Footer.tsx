@@ -3,6 +3,7 @@
 import { Link } from "@/i18n/navigation";
 import Image from "next/image";
 import { useState } from "react";
+import DonacionModal from "@/components/DonacionModal";
 
 type EstadoEnvio = "idle" | "enviando" | "ok" | "error";
 
@@ -12,6 +13,7 @@ export default function Footer() {
   const [mensaje, setMensaje] = useState("");
   const [estado, setEstado] = useState<EstadoEnvio>("idle");
   const [aviso, setAviso] = useState("");
+  const [donacionAbierta, setDonacionAbierta] = useState(false);
 
   async function enviarMensaje() {
     if (estado === "enviando") return;
@@ -53,6 +55,7 @@ export default function Footer() {
   }
 
   return (
+    <>
     <footer
       className="text-white relative"
       style={{ background: "linear-gradient(135deg, #0e1628 0%, #2a1060 55%, #7b1fa2 85%, #ED008C 100%)" }}
@@ -123,6 +126,17 @@ export default function Footer() {
                 <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">›</span>
                 Política de Privacidad
               </Link>
+
+              <button
+                onClick={() => setDonacionAbierta(true)}
+                className="group mt-3 flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold text-white transition-all duration-300 hover:scale-105 active:scale-95 hover:brightness-110"
+                style={{ background: "linear-gradient(135deg, #ED008C, #662D91)", boxShadow: "0 3px 14px rgba(237,0,140,0.4)" }}
+              >
+                <svg className="w-3.5 h-3.5 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                </svg>
+                Donación
+              </button>
             </div>
 
             <p className="text-xs text-white/30 mt-auto">
@@ -284,5 +298,10 @@ export default function Footer() {
         </div>
       </div>
     </footer>
+
+      {donacionAbierta && (
+        <DonacionModal onClose={() => setDonacionAbierta(false)} />
+      )}
+    </>
   );
 }
