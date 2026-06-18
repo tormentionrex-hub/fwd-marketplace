@@ -56,7 +56,6 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {children}
-          <ThemeToggle variant="floating" className="!fixed !bottom-5 !left-5 !right-auto z-[9999]" />
         </ThemeProvider>
       </body>
     </html>

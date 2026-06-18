@@ -41,11 +41,42 @@ export function listarProyectosAdmin() {
       estado: true,
       publicado: true,
       cierre: true,
+      motivo_estado: true,
+      estado_previo: true,
       perfiles_empresario: { select: { usuarios: { select: { nombre: true } } } },
       _count: { select: { ofertas: true } },
     },
   });
 }
+
+export function suspenderProyectoRepo(id: string, motivo: string, estadoActual: string) {
+  return db.proyectos.update({
+    where: { id },
+    data: {
+      estado: 'pendiente_revision',
+      estado_previo: estadoActual,
+      motivo_estado: motivo,
+    },
+  });
+}
+
+export function vistoBuenoProyectoRepo(id: string, estadoPrevio: string | null) {
+  return db.proyectos.update({
+    where: { id },
+    data: {
+      estado: estadoPrevio || 'publicado',
+      estado_previo: null,
+      motivo_estado: null,
+    },
+  });
+}
+
+export function eliminarProyectoRepo(id: string) {
+  return db.proyectos.delete({
+    where: { id },
+  });
+}
+
 
 // Cuenta las ofertas recibidas en los proyectos del empresario desde `desde`
 // (para el delta "nuevas esta semana" del dashboard). Una query agregada.

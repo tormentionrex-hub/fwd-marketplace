@@ -11,6 +11,7 @@ import SmoothScroll from '@/components/SmoothScroll';
 import AnimationsInit from '@/components/AnimationsInit';
 import CursorGlow from '@/components/CursorGlow';
 import PageLoader from '@/components/PageLoader';
+import { getUser } from '@/server/auth/get-user';
 
 export const metadata: Metadata = {
   title: 'FWD · Costa Rica — Marketplace',
@@ -34,6 +35,7 @@ export default async function LocaleLayout({
   }
   setRequestLocale(locale);
   const messages = await getMessages();
+  const user = await getUser();
 
   return (
     <>
@@ -43,10 +45,11 @@ export default async function LocaleLayout({
       <CursorGlow />
       <NextIntlClientProvider messages={messages}>
         {children}
-        <AdminDashboardButton />
+        <AdminDashboardButton userRole={user?.roles.nombre} locale={locale} />
         <RoleBadge />
         <AlertaGlobal />
       </NextIntlClientProvider>
     </>
   );
 }
+

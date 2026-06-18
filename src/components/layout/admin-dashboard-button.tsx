@@ -1,16 +1,24 @@
+"use client";
+
 import Link from "next/link";
-import { getLocale } from "next-intl/server";
-import { getUser } from "@/server/auth/get-user";
+import { usePathname } from "next/navigation";
 
 // Acceso directo al panel de administración, fijo arriba a la derecha.
-// Server Component: el rol se lee en el servidor (privado) y solo se muestra a
-// administradores. Usa el locale del servidor + next/link normal para no
-// depender del contexto i18n del cliente.
-export async function AdminDashboardButton() {
-  const user = await getUser();
-  if (user?.roles.nombre !== "admin") return null;
+// Se muestra solo si el rol del usuario es administrador y no estamos ya en el panel.
+export function AdminDashboardButton({
+  userRole,
+  locale,
+}: {
+  userRole: string | undefined;
+  locale: string;
+}) {
+  const pathname = usePathname();
 
-  const locale = await getLocale();
+  if (userRole !== "admin") return null;
+
+  // Ocultar si ya estamos dentro de las rutas del administrador (/es/admin..., /en/admin..., /admin...)
+  const isAlreadyAdmin = pathname?.split("/").includes("admin");
+  if (isAlreadyAdmin) return null;
 
   return (
     <Link
@@ -34,3 +42,4 @@ export async function AdminDashboardButton() {
     </Link>
   );
 }
+
