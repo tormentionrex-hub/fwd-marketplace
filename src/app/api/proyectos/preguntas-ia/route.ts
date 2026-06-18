@@ -26,7 +26,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ preguntas });
   } catch (e) {
     const msg = e instanceof Error ? e.message : '';
-    if (msg.includes('no configurada')) {
+    if (
+      msg.includes('no configurada') ||
+      msg.includes('servicio de IA') ||
+      msg.includes('OpenRouter') ||
+      msg.includes('API_KEY')
+    ) {
       return error('El servicio de IA no esta disponible en este momento.', 503);
     }
     return errorInterno('proyectos/preguntas-ia/POST', e);

@@ -41,6 +41,7 @@ export function LoginForm() {
       // Perfil público (nombre, foto) -> localStorage. Lo privado va en la cookie.
       if (data?.perfil) {
         localStorage.setItem("fwd_perfil", JSON.stringify(data.perfil));
+        sessionStorage.setItem("fwd_active", "true");
       }
 
       router.push(data?.redirectTo ?? "/");

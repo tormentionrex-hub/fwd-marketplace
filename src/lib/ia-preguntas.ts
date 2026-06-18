@@ -116,6 +116,10 @@ export async function generarPreguntasDesdeBrief(brief: string): Promise<Pregunt
     ]);
   } catch (err) {
     console.error('[ia-preguntas] Error de red:', err);
+    const msg = err instanceof Error ? err.message : '';
+    if (msg.includes('no configurada')) {
+      throw err;
+    }
     throw new Error('Error al comunicarse con el servicio de IA');
   }
 

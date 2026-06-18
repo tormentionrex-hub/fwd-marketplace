@@ -27,7 +27,12 @@ export async function POST(request: Request) {
     return NextResponse.json(respuesta);
   } catch (e) {
     const msg = e instanceof Error ? e.message : '';
-    if (msg.includes('API_KEY') || msg.includes('no configurada')) {
+    if (
+      msg.includes('API_KEY') ||
+      msg.includes('no configurada') ||
+      msg.includes('agente de IA') ||
+      msg.includes('OpenRouter')
+    ) {
       return error('El servicio de IA no esta disponible en este momento.', 503);
     }
     return errorInterno('proyectos/chat-ia/POST', e);

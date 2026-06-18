@@ -8,8 +8,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   if (!user) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
   }
-  if (user.roles.nombre !== 'estudiante') {
-    return NextResponse.json({ error: 'Solo los estudiantes' }, { status: 403 });
+  if (user.roles.nombre !== 'estudiante' && user.roles.nombre !== 'empresario') {
+    return NextResponse.json({ error: 'Rol no autorizado' }, { status: 403 });
   }
 
   const { id } = await params;

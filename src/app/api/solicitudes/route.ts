@@ -2,23 +2,22 @@ import { NextResponse } from 'next/server';
 import { getUser } from '@/server/auth/get-user';
 import {
   enviarSolicitud,
-  listarSolicitudesEstudiante,
+  listarTodasLasSolicitudes,
 } from '@/server/services/solicitud-mensaje.service';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-// POST /api/solicitudes — un empresario envía una solicitud de contacto.
+// POST /api/solicitudes — envía una solicitud de contacto (puede ser de estudiante -> empresario o viceversa).
 export async function POST(request: Request) {
   const user = await getUser();
   if (!user) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
   }
-  if (user.roles.nombre !== 'empresario') {
-    return NextResponse.json({ error: 'Solo los empresarios pueden enviar solicitudes' }, { status: 403 });
-  }
 
   let body: {
+    idDestino?: string;
     idEstudiante?: string;
+    idEmpresario?: string;
     asunto?: string;
     mensaje?: string;
     idProyecto?: string | null;
@@ -29,13 +28,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Cuerpo inválido' }, { status: 400 });
   }
 
-  const idEstudiante = (body.idEstudiante ?? '').trim();
+  const idDestino = (body.idDestino ?? body.idEstudiante ?? body.idEmpresario ?? '').trim();
   const asunto = (body.asunto ?? '').trim();
   const mensaje = (body.mensaje ?? '').trim();
   const idProyecto = body.idProyecto?.trim() ? body.idProyecto.trim() : null;
 
-  if (!UUID_RE.test(idEstudiante)) {
-    return NextResponse.json({ error: 'Estudiante inválido' }, { status: 400 });
+  if (!UUID_RE.test(idDestino)) {
+    return NextResponse.json({ error: 'Destinatario inválido' }, { status: 400 });
   }
   if (!asunto || asunto.length > 200) {
     return NextResponse.json({ error: 'El asunto es obligatorio (máx. 200 caracteres)' }, { status: 400 });
@@ -47,17 +46,34 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Proyecto inválido' }, { status: 400 });
   }
 
+  let idEstudiante: string;
+  let idEmpresario: string;
+  let iniciador: string;
+
+  if (user.roles.nombre === 'empresario') {
+    idEstudiante = idDestino;
+    idEmpresario = user.id;
+    iniciador = 'empresario';
+  } else if (user.roles.nombre === 'estudiante') {
+    idEstudiante = user.id;
+    idEmpresario = idDestino;
+    iniciador = 'estudiante';
+  } else {
+    return NextResponse.json({ error: 'Rol no permitido para enviar solicitudes' }, { status: 403 });
+  }
+
   const resultado = await enviarSolicitud({
-    idEmpresario: user.id,
+    idEmpresario,
     idEstudiante,
     idProyecto,
     asunto: asunto.slice(0, 200),
     mensaje,
+    iniciador,
   });
 
   if (resultado === 'duplicada') {
     return NextResponse.json(
-      { error: 'Ya tenés una solicitud pendiente con este estudiante.' },
+      { error: 'Ya tenés una solicitud pendiente con este usuario.' },
       { status: 409 },
     );
   }
@@ -65,16 +81,13 @@ export async function POST(request: Request) {
   return NextResponse.json({ ok: true, id: resultado.id }, { status: 201 });
 }
 
-// GET /api/solicitudes — un estudiante lista las solicitudes que recibió.
+// GET /api/solicitudes — lista las solicitudes recibidas por el usuario.
 export async function GET() {
   const user = await getUser();
   if (!user) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
   }
-  if (user.roles.nombre !== 'estudiante') {
-    return NextResponse.json({ error: 'Solo los estudiantes' }, { status: 403 });
-  }
 
-  const solicitudes = await listarSolicitudesEstudiante(user.id);
-  return NextResponse.json({ solicitudes });
+  const { recibidas, enviadas } = await listarTodasLasSolicitudes(user.id);
+  return NextResponse.json({ solicitudes: recibidas, recibidas, enviadas });
 }

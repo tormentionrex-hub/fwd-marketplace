@@ -85,6 +85,7 @@ export function RegisterEstudianteForm() {
 
       if (data?.perfil) {
         localStorage.setItem("fwd_perfil", JSON.stringify(data.perfil));
+        sessionStorage.setItem("fwd_active", "true");
       }
 
       router.push(data?.redirectTo ?? "/dashboard/estudiante");
