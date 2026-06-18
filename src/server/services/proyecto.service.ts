@@ -1,14 +1,144 @@
 import 'server-only';
+import { after } from 'next/server';
 import {
   listarProyectosDeEmpresario,
+  listarProyectosPublicados,
   obtenerProyectoConDetalle,
   ofertasRecientesDeEmpresario,
   entregablesRecientesDeEmpresario,
   proyectosCerradosDeEmpresario,
   contarOfertasDesde,
+  buscarProyectoActivo,
+  listarTecnologias,
+  crearProyecto,
+  actualizarProyecto,
+  publicarProyecto,
+  eliminarProyecto,
+  guardarEmbedding,
+  obtenerDatosParaEmbedding,
+  buscarProyectosPorSimilitud,
   obtenerActividadSeisMeses,
 } from '@/server/repositories/proyecto.repository';
+import { generarEmbedding, textoParaEmbedding } from '@/lib/embeddings';
+import type { ProyectoMarketplace } from '@/types/marketplace';
 import type { EstadoProyecto } from '@/types/sefora';
+
+// ── Marketplace público ─────────────────────────────────────────────────────
+// Devuelve todos los proyectos con estado 'publicado', mapeados al DTO que
+// consume MarketplaceExplorer (fechas ya en ISO, empresa + tecnologías aplanadas).
+
+export async function listarProyectosParaMarketplace(): Promise<ProyectoMarketplace[]> {
+  const filas = await listarProyectosPublicados();
+  return filas.map((p) => ({
+    id: p.id,
+    titulo: p.titulo,
+    descripcion: p.descripcion,
+    areaNegocio: p.area_negocio,
+    plazoDias: p.plazo_dias,
+    publicado: p.publicado?.toISOString() ?? null,
+    tecnologias: p.proyectos_tecnologias.map((pt) => pt.tecnologias.nombre),
+    empresario: {
+      nombre: p.perfiles_empresario?.usuarios?.nombre ?? 'Empresa',
+      nombreEmpresa: p.perfiles_empresario?.nombre_empresa ?? null,
+      sector: p.perfiles_empresario?.sector ?? null,
+    },
+  }));
+}
+
+// ── CRUD empresario ─────────────────────────────────────────────────────────
+
+export async function listarTecnologiasService() {
+  const techs = await listarTecnologias();
+  return techs.map((t) => ({ id: t.id.toString(), nombre: t.nombre }));
+}
+
+export async function crearProyectoService(
+  idEmpresario: string,
+  data: {
+    titulo: string;
+    descripcion: string;
+    areaNegocio: string | null;
+    plazoDias: number | null;
+    tecnologias: string[];
+  },
+) {
+  const proyecto = await crearProyecto({ idEmpresario, ...data });
+  return { id: proyecto.id };
+}
+
+export async function actualizarProyectoService(
+  idProyecto: string,
+  idEmpresario: string,
+  data: {
+    titulo?: string | undefined;
+    descripcion?: string | undefined;
+    areaNegocio?: string | null | undefined;
+    plazoDias?: number | null | undefined;
+    tecnologias?: string[] | undefined;
+  },
+): Promise<'ok' | 'no_autorizado' | 'no_encontrado'> {
+  const proyecto = await buscarProyectoActivo(idProyecto);
+  if (!proyecto) return 'no_encontrado';
+  if (proyecto.id_empresario !== idEmpresario) return 'no_autorizado';
+  await actualizarProyecto(idProyecto, data);
+  return 'ok';
+}
+
+export async function publicarProyectoService(
+  idProyecto: string,
+  idEmpresario: string,
+): Promise<'ok' | 'no_autorizado' | 'no_encontrado' | 'ya_publicado'> {
+  const proyecto = await buscarProyectoActivo(idProyecto);
+  if (!proyecto) return 'no_encontrado';
+  if (proyecto.id_empresario !== idEmpresario) return 'no_autorizado';
+  if (proyecto.estado === 'publicado') return 'ya_publicado';
+
+  await publicarProyecto(idProyecto);
+
+  // Genera y guarda el embedding DESPUÉS de responder al cliente (no bloquea).
+  after(async () => {
+    try {
+      const datos = await obtenerDatosParaEmbedding(idProyecto);
+      if (!datos) return;
+      const texto = textoParaEmbedding({
+        titulo: datos.titulo,
+        descripcion: datos.descripcion,
+        areaNegocio: datos.area_negocio ?? null,
+        tecnologias: datos.proyectos_tecnologias.map((pt) => pt.tecnologias.nombre),
+      });
+      const embedding = await generarEmbedding(texto);
+      if (embedding) await guardarEmbedding(idProyecto, embedding);
+    } catch (err) {
+      console.error('[publicar] Error generando embedding:', err);
+    }
+  });
+
+  return 'ok';
+}
+
+// Búsqueda semántica: genera embedding de la query y devuelve proyectos
+// ordenados por similitud coseno. Soporta búsquedas como "turismo" que
+// devuelven proyectos relacionados aunque no contengan esa palabra exacta.
+export async function buscarProyectosSemantico(
+  query: string,
+  limite = 20,
+): Promise<{ id: string; similitud: number }[]> {
+  const embedding = await generarEmbedding(query);
+  if (!embedding) return [];
+  return buscarProyectosPorSimilitud(embedding, limite);
+}
+
+export async function eliminarProyectoService(
+  idProyecto: string,
+  idEmpresario: string,
+): Promise<'ok' | 'no_autorizado' | 'no_encontrado' | 'no_borrador'> {
+  const proyecto = await buscarProyectoActivo(idProyecto);
+  if (!proyecto) return 'no_encontrado';
+  if (proyecto.id_empresario !== idEmpresario) return 'no_autorizado';
+  if (proyecto.estado !== 'borrador') return 'no_borrador';
+  await eliminarProyecto(idProyecto);
+  return 'ok';
+}
 
 // ── Dashboard del empresario (Página 12) ────────────────────────────────────
 // Agrega y mapea los datos que consume la UI. Devuelve formas planas (fechas ya

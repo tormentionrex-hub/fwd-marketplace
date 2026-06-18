@@ -10,6 +10,7 @@ import {
   IconGrid,
   IconFolder,
   IconSpark,
+  IconPlus,
 } from '@/components/ui/fwd-icons';
 
 // LocalStorage key for the collapsed state of the Empresario sidebar
@@ -18,7 +19,6 @@ const STORAGE_KEY = 'fwd_empresario_sidebar_collapsed';
 export default function Sidebar({
   nombre,
   fotoUrl,
-  locale = 'es',
 }: {
   nombre: string;
   fotoUrl?: string | null;
@@ -214,6 +214,26 @@ export default function Sidebar({
           }}
         >
           Mis proyectos
+        </span>
+      </Link>
+
+      <Link
+        href="/empresario/crear-proyecto"
+        title={collapsed ? 'Crear proyecto' : undefined}
+        className={`nav-item ${isActive('/empresario/crear-proyecto') ? 'on' : ''}`}
+        style={{ justifyContent: collapsed ? 'center' : 'flex-start', gap: collapsed ? 0 : 11, overflow: 'hidden', transition: 'gap 0.2s' }}
+      >
+        <IconPlus size={19} />
+        <span
+          style={{
+            overflow: 'hidden',
+            width: collapsed ? 0 : 'auto',
+            opacity: collapsed ? 0 : 1,
+            whiteSpace: 'nowrap',
+            transition: 'width 0.3s ease, opacity 0.2s ease',
+          }}
+        >
+          Crear proyecto
         </span>
       </Link>
 

@@ -1,358 +1,660 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { Link, useRouter } from '@/i18n/navigation';
-import {
-  IconSpark,
-  IconSend,
-  IconFile,
-  IconCheck,
-  IconFlag,
-  IconChevD,
-  IconCode,
-  IconPlus,
-  IconAlert,
-  IconEdit,
-  IconX,
-  IconComunidad,
-} from '@/components/ui/fwd-icons';
+import { useState } from 'react';
+import { useRouter } from '@/i18n/navigation';
+import { IconSpark, IconAlert, IconEdit } from '@/components/ui/fwd-icons';
 
-// CREAR CON IA (Página 13) — VISUAL / DEMO. Reproduce el asistente del diseño FWD
-// (chat guiado -> propuesta estructurada) pero NO crea proyectos reales: es una
-// maqueta navegable. La creación real la conecta el equipo de IA.
-
-type Msg = { rol: 'ia' | 'user'; texto: string };
-
-const SALUDO =
-  '¡Hola! Soy tu asistente para publicar un proyecto. Contame en tus palabras qué necesitás construir y te ayudo a estructurarlo. ¿Qué problema querés resolver?';
-
-const GUION: { ia: string; sug?: string[]; genera?: boolean }[] = [
-  {
-    ia: 'Perfecto. ¿Quiénes van a usar la herramienta y qué deberían poder hacer? (por ejemplo: un administrador, un cliente, un supervisor…)',
-    sug: ['Un administrador y un supervisor de flota', 'Solo mi equipo interno'],
-  },
-  {
-    ia: '¡Muy claro! ¿A qué área de negocio pertenece esta solución? Esto ayuda a que el estudiante indicado la encuentre.',
-    sug: ['Logística', 'Operaciones', 'Servicio al cliente'],
-  },
-  {
-    ia: 'Genial. Una última cosa: ¿cuántos días querés dejar abierta la recepción de ofertas? Puede ser entre 5 y 15 días.',
-    sug: ['10 días', '7 días', '15 días'],
-  },
-  {
-    ia: 'Listo. Con eso ya tengo lo necesario para estructurar tu proyecto. Generé la propuesta a la derecha — revisala, editá lo que quieras y publicala cuando estés lista.',
-    genera: true,
-  },
-];
-
-const SUG_INICIAL = ['Una app para rastrear mi flota de reparto en tiempo real', 'Quiero un dashboard de ventas'];
-
-const PROPUESTA = {
-  titulo: 'App de seguimiento de flota en tiempo real',
-  resumen:
-    'Aplicación web para monitorear vehículos de reparto en tiempo real, con mapa en vivo, alertas de desvío de ruta y reportes de entrega.',
-  area: 'Logística',
-  plazo: '10 días',
-  requerimientos: [
-    'Mapa en vivo con posición de cada vehículo',
-    'Alertas de desvío de ruta en tiempo real',
-    'Panel de reportes: entregas completadas, tiempos, incidencias',
-    'Roles: administrador de flota y supervisor',
-    'Exportar reportes a PDF/CSV',
-  ],
-  tecnologias: ['React', 'Mapbox', 'WebSockets', 'Node'],
+type Pregunta = {
+  texto: string;
+  tipo: 'checkbox' | 'radio';
+  opciones: string[];
 };
 
-const inputBox: React.CSSProperties = {
-  width: '100%',
-  border: '1px solid var(--line)',
-  borderRadius: 'var(--r-sm)',
-  padding: '11px 13px',
-  fontSize: 14,
-  color: 'var(--ink-900)',
-  background: 'var(--surface)',
-  outline: 'none',
-  fontFamily: 'var(--font-body)',
-};
+type Contexto = { pregunta: string; respuestas: string[] };
 
-function Burbuja({ m, inicial }: { m: Msg; inicial: string }) {
-  const ia = m.rol === 'ia';
-  return (
-    <div style={{ display: 'flex', gap: 11, flexDirection: ia ? 'row' : 'row-reverse', marginBottom: 18 }}>
-      <div style={{ width: 34, height: 34, borderRadius: 10, flexShrink: 0, display: 'grid', placeItems: 'center', background: ia ? 'var(--morado)' : 'var(--azul)' }}>
-        {ia ? (
-          <IconSpark size={17} color="var(--amarillo)" />
-        ) : (
-          <span style={{ color: '#fff', fontFamily: 'var(--font-head)', fontWeight: 700, fontSize: 13 }}>{inicial}</span>
-        )}
-      </div>
-      <div
-        style={{
-          maxWidth: '78%',
-          padding: '12px 15px',
-          borderRadius: 14,
-          lineHeight: 1.55,
-          fontSize: 14,
-          background: ia ? 'var(--surface)' : 'var(--azul)',
-          color: ia ? 'var(--ink-800)' : '#fff',
-          border: ia ? '1px solid var(--line)' : 'none',
-          borderTopLeftRadius: ia ? 4 : 14,
-          borderTopRightRadius: ia ? 14 : 4,
-        }}
-      >
-        {m.texto}
-      </div>
-    </div>
-  );
-}
+type Paso = 'brief' | 'preguntas' | 'generando';
 
-function EditField({ label, value, multi }: { label: string; value: string; multi?: boolean }) {
-  const [v, setV] = useState(value);
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-      <label style={{ fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 13, color: 'var(--ink-800)' }}>{label}</label>
-      {multi ? (
-        <textarea value={v} onChange={(e) => setV(e.target.value)} style={{ ...inputBox, minHeight: 72, resize: 'vertical', lineHeight: 1.5 }} />
-      ) : (
-        <input value={v} onChange={(e) => setV(e.target.value)} style={inputBox} />
-      )}
-    </div>
-  );
-}
-
-export default function CrearConIA({ nombre }: { nombre: string }) {
+export default function CrearConIA({ nombre: _nombre }: { nombre: string }) {
   const router = useRouter();
-  const inicial = (nombre.trim()[0] ?? 'E').toUpperCase();
-  const [msgs, setMsgs] = useState<Msg[]>([{ rol: 'ia', texto: SALUDO }]);
-  const [step, setStep] = useState(0);
-  const [typing, setTyping] = useState(false);
-  const [input, setInput] = useState('');
-  const [generado, setGenerado] = useState(false);
-  const [publicado, setPublicado] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-  }, [msgs, typing]);
+  const [paso, setPaso] = useState<Paso>('brief');
+  const [brief, setBrief] = useState('');
+  const [preguntas, setPreguntas] = useState<Pregunta[]>([]);
+  const [preguntaIdx, setPreguntaIdx] = useState(0);
+  const [contexto, setContexto] = useState<Contexto[]>([]);
+  const [seleccionadas, setSeleccionadas] = useState<string[]>([]);
+  const [otroActivo, setOtroActivo] = useState(false);
+  const [otroTexto, setOtroTexto] = useState('');
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  // Loading inline: mientras se piden las preguntas a la IA el brief sigue visible
+  const [cargandoPreguntas, setCargandoPreguntas] = useState(false);
 
-  function enviar(texto: string) {
-    if (!texto.trim() || typing || step >= GUION.length) return;
-    setMsgs((m) => [...m, { rol: 'user', texto }]);
-    setInput('');
-    const turno = GUION[step];
-    if (!turno) return;
-    setTyping(true);
-    window.setTimeout(() => {
-      setTyping(false);
-      setMsgs((m) => [...m, { rol: 'ia', texto: turno.ia }]);
-      if (turno.genera) setGenerado(true);
-      setStep((s) => s + 1);
-    }, 1100);
+  // Paso 1: enviar brief, pedir preguntas a la IA sin salir de la pantalla de brief
+  async function enviarBrief() {
+    const texto = brief.trim();
+    if (!texto || cargandoPreguntas) return;
+    setErrorMsg(null);
+    setCargandoPreguntas(true);
+
+    try {
+      const res = await fetch('/api/proyectos/preguntas-ia', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ brief: texto }),
+      });
+      const data = (await res.json()) as { preguntas?: Pregunta[]; error?: string };
+
+      if (res.ok && data.preguntas && data.preguntas.length > 0) {
+        setPreguntas(data.preguntas);
+        setPreguntaIdx(0);
+        setContexto([]);
+        setSeleccionadas([]);
+        setOtroActivo(false);
+        setOtroTexto('');
+        setPaso('preguntas');
+      } else {
+        setErrorMsg(
+          data.error ?? 'No pudimos generar las preguntas. Intenta de nuevo o redacta un brief mas detallado.',
+        );
+      }
+    } catch {
+      setErrorMsg('Error de conexion. Verifica tu internet e intenta de nuevo.');
+    } finally {
+      setCargandoPreguntas(false);
+    }
   }
 
-  const sugActuales = step < GUION.length ? (step === 0 ? SUG_INICIAL : GUION[step]?.sug ?? null) : null;
-  const completado = step >= GUION.length;
+  // Toggle opcion — siempre checkbox: el empresario puede seleccionar todas las que quiera
+  function toggleOpcion(opcion: string) {
+    setSeleccionadas((prev) =>
+      prev.includes(opcion) ? prev.filter((o) => o !== opcion) : [...prev, opcion],
+    );
+  }
 
-  function publicar() {
-    setPublicado(true);
-    window.setTimeout(() => router.push('/empresario/proyectos'), 1300);
+  function toggleOtro() {
+    if (otroActivo) setOtroTexto('');
+    setOtroActivo((prev) => !prev);
+  }
+
+  // Avanzar a la siguiente pregunta o generar el proyecto
+  function siguiente() {
+    const pregunta = preguntas[preguntaIdx];
+    if (!pregunta) return;
+
+    const respuestasActuales = [...seleccionadas];
+    if (otroActivo && otroTexto.trim()) {
+      respuestasActuales.push(otroTexto.trim());
+    }
+
+    const nuevoContexto: Contexto[] = [
+      ...contexto,
+      { pregunta: pregunta.texto, respuestas: respuestasActuales },
+    ];
+    setContexto(nuevoContexto);
+
+    if (preguntaIdx < preguntas.length - 1) {
+      setPreguntaIdx((i) => i + 1);
+      setSeleccionadas([]);
+      setOtroActivo(false);
+      setOtroTexto('');
+    } else {
+      generarProyecto(nuevoContexto);
+    }
+  }
+
+  // Saltar la pregunta actual sin registrar respuesta
+  function saltar() {
+    if (preguntaIdx < preguntas.length - 1) {
+      setPreguntaIdx((i) => i + 1);
+      setSeleccionadas([]);
+      setOtroActivo(false);
+      setOtroTexto('');
+    } else {
+      generarProyecto(contexto);
+    }
+  }
+
+  // Llamar a la IA para generar el proyecto y redirigir al formulario
+  async function generarProyecto(ctx: Contexto[]) {
+    setErrorMsg(null);
+    setPaso('generando');
+
+    try {
+      const body: Record<string, unknown> = { brief: brief.trim() };
+      const ctxFiltrado = ctx.filter((c) => c.respuestas.length > 0);
+      if (ctxFiltrado.length > 0) body.contexto = ctxFiltrado;
+
+      const res = await fetch('/api/proyectos/generar-ia', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = (await res.json()) as { ok?: boolean; id?: string; error?: string };
+
+      if (!res.ok || !data.id) {
+        setPaso('brief');
+        setErrorMsg(data.error ?? 'No pudimos estructurar tu proyecto. Intenta de nuevo.');
+        return;
+      }
+
+      router.push(`/empresario/proyectos/${data.id}/editar`);
+    } catch {
+      setPaso('brief');
+      setErrorMsg('Error de conexion. Verifica tu internet e intenta de nuevo.');
+    }
+  }
+
+  const preguntaActual = preguntas[preguntaIdx];
+  const haySeleccion = seleccionadas.length > 0 || otroActivo;
+
+  // Estilo base para opciones de respuesta
+  function estiloOpcion(activa: boolean): React.CSSProperties {
+    return {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 14,
+      padding: '14px 16px',
+      border: `1.5px solid ${activa ? 'var(--azul)' : 'var(--line)'}`,
+      borderRadius: 10,
+      background: activa ? 'var(--azul-tint)' : 'var(--bg)',
+      cursor: 'pointer',
+      fontSize: 14,
+      color: 'var(--ink-800)',
+      userSelect: 'none',
+      transition: 'border-color 0.15s, background 0.15s',
+    };
   }
 
   return (
     <>
-      <div className="topbar">
-        <div>
-          <div className="tb-title">Crear proyecto con IA</div>
-          <div className="tb-sub">El asistente te ayuda a estructurar y publicar tu proyecto</div>
-        </div>
-        <div className="tb-spacer" />
-        <Link href="/empresario" className="btn btn-ghost">
-          <IconX size={16} />
-          Cancelar
-        </Link>
-      </div>
+      <style>{`
+        .fwd-app .tb-actions { right: calc(400px + 24px); top: 20px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes chatdot {
+          0%, 80%, 100% { opacity: 0.25; transform: translateY(0); }
+          40% { opacity: 1; transform: translateY(-4px); }
+        }
+      `}</style>
 
-      <div className="page page-wide fade-in" style={{ paddingTop: 22 }}>
-        {/* Aviso: demo visual */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 400px',
+          height: '100vh',
+          overflow: 'hidden',
+        }}
+      >
+        {/* ─── Columna izquierda ─── */}
         <div
-          className="card"
-          style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 16px', marginBottom: 18, background: 'var(--azul-tint)', borderColor: 'var(--azul-tint2)', color: 'var(--azul-700)' }}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            padding: '0 64px',
+            background: 'var(--surface)',
+            position: 'relative',
+            overflow: 'hidden',
+          }}
         >
-          <IconAlert size={16} />
-          <span style={{ fontSize: 13, fontWeight: 500 }}>
-            Demostración visual del asistente — todavía no crea proyectos reales.
-          </span>
+
+          {/* ── STEP: brief ── */}
+          {paso === 'brief' && (
+            <div style={{ maxWidth: 520 }}>
+              <h1
+                style={{
+                  fontFamily: 'var(--font-head)',
+                  fontWeight: 900,
+                  fontSize: 48,
+                  color: 'var(--ink-900)',
+                  lineHeight: 1.1,
+                  marginBottom: 16,
+                  letterSpacing: '-0.5px',
+                }}
+              >
+                Contanos que<br />
+                necesitas{' '}
+                <span style={{ color: 'var(--morado)' }}>resuelto.</span>
+              </h1>
+
+              <p
+                style={{
+                  fontSize: 15,
+                  color: 'var(--ink-500)',
+                  lineHeight: 1.65,
+                  marginBottom: 28,
+                }}
+              >
+                Te guiaremos para que crees el brief perfecto. Cuanto mas detallado, mejor.
+              </p>
+
+              <textarea
+                value={brief}
+                onChange={(e) => setBrief(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                    e.preventDefault();
+                    enviarBrief();
+                  }
+                }}
+                placeholder="Introduce algunos puntos clave o una descripcion completa."
+                rows={5}
+                style={{
+                  width: '100%',
+                  border: '1.5px solid var(--line)',
+                  borderRadius: 10,
+                  padding: '14px 16px',
+                  fontSize: 14,
+                  color: 'var(--ink-900)',
+                  background: 'var(--bg)',
+                  outline: 'none',
+                  fontFamily: 'var(--font-body)',
+                  lineHeight: 1.6,
+                  resize: 'vertical',
+                  marginBottom: 6,
+                }}
+              />
+
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  marginBottom: 20,
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: 12,
+                    color: brief.length > 1800 ? '#dc2626' : 'var(--ink-400)',
+                  }}
+                >
+                  {brief.length} / 2000
+                </span>
+              </div>
+
+              {errorMsg && (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: 9,
+                    background: 'rgba(220,38,38,0.07)',
+                    border: '1.5px solid rgba(220,38,38,0.25)',
+                    borderRadius: 10,
+                    padding: '10px 14px',
+                    fontSize: 13,
+                    color: '#dc2626',
+                    fontWeight: 500,
+                    marginBottom: 16,
+                    lineHeight: 1.5,
+                  }}
+                >
+                  <span style={{ flexShrink: 0, marginTop: 1 }}>
+                    <IconAlert size={15} color="#dc2626" />
+                  </span>
+                  {errorMsg}
+                </div>
+              )}
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                <button
+                  className="btn btn-primary"
+                  style={{ padding: '0 32px', height: 48, fontSize: 15, fontWeight: 700 }}
+                  disabled={!brief.trim() || cargandoPreguntas}
+                  onClick={enviarBrief}
+                >
+                  {cargandoPreguntas ? 'Preparando preguntas...' : 'Proximo'}
+                </button>
+                {/* Reintento rapido si la generacion fallo pero ya hay contexto */}
+                {contexto.length > 0 && !cargandoPreguntas && (
+                  <button
+                    className="btn btn-ghost"
+                    style={{ padding: '0 20px', height: 48, fontSize: 14 }}
+                    onClick={() => generarProyecto(contexto)}
+                  >
+                    Reintentar generacion
+                  </button>
+                )}
+                {!cargandoPreguntas && contexto.length === 0 && (
+                  <span style={{ fontSize: 13, color: 'var(--ink-400)' }}>
+                    Ctrl + Enter
+                  </span>
+                )}
+              </div>
+
+              {/* Loading inline: tres puntos mientras la IA genera las preguntas */}
+              {cargandoPreguntas && (
+                <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 18 }}>
+                  {[0, 1, 2].map((i) => (
+                    <span
+                      key={i}
+                      style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        background: 'var(--morado)',
+                        display: 'inline-block',
+                        animation: `chatdot 1.2s ease-in-out ${i * 0.2}s infinite`,
+                      }}
+                    />
+                  ))}
+                  <span style={{ fontSize: 13, color: 'var(--ink-400)', marginLeft: 8 }}>
+                    Fordy esta leyendo tu idea...
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── STEP: preguntas ── */}
+          {paso === 'preguntas' && preguntaActual && (
+            <div style={{ maxWidth: 540 }}>
+
+              {/* Brief en resumen + editar */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: 10,
+                  marginBottom: 32,
+                  padding: '12px 14px',
+                  background: 'var(--bg)',
+                  border: '1px solid var(--line)',
+                  borderRadius: 10,
+                }}
+              >
+                <p
+                  style={{
+                    flex: 1,
+                    fontSize: 13,
+                    color: 'var(--ink-600)',
+                    fontStyle: 'italic',
+                    lineHeight: 1.5,
+                    margin: 0,
+                    overflow: 'hidden',
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                  }}
+                >
+                  {brief}
+                </p>
+                <button
+                  onClick={() => {
+                    setPaso('brief');
+                    setContexto([]);
+                    setPreguntaIdx(0);
+                  }}
+                  title="Editar idea"
+                  style={{
+                    flexShrink: 0,
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: 'var(--ink-400)',
+                    padding: 4,
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}
+                >
+                  <IconEdit size={15} />
+                </button>
+              </div>
+
+              {/* Pregunta + progreso */}
+              <div style={{ marginBottom: 22 }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'baseline',
+                    marginBottom: 10,
+                  }}
+                >
+                  <h2
+                    style={{
+                      fontFamily: 'var(--font-head)',
+                      fontWeight: 700,
+                      fontSize: 20,
+                      color: 'var(--ink-900)',
+                      lineHeight: 1.3,
+                      margin: 0,
+                      flex: 1,
+                      paddingRight: 16,
+                    }}
+                  >
+                    {preguntaActual.texto}
+                  </h2>
+                  <span
+                    style={{
+                      fontSize: 13,
+                      color: 'var(--ink-400)',
+                      fontWeight: 500,
+                      flexShrink: 0,
+                    }}
+                  >
+                    {preguntaIdx + 1} de {preguntas.length}
+                  </span>
+                </div>
+              </div>
+
+              {/* Opciones — siempre checkbox, el empresario elige las que quiera */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
+                {preguntaActual.opciones.map((opcion) => {
+                  const activa = seleccionadas.includes(opcion);
+                  return (
+                    <div
+                      key={opcion}
+                      style={estiloOpcion(activa)}
+                      onClick={() => toggleOpcion(opcion)}
+                    >
+                      <div
+                        style={{
+                          width: 20,
+                          height: 20,
+                          borderRadius: 5,
+                          border: `2px solid ${activa ? 'var(--azul)' : 'var(--ink-300)'}`,
+                          background: activa ? 'var(--azul)' : 'transparent',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                          transition: 'all 0.15s',
+                        }}
+                      >
+                        {activa && (
+                          <div
+                            style={{
+                              width: 12,
+                              height: 12,
+                              borderRadius: 2,
+                              background: '#fff',
+                            }}
+                          />
+                        )}
+                      </div>
+                      {opcion}
+                    </div>
+                  );
+                })}
+
+                {/* Otro (especifique) */}
+                <div>
+                  <div
+                    style={estiloOpcion(otroActivo)}
+                    onClick={toggleOtro}
+                  >
+                    <div
+                      style={{
+                        width: 20,
+                        height: 20,
+                        borderRadius: 5,
+                        border: `2px solid ${otroActivo ? 'var(--azul)' : 'var(--ink-300)'}`,
+                        background: otroActivo ? 'var(--azul)' : 'transparent',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                        transition: 'all 0.15s',
+                      }}
+                    >
+                      {otroActivo && (
+                        <div
+                          style={{
+                            width: 12,
+                            height: 12,
+                            borderRadius: 2,
+                            background: '#fff',
+                          }}
+                        />
+                      )}
+                    </div>
+                    Otro (especifique)
+                  </div>
+
+                  {otroActivo && (
+                    <input
+                      type="text"
+                      value={otroTexto}
+                      onChange={(e) => setOtroTexto(e.target.value)}
+                      placeholder="Especifica aqui..."
+                      autoFocus
+                      style={{
+                        width: '100%',
+                        marginTop: 8,
+                        border: '1.5px solid var(--azul)',
+                        borderRadius: 8,
+                        padding: '10px 14px',
+                        fontSize: 14,
+                        color: 'var(--ink-900)',
+                        background: 'var(--bg)',
+                        outline: 'none',
+                        fontFamily: 'var(--font-body)',
+                        boxSizing: 'border-box',
+                      }}
+                    />
+                  )}
+                </div>
+              </div>
+
+              {/* Botones de accion */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}>
+                <button
+                  className="btn btn-primary"
+                  style={{ padding: '0 32px', height: 46, fontSize: 15, fontWeight: 700 }}
+                  onClick={siguiente}
+                >
+                  {preguntaIdx < preguntas.length - 1 ? 'Proximo' : 'Generar proyecto'}
+                </button>
+                <button
+                  className="btn btn-ghost"
+                  style={{ padding: '0 20px', height: 46 }}
+                  onClick={saltar}
+                >
+                  Saltar
+                </button>
+              </div>
+
+              <button
+                onClick={() => generarProyecto(contexto)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  padding: 0,
+                  fontSize: 13,
+                  color: 'var(--azul)',
+                  cursor: 'pointer',
+                  textDecoration: 'underline',
+                  textUnderlineOffset: 3,
+                }}
+              >
+                Utilice mi descripcion anterior
+              </button>
+
+              {/* No se usa de la lógica pero hay un chek de seleccion opcional */}
+              {!haySeleccion && (
+                <p style={{ fontSize: 12, color: 'var(--ink-400)', marginTop: 12 }}>
+                  Selecciona una o mas opciones, o salta si no aplica.
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* ── Overlay de generacion ── */}
+          {paso === 'generando' && (
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                background: 'rgba(244,246,251,0.92)',
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 20,
+                zIndex: 10,
+              }}
+            >
+              <div
+                style={{
+                  width: 60,
+                  height: 60,
+                  borderRadius: 18,
+                  background: 'var(--morado)',
+                  display: 'grid',
+                  placeItems: 'center',
+                  animation: 'spin 2s linear infinite',
+                  boxShadow: '0 8px 28px rgba(102,45,145,0.4)',
+                }}
+              >
+                <IconSpark size={30} color="var(--amarillo)" />
+              </div>
+              <div style={{ textAlign: 'center', maxWidth: 300 }}>
+                <p
+                  style={{
+                    fontFamily: 'var(--font-head)',
+                    fontWeight: 800,
+                    fontSize: 22,
+                    color: 'var(--ink-900)',
+                    marginBottom: 10,
+                  }}
+                >
+                  Haciendolo realidad...
+                </p>
+                <p style={{ fontSize: 14, color: 'var(--ink-500)', lineHeight: 1.6 }}>
+                  Fordy esta estructurando tu proyecto con todo lo que nos contaste.
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 440px', gap: 24, alignItems: 'start', height: 'calc(100vh - 230px)', minHeight: 480 }}>
-          {/* Columna chat */}
-          <div className="card" style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-            <div style={{ padding: '15px 20px', borderBottom: '1px solid var(--line)', display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ width: 30, height: 30, borderRadius: 9, background: 'var(--morado)', display: 'grid', placeItems: 'center' }}>
-                <IconSpark size={15} color="var(--amarillo)" />
-              </div>
-              <div>
-                <div style={{ fontFamily: 'var(--font-head)', fontWeight: 700, fontSize: 14 }}>Asistente FWD</div>
-                <div className="muted" style={{ fontSize: 11.5 }}>Te hace preguntas para estructurar el proyecto</div>
-              </div>
-            </div>
-
-            <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', padding: '22px 20px', background: 'var(--bg)' }}>
-              {msgs.map((m, i) => (
-                <Burbuja key={i} m={m} inicial={inicial} />
-              ))}
-              {typing && (
-                <div style={{ display: 'flex', gap: 11, marginBottom: 18 }}>
-                  <div style={{ width: 34, height: 34, borderRadius: 10, background: 'var(--morado)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
-                    <IconSpark size={17} color="var(--amarillo)" />
-                  </div>
-                  <div style={{ padding: '15px 16px', borderRadius: 14, borderTopLeftRadius: 4, background: 'var(--surface)', border: '1px solid var(--line)', display: 'flex', gap: 5 }}>
-                    {[0, 1, 2].map((i) => (
-                      <span key={i} style={{ width: 7, height: 7, borderRadius: 50, background: 'var(--ink-300)' }} />
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div style={{ padding: '14px 16px', borderTop: '1px solid var(--line)' }}>
-              {sugActuales && !typing && (
-                <div style={{ display: 'flex', gap: 8, marginBottom: 11, flexWrap: 'wrap' }}>
-                  {sugActuales.map((s, i) => (
-                    <button
-                      key={i}
-                      onClick={() => enviar(s)}
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 500, padding: '6px 11px', borderRadius: 'var(--r-pill)', background: 'var(--azul-tint)', color: 'var(--azul-700)', cursor: 'pointer' }}
-                    >
-                      <IconPlus size={13} />
-                      {s}
-                    </button>
-                  ))}
-                </div>
-              )}
-              <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
-                <textarea
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      enviar(input);
-                    }
-                  }}
-                  placeholder={completado ? 'Conversación completada — revisá la propuesta' : 'Escribe tu respuesta…'}
-                  disabled={completado}
-                  style={{ ...inputBox, minHeight: 46, maxHeight: 110, resize: 'none', flex: 1 }}
-                />
-                <button className="btn btn-primary" style={{ height: 46, padding: '0 16px' }} disabled={!input.trim() || completado} onClick={() => enviar(input)}>
-                  <IconSend size={17} />
-                </button>
-              </div>
-              <div className="muted" style={{ fontSize: 11, marginTop: 8, textAlign: 'center', display: 'inline-flex', gap: 5, alignItems: 'center', width: '100%', justifyContent: 'center' }}>
-                <IconAlert size={12} /> El agente nunca publica solo. Vos revisás y confirmás.
-              </div>
-            </div>
-          </div>
-
-          {/* Columna propuesta */}
-          <div className="card" style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-            <div style={{ padding: '15px 20px', borderBottom: '1px solid var(--line)', display: 'flex', alignItems: 'center', gap: 9 }}>
-              <IconFile size={17} color="var(--azul)" />
-              <span style={{ fontFamily: 'var(--font-head)', fontWeight: 700, fontSize: 14 }}>Propuesta de proyecto</span>
-              {generado && (
-                <span className="badge publicado" style={{ marginLeft: 'auto' }}>
-                  <span className="bdot" />
-                  Borrador
-                </span>
-              )}
-            </div>
-
-            <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
-              {!generado ? (
-                <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: 16, padding: 20 }}>
-                  <IconComunidad size={72} />
-                  <div>
-                    <div style={{ fontFamily: 'var(--font-head)', fontWeight: 700, fontSize: 15, color: 'var(--ink-700)' }}>Aún no hay propuesta</div>
-                    <p className="muted" style={{ fontSize: 13, marginTop: 6, lineHeight: 1.5, maxWidth: 250 }}>
-                      Respondé las preguntas del asistente y acá aparecerá tu proyecto estructurado, listo para revisar.
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-                  <EditField label="Título del proyecto" value={PROPUESTA.titulo} />
-                  <EditField label="Resumen" value={PROPUESTA.resumen} multi />
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-                      <label style={{ fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 13, color: 'var(--ink-800)' }}>Área de negocio</label>
-                      <div style={{ ...inputBox, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <span style={{ display: 'inline-flex', gap: 7, alignItems: 'center', fontSize: 13.5 }}>
-                          <span style={{ width: 9, height: 9, borderRadius: 50, background: 'var(--azul)' }} />
-                          {PROPUESTA.area}
-                        </span>
-                        <IconChevD size={15} color="var(--ink-400)" />
-                      </div>
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-                      <label style={{ fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 13, color: 'var(--ink-800)' }}>Recepción de ofertas</label>
-                      <div style={{ ...inputBox, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <span style={{ fontSize: 13.5 }}>{PROPUESTA.plazo}</span>
-                        <span className="muted" style={{ fontSize: 11.5 }}>rango 5–15</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div>
-                    <label style={{ fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 13, color: 'var(--ink-800)', display: 'block', marginBottom: 9 }}>Requerimientos</label>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      {PROPUESTA.requerimientos.map((r, i) => (
-                        <div key={i} style={{ display: 'flex', gap: 10, padding: '10px 12px', background: 'var(--bg)', borderRadius: 10, fontSize: 13, lineHeight: 1.45, color: 'var(--ink-700)' }}>
-                          <span style={{ color: 'var(--turquesa)', flexShrink: 0, marginTop: 2, display: 'inline-flex' }}>
-                            <IconCheck size={15} />
-                          </span>
-                          {r}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <label style={{ fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 13, color: 'var(--ink-800)', display: 'block', marginBottom: 9 }}>
-                      Tecnologías sugeridas <span className="muted" style={{ fontWeight: 400 }}>(por IA)</span>
-                    </label>
-                    <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>
-                      {PROPUESTA.tecnologias.map((t) => (
-                        <span key={t} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 500, padding: '5px 11px', borderRadius: 'var(--r-pill)', background: 'var(--bg-2)', color: 'var(--ink-600)' }}>
-                          <IconCode size={12} />
-                          {t}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {generado && (
-              <div style={{ padding: 16, borderTop: '1px solid var(--line)', display: 'flex', gap: 10 }}>
-                <button className="btn btn-ghost">
-                  <IconEdit size={15} />
-                  Editar
-                </button>
-                <button className="btn btn-primary btn-block" disabled={publicado} onClick={publicar}>
-                  {publicado ? (
-                    <>
-                      <IconCheck size={16} />
-                      Publicado
-                    </>
-                  ) : (
-                    <>
-                      <IconFlag size={15} />
-                      Publicar proyecto
-                    </>
-                  )}
-                </button>
-              </div>
-            )}
-          </div>
+        {/* ─── Columna derecha: video de Fordy ─── */}
+        <div
+          style={{
+            background: '#0f0c29',
+            position: 'relative',
+            overflow: 'hidden',
+          }}
+        >
+          <video
+            src="/videos/lv_0_20260616153411.mp4"
+            autoPlay
+            loop
+            muted
+            playsInline
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              objectPosition: 'center center',
+              transform: 'scale(1.1)',
+              transformOrigin: 'center center',
+            }}
+          />
         </div>
       </div>
     </>

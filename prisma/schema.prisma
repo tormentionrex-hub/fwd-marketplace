@@ -275,18 +275,19 @@ model proyecto_mejoras {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model proyectos {
-  id                    String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  id_empresario         String                  @db.Uuid
-  titulo                String                  @db.VarChar(200)
+  id                    String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id_empresario         String                      @db.Uuid
+  titulo                String                      @db.VarChar(200)
   descripcion           String
-  area_negocio          String?                 @db.VarChar(150)
-  usa_ia                Boolean                 @default(false)
+  area_negocio          String?                     @db.VarChar(150)
+  usa_ia                Boolean                     @default(false)
   plazo_dias            Int?
-  estado                String                  @default("borrador") @db.VarChar(50)
+  estado                String                      @default("borrador") @db.VarChar(50)
   motivo_estado         String?
-  estado_previo         String?                 @db.VarChar(50)
-  publicado             DateTime?               @db.Timestamptz(6)
-  cierre                DateTime?               @db.Timestamptz(6)
+  estado_previo         String?                     @db.VarChar(50)
+  publicado             DateTime?                   @db.Timestamptz(6)
+  cierre                DateTime?                   @db.Timestamptz(6)
+  embedding             Unsupported("vector(768)")?
   chats                 chats[]
   conversaciones_ia     conversaciones_ia[]
   cv_accesos            cv_accesos[]
