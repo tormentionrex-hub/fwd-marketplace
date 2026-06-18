@@ -1,15 +1,19 @@
 import { listarUsuariosPendientes } from "@/server/repositories/usuario.repository";
+import { listarPendingVerifications } from "@/server/repositories/pending-verification.repository";
 import {
   AdminPageShell,
   AdminPageHeader,
 } from "@/components/features/admin/admin-page-header";
 import { ValidacionesLista } from "@/components/features/admin/validaciones-lista";
 
-// URL: /es/admin/validaciones — aprobar/rechazar cuentas pendientes.
+// URL: /es/admin/validaciones — aprobar/rechazar cuentas pendientes y solicitudes de invitación.
 export default async function AdminValidacionesPage() {
-  const data = await listarUsuariosPendientes();
+  const [dataUsuarios, dataVerificaciones] = await Promise.all([
+    listarUsuariosPendientes(),
+    listarPendingVerifications(),
+  ]);
 
-  const pendientes = data.map((u) => ({
+  const pendientes = dataUsuarios.map((u) => ({
     id: u.id,
     nombre: u.nombre,
     correo: u.correo,
@@ -17,13 +21,21 @@ export default async function AdminValidacionesPage() {
     creado: u.creado.toISOString(),
   }));
 
+  const solicitudes = dataVerificaciones
+    .filter((v) => v.tipo === "solicitud")
+    .map((v) => ({
+      id: v.id,
+      email: v.email,
+      solicitado: v.solicitado.toISOString(),
+    }));
+
   return (
     <AdminPageShell>
       <AdminPageHeader
         title="Validaciones"
-        subtitle="Cuentas que se registraron y esperan tu aprobación para poder acceder."
+        subtitle="Gestioná las cuentas registradas pendientes de activación y las solicitudes de invitación."
       />
-      <ValidacionesLista pendientes={pendientes} />
+      <ValidacionesLista pendientes={pendientes} solicitudes={solicitudes} />
     </AdminPageShell>
   );
 }

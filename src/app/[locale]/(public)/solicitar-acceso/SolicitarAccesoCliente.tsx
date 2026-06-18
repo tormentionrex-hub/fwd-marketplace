@@ -15,13 +15,47 @@ export function SolicitarAccesoCliente() {
   const [modalOpen, setModalOpen] = useState(false);
   const [canalOpen, setCanalOpen] = useState(false);
   const [correoSolicitud, setCorreoSolicitud] = useState("");
+  const [emailEnviado, setEmailEnviado] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const correoTexto = correoSolicitud.trim() || "(coloca tu correo aquí)";
   const whatsappUrl = `https://wa.me/50672025228?text=${encodeURIComponent(`Hola, envié mi solicitud de invitación para unirme al FWD Marketplace. Mi correo es ${correoTexto}.`)}`;
   const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${CORREO}&su=${encodeURIComponent("Solicitud de invitación a FWD Marketplace")}&body=${encodeURIComponent(`Hola equipo FWD,\n\nEnvié mi solicitud de invitación para unirme al Marketplace. Quedo atento a la aprobación.\n\nMi correo es: ${correoSolicitud.trim()}`)}`;
 
-  function handleEnviarSolicitud() {
-    setCanalOpen(true);
+  useEffect(() => {
+    const saved = localStorage.getItem("solicitud_acceso_enviada_email");
+    if (saved) {
+      setEmailEnviado(saved);
+    }
+  }, []);
+
+  async function handleEnviarSolicitud() {
+    const email = correoSolicitud.trim();
+    if (!email) return;
+
+    setLoading(true);
+    setErrorMsg(null);
+    try {
+      const res = await fetch("/api/solicitar-acceso", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        setErrorMsg(data.error ?? "Ocurrió un error al enviar la solicitud.");
+        return;
+      }
+
+      localStorage.setItem("solicitud_acceso_enviada_email", email);
+      setEmailEnviado(email);
+    } catch {
+      setErrorMsg("Error de conexión. Intentá de nuevo.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {
@@ -352,77 +386,124 @@ export function SolicitarAccesoCliente() {
           className="js-card w-full rounded-2xl bg-white px-9 py-11 text-center"
           style={{ boxShadow: "0 24px 64px rgba(0,0,0,0.28)" }}
         >
-          <p className="font-heading text-[11px] font-bold uppercase tracking-[0.28em] text-fwd-blue">
-            Acceso por invitación
-          </p>
-          <h1 className="mt-3 font-heading text-2xl font-black leading-snug text-fwd-ink sm:text-3xl">
-            Solicitá una invitación
-          </h1>
-          <p className="mt-4 font-body text-sm leading-relaxed text-fwd-ink/60">
-            FWD Marketplace es una comunidad por invitación: el ingreso de
-            estudiantes es aprobado por el equipo de FWD · Costa Rica. Si
-            todavía no recibiste tu invitación, escribinos y con gusto revisamos
-            tu solicitud.
-          </p>
+          {emailEnviado ? (
+            <div className="flex flex-col items-center">
+              <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-fwd-blue/10 text-fwd-blue mb-5">
+                <Clock className="h-8 w-8 animate-pulse" />
+              </div>
+              <p className="font-heading text-[11px] font-bold uppercase tracking-[0.28em] text-fwd-blue">
+                Solicitud en espera
+              </p>
+              <h1 className="mt-3 font-heading text-2xl font-black leading-snug text-fwd-ink sm:text-3xl">
+                Tu solicitud está en revisión
+              </h1>
+              <p className="mt-4 font-body text-sm leading-relaxed text-fwd-ink/60">
+                Hemos registrado tu solicitud para el correo:
+              </p>
+              <p className="mt-1 font-body text-sm font-bold text-fwd-ink break-all">
+                {emailEnviado}
+              </p>
+              <p className="mt-4 font-body text-sm leading-relaxed text-fwd-ink/60">
+                El equipo de FWD Costa Rica revisará tu caso en un plazo máximo de <span className="font-bold text-fwd-blue">24 horas</span>.
+              </p>
+              <p className="mt-2 font-body text-xs text-fwd-ink/40">
+                Recibirás un correo electrónico de confirmación con los pasos a seguir una vez aprobada.
+              </p>
+              <div className="mt-7 w-full border-t border-fwd-ink/10 pt-6">
+                <button
+                  onClick={() => {
+                    localStorage.removeItem("solicitud_acceso_enviada_email");
+                    setEmailEnviado(null);
+                    setCorreoSolicitud("");
+                    setErrorMsg(null);
+                  }}
+                  className="inline-flex w-full h-11 items-center justify-center gap-2 rounded-full border border-fwd-ink/15 font-heading font-bold text-fwd-ink/65 transition-all hover:scale-[1.02] hover:border-fwd-ink/30 hover:text-fwd-ink active:scale-[0.98]"
+                >
+                  Volver a solicitar
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <p className="font-heading text-[11px] font-bold uppercase tracking-[0.28em] text-fwd-blue">
+                Acceso por invitación
+              </p>
+              <h1 className="mt-3 font-heading text-2xl font-black leading-snug text-fwd-ink sm:text-3xl">
+                Solicitá una invitación
+              </h1>
+              <p className="mt-4 font-body text-sm leading-relaxed text-fwd-ink/60">
+                FWD Marketplace es una comunidad por invitación: el ingreso de
+                estudiantes es aprobado por el equipo de FWD · Costa Rica. Si
+                todavía no recibiste tu invitación, escribinos y con gusto revisamos
+                tu solicitud.
+              </p>
 
-          <div className="mt-6 text-left">
-            <label htmlFor="correo-solicitud" className="block font-heading text-[11px] font-bold uppercase tracking-[0.2em] text-fwd-ink/50 mb-2">
-              Tu correo electrónico
-            </label>
-            <input
-              id="correo-solicitud"
-              type="text"
-              value={correoSolicitud}
-              onChange={(e) => setCorreoSolicitud(e.target.value)}
-              maxLength={25}
-              placeholder="tucorreo@fwd.cr"
-              className="w-full rounded-xl border border-fwd-ink/15 bg-fwd-ink/[0.03] px-4 py-3 font-body text-sm text-fwd-ink placeholder:text-fwd-ink/30 focus:border-fwd-blue/50 focus:outline-none focus:ring-2 focus:ring-fwd-blue/15 transition-all"
-            />
-            <p className="mt-1.5 text-right font-body text-[11px] text-fwd-ink/30">
-              {correoSolicitud.length}/25
-            </p>
-          </div>
+              {errorMsg && (
+                <div role="alert" className="mt-4 rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-2.5 text-xs text-red-600 font-semibold">
+                  {errorMsg}
+                </div>
+              )}
 
-          <button
-            onClick={handleEnviarSolicitud}
-            disabled={correoSolicitud.trim().length === 0}
-            className="mt-2 inline-flex w-full h-11 items-center justify-center gap-2 rounded-full font-heading font-bold text-white transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
-            style={{ backgroundColor: "#1a1633" }}
-          >
-            Enviar solicitud de invitación
-          </button>
+              <div className="mt-6 text-left">
+                <label htmlFor="correo-solicitud" className="block font-heading text-[11px] font-bold uppercase tracking-[0.2em] text-fwd-ink/50 mb-2">
+                  Tu correo electrónico
+                </label>
+                <input
+                  id="correo-solicitud"
+                  type="text"
+                  value={correoSolicitud}
+                  onChange={(e) => setCorreoSolicitud(e.target.value)}
+                  maxLength={25}
+                  placeholder="tucorreo@fwd.cr"
+                  className="w-full rounded-xl border border-fwd-ink/15 bg-fwd-ink/[0.03] px-4 py-3 font-body text-sm text-fwd-ink placeholder:text-fwd-ink/30 focus:border-fwd-blue/50 focus:outline-none focus:ring-2 focus:ring-fwd-blue/15 transition-all"
+                />
+                <p className="mt-1.5 text-right font-body text-[11px] text-fwd-ink/30">
+                  {correoSolicitud.length}/25
+                </p>
+              </div>
 
-          <div className="mt-5 border-t border-fwd-ink/10 pt-5">
-            <p className="font-heading text-[11px] font-bold uppercase tracking-[0.2em] text-fwd-ink/35 mb-3">
-              O contactanos directamente
-            </p>
-          </div>
+              <button
+                onClick={handleEnviarSolicitud}
+                disabled={correoSolicitud.trim().length === 0 || loading}
+                className="mt-2 inline-flex w-full h-11 items-center justify-center gap-2 rounded-full font-heading font-bold text-white transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
+                style={{ backgroundColor: "#1a1633" }}
+              >
+                {loading ? "Registrando..." : "Enviar solicitud de invitación"}
+              </button>
 
-          <button
-            onClick={() => setCanalOpen(true)}
-            className="inline-flex w-full h-11 items-center justify-center gap-2 rounded-full border border-fwd-ink/15 font-heading font-bold text-fwd-ink/70 transition-all hover:scale-[1.02] hover:border-fwd-ink/30 hover:text-fwd-ink active:scale-[0.98]"
-          >
-            Escribir al equipo FWD
-            <ChevronRight className="h-4 w-4" strokeWidth={2.5} />
-          </button>
-          <p className="mt-3 font-body text-xs text-fwd-ink/45">
-            O escribinos directamente a{" "}
-            <a
-              href={`mailto:${CORREO}`}
-              className="font-semibold text-fwd-blue transition-colors hover:text-fwd-purple"
-            >
-              {CORREO}
-            </a>
-            .
-          </p>
-          <div className="mt-7 border-t border-fwd-ink/10 pt-5">
-            <Link
-              href="/register-estudiante"
-              className="font-body text-sm font-semibold text-fwd-blue transition-colors hover:text-fwd-purple"
-            >
-              ¿Ya tenés invitación? Registrate →
-            </Link>
-          </div>
+              <div className="mt-5 border-t border-fwd-ink/10 pt-5">
+                <p className="font-heading text-[11px] font-bold uppercase tracking-[0.2em] text-fwd-ink/35 mb-3">
+                  O contactanos directamente
+                </p>
+              </div>
+
+              <button
+                onClick={() => setCanalOpen(true)}
+                className="inline-flex w-full h-11 items-center justify-center gap-2 rounded-full border border-fwd-ink/15 font-heading font-bold text-fwd-ink/70 transition-all hover:scale-[1.02] hover:border-fwd-ink/30 hover:text-fwd-ink active:scale-[0.98]"
+              >
+                Escribir al equipo FWD
+                <ChevronRight className="h-4 w-4" strokeWidth={2.5} />
+              </button>
+              <p className="mt-3 font-body text-xs text-fwd-ink/45">
+                O escribinos directamente a{" "}
+                <a
+                  href={`mailto:${CORREO}`}
+                  className="font-semibold text-fwd-blue transition-colors hover:text-fwd-purple"
+                >
+                  {CORREO}
+                </a>
+                .
+              </p>
+              <div className="mt-7 border-t border-fwd-ink/10 pt-5">
+                <Link
+                  href="/register-estudiante"
+                  className="font-body text-sm font-semibold text-fwd-blue transition-colors hover:text-fwd-purple"
+                >
+                  ¿Ya tenés invitación? Registrate →
+                </Link>
+              </div>
+            </>
+          )}
         </div>
       </main>
     </div>

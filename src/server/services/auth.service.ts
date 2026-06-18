@@ -163,9 +163,9 @@ export async function registrarEstudiante(
   password: string,
   extra: { segundoApellido?: string | undefined; generacionFwd?: number | undefined } = {}
 ): Promise<ResultadoAuth | 'no_invitado' | null> {
-  // 1. ¿Fue invitado?
+  // 1. ¿Fue invitado? (debe ser tipo 'invitacion' y estar pendiente)
   const invitacion = await buscarInvitacionPendientePorEmail(correo);
-  if (!invitacion || !invitacion.pending) return 'no_invitado';
+  if (!invitacion || !invitacion.pending || invitacion.tipo !== 'invitacion') return 'no_invitado';
 
   // 2. ¿Ya tiene cuenta?
   const existente = await buscarUsuarioPorCorreo(correo);

@@ -154,6 +154,7 @@ export function activarUsuario(id: string) {
   return db.usuarios.update({
     where: { id },
     data: { estado: 'activo' },
+    select: { id: true, nombre: true, correo: true },
   });
 }
 
@@ -162,6 +163,7 @@ export function rechazarUsuario(id: string) {
   return db.usuarios.update({
     where: { id },
     data: { estado: 'rechazado' },
+    select: { id: true, nombre: true, correo: true },
   });
 }
 
