@@ -160,7 +160,6 @@ model solicitudes_mensaje {
   @@index([id_empresario], map: "idx_solicitudes_empresario")
   @@index([estado], map: "idx_solicitudes_estado")
 }
-
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model ofertas {
   id                  String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
