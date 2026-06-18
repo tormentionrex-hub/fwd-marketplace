@@ -283,6 +283,8 @@ model proyectos {
   usa_ia                Boolean                 @default(false)
   plazo_dias            Int?
   estado                String                  @default("borrador") @db.VarChar(50)
+  motivo_estado         String?
+  estado_previo         String?                 @db.VarChar(50)
   publicado             DateTime?               @db.Timestamptz(6)
   cierre                DateTime?               @db.Timestamptz(6)
   chats                 chats[]
@@ -417,7 +419,6 @@ model cv_accesos {
   @@index([id_empresario], map: "idx_cv_accesos_empresario")
 }
 
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model suspensiones {
   id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   id_usuario   String   @db.Uuid
@@ -427,7 +428,5 @@ model suspensiones {
   nombre_admin String   @db.VarChar(150)
   creado       DateTime @default(now()) @db.Timestamptz(6)
   usuarios     usuarios @relation(fields: [id_usuario], references: [id], onDelete: Cascade, onUpdate: NoAction)
-
-  @@index([accion], map: "idx_suspensiones_accion")
-  @@index([id_usuario], map: "idx_suspensiones_id_usuario")
 }
+

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import Badge from "@/components/ui/Badge";
 import Card from "@/components/ui/Card";
@@ -31,6 +32,7 @@ interface BorradorProyecto {
 
 const NIVELES: NivelHabilidad[] = ["básico", "intermedio", "avanzado"];
 const MAX_FOTO_MB = 5;
+const TIPOS_FOTO = ["image/jpeg", "image/png", "image/webp"];
 
 const inputClass =
   "h-11 w-full rounded-xl border border-border bg-surface px-3.5 text-sm text-text outline-none transition-colors placeholder:text-text-muted/60 focus:border-fwd-azul focus:ring-4 focus:ring-fwd-azul/10";
@@ -71,6 +73,7 @@ type GitEstado = "idle" | "checking" | "ok" | "fail";
 type Guardado = "idle" | "saving" | "saved" | "error";
 
 export default function FormularioEditarPerfil({ locale }: FormularioEditarPerfilProps) {
+  const router = useRouter();
   const [seccion, setSeccion] = useState<Seccion>("datos");
   const [carga, setCarga] = useState<"loading" | "ready" | "error">("loading");
 
@@ -81,7 +84,6 @@ export default function FormularioEditarPerfil({ locale }: FormularioEditarPerfi
   const [fotoUrl, setFotoUrl] = useState("");
   const [subiendoFoto, setSubiendoFoto] = useState(false);
   const [errorFoto, setErrorFoto] = useState("");
-  const [arrastrando, setArrastrando] = useState(false);
 
   // Habilidades
   const [catalogo, setCatalogo] = useState<HabilidadCatalogo[]>([]);
@@ -128,8 +130,8 @@ export default function FormularioEditarPerfil({ locale }: FormularioEditarPerfi
   async function procesarFoto(archivo: File | undefined) {
     setErrorFoto("");
     if (!archivo) return;
-    if (!["image/jpeg", "image/png"].includes(archivo.type)) {
-      setErrorFoto("La foto debe ser JPG o PNG.");
+    if (!TIPOS_FOTO.includes(archivo.type)) {
+      setErrorFoto("La foto debe ser JPG, PNG o WEBP.");
       return;
     }
     if (archivo.size > MAX_FOTO_MB * 1024 * 1024) {
@@ -235,6 +237,7 @@ export default function FormularioEditarPerfil({ locale }: FormularioEditarPerfi
         return;
       }
       setGuardado("saved");
+      router.refresh();
     } catch {
       setErrorGuardar("Error de red. Intentá de nuevo.");
       setGuardado("error");
@@ -297,43 +300,47 @@ export default function FormularioEditarPerfil({ locale }: FormularioEditarPerfi
 
       {seccion === "datos" && (
         <Card className="flex flex-col gap-5 p-6">
-          <label
-            onDragOver={(e) => {
-              e.preventDefault();
-              setArrastrando(true);
-            }}
-            onDragLeave={() => setArrastrando(false)}
-            onDrop={(e) => {
-              e.preventDefault();
-              setArrastrando(false);
-              procesarFoto(e.dataTransfer.files?.[0]);
-            }}
-            className={`flex cursor-pointer flex-col items-center gap-3 rounded-xl border-2 border-dashed p-6 text-center transition-colors ${
-              arrastrando ? "border-fwd-azul bg-fwd-azul/5" : "border-slate-300 hover:border-fwd-azul/50 dark:border-white/15"
-            }`}
-          >
-            {fotoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={fotoUrl} alt="Foto de perfil" className="h-20 w-20 rounded-full object-cover" />
-            ) : (
-              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-fwd-azul/10 text-fwd-azul">
-                <IconUpload />
-              </span>
-            )}
-            <div className="flex flex-col gap-0.5">
-              <span className="text-sm font-medium text-text">
-                {subiendoFoto ? "Subiendo…" : "Arrastrá una imagen o hacé clic para subirla"}
-              </span>
-              <span className="text-xs text-text-muted">JPG o PNG · máx {MAX_FOTO_MB} MB</span>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6 rounded-xl border border-slate-200 p-5 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.01]">
+            <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-slate-200 dark:border-white/10 bg-surface">
+              {fotoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={fotoUrl} alt="Foto de perfil" className="h-full w-full object-cover" />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-fwd-azul/10 text-xl font-bold text-fwd-azul">
+                  {nombre ? nombre.slice(0, 2).toUpperCase() : "?"}
+                </div>
+              )}
             </div>
-            <input
-              type="file"
-              accept="image/jpeg,image/png"
-              disabled={subiendoFoto}
-              onChange={(e) => procesarFoto(e.target.files?.[0])}
-              className="hidden"
-            />
-          </label>
+
+            <div className="flex flex-col gap-1.5">
+              <span className="text-sm font-semibold text-text">Foto de perfil</span>
+              <div className="flex flex-wrap gap-2">
+                <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-fwd-azul/10 px-4 py-2.5 text-sm font-semibold text-fwd-azul transition-colors hover:bg-fwd-azul/20">
+                  <IconUpload width={16} height={16} />
+                  {subiendoFoto ? "Subiendo…" : fotoUrl ? "Cambiar foto" : "Subir foto"}
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    disabled={subiendoFoto}
+                    onChange={(e) => procesarFoto(e.target.files?.[0])}
+                    className="hidden"
+                  />
+                </label>
+                {fotoUrl && (
+                  <button
+                    type="button"
+                    onClick={() => setFotoUrl("")}
+                    className="inline-flex items-center gap-2 rounded-xl border border-red-200 bg-red-50/50 px-4 py-2.5 text-sm font-semibold text-red-600 transition-colors hover:bg-red-50 dark:border-red-500/20 dark:bg-red-500/5 dark:text-red-400 dark:hover:bg-red-500/10"
+                  >
+                    Quitar foto
+                  </button>
+                )}
+              </div>
+              <span className="text-xs text-text-muted">
+                JPG, PNG o WEBP · máx {MAX_FOTO_MB} MB
+              </span>
+            </div>
+          </div>
           {errorFoto && <p className="text-sm text-red-600 dark:text-red-400">{errorFoto}</p>}
 
           <label className="flex flex-col gap-1.5 text-sm font-medium text-text">
