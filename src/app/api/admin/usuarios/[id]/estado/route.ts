@@ -4,6 +4,7 @@ import {
   activarUsuario,
   rechazarUsuario,
 } from '@/server/repositories/usuario.repository';
+import { enviarEmailCuentaAprobada, enviarEmailCuentaRechazada } from '@/lib/email';
 
 // PATCH /api/admin/usuarios/:id/estado — aprobar o rechazar una cuenta pendiente.
 // Protegido: solo un admin autenticado, y nunca sobre su propia cuenta.
@@ -41,12 +42,15 @@ export async function PATCH(
 
   try {
     if (body.accion === 'aprobar') {
-      await activarUsuario(id);
+      const u = await activarUsuario(id);
+      await enviarEmailCuentaAprobada(u.correo, u.nombre);
     } else {
-      await rechazarUsuario(id);
+      const u = await rechazarUsuario(id);
+      await enviarEmailCuentaRechazada(u.correo, u.nombre);
     }
     return NextResponse.json({ ok: true });
-  } catch {
+  } catch (e) {
+    console.error('[admin/usuarios/estado/PATCH]', e);
     return NextResponse.json(
       { error: 'No se pudo actualizar la cuenta' },
       { status: 500 }

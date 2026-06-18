@@ -26,17 +26,36 @@ export async function POST(request: Request) {
 
   try {
     const invitacion = await buscarInvitacionPendientePorEmail(email);
-    if (!invitacion || !invitacion.pending) {
+    if (!invitacion) {
       return error(
         'Este correo no ha sido invitado aún. Pedile al equipo de FWD una invitación para poder registrarte.',
         403,
       );
     }
 
-    // Ya se registró con esta invitación
-    const usuarioExistente = await buscarUsuarioPorCorreo(email);
-    if (usuarioExistente) {
-      return error('Este correo ya tiene una cuenta registrada. Iniciá sesión.', 409);
+    if (invitacion.tipo === 'solicitud' && invitacion.pending) {
+      return error(
+        'Tu solicitud de acceso aún está en revisión. El administrador se comunicará contigo en un plazo máximo de 24 horas.',
+        403,
+      );
+    }
+
+    if (!invitacion.pending) {
+      const usuarioExistente = await buscarUsuarioPorCorreo(email);
+      if (usuarioExistente) {
+        return error('Este correo ya tiene una cuenta registrada. Iniciá sesión.', 409);
+      }
+      return error(
+        'Esta invitación ya fue utilizada o no es válida.',
+        403,
+      );
+    }
+
+    if (invitacion.tipo !== 'invitacion') {
+      return error(
+        'Este correo no cuenta con una invitación válida para registrarse.',
+        403,
+      );
     }
 
     return NextResponse.json({ ok: true });

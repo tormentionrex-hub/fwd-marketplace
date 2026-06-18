@@ -5,7 +5,7 @@ import { Link, usePathname } from "@/i18n/navigation";
 import { LogoutButton } from "@/components/layout/logout-button";
 
 /* ── Íconos SVG inline (sin emojis, REGLA #6) ───────────────── */
-type IcoProps = { d: string; extra?: string | undefined; className?: string | undefined };
+type IcoProps = { d: string; extra?: string | undefined; className?: string };
 function Ico({ d, extra, className }: IcoProps) {
   return (
     <svg

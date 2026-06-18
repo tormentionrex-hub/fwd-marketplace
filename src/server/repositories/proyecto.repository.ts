@@ -86,6 +86,26 @@ export function contarOfertasDesde(idEmpresario: string, desde: Date) {
   });
 }
 
+// Obtiene fechas de proyectos y ofertas de los últimos 6 meses
+export function obtenerActividadSeisMeses(idEmpresario: string) {
+  const hace6Meses = new Date();
+  hace6Meses.setMonth(hace6Meses.getMonth() - 5);
+  hace6Meses.setDate(1);
+  hace6Meses.setHours(0, 0, 0, 0);
+
+  const proyectos = db.proyectos.findMany({
+    where: { id_empresario: idEmpresario, publicado: { gte: hace6Meses } },
+    select: { publicado: true },
+  });
+
+  const ofertas = db.ofertas.findMany({
+    where: { proyectos: { id_empresario: idEmpresario }, enviado: { gte: hace6Meses } },
+    select: { enviado: true },
+  });
+
+  return Promise.all([proyectos, ofertas]);
+}
+
 // Trae un proyecto con su empresario (nombre + sector) y sus tecnologías
 // (ficha pública del proyecto).
 export function obtenerProyectoConDetalle(id: string) {
@@ -183,11 +203,201 @@ export function buscarEstudianteAdjudicado(idProyecto: string) {
   });
 }
 
+// Lista todos los proyectos con estado 'publicado' para el marketplace.
+// Incluye tecnologías y datos del empresario (empresa + sector).
+export function listarProyectosPublicados() {
+  return db.proyectos.findMany({
+    where: { estado: 'publicado' },
+    select: {
+      id: true,
+      titulo: true,
+      descripcion: true,
+      area_negocio: true,
+      plazo_dias: true,
+      publicado: true,
+      perfiles_empresario: {
+        select: {
+          nombre_empresa: true,
+          sector: true,
+          usuarios: { select: { nombre: true } },
+        },
+      },
+      proyectos_tecnologias: {
+        select: { tecnologias: { select: { nombre: true } } },
+      },
+    },
+    orderBy: { publicado: 'desc' },
+  });
+}
+
+
 // Cierra el proyecto: estado 'cerrado' y marca la fecha de cierre.
 export function cerrarProyectoRepo(idProyecto: string) {
   return db.proyectos.update({
     where: { id: idProyecto },
     data: { estado: 'cerrado', cierre: new Date() },
   });
+}
+
+// ── Embeddings (pgvector) ───────────────────────────────────────────────────
+
+// Guarda el embedding de un proyecto usando SQL raw (pgvector no es soportado
+// por el cliente de Prisma de forma nativa).
+export async function guardarEmbedding(idProyecto: string, embedding: number[]) {
+  await db.$executeRawUnsafe(
+    `UPDATE proyectos SET embedding = $1::vector WHERE id = $2::uuid`,
+    JSON.stringify(embedding),
+    idProyecto,
+  );
+}
+
+// Resultado mínimo que necesita el marketplace para reordenar por similitud.
+export type ProyectoSimilitud = {
+  id: string;
+  similitud: number;
+};
+
+// Busca los proyectos publicados más similares al embedding dado.
+// Usa el operador de distancia coseno (<=>): similitud = 1 - distancia.
+export async function buscarProyectosPorSimilitud(
+  embedding: number[],
+  limite = 20,
+): Promise<ProyectoSimilitud[]> {
+  const filas = await db.$queryRawUnsafe<{ id: string; similitud: number }[]>(
+    `SELECT id, (1 - (embedding <=> $1::vector))::float AS similitud
+     FROM proyectos
+     WHERE estado = 'publicado' AND embedding IS NOT NULL
+     ORDER BY embedding <=> $1::vector
+     LIMIT $2`,
+    JSON.stringify(embedding),
+    limite,
+  );
+  return filas;
+}
+
+// Trae los datos de un proyecto publicado para generar su embedding (titulo,
+// descripcion, area y tecnologías). Solo se llama después de publicar.
+export function obtenerDatosParaEmbedding(idProyecto: string) {
+  return db.proyectos.findUnique({
+    where: { id: idProyecto },
+    select: {
+      titulo: true,
+      descripcion: true,
+      area_negocio: true,
+      proyectos_tecnologias: {
+        select: { tecnologias: { select: { nombre: true } } },
+      },
+    },
+  });
+}
+
+// ── CRUD empresario ─────────────────────────────────────────────────────────
+
+// Lista todas las tecnologías disponibles (para el selector del formulario).
+export function listarTecnologias() {
+  return db.tecnologias.findMany({
+    select: { id: true, nombre: true },
+    orderBy: { nombre: 'asc' },
+  });
+}
+
+// Crea un proyecto en borrador y asocia las tecnologías indicadas (por nombre,
+// haciendo upsert para reutilizar las que ya existen).
+export async function crearProyecto(data: {
+  idEmpresario: string;
+  titulo: string;
+  descripcion: string;
+  areaNegocio: string | null;
+  plazoDias: number | null;
+  tecnologias: string[];
+}) {
+  const techIds = await Promise.all(
+    data.tecnologias.map((nombre) =>
+      db.tecnologias.upsert({
+        where: { nombre },
+        create: { nombre },
+        update: {},
+        select: { id: true },
+      }),
+    ),
+  );
+
+  return db.proyectos.create({
+    data: {
+      id_empresario: data.idEmpresario,
+      titulo: data.titulo,
+      descripcion: data.descripcion,
+      area_negocio: data.areaNegocio,
+      plazo_dias: data.plazoDias,
+      estado: 'borrador',
+      proyectos_tecnologias: {
+        create: techIds.map((t) => ({ id_tecnologia: t.id })),
+      },
+    },
+    select: { id: true },
+  });
+}
+
+// Actualiza los campos enviados y, si se envía `tecnologias`, reemplaza las
+// asociaciones (borra las viejas y crea las nuevas). Usa PATCH semántico:
+// solo toca los campos presentes en el objeto.
+export async function actualizarProyecto(
+  idProyecto: string,
+  data: {
+    titulo?: string | undefined;
+    descripcion?: string | undefined;
+    areaNegocio?: string | null | undefined;
+    plazoDias?: number | null | undefined;
+    tecnologias?: string[] | undefined;
+  },
+) {
+  const { tecnologias, ...campos } = data;
+
+  if (tecnologias !== undefined) {
+    const techIds = await Promise.all(
+      tecnologias.map((nombre) =>
+        db.tecnologias.upsert({
+          where: { nombre },
+          create: { nombre },
+          update: {},
+          select: { id: true },
+        }),
+      ),
+    );
+    await db.proyectos_tecnologias.deleteMany({ where: { id_proyecto: idProyecto } });
+    if (techIds.length > 0) {
+      await db.proyectos_tecnologias.createMany({
+        data: techIds.map((t) => ({ id_proyecto: idProyecto, id_tecnologia: t.id })),
+        skipDuplicates: true,
+      });
+    }
+  }
+
+  return db.proyectos.update({
+    where: { id: idProyecto },
+    data: {
+      ...(campos.titulo !== undefined && { titulo: campos.titulo }),
+      ...(campos.descripcion !== undefined && { descripcion: campos.descripcion }),
+      ...(campos.areaNegocio !== undefined && { area_negocio: campos.areaNegocio }),
+      ...(campos.plazoDias !== undefined && { plazo_dias: campos.plazoDias }),
+    },
+    select: { id: true },
+  });
+}
+
+// Cambia el estado a 'publicado' y marca la fecha de publicación.
+export function publicarProyecto(idProyecto: string) {
+  return db.proyectos.update({
+    where: { id: idProyecto },
+    data: { estado: 'publicado', publicado: new Date() },
+    select: { id: true },
+  });
+}
+
+// Elimina el proyecto y sus relaciones de tecnologías.
+// La guarda de "solo borrador" la hace la capa de servicio.
+export async function eliminarProyecto(idProyecto: string) {
+  await db.proyectos_tecnologias.deleteMany({ where: { id_proyecto: idProyecto } });
+  return db.proyectos.delete({ where: { id: idProyecto } });
 }
 
