@@ -6,11 +6,9 @@ import Card from "@/components/ui/Card";
 import EventCard from "@/components/features/cards/EventCard";
 import NotificacionesPanel from "@/components/features/dashboard/NotificacionesPanel";
 import {
-  IconArrowRight,
   IconAward,
   IconBriefcase,
   IconCheck,
-  IconClock,
   IconCpu,
   IconFile,
   IconRocket,
@@ -19,43 +17,15 @@ import {
   IconStar,
   IconTrendingUp,
 } from "@/components/ui/icons";
-import { EVENTOS, PROYECTOS } from "@/lib/marketplace-data";
+import { EVENTOS } from "@/lib/marketplace-data";
 import { ESTADO_OFERTA_META } from "@/lib/oferta-estado";
 import { tiempoRelativo } from "@/lib/tiempo";
-import type { ProyectoDetalle } from "@/types/sefora";
 import { getUser } from "@/server/auth/get-user";
 import { obtenerVerificacionEstudiante } from "@/server/services/verificacion.service";
 import { resumenDashboardEstudiante } from "@/server/services/dashboard.service";
 import { listarMisOfertas } from "@/server/services/oferta.service";
 import { cargarPerfilEditable } from "@/server/services/perfil-estudiante.service";
 
-const GRADIENTES_PROYECTO = [
-  "linear-gradient(135deg,#008FD4,#20BEC6)",
-  "linear-gradient(135deg,#662D91,#EC008C)",
-  "linear-gradient(135deg,#F7901E,#FFCB05)",
-  "linear-gradient(135deg,#20BEC6,#008FD4)",
-  "linear-gradient(135deg,#EC008C,#662D91)",
-  "linear-gradient(135deg,#008FD4,#662D91)",
-];
-
-function compatibilidad(id: string): number {
-  let h = 0;
-  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) % 1000;
-  return 70 + (h % 29);
-}
-
-function presupuesto(id: string): string {
-  let h = 0;
-  for (let i = 0; i < id.length; i++) h = (h * 131 + id.charCodeAt(i)) % 100000;
-  const base = Math.round((600 + (h % 5400)) / 100) * 100;
-  return `$${base.toLocaleString("en-US")}`;
-}
-
-function compatColor(v: number): { bar: string; text: string } {
-  if (v >= 85) return { bar: "linear-gradient(90deg,#10B981,#34D399)", text: "text-emerald-600 dark:text-emerald-400" };
-  if (v >= 70) return { bar: "linear-gradient(90deg,#FFCB05,#F7901E)", text: "text-fwd-naranja" };
-  return { bar: "linear-gradient(90deg,#F7901E,#EC008C)", text: "text-fwd-naranja" };
-}
 
 export default async function DashboardEstudiantePage({
   params,
@@ -258,7 +228,7 @@ export default async function DashboardEstudiantePage({
               </span>
             </span>
             <h2 className="text-gradient-fwd mt-2 font-display text-2xl font-extrabold tracking-tight sm:text-3xl">
-              🚀 Oportunidades recomendadas para ti
+              Oportunidades recomendadas
             </h2>
             <p className="mt-1 text-sm text-text-muted">Basadas en tu perfil y habilidades.</p>
           </div>
@@ -268,10 +238,12 @@ export default async function DashboardEstudiantePage({
           </span>
         </div>
 
-        <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {PROYECTOS.map((proyecto, i) => (
-            <OpportunityCard key={proyecto.id} proyecto={proyecto} locale={locale} i={i} />
-          ))}
+        <div className="mt-6 flex flex-col items-center gap-2 rounded-2xl border border-dashed border-border py-12 text-center">
+          <span className="grid h-12 w-12 place-items-center rounded-full bg-gradient-fwd-soft text-white">
+            <IconSparkles width={22} height={22} />
+          </span>
+          <p className="text-sm font-semibold text-text-muted">Aun no hay proyectos disponibles</p>
+          <p className="text-xs text-text-muted/60">Cuando los empresarios publiquen proyectos, aparecerán aquí según tu perfil.</p>
         </div>
       </section>
 
@@ -440,76 +412,3 @@ function Logro({
   );
 }
 
-function OpportunityCard({
-  proyecto,
-  locale,
-  i,
-}: {
-  proyecto: ProyectoDetalle;
-  locale: string;
-  i: number;
-}) {
-  const gradiente = GRADIENTES_PROYECTO[i % GRADIENTES_PROYECTO.length]!;
-  const compat = compatibilidad(proyecto.id);
-  const cc = compatColor(compat);
-
-  return (
-    <Link
-      href={`/${locale}/proyectos/${proyecto.id}`}
-      style={{ animationDelay: `${i * 70}ms`, animationDuration: "500ms" }}
-      className="animate-in fade-in slide-in-from-bottom-3 fill-mode-backwards group relative flex h-full flex-col overflow-hidden rounded-[20px] border border-border bg-surface/80 p-6 shadow-sm backdrop-blur-sm transition-all duration-300 hover:-translate-y-1.5 hover:border-fwd-azul/40 hover:shadow-xl"
-    >
-      <span aria-hidden className="absolute inset-x-0 top-0 h-1.5" style={{ backgroundImage: gradiente }} />
-
-      <div className="flex items-center justify-between">
-        <span
-          className="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold text-white shadow-sm"
-          style={{ backgroundImage: gradiente }}
-        >
-          {proyecto.area}
-        </span>
-        <span className={`text-xs font-bold ${cc.text}`}>{compat}% compatible</span>
-      </div>
-
-      <h3 className="mt-4 font-display text-lg font-bold text-text transition-colors group-hover:text-fwd-azul">
-        {proyecto.titulo}
-      </h3>
-      <p className="mt-0.5 text-xs font-medium text-text-muted">{proyecto.empresario.nombre}</p>
-      <p className="mt-2 line-clamp-2 flex-1 text-sm leading-relaxed text-text-muted">
-        {proyecto.descripcion}
-      </p>
-
-      <div className="mt-4 flex flex-wrap gap-1.5">
-        {proyecto.tecnologias.slice(0, 4).map((tech) => (
-          <span
-            key={tech}
-            className="inline-flex items-center gap-1 rounded-full border border-fwd-azul/15 bg-fwd-azul/5 px-2.5 py-0.5 text-xs font-medium text-fwd-azul dark:border-fwd-turquesa/20 dark:bg-fwd-turquesa/10 dark:text-fwd-turquesa"
-          >
-            <IconCpu width={12} height={12} className="opacity-70" />
-            {tech}
-          </span>
-        ))}
-      </div>
-
-      <div className="mt-4">
-        <div className="h-2 w-full overflow-hidden rounded-full bg-surface-2">
-          <span className="block h-full rounded-full transition-all duration-500" style={{ width: `${compat}%`, backgroundImage: cc.bar }} />
-        </div>
-      </div>
-
-      <div className="mt-5 border-t border-border pt-4">
-        <div className="flex items-center justify-between text-sm">
-          <span className="inline-flex items-center gap-1.5 text-text-muted">
-            <IconClock width={15} height={15} />
-            {proyecto.diasRestantes}d restantes
-          </span>
-          <span className="font-semibold text-text">{presupuesto(proyecto.id)}</span>
-        </div>
-        <span className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-fwd-azul px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 group-hover:bg-fwd-morado group-hover:shadow-md">
-          Ver proyecto
-          <IconArrowRight width={15} height={15} className="transition-transform duration-300 group-hover:translate-x-0.5" />
-        </span>
-      </div>
-    </Link>
-  );
-}

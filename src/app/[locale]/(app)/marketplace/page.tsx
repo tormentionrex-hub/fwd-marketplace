@@ -2,11 +2,10 @@ import SectionHeading from "@/components/ui/SectionHeading";
 import { Reveal } from "@/components/ui/motion";
 import MarketplaceExplorer from "@/components/features/marketplace/MarketplaceExplorer";
 import CategoriesSection from "@/components/features/marketplace/CategoriesSection";
-import ProductCard from "@/components/features/cards/ProductCard";
 import Footer from "@/components/Footer";
 import HomeButton from "@/components/HomeButton";
 import ParticleBackground from "@/components/ParticleBackground";
-import { PRODUCTOS, PRODUCTOS_DESTACADOS } from "@/lib/marketplace-data";
+import { listarProyectosParaMarketplace } from "@/server/services/proyecto.service";
 
 export default async function MarketplacePage({
   params,
@@ -14,6 +13,7 @@ export default async function MarketplacePage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+  const proyectos = await listarProyectosParaMarketplace();
 
   return (
     <div className="flex flex-col">
@@ -21,7 +21,7 @@ export default async function MarketplacePage({
       <HomeButton />
 
       {/* Hero + buscador + filtros + grid */}
-      <MarketplaceExplorer productos={PRODUCTOS} locale={locale} />
+      <MarketplaceExplorer proyectos={proyectos} locale={locale} />
 
       {/* Categorías y destacados */}
       <div className="relative overflow-hidden">
@@ -37,21 +37,6 @@ export default async function MarketplacePage({
           </Reveal>
           <div className="mt-8">
             <CategoriesSection />
-          </div>
-        </section>
-
-        <section>
-          <Reveal>
-            <SectionHeading
-              eyebrow="Productos Destacados"
-              title="Lo más relevante del marketplace"
-              description="Selección curada de lo que está marcando la diferencia."
-            />
-          </Reveal>
-          <div className="mt-10 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {PRODUCTOS_DESTACADOS.map((producto) => (
-              <ProductCard key={producto.id} producto={producto} locale={locale} />
-            ))}
           </div>
         </section>
         </div>
