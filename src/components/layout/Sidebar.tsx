@@ -264,9 +264,9 @@ export default function Sidebar({
       </Link>
 
       <Link
-        href="/mensajes"
+        href="/empresario/mensajes"
         title={collapsed ? 'Mensajes' : undefined}
-        className={`nav-item ${isActive('/mensajes') ? 'on' : ''}`}
+        className={`nav-item ${isActive('/empresario/mensajes') ? 'on' : ''}`}
         style={{ justifyContent: collapsed ? 'center' : 'flex-start', gap: collapsed ? 0 : 11, overflow: 'hidden', transition: 'gap 0.2s' }}
       >
         <svg
