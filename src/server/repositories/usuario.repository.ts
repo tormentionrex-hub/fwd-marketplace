@@ -148,7 +148,6 @@ export function actualizarHashContrasena(id: string, hashContrasena: string) {
     select: { id: true, correo: true },
   });
 }
-
 // Activa un usuario cambiando su estado a 'activo'. Lo llama el admin al aprobar.
 export function activarUsuario(id: string) {
   return db.usuarios.update({
