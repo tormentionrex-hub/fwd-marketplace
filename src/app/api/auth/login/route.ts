@@ -32,12 +32,6 @@ export async function POST(request: Request) {
     if (resultado === null) {
       return error('Correo o contraseña incorrectos', 401);
     }
-    if (resultado === 'pendiente') {
-      return error(
-        'Tu cuenta está pendiente de aprobación por un administrador. Te avisaremos por email cuando esté lista.',
-        403,
-      );
-    }
 
     // Lo privado (id, rol, correo, token) viaja en la cookie httpOnly firmada.
     await crearCookieSesion({
@@ -54,6 +48,7 @@ export async function POST(request: Request) {
         nombre: resultado.usuario.nombre,
         image_url: resultado.usuario.image_url,
       },
+      pendiente: resultado.pendiente ?? false,
       redirectTo: rutaPorRol(resultado.usuario.rol),
     });
   } catch (e) {

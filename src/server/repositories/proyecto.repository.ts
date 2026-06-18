@@ -29,6 +29,54 @@ export function listarProyectosDeEmpresario(idEmpresario: string) {
     orderBy: { publicado: 'desc' },
   });
 }
+// Lista todos los proyectos para el panel admin: empresario, estado y nº de
+// ofertas. Solo lectura, acotado a los más recientes.
+export function listarProyectosAdmin() {
+  return db.proyectos.findMany({
+    take: 50,
+    orderBy: { publicado: 'desc' },
+    select: {
+      id: true,
+      titulo: true,
+      estado: true,
+      publicado: true,
+      cierre: true,
+      motivo_estado: true,
+      estado_previo: true,
+      perfiles_empresario: { select: { usuarios: { select: { nombre: true } } } },
+      _count: { select: { ofertas: true } },
+    },
+  });
+}
+
+export function suspenderProyectoRepo(id: string, motivo: string, estadoActual: string) {
+  return db.proyectos.update({
+    where: { id },
+    data: {
+      estado: 'pendiente_revision',
+      estado_previo: estadoActual,
+      motivo_estado: motivo,
+    },
+  });
+}
+
+export function vistoBuenoProyectoRepo(id: string, estadoPrevio: string | null) {
+  return db.proyectos.update({
+    where: { id },
+    data: {
+      estado: estadoPrevio || 'publicado',
+      estado_previo: null,
+      motivo_estado: null,
+    },
+  });
+}
+
+export function eliminarProyectoRepo(id: string) {
+  return db.proyectos.delete({
+    where: { id },
+  });
+}
+
 
 // Cuenta las ofertas recibidas en los proyectos del empresario desde `desde`
 // (para el delta "nuevas esta semana" del dashboard). Una query agregada.
@@ -36,6 +84,26 @@ export function contarOfertasDesde(idEmpresario: string, desde: Date) {
   return db.ofertas.count({
     where: { proyectos: { id_empresario: idEmpresario }, enviado: { gte: desde } },
   });
+}
+
+// Obtiene fechas de proyectos y ofertas de los últimos 6 meses
+export function obtenerActividadSeisMeses(idEmpresario: string) {
+  const hace6Meses = new Date();
+  hace6Meses.setMonth(hace6Meses.getMonth() - 5);
+  hace6Meses.setDate(1);
+  hace6Meses.setHours(0, 0, 0, 0);
+
+  const proyectos = db.proyectos.findMany({
+    where: { id_empresario: idEmpresario, publicado: { gte: hace6Meses } },
+    select: { publicado: true },
+  });
+
+  const ofertas = db.ofertas.findMany({
+    where: { proyectos: { id_empresario: idEmpresario }, enviado: { gte: hace6Meses } },
+    select: { enviado: true },
+  });
+
+  return Promise.all([proyectos, ofertas]);
 }
 
 // Trae un proyecto con su empresario (nombre + sector) y sus tecnologías
@@ -135,22 +203,6 @@ export function buscarEstudianteAdjudicado(idProyecto: string) {
   });
 }
 
-// Lista todos los proyectos para el panel admin con nombre del empresario y conteo de ofertas.
-export function listarProyectosAdmin() {
-  return db.proyectos.findMany({
-    orderBy: { publicado: 'desc' },
-    select: {
-      id: true,
-      titulo: true,
-      estado: true,
-      perfiles_empresario: {
-        select: { usuarios: { select: { nombre: true } } },
-      },
-      _count: { select: { ofertas: true } },
-    },
-  });
-}
-
 // Lista todos los proyectos con estado 'publicado' para el marketplace.
 // Incluye tecnologías y datos del empresario (empresa + sector).
 export function listarProyectosPublicados() {
@@ -177,6 +229,7 @@ export function listarProyectosPublicados() {
     orderBy: { publicado: 'desc' },
   });
 }
+
 
 // Cierra el proyecto: estado 'cerrado' y marca la fecha de cierre.
 export function cerrarProyectoRepo(idProyecto: string) {

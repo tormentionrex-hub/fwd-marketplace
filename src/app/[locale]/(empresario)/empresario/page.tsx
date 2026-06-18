@@ -5,10 +5,10 @@ import {
   dashboardEmpresario,
   actividadRecienteEmpresario,
 } from '@/server/services/proyecto.service';
-import { ProyectoRow } from '@/components/features/empresario/lista-proyectos';
-import { ProyectosTablaMock } from '@/components/features/empresario/proyectos-tabla-mock';
+
 import BuscadorProyectos from '@/components/features/empresario/buscador-proyectos';
 import DashboardRefresher from '@/components/features/empresario/dashboard-refresher';
+import { ProgresoProyectos } from '@/components/features/empresario/progreso-proyectos';
 import { tiempoRelativo } from '@/lib/tiempo';
 import { ActividadChart } from '@/components/features/empresario/actividad-chart';
 import {
@@ -25,6 +25,8 @@ import {
   IconBell,
 } from '@/components/ui/fwd-icons';
 
+import './emp-dash-responsive.css';
+
 export default async function DashboardEmpresarioPage({
   params,
 }: {
@@ -36,7 +38,7 @@ export default async function DashboardEmpresarioPage({
   if (!user) redirect(`/${locale}/login`);
   if (user.roles.nombre !== 'empresario') redirect(`/${locale}`);
 
-  const [{ resumen, proyectos }] = await Promise.all([
+  const [{ resumen, proyectos, chartData }, actividadReciente] = await Promise.all([
     dashboardEmpresario(user.id),
     actividadRecienteEmpresario(user.id),
   ]);
@@ -45,27 +47,17 @@ export default async function DashboardEmpresarioPage({
   // solo muestra tendencia en las cards con movimiento; el resto va sin chip.
   // `href` = vista filtrada a la que lleva la card al hacer clic (#5).
   const stats = [
-    { label: 'Proyectos activos', value: resumen.activos, Icon: IconFolder, color: 'var(--azul)', delta: 2, deltaText: 'este mes', href: '/empresario/proyectos?estado=publicado' },
-    { label: 'Ofertas recibidas', value: resumen.ofertasRecibidas, Icon: IconSend, color: 'var(--magenta)', delta: 5, deltaText: 'esta semana', href: '/empresario/proyectos' },
-    { label: 'En desarrollo', value: resumen.enDesarrollo, Icon: IconLayers, color: 'var(--naranja)', delta: 0, deltaText: '', href: '/empresario/proyectos?estado=en_desarrollo' },
-    { label: 'Proyectos cerrados', value: resumen.cerrados, Icon: IconTrophy, color: 'var(--turquesa)', delta: 1, deltaText: 'esta semana', href: '/empresario/proyectos?estado=cerrado' },
-  ];
-
-  // Datos mock visuales para la gráfica nueva, tal cual la imagen
-  const mockChartData = [
-    { mes: 'Ene', proyectos: 0, ofertas: 0 },
-    { mes: 'Feb', proyectos: 2, ofertas: 7 },
-    { mes: 'Mar', proyectos: 4, ofertas: 12 },
-    { mes: 'Abr', proyectos: 3, ofertas: 9 },
-    { mes: 'May', proyectos: 5, ofertas: 14 },
-    { mes: 'Jun', proyectos: 7, ofertas: 16 },
+    { label: 'Proyectos activos', subLabel: 'Publicados actualmente', value: resumen.activos, Icon: IconFolder, delta: resumen.nuevosActivosSemana, deltaText: 'esta semana', href: '/empresario/proyectos?estado=publicado', tone: 'activos' as const },
+    { label: 'Ofertas recibidas', subLabel: 'En todos tus proyectos', value: resumen.ofertasRecibidas, Icon: IconSend, delta: resumen.nuevasOfertasSemana, deltaText: 'esta semana', href: '/empresario/proyectos', tone: 'ofertas' as const },
+    { label: 'En desarrollo', subLabel: 'Trabajo en progreso', value: resumen.enDesarrollo, Icon: IconLayers, delta: 0, deltaText: '', href: '/empresario/proyectos?estado=en_desarrollo', tone: 'desarrollo' as const },
+    { label: 'Proyectos cerrados', subLabel: 'Finalizados exitosamente', value: resumen.cerrados, Icon: IconTrophy, delta: 0, deltaText: '', href: '/empresario/proyectos?estado=cerrado', tone: 'cerrados' as const },
   ];
 
   const primerNombre = user.nombre.split(' ')[0];
   const ultimaSesion = tiempoRelativo(user.ultima_sesion);
 
   return (
-    <>
+    <div className="emp-dash">
       {/* Refresco automático del dashboard (foco de pestaña + cada 60s) */}
       <DashboardRefresher />
 
@@ -79,28 +71,12 @@ export default async function DashboardEmpresarioPage({
           </div>
         </div>
         <div className="tb-spacer" />
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          {/* El buscador puede recibir estilos via class o globales, pero en la imagen se ve redondeado y gris claro. */}
-          <div style={{ 
-            background: 'var(--surface)', 
-            borderRadius: 24, 
-            overflow: 'hidden' 
-          }}>
+        <div className="emp-dash-topbar-actions">
+          <div className="emp-dash-search-wrap">
             <BuscadorProyectos />
           </div>
-          
-          <Link href="/empresario/nuevo-proyecto" className="btn" style={{
-            background: 'linear-gradient(90deg, #008FD4 0%, #20BEC6 100%)',
-            border: 'none',
-            borderRadius: 24,
-            padding: '10px 24px',
-            fontWeight: 800,
-            color: 'white',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            boxShadow: 'none'
-          }}>
+
+          <Link href="/empresario/nuevo-proyecto" className="btn emp-dash-btn-publish">
             <IconPlus size={18} />
             Publicar proyecto
           </Link>
@@ -109,155 +85,69 @@ export default async function DashboardEmpresarioPage({
 
       <div className="page fade-in">
         {/* Banner Resumen Ejecutivo */}
-        <div style={{
-          background: 'linear-gradient(90deg, #0082c8 0%, #800080 50%, #e6007e 100%)',
-          borderRadius: 16,
-          padding: '20px 32px',
-          color: 'white',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 24,
-        }}>
+        <div className="emp-dash-banner">
           <div>
             <div style={{ fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4, color: 'rgba(255,255,255,0.9)' }}>
               Resumen Ejecutivo
             </div>
-            <div style={{ fontSize: 22, fontWeight: 800, fontFamily: 'var(--font-head)' }}>
-              Tienes 5 ofertas pendientes de revisión
+            <div className="emp-dash-banner-title">
+              Tienes {resumen.ofertasRecibidas} {resumen.ofertasRecibidas === 1 ? 'oferta pendiente' : 'ofertas pendientes'} de revisión
             </div>
           </div>
-          <Link href="/empresario/proyectos" className="btn" style={{
-            background: 'rgba(255,255,255,0.25)',
-            color: 'white',
-            border: 'none',
-            borderRadius: 20,
-            padding: '8px 20px',
-            fontWeight: 600,
-            backdropFilter: 'blur(4px)'
-          }}>
+          <Link href="/empresario/proyectos" className="btn emp-dash-btn-review">
             Revisar ofertas &rarr;
           </Link>
         </div>
 
-        {/* Tarjetas resumen (Diseño Fase 2: Pastel / Light Mode Híbrido) */}
-        <div className="stat-grid" style={{ marginBottom: 28 }}>
-          {stats.map((s) => (
-            <Link
-              key={s.label}
-              href={s.href}
-              className="card fwd-stat"
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 14,
-                overflow: 'hidden',
-                padding: '24px 22px',
-                background: `color-mix(in srgb, ${s.color} 12%, var(--surface))`,
-                borderColor: `color-mix(in srgb, ${s.color} 25%, transparent)`,
-                boxShadow: 'none',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>
-                <div
-                  style={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: 14,
-                    background: `color-mix(in srgb, ${s.color} 18%, transparent)`,
-                    display: 'grid',
-                    placeItems: 'center',
-                    color: s.color,
-                  }}
-                >
-                  <s.Icon size={24} />
-                </div>
-                {s.delta > 0 ? (
-                  <span
-                    title={`Nuevas en ${s.deltaText}`}
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 4,
-                      fontFamily: 'var(--font-head)',
-                      fontWeight: 700,
-                      fontSize: 12,
-                      color: 'var(--turquesa)',
-                      textAlign: 'left',
-                      lineHeight: 1.2
-                    }}
-                  >
-                    <IconTrend size={14} />
-                    <span style={{ display: 'inline-block', width: 45 }}>
-                      +{s.delta} {s.deltaText}
-                    </span>
-                  </span>
-                ) : (
-                  <span
-                    style={{
-                      fontFamily: 'var(--font-head)',
-                      fontWeight: 500,
-                      fontSize: 12,
-                      color: 'var(--ink-500)',
-                      marginTop: 4
-                    }}
-                  >
-                    Sin cambios
-                  </span>
-                )}
-              </div>
-              <div style={{ position: 'relative', zIndex: 1, marginTop: 4 }}>
-                <div
-                  className="font-display"
-                  style={{ fontSize: 36, fontWeight: 900, color: s.color, lineHeight: 1 }}
-                >
-                  {s.value}
-                </div>
-                <div style={{ fontSize: 13.5, fontWeight: 500, color: 'var(--ink-600)', marginTop: 6 }}>
-                  {s.label}
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
+
 
         {/* Workspace: proyectos recientes + panel lateral */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 24, alignItems: 'start' }}>
-          <div className="card">
-            <div
-              style={{
-                padding: '18px 20px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-              }}
-            >
-              <h3 style={{ fontSize: 16, fontWeight: 700 }}>Proyectos recientes</h3>
-              <Link href="/empresario/proyectos" className="btn btn-ghost btn-sm">
-                Ver todos
-              </Link>
-            </div>
-            {proyectos.length === 0 ? (
-              <div style={{ padding: 40, textAlign: 'center' }} className="muted">
-                Todavía no publicaste ningún proyecto.
+        <div className="emp-dash-workspace">
+          <div>
+            <div className="card emp-dash-card">
+              <div className="emp-dash-metrics-head">
+                <h2 className="font-display" style={{ fontSize: 20, fontWeight: 800, color: 'var(--ink-900)' }}>Métricas destacadas</h2>
+                <div style={{ background: 'var(--bg-2)', padding: '6px 14px', borderRadius: 20, fontSize: 13, fontWeight: 600, color: 'var(--ink-600)' }}>
+                  {new Date().toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }).replace(/^\w/, (c) => c.toUpperCase())}
+                </div>
               </div>
-            ) : (
-              proyectos.map((p) => <ProyectoRow key={p.id} p={p} />)
-            )}
+
+              <div className="emp-dash-stats">
+                {stats.map((s) => (
+                  <Link
+                    key={s.label}
+                    href={s.href}
+                    className={`fwd-stat fwd-stat--${s.tone}`}
+                  >
+                    <div className="fwd-stat-top">
+                      <div className="fwd-stat-icon">
+                        <s.Icon size={20} />
+                      </div>
+                      {s.delta > 0 ? (
+                        <span className="fwd-stat-delta">
+                          <IconTrend size={14} />
+                          +{s.delta} {s.deltaText}
+                        </span>
+                      ) : (
+                        <span className="fwd-stat-muted">Sin cambios</span>
+                      )}
+                    </div>
+                    <div className="fwd-stat-body">
+                      <div className="fwd-stat-value font-display">{s.value}</div>
+                      <div className="fwd-stat-label">{s.label}</div>
+                      <div className="fwd-stat-sublabel">{s.subLabel}</div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+            
+            <ProgresoProyectos proyectos={proyectos} />
           </div>
 
-          <div style={{ position: 'sticky', top: 90, height: 'calc(100vh - 120px)', zIndex: 2 }}>
-            <div 
-              className="panel-scroll"
-              style={{ 
-                height: '100%', 
-                overflowY: 'auto', 
-                overflowX: 'hidden',
-                padding: '20px',
-                margin: '-20px'
-              }}
-            >
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <div className="emp-dash-sidebar">
+            <div className="panel-scroll emp-dash-sidebar-scroll">
+              <div className="emp-dash-sidebar-stack">
             {/* Crear con IA (estilo Dark Neon AI basado en FWD Magenta) */}
             <div
               className="card card-pad"
@@ -330,7 +220,7 @@ export default async function DashboardEmpresarioPage({
 
               {/* Contenedor del gráfico */}
               <div style={{ height: 160, width: '100%' }}>
-                <ActividadChart data={mockChartData} />
+                <ActividadChart data={chartData} />
               </div>
 
               {/* Leyenda */}
@@ -350,53 +240,48 @@ export default async function DashboardEmpresarioPage({
             <div className="card card-pad" style={{ background: 'var(--surface)', color: 'var(--ink-800)' }}>
               <h4 className="font-display" style={{ fontSize: 16, fontWeight: 800, color: 'var(--ink-900)', marginBottom: 20 }}>Actividad reciente</h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-                {/* Item 1 */}
-                <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-                  <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(236,0,140,0.1)', display: 'grid', placeItems: 'center', color: 'var(--magenta)' }}>
-                    <IconSend size={20} />
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink-900)' }}>Nueva oferta recibida</div>
-                    <div style={{ fontSize: 13, color: 'var(--ink-500)' }}>App de logística · hace 2h</div>
-                  </div>
-                </div>
-                {/* Item 2 */}
-                <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-                  <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(0,130,200,0.1)', display: 'grid', placeItems: 'center', color: 'var(--azul)' }}>
-                    <IconMessage size={20} />
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink-900)' }}>Mensaje de talento</div>
-                    <div style={{ fontSize: 13, color: 'var(--ink-500)' }}>Juan Mora · hace 4h</div>
-                  </div>
-                </div>
-                {/* Item 3 */}
-                <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-                  <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(0,180,180,0.1)', display: 'grid', placeItems: 'center', color: 'var(--turquesa)' }}>
-                    <IconCheckCircle size={20} />
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink-900)' }}>Proyecto cerrado</div>
-                    <div style={{ fontSize: 13, color: 'var(--ink-500)' }}>E-commerce B2B · ayer</div>
-                  </div>
-                </div>
-                {/* Item 4 */}
-                <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-                  <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,165,0,0.1)', display: 'grid', placeItems: 'center', color: 'var(--naranja)' }}>
-                    <IconBell size={20} />
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink-900)' }}>Recordatorio de entrega</div>
-                    <div style={{ fontSize: 13, color: 'var(--ink-500)' }}>Campaña Q3 · mañana</div>
-                  </div>
-                </div>
+                {actividadReciente.length === 0 ? (
+                  <div style={{ fontSize: 13, color: 'var(--ink-500)' }}>No hay actividad reciente.</div>
+                ) : (
+                  actividadReciente.map((item) => {
+                    let Icon = IconBell;
+                    let bgColor = 'rgba(255,165,0,0.1)';
+                    let fgColor = 'var(--naranja)';
+
+                    if (item.tipo === 'oferta') {
+                      Icon = IconSend;
+                      bgColor = 'rgba(236,0,140,0.1)';
+                      fgColor = 'var(--magenta)';
+                    } else if (item.tipo === 'entrega') {
+                      Icon = IconMessage;
+                      bgColor = 'rgba(0,130,200,0.1)';
+                      fgColor = 'var(--azul)';
+                    } else if (item.tipo === 'cierre') {
+                      Icon = IconCheckCircle;
+                      bgColor = 'rgba(0,180,180,0.1)';
+                      fgColor = 'var(--turquesa)';
+                    }
+
+                    return (
+                      <Link href={`/empresario/gestion-proyectos/${item.idProyecto}`} key={item.id} style={{ display: 'flex', gap: 16, alignItems: 'center', textDecoration: 'none' }}>
+                        <div style={{ width: 44, height: 44, borderRadius: '50%', background: bgColor, display: 'grid', placeItems: 'center', color: fgColor }}>
+                          <Icon size={20} />
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink-900)' }}>{item.titulo}</div>
+                          <div style={{ fontSize: 13, color: 'var(--ink-500)' }}>{item.proyecto} · {item.cuando}</div>
+                        </div>
+                      </Link>
+                    );
+                  })
+                )}
               </div>
+            </div>
             </div>
           </div>
         </div>
+        </div>
       </div>
-      </div>
-      </div>
-    </>
+    </div>
   );
 }

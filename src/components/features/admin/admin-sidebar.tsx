@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { Link, usePathname } from "@/i18n/navigation";
+import { LogoutButton } from "@/components/layout/logout-button";
 
 /* ── Íconos SVG inline (sin emojis, REGLA #6) ───────────────── */
-type IcoProps = { d: string; extra?: string; className?: string };
+type IcoProps = { d: string; extra?: string | undefined; className?: string | undefined };
 function Ico({ d, extra, className }: IcoProps) {
   return (
     <svg
@@ -36,9 +37,13 @@ const ICON = {
     d: "M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z",
     extra: "M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z",
   },
+  gestionCuentas: {
+    d: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z",
+  },
   inicio: { d: "M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z" },
   menu: { d: "M3 6h18M3 12h18M3 18h18" },
   close: { d: "M18 6 6 18M6 6l12 12" },
+  logout: { d: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4", extra: "M16 17l5-5-5-5M21 12H9" },
 } as const;
 
 const NAV = [
@@ -47,6 +52,7 @@ const NAV = [
   { href: "/admin/proyectos", label: "Proyectos", icon: ICON.proyectos },
   { href: "/admin/ofertas", label: "Ofertas", icon: ICON.ofertas },
   { href: "/admin/validaciones", label: "Validaciones", icon: ICON.validaciones },
+  { href: "/admin/gestion-cuentas", label: "Gestión cuentas", icon: ICON.gestionCuentas },
   { href: "/admin/configuracion", label: "Configuración", icon: ICON.configuracion },
 ] as const;
 
@@ -129,14 +135,23 @@ export function AdminSidebar() {
         </nav>
 
         {/* Salir del panel — visualmente distinto, al fondo */}
-        <Link
-          href="/"
-          onClick={() => setOpen(false)}
-          className="mt-4 flex items-center gap-3 rounded-xl border border-white/15 bg-white/5 px-3 py-2.5 text-sm font-semibold text-white/80 transition hover:border-fwd-turquoise/50 hover:bg-fwd-turquoise/10 hover:text-white"
-        >
-          <Ico d={ICON.inicio.d} />
-          Ir al inicio
-        </Link>
+        <div className="mt-4 flex gap-2">
+          <Link
+            href="/"
+            onClick={() => setOpen(false)}
+            className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 px-2.5 py-2.5 text-xs font-semibold text-white/80 transition hover:border-fwd-turquoise/50 hover:bg-fwd-turquoise/10 hover:text-white"
+          >
+            <Ico d={ICON.inicio.d} />
+            Inicio
+          </Link>
+          <LogoutButton
+            className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-2.5 py-2.5 text-xs font-semibold text-red-200 transition hover:border-red-500/40 hover:bg-red-500/20 disabled:opacity-60"
+            label="Salir"
+          >
+            <Ico d={ICON.logout.d} extra={ICON.logout.extra} />
+            Salir
+          </LogoutButton>
+        </div>
       </aside>
     </>
   );

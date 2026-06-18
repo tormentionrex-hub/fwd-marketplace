@@ -5,7 +5,6 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { TextField } from "@/components/ui/text-field";
 import { IconArrowRight } from "@/components/ui/icons";
 import { SocialAuthButtons } from "@/components/features/auth/social-auth-buttons";
-import { PasswordToggle } from "@/components/ui/password-toggle";
 import AnimatedFormTitle from "@/components/features/auth/AnimatedFormTitle";
 
 export function LoginForm() {
@@ -27,6 +26,7 @@ export function LoginForm() {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ email, password }),
       });
 
@@ -86,7 +86,7 @@ export function LoginForm() {
 
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center justify-between">
-            <label htmlFor="password" className="text-sm font-medium text-fwd-ink/80">
+            <label htmlFor="password" className="text-sm font-medium text-fwd-ink/80 dark:text-white/80">
               Contraseña
             </label>
             <Link
@@ -107,16 +107,24 @@ export function LoginForm() {
               placeholder="••••••••"
               autoComplete="current-password"
               required
-              className="w-full rounded-xl border border-fwd-ink/12 bg-fwd-mist/40 px-4 py-3 pr-11 text-[0.95rem] text-fwd-ink outline-none transition placeholder:text-fwd-ink/35 focus:border-fwd-blue focus:bg-white focus:ring-4 focus:ring-fwd-blue/15"
+              className="w-full rounded-xl border border-fwd-ink/12 bg-fwd-mist/40 dark:bg-white/5 dark:border-white/15 dark:text-white px-4 py-3 pr-11 text-[0.95rem] text-fwd-ink outline-none transition placeholder:text-fwd-ink/35 dark:placeholder:text-white/35 focus:border-fwd-blue focus:bg-white dark:focus:bg-white/10 focus:ring-4 focus:ring-fwd-blue/15"
             />
-            <PasswordToggle
-              visible={showPwd}
-              onToggle={() => setShowPwd((v) => !v)}
-            />
+            <button
+              type="button"
+              onClick={() => setShowPwd((v) => !v)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-fwd-ink/40 hover:text-fwd-ink dark:text-white/40 dark:hover:text-white"
+              aria-label={showPwd ? 'Ocultar contrasena' : 'Mostrar contrasena'}
+            >
+              {showPwd ? (
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              )}
+            </button>
           </div>
         </div>
 
-        <label className="flex items-center gap-2 text-sm text-fwd-ink/70">
+        <label className="flex items-center gap-2 text-sm text-fwd-ink/70 dark:text-white/70">
           <input
             type="checkbox"
             className="h-4 w-4 rounded border-fwd-ink/25 accent-fwd-blue"
@@ -149,7 +157,7 @@ export function LoginForm() {
         <SocialAuthButtons />
       </div>
 
-      <p className="mt-8 text-center text-sm text-fwd-ink/60">
+      <p className="mt-8 text-center text-sm text-fwd-ink/60 dark:text-white/60">
         ¿Aún no tienes cuenta?{" "}
         <Link
           href="/register"

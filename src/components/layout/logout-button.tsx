@@ -8,9 +8,11 @@ import { useRouter } from "@/i18n/navigation";
 export function LogoutButton({
   className,
   label = "Cerrar sesión",
+  children,
 }: {
   className?: string;
   label?: string;
+  children?: React.ReactNode;
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -37,7 +39,7 @@ export function LogoutButton({
         "rounded-full bg-fwd-ink/5 px-3 py-1.5 text-xs font-medium text-fwd-ink/70 transition hover:bg-fwd-ink/10 disabled:opacity-60"
       }
     >
-      {loading ? "Saliendo…" : label}
+      {loading ? "Saliendo…" : (children || label)}
     </button>
   );
 }
