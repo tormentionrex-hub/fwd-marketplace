@@ -12,6 +12,7 @@ import {
   IconSpark,
   IconPlus,
 } from '@/components/ui/fwd-icons';
+import { LogoutButton } from '@/components/layout/logout-button';
 
 // LocalStorage key for the collapsed state of the Empresario sidebar
 const STORAGE_KEY = 'fwd_empresario_sidebar_collapsed';
@@ -332,6 +333,27 @@ export default function Sidebar({
           Configuración
         </span>
       </Link>
+
+      {/* Cerrar sesión */}
+      <LogoutButton
+        className={`nav-item w-full text-left mt-1`}
+        style={{
+          color: '#ef4444',
+          justifyContent: collapsed ? 'center' : 'flex-start',
+          gap: collapsed ? 0 : 11,
+          overflow: 'hidden',
+          transition: 'gap 0.2s',
+        } as React.CSSProperties}
+      >
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+          <polyline points="16 17 21 12 16 7" />
+          <line x1="21" y1="12" x2="9" y2="12" />
+        </svg>
+        <span style={{ overflow: 'hidden', width: collapsed ? 0 : 'auto', opacity: collapsed ? 0 : 1, whiteSpace: 'nowrap', transition: 'width 0.3s ease, opacity 0.2s ease' }}>
+          Cerrar sesión
+        </span>
+      </LogoutButton>
 
       {/* Footer with user info */}
       <div className="sb-foot">
