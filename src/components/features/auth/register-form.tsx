@@ -162,7 +162,10 @@ export function RegisterForm() {
         localStorage.setItem("fwd_perfil", JSON.stringify(data.perfil));
         sessionStorage.setItem("fwd_active", "true");
       }
-      localStorage.setItem("fwd_dashboard", data?.redirectTo ?? "/empresario");
+      if (data?.redirectTo) {
+        localStorage.setItem("fwd_dashboard", data.redirectTo);
+        localStorage.setItem("fwd_redirect", data.redirectTo);
+      }
 
       router.push(data?.redirectTo ?? "/empresario");
       router.refresh();

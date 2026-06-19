@@ -45,6 +45,7 @@ export function LoginForm() {
       }
       if (data?.redirectTo) {
         localStorage.setItem("fwd_dashboard", data.redirectTo);
+        localStorage.setItem("fwd_redirect", data.redirectTo);
       }
 
       router.push(data?.redirectTo ?? "/");

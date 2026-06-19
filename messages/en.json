@@ -4,7 +4,9 @@
     "inicio": "Home",
     "proyectos": "Projects",
     "iniciarSesion": "Sign in",
-    "registrarse": "Sign up"
+    "registrarse": "Sign up",
+    "miPanel": "My Dashboard",
+    "cerrarSesion": "Sign out"
   },
   "Hero": {
     "badge": "Innovation platform · FWD Costa Rica",

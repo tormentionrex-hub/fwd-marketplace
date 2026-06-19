@@ -57,10 +57,12 @@ export default async function PerfilPublicoPage({ params }: PerfilPublicoPagePro
   const { locale, username } = await params;
   const perfil = await getPerfilPublico(username);
 
-  // Currículum público: solo lo ve un empresario autenticado, si el estudiante lo habilitó.
+  // Currículum público: lo ve un empresario o administrador, si el estudiante lo habilitó.
   const viewer = await getUser();
   const cvPublico =
-    viewer?.roles.nombre === "empresario" ? await metadataCvPublico(username) : null;
+    viewer && (viewer.roles.nombre === "empresario" || viewer.roles.nombre === "admin")
+      ? await metadataCvPublico(username)
+      : null;
 
   // Proyectos ordenados por relevancia: calificación ponderada por nº de evaluaciones.
   const proyectosOrdenados = [...perfil.proyectos].sort(

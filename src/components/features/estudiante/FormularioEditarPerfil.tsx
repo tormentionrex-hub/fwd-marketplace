@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import Badge from "@/components/ui/Badge";
 import Card from "@/components/ui/Card";
 import CvManager from "./CvManager";
+import CvIaManager from "./CvIaManager";
 import { IconCheck, IconPlus, IconUpload, IconX } from "@/components/ui/icons";
 import type { NivelHabilidad } from "@/types/sefora";
 import type {
@@ -19,7 +20,7 @@ interface FormularioEditarPerfilProps {
   locale: string;
 }
 
-type Seccion = "datos" | "habilidades" | "portafolio" | "curriculum";
+type Seccion = "datos" | "habilidades" | "portafolio" | "curriculum" | "cv-ia";
 
 interface BorradorProyecto {
   titulo: string;
@@ -67,6 +68,7 @@ const secciones: { id: Seccion; label: string }[] = [
   { id: "habilidades", label: "Habilidades" },
   { id: "portafolio", label: "Portafolio" },
   { id: "curriculum", label: "Currículum" },
+  { id: "cv-ia", label: "CV IA" },
 ];
 
 type GitEstado = "idle" | "checking" | "ok" | "fail";
@@ -563,7 +565,21 @@ export default function FormularioEditarPerfil({ locale }: FormularioEditarPerfi
 
       {seccion === "curriculum" && <CvManager />}
 
-      {seccion !== "curriculum" && (
+      {seccion === "cv-ia" && (
+        <CvIaManager
+          nombre={nombre}
+          correo={correo}
+          resumen={resumen}
+          habilidades={habilidades.map((h) => ({
+            nombre: catalogo.find((c) => c.id === h.id)?.nombre ?? h.id,
+            nivel: h.nivel,
+          }))}
+          portafolio={proyectos}
+          completados={completados}
+        />
+      )}
+
+      {seccion !== "curriculum" && seccion !== "cv-ia" && (
       <div className="flex flex-wrap items-center gap-4">
         <button
           type="button"
