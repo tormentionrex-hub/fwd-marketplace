@@ -120,6 +120,7 @@ export function RegisterEstudianteForm() {
         localStorage.setItem("fwd_perfil", JSON.stringify(data.perfil));
         sessionStorage.setItem("fwd_active", "true");
       }
+      localStorage.setItem("fwd_dashboard", data?.redirectTo ?? "/dashboard/estudiante");
 
       router.push(data?.redirectTo ?? "/dashboard/estudiante");
       router.refresh();

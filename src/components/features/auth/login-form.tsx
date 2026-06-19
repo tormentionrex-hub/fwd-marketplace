@@ -43,6 +43,9 @@ export function LoginForm() {
         localStorage.setItem("fwd_perfil", JSON.stringify(data.perfil));
         sessionStorage.setItem("fwd_active", "true");
       }
+      if (data?.redirectTo) {
+        localStorage.setItem("fwd_dashboard", data.redirectTo);
+      }
 
       router.push(data?.redirectTo ?? "/");
       router.refresh();
