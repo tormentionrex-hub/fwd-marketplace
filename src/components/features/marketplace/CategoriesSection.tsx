@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import type { ReactElement, SVGProps } from "react";
 import {
   IconArrowRight,
   IconBriefcase,
@@ -8,12 +9,22 @@ import {
   IconCpu,
   IconGraduation,
   IconRocket,
+  IconTrendingUp,
 } from "@/components/ui/icons";
 
-const CATEGORIAS = [
+type CategoriaMarketing = {
+  nombre: string;
+  color: string;
+  total: number;
+  Icon: (props: SVGProps<SVGSVGElement>) => ReactElement;
+  label?: string;
+};
+
+const CATEGORIAS: CategoriaMarketing[] = [
   { nombre: "Tecnología",     color: "#008fd4", total: 48, Icon: IconCpu },
   { nombre: "Educación",      color: "#662d91", total: 31, Icon: IconGraduation },
   { nombre: "Servicios",      color: "#20bec6", total: 27, Icon: IconBriefcase },
+  { nombre: "Marketing",      color: "#008fd4", total: 12, Icon: IconTrendingUp, label: "indicadores" },
   { nombre: "Emprendimiento", color: "#f7901e", total: 22, Icon: IconRocket },
   { nombre: "Innovación",     color: "#ec008c", total: 18, Icon: IconBulb },
 ] as const;
@@ -33,7 +44,7 @@ export default function CategoriesSection() {
       viewport={{ once: true, margin: "-80px" }}
       className="grid grid-cols-2 gap-5 md:grid-cols-3 lg:grid-cols-5"
     >
-      {CATEGORIAS.map(({ nombre, color, total, Icon }) => (
+      {CATEGORIAS.map(({ nombre, color, total, Icon, label = "productos" }) => (
         <motion.button
           key={nombre}
           variants={item}
@@ -82,7 +93,7 @@ export default function CategoriesSection() {
             >
               {nombre}
             </h3>
-            <p className="text-sm text-text-muted">{total} productos</p>
+            <p className="text-sm text-text-muted">{total} {label}</p>
           </div>
 
           {/* CTA */}

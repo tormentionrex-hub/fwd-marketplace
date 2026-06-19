@@ -1,18 +1,17 @@
 import { obtenerEstadisticasAdmin } from "@/server/repositories/estadisticas-admin.repository";
 import { listarProyectosAdmin } from "@/server/repositories/proyecto.repository";
-import {
-  AdminPageShell,
-  AdminPageHeader,
-} from "@/components/features/admin/admin-page-header";
+import {AdminPageShell,AdminPageHeader } from "@/components/features/admin/admin-page-header";
 import { GestionProyectosPanel } from "@/components/features/admin/gestion-proyectos-panel";
+import type { ProyectoAdmin } from "@/components/features/admin/gestion-proyectos-panel";
 
 
 // URL: /es/admin/proyectos — resumen operativo + listado de proyectos.
 export default async function AdminProyectosPage() {
-  const [stats, proyectos] = await Promise.all([
+  const [stats, rawProyectos] = await Promise.all([
     obtenerEstadisticasAdmin(),
     listarProyectosAdmin(),
   ]);
+  const proyectos = rawProyectos as ProyectoAdmin[];
 
   const serializableProyectos = proyectos.map((p) => ({
     ...p,
@@ -53,8 +52,10 @@ export default async function AdminProyectosPage() {
         {operativas.map((m) => (
           <div
             key={m.label}
+
             className="rounded-2xl p-5 shadow-lg transition-all duration-300 hover:scale-[1.03] hover:shadow-xl cursor-default"
             style={{ backgroundColor: m.color }}
+          
           >
             <p className="text-sm font-medium text-white/80 transition-all duration-300 hover:translate-x-1 hover:text-white select-none">{m.label}</p>
             <p className="mt-1 text-4xl font-black tabular-nums text-white transition-all duration-300 hover:translate-x-1 hover:scale-105 origin-left select-none">

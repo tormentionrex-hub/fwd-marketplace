@@ -2,6 +2,8 @@ import SectionHeading from "@/components/ui/SectionHeading";
 import { Reveal } from "@/components/ui/motion";
 import MarketplaceExplorer from "@/components/features/marketplace/MarketplaceExplorer";
 import CategoriesSection from "@/components/features/marketplace/CategoriesSection";
+import MarketingDashboard from "@/components/features/marketplace/MarketingDashboard";
+import ProductCard from "@/components/features/cards/ProductCard";
 import Footer from "@/components/Footer";
 import HomeButton from "@/components/HomeButton";
 import ParticleBackground from "@/components/ParticleBackground";
@@ -22,6 +24,8 @@ export default async function MarketplacePage({
 
       {/* Hero + buscador + filtros + grid */}
       <MarketplaceExplorer proyectos={proyectos} locale={locale} />
+
+      <MarketingDashboard />
 
       {/* Categorías y destacados */}
       <div className="relative overflow-hidden">
