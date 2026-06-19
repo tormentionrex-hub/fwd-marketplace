@@ -4,7 +4,6 @@ import { NextIntlClientProvider, hasLocale } from 'next-intl';
 import { setRequestLocale, getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
-import { RoleBadge } from '@/components/layout/role-badge';
 import { AdminDashboardButton } from '@/components/layout/admin-dashboard-button';
 import { AlertaGlobal } from '@/components/layout/alerta-global';
 import SmoothScroll from '@/components/SmoothScroll';
@@ -49,7 +48,6 @@ export default async function LocaleLayout({
         <TabSessionGuard hasSession={!!user} />
         {children}
         <AdminDashboardButton userRole={user?.roles.nombre} locale={locale} />
-        <RoleBadge />
         <AlertaGlobal />
         <SettingsPanel />
       </NextIntlClientProvider>
