@@ -11,13 +11,13 @@ import DashboardRefresher from '@/components/features/empresario/dashboard-refre
 import { ProgresoProyectos } from '@/components/features/empresario/progreso-proyectos';
 import { tiempoRelativo } from '@/lib/tiempo';
 import { ActividadChart } from '@/components/features/empresario/actividad-chart';
+import Image from 'next/image';
 import {
   IconFolder,
   IconSend,
   IconLayers,
   IconTrophy,
   IconPlus,
-  IconSpark,
   IconArrowR,
   IconCheckCircle,
   IconTrend,
@@ -84,21 +84,6 @@ export default async function DashboardEmpresarioPage({
       </div>
 
       <div className="page fade-in">
-        {/* Banner Resumen Ejecutivo */}
-        <div className="emp-dash-banner">
-          <div>
-            <div style={{ fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4, color: 'rgba(255,255,255,0.9)' }}>
-              Resumen Ejecutivo
-            </div>
-            <div className="emp-dash-banner-title">
-              Tienes {resumen.ofertasRecibidas} {resumen.ofertasRecibidas === 1 ? 'oferta pendiente' : 'ofertas pendientes'} de revisión
-            </div>
-          </div>
-          <Link href="/empresario/proyectos" className="btn emp-dash-btn-review">
-            Revisar ofertas &rarr;
-          </Link>
-        </div>
-
 
 
         {/* Workspace: proyectos recientes + panel lateral */}
@@ -148,58 +133,25 @@ export default async function DashboardEmpresarioPage({
           <div className="emp-dash-sidebar">
             <div className="panel-scroll emp-dash-sidebar-scroll">
               <div className="emp-dash-sidebar-stack">
-            {/* Crear con IA (estilo Dark Neon AI basado en FWD Magenta) */}
-            <div
-              className="card card-pad"
-              style={{
-                background: 'linear-gradient(160deg, #0A0F1C 0%, #16102b 100%)',
-                borderColor: 'rgba(236,0,140,0.3)',
-                boxShadow: 'var(--sh-magenta)',
-                color: '#fff',
-              }}
-            >
-              <div className="bg-glow" style={{ background: 'var(--magenta)', width: 200, height: 200, bottom: -80, right: -80, opacity: 0.3 }} />
-              <div className="bg-glow" style={{ background: 'var(--turquesa)', width: 150, height: 150, top: -50, left: -50, opacity: 0.15 }} />
-              
-              <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 12, position: 'relative', zIndex: 1 }}>
-                <div
-                  style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: 12,
-                    background: 'rgba(255,255,255,0.05)',
-                    border: '1px solid rgba(236,0,140,0.4)',
-                    boxShadow: 'inset 0 0 15px rgba(236,0,140,0.2)',
-                    display: 'grid',
-                    placeItems: 'center',
-                    color: 'var(--magenta)',
-                  }}
-                  className="glow-magenta"
+            {/* Banner Fordy Crear con IA */}
+            <div className="card" style={{ overflow: 'hidden', padding: 0, position: 'relative', height: 180 }}>
+              <Image
+                src="/imagenes/fordy crear 2.png"
+                alt="Crear con IA"
+                fill
+                style={{ objectFit: 'cover' }}
+              />
+              <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: '55%', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 8, padding: '20px 20px 20px 20px' }}>
+                <div style={{ fontSize: 18, fontWeight: 900, color: '#ec008c', letterSpacing: '0.04em', lineHeight: 1.1 }}>CREAR CON IA</div>
+                <div style={{ fontSize: 12, fontWeight: 400, color: 'rgba(255,255,255,0.85)', lineHeight: 1.4 }}>Describe tu idea y la convertimos en un proyecto estructurado.</div>
+                <Link
+                  href="/empresario/nuevo-proyecto"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#ec008c', color: '#fff', fontWeight: 700, fontSize: 13, borderRadius: 999, padding: '7px 16px', textDecoration: 'none', alignSelf: 'flex-start' }}
                 >
-                  <IconSpark size={22} />
-                </div>
-                <span className="font-display glow-magenta" style={{ fontWeight: 800, fontSize: 17 }}>
-                  CREAR CON IA
-                </span>
+                  Empezar
+                  <IconArrowR size={14} />
+                </Link>
               </div>
-              <p style={{ fontSize: 13.5, lineHeight: 1.55, color: 'var(--ink-700)', marginBottom: 20, position: 'relative', zIndex: 1 }}>
-                Describe tu idea en lenguaje natural y nuestro modelo la convierte en un proyecto
-                estructurado al instante.
-              </p>
-              <Link
-                href="/empresario/nuevo-proyecto"
-                className="btn btn-block"
-                style={{
-                  background: 'var(--magenta)',
-                  color: '#fff',
-                  boxShadow: '0 0 15px rgba(236,0,140,0.6)',
-                  border: '1px solid rgba(255,255,255,0.2)',
-                  position: 'relative',
-                  zIndex: 1,
-                }}
-              >
-                Empezar <IconArrowR size={16} />
-              </Link>
             </div>
 
             {/* Gráfica Actividad 2026 (Diseño estático / Maqueta visual) */}
