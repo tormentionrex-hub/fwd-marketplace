@@ -88,6 +88,12 @@ export default function Navbar() {
           >
             {t("proyectos")}
           </Link>
+          <Link
+            href="/noticias"
+            className="text-white/80 hover:text-[#20BEC7] text-base font-semibold transition-colors duration-200"
+          >
+            {t("noticias")}
+          </Link>
           {!logueado && (
             <Link
               href="/login"
@@ -180,6 +186,9 @@ export default function Navbar() {
           </Link>
           <Link href="/proyectos" className="text-white/80 text-base font-semibold py-1 hover:text-[#20BEC7] transition-colors" onClick={() => setMenuOpen(false)}>
             {t("proyectos")}
+          </Link>
+          <Link href="/noticias" className="text-white/80 text-base font-semibold py-1 hover:text-[#20BEC7] transition-colors" onClick={() => setMenuOpen(false)}>
+            {t("noticias")}
           </Link>
           {logueado ? (
             <>

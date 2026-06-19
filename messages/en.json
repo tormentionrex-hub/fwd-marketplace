@@ -3,6 +3,7 @@
   "Nav": {
     "inicio": "Home",
     "proyectos": "Projects",
+    "noticias": "News",
     "iniciarSesion": "Sign in",
     "registrarse": "Sign up",
     "miPanel": "My Dashboard",
