@@ -156,14 +156,14 @@ export default function MarketplaceExplorer({ proyectos, locale }: Props) {
 
   return (
     <div>
-      {/* ══ HERO OSCURO ══ */}
+      {/* ══ HERO ══ */}
       <section
         className="relative pt-32 pb-16"
-        style={{ background: "linear-gradient(135deg, #0e1628 0%, #0a2a4e 50%, #008FD4 100%)" }}
+        style={{ background: "linear-gradient(135deg, #0e1628 0%, #0a2a4e 40%, #008FD5 100%)" }}
       >
         <div
           className="pointer-events-none absolute inset-0"
-          style={{ background: "radial-gradient(ellipse at 70% 50%, rgba(32,190,198,0.12) 0%, transparent 60%)" }}
+          style={{ background: "radial-gradient(ellipse at 70% 50%, rgba(32,190,198,0.2) 0%, transparent 60%)" }}
         />
         <div className="pointer-events-none absolute right-[-60px] top-1/2 -translate-y-1/2 opacity-20">
           <FwdIsotipo style={{ width: "420px", height: "auto" }} />
@@ -310,8 +310,12 @@ export default function MarketplaceExplorer({ proyectos, locale }: Props) {
       </section>
 
       {/* ══ CONTENIDO ══ */}
-      <div className="relative overflow-hidden">
-        <ParticleBackground />
+      <div
+        className="relative overflow-hidden"
+      >
+        <div className="absolute inset-0 z-0">
+          <ParticleBackground />
+        </div>
         <div className="relative z-10 mx-auto w-full max-w-7xl px-6 py-10 sm:px-8">
 
           <div className="flex items-center gap-3 mb-8" id="marketplace-grid">
