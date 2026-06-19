@@ -4,7 +4,9 @@
     "inicio": "Inicio",
     "proyectos": "Proyectos",
     "iniciarSesion": "Iniciar sesión",
-    "registrarse": "Registrarse"
+    "registrarse": "Registrarse",
+    "miPanel": "Mi panel",
+    "cerrarSesion": "Cerrar sesión"
   },
   "Hero": {
     "badge": "Plataforma de innovación · FWD Costa Rica",
