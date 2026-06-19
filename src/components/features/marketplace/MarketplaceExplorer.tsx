@@ -7,6 +7,7 @@ import type { ProyectoMarketplace } from "@/types/marketplace";
 import AnimatedMarketplaceTitle from "@/components/AnimatedMarketplaceTitle";
 import SelectFWD from "@/components/SelectFWD";
 import TechFilterDropdown from "@/components/features/marketplace/TechFilterDropdown";
+import CategoriaFilterDropdown from "@/components/features/marketplace/CategoriaFilterDropdown";
 import { FwdIsotipo } from "@/components/ui/fwd-logo";
 import ParticleBackground from "@/components/ParticleBackground";
 
@@ -14,7 +15,7 @@ const TODO_AREA     = "Todas las áreas";
 const TODA_TECH     = "Todas las tecnologías";
 const TODA_FECHA    = "Cualquier fecha";
 const TODA_DURACION = "Cualquier duración";
-const TODA_CATEGORIA = "Todas";
+const TODA_CATEGORIA = "Todas las categorías";
 
 const ORDENES:   [string, ...string[]] = ["Más recientes", "Más antiguos", "Más relevantes"];
 const FECHAS:    [string, ...string[]] = ["Cualquier fecha", "Esta semana", "Este mes", "Últimos 3 meses"];
@@ -292,61 +293,9 @@ export default function MarketplaceExplorer({ proyectos, locale }: Props) {
             )}
           </div>
 
-          {/* ── Chips de categoría ── */}
-          <div
-            className="flex items-center gap-2 pb-3 mb-5"
-            style={{ overflowX: "auto", scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
-          >
-            {/* Chip "Todas" */}
-            <button
-              type="button"
-              onClick={() => { setCategoria(TODA_CATEGORIA); setPagina(1); }}
-              className="flex-shrink-0 px-4 py-2 rounded-full text-sm font-bold transition-all duration-200"
-              style={
-                categoria === TODA_CATEGORIA
-                  ? { background: "linear-gradient(135deg, #20BEC6, #008FD5)", color: "white", boxShadow: "0 4px 16px rgba(32,190,198,0.45)" }
-                  : { background: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.7)", border: "1px solid rgba(255,255,255,0.2)" }
-              }
-            >
-              Todas
-            </button>
-
-            {CATEGORIAS_CHIPS.map((cat) => {
-              const activa = categoria === cat.label;
-              return (
-                <button
-                  key={cat.label}
-                  type="button"
-                  onClick={() => { setCategoria(activa ? TODA_CATEGORIA : cat.label); setPagina(1); }}
-                  className="flex-shrink-0 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 hover:scale-105 active:scale-95"
-                  style={
-                    activa
-                      ? { background: "linear-gradient(135deg, #662D91, #ED008C)", color: "white", boxShadow: "0 4px 16px rgba(237,0,140,0.4)" }
-                      : { background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.65)", border: "1px solid rgba(255,255,255,0.15)" }
-                  }
-                  onMouseEnter={(e) => {
-                    if (!activa) {
-                      (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.16)";
-                      (e.currentTarget as HTMLElement).style.color = "white";
-                      (e.currentTarget as HTMLElement).style.borderColor = "rgba(32,190,198,0.5)";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!activa) {
-                      (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.08)";
-                      (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.65)";
-                      (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.15)";
-                    }
-                  }}
-                >
-                  {cat.label}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* ── Filtros secundarios ── */}
+          {/* ── Filtros ── */}
           <div className="flex flex-wrap gap-3 justify-center">
+            <CategoriaFilterDropdown value={categoria} onChange={(v) => { setCategoria(v); setPagina(1); }} />
             {areasOpciones.length > 1 && (
               <SelectFWD value={area} onChange={(v) => { setArea(v); setPagina(1); }} options={areasOpciones} />
             )}

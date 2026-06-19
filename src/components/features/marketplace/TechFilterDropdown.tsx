@@ -100,6 +100,12 @@ export default function TechFilterDropdown({ value, onChange, options }: Props) 
 
   return (
     <div ref={ref} className="relative">
+      <style>{`
+        .fwd-tech-scroll::-webkit-scrollbar { width: 5px; }
+        .fwd-tech-scroll::-webkit-scrollbar-track { background: rgba(255,255,255,0.04); border-radius: 99px; }
+        .fwd-tech-scroll::-webkit-scrollbar-thumb { background: linear-gradient(180deg,#20BEC6,#662D91,#ED008C); border-radius: 99px; }
+        .fwd-tech-scroll::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg,#ED008C,#662D91,#20BEC6); }
+      `}</style>
       {/* Trigger */}
       <button
         type="button"
@@ -152,13 +158,15 @@ export default function TechFilterDropdown({ value, onChange, options }: Props) 
       {/* Dropdown */}
       {open && (
         <div
-          className="absolute top-full left-0 mt-2 w-full min-w-[220px] rounded-2xl overflow-hidden z-50 shadow-2xl"
+          className="absolute top-full left-0 mt-2 w-full min-w-[220px] rounded-2xl overflow-hidden z-50 shadow-2xl fwd-tech-scroll"
           style={{
             background:    "linear-gradient(135deg, #0e1628 0%, #1a0a40 100%)",
             border:        "1px solid rgba(32,190,198,0.3)",
             backdropFilter:"blur(16px)",
             maxHeight:     "280px",
             overflowY:     "auto",
+            scrollbarWidth: "thin",
+            scrollbarColor: "#20BEC6 rgba(255,255,255,0.05)",
           }}
         >
           {/* Barra de color superior */}

@@ -29,7 +29,25 @@ export default async function MarketplacePage({
 
       {/* Categorías y destacados */}
       <div className="relative overflow-hidden">
+        {/* Fondo blanco base */}
+        <div className="absolute inset-0 bg-white" />
+
+        {/* Difuminados de color FWD */}
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background: [
+              "radial-gradient(ellipse 60% 50% at 0% 0%, rgba(32,190,198,0.13) 0%, transparent 60%)",
+              "radial-gradient(ellipse 50% 55% at 100% 0%, rgba(102,45,145,0.10) 0%, transparent 60%)",
+              "radial-gradient(ellipse 45% 40% at 50% 100%, rgba(237,0,140,0.09) 0%, transparent 55%)",
+              "radial-gradient(ellipse 35% 30% at 100% 100%, rgba(0,143,213,0.08) 0%, transparent 50%)",
+            ].join(", "),
+          }}
+        />
+
+        {/* Partículas encima de los difuminados */}
         <ParticleBackground />
+
         <div className="relative z-10 mx-auto w-full max-w-7xl space-y-20 px-6 py-12 sm:px-8">
         <section>
           <Reveal>
