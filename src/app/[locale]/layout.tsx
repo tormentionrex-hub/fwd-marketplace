@@ -13,6 +13,7 @@ import CursorGlow from '@/components/CursorGlow';
 import PageLoader from '@/components/PageLoader';
 import { getUser } from '@/server/auth/get-user';
 import { TabSessionGuard } from '@/components/layout/TabSessionGuard';
+import SettingsPanel from '@/components/SettingsPanel';
 
 export const metadata: Metadata = {
   title: 'FWD · Costa Rica — Marketplace',
@@ -50,6 +51,7 @@ export default async function LocaleLayout({
         <AdminDashboardButton userRole={user?.roles.nombre} locale={locale} />
         <RoleBadge />
         <AlertaGlobal />
+        <SettingsPanel />
       </NextIntlClientProvider>
     </>
   );
