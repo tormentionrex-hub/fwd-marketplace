@@ -150,6 +150,7 @@ model solicitudes_mensaje {
   asunto              String              @db.VarChar(200)
   mensaje             String
   estado              String              @default("pendiente") @db.VarChar(20)
+  iniciador           String              @default("empresario") @db.VarChar(50)
   creado              DateTime            @default(now()) @db.Timestamptz(6)
   actualizado         DateTime            @default(now()) @db.Timestamptz(6)
   perfiles_empresario perfiles_empresario @relation(fields: [id_empresario], references: [id_usuario], onDelete: Cascade, map: "fk_solicitudes_empresario")

@@ -10,7 +10,7 @@ import {
 
 export interface ConversacionDTO {
   id: string;
-  otro: { nombre: string; fotoUrl: string | null };
+  otro: { id: string; nombre: string; fotoUrl: string | null };
   proyectoTitulo: string | null;
   ultimoMensaje: { texto: string; creado: string } | null;
   noLeidos: number;
@@ -27,7 +27,7 @@ export interface MensajeDTO {
 
 export interface ConversacionDetalleDTO {
   id: string;
-  otro: { nombre: string; fotoUrl: string | null };
+  otro: { id: string; nombre: string; fotoUrl: string | null };
   mensajes: MensajeDTO[];
 }
 
@@ -43,18 +43,28 @@ export async function listarConversaciones(idUsuario: string): Promise<Conversac
   const chats = await listarChatsDeUsuario(idUsuario);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return chats.map((c: any) => {
+    // Alias para el perfil del estudiante destino (nombre largo autogenerado por Prisma)
+    const perfilDestino = c.perfiles_estudiante_chats_id_estudiante_destinoToperfiles_estudiante;
+    let otroId = '';
     let otroPerfil: { usuarios?: { nombre: string; image_url: string | null } | null } | null | undefined = null;
     if (c.id_estudiante_destino) {
-      if (c.id_estudiante === idUsuario) otroPerfil = c.perfiles_estudiante_destino;
-      else otroPerfil = c.perfiles_estudiante;
+      if (c.id_estudiante === idUsuario) {
+        otroPerfil = perfilDestino;
+        otroId = c.id_estudiante_destino;
+      } else {
+        otroPerfil = c.perfiles_estudiante;
+        otroId = c.id_estudiante;
+      }
     } else {
       const soyEstudiante = c.id_estudiante === idUsuario;
       otroPerfil = soyEstudiante ? c.perfiles_empresario : c.perfiles_estudiante;
+      otroId = soyEstudiante ? (c.id_empresario ?? '') : c.id_estudiante;
     }
     const ultimo = c.mensajes[0];
     return {
       id: c.id,
       otro: {
+        id: otroId,
         nombre: otroPerfil?.usuarios?.nombre ?? 'Usuario',
         fotoUrl: otroPerfil?.usuarios?.image_url ?? null,
       },
@@ -83,19 +93,30 @@ export async function obtenerConversacion(
 
   await marcarMensajesLeidos(idChat, idUsuario);
 
+  // Alias para el perfil del estudiante destino (nombre largo autogenerado por Prisma)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const perfilDestino = (chat as any).perfiles_estudiante_chats_id_estudiante_destinoToperfiles_estudiante;
+  let otroId = '';
   let otroPerfil: { usuarios?: { nombre: string; image_url: string | null } | null } | null | undefined = null;
   if (chat.id_estudiante_destino) {
-    if (chat.id_estudiante === idUsuario) otroPerfil = chat.perfiles_estudiante_destino;
-    else otroPerfil = chat.perfiles_estudiante;
+    if (chat.id_estudiante === idUsuario) {
+      otroPerfil = perfilDestino;
+      otroId = chat.id_estudiante_destino;
+    } else {
+      otroPerfil = chat.perfiles_estudiante;
+      otroId = chat.id_estudiante;
+    }
   } else {
     const soyEstudiante = chat.id_estudiante === idUsuario;
     otroPerfil = soyEstudiante ? chat.perfiles_empresario : chat.perfiles_estudiante;
+    otroId = soyEstudiante ? (chat.id_empresario ?? '') : chat.id_estudiante;
   }
   const mensajes = await listarMensajes(idChat);
 
   return {
     id: chat.id,
     otro: {
+      id: otroId,
       nombre: otroPerfil?.usuarios?.nombre ?? 'Usuario',
       fotoUrl: otroPerfil?.usuarios?.image_url ?? null,
     },

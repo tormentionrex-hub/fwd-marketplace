@@ -5,6 +5,7 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { TextField } from "@/components/ui/text-field";
 import { IconArrowRight } from "@/components/ui/icons";
 import { SocialAuthButtons } from "@/components/features/auth/social-auth-buttons";
+import { PasswordToggle } from "@/components/ui/password-toggle";
 import AnimatedFormTitle from "@/components/features/auth/AnimatedFormTitle";
 
 export function LoginForm() {
@@ -40,6 +41,7 @@ export function LoginForm() {
       // Perfil público (nombre, foto) -> localStorage. Lo privado va en la cookie.
       if (data?.perfil) {
         localStorage.setItem("fwd_perfil", JSON.stringify(data.perfil));
+        sessionStorage.setItem("fwd_active", "true");
       }
 
       router.push(data?.redirectTo ?? "/");

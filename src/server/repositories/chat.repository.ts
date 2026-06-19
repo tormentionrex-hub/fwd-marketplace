@@ -73,7 +73,7 @@ export function listarChatsDeUsuario(idUsuario: string) {
       ultimo_mensaje: true,
       perfiles_estudiante: { select: { usuarios: { select: { nombre: true, image_url: true } } } },
       perfiles_empresario: { select: { usuarios: { select: { nombre: true, image_url: true } } } },
-      perfiles_estudiante_destino: { select: { usuarios: { select: { nombre: true, image_url: true } } } },
+      perfiles_estudiante_chats_id_estudiante_destinoToperfiles_estudiante: { select: { usuarios: { select: { nombre: true, image_url: true } } } },
       proyectos: { select: { titulo: true } },
       mensajes: {
         orderBy: { creado: 'desc' },
@@ -99,7 +99,7 @@ export function buscarChatPorId(id: string) {
       id_estudiante_destino: true,
       perfiles_estudiante: { select: { usuarios: { select: { nombre: true, image_url: true } } } },
       perfiles_empresario: { select: { usuarios: { select: { nombre: true, image_url: true } } } },
-      perfiles_estudiante_destino: { select: { usuarios: { select: { nombre: true, image_url: true } } } },
+      perfiles_estudiante_chats_id_estudiante_destinoToperfiles_estudiante: { select: { usuarios: { select: { nombre: true, image_url: true } } } },
     },
   });
 }

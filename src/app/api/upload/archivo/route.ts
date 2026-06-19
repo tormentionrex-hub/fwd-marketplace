@@ -61,10 +61,20 @@ export async function POST(request: Request) {
   }
 
   // Validar tipo MIME
-  const tiposPermitidos = tipo === 'prototipo' ? TIPOS_PROTOTIPO : TIPOS_DOCUMENTACION;
-  if (!tiposPermitidos.includes(archivo.type)) {
+  let mimeValido = false;
+  if (tipo === 'documentacion') {
+    mimeValido = TIPOS_DOCUMENTACION.includes(archivo.type);
+  } else {
+    // tipo === 'prototipo': permitir cualquier imagen, cualquier audio, o ZIP/PDF
+    mimeValido =
+      archivo.type.startsWith('image/') ||
+      archivo.type.startsWith('audio/') ||
+      TIPOS_PROTOTIPO.includes(archivo.type);
+  }
+
+  if (!mimeValido) {
     const permitidos = tipo === 'prototipo'
-      ? 'ZIP, PDF, JPG, PNG, GIF, WEBP'
+      ? 'ZIP, PDF, imágenes, audios'
       : 'PDF';
     return NextResponse.json(
       { error: `Formato no permitido. Formatos aceptados: ${permitidos}` },

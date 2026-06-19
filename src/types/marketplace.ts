@@ -4,6 +4,7 @@ export type CategoriaProducto =
   | "Tecnología"
   | "Educación"
   | "Servicios"
+  | "Marketing"
   | "Emprendimiento"
   | "Innovación";
 

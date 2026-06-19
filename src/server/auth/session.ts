@@ -12,7 +12,6 @@ import { createHmac, timingSafeEqual } from 'crypto';
 // navegador. El base64 estándar no usa '.', por eso sirve de separador.
 
 const COOKIE = 'fwd_session';
-const UNA_SEMANA = 60 * 60 * 24 * 7;
 
 export interface PayloadSesion {
   uid: string;
@@ -38,7 +37,13 @@ export async function crearCookieSesion(payload: PayloadSesion): Promise<void> {
     sameSite: 'lax',
     secure: process.env.NODE_ENV === 'production',
     path: '/',
-    maxAge: UNA_SEMANA,
+  });
+  cookieStore.set('fwd_new_session', 'true', {
+    httpOnly: false,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+    maxAge: 60, // 1 minuto es suficiente
   });
 }
 
@@ -75,4 +80,5 @@ export async function leerCookieSesion(): Promise<PayloadSesion | null> {
 export async function borrarCookieSesion(): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.delete(COOKIE);
+  cookieStore.delete('fwd_new_session');
 }

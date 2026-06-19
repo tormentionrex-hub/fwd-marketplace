@@ -9,6 +9,7 @@ export function crearSolicitud(datos: {
   idProyecto: string | null;
   asunto: string;
   mensaje: string;
+  iniciador: string;
 }) {
   return db.solicitudes_mensaje.create({
     data: {
@@ -17,6 +18,7 @@ export function crearSolicitud(datos: {
       id_proyecto: datos.idProyecto,
       asunto: datos.asunto,
       mensaje: datos.mensaje,
+      iniciador: datos.iniciador,
     },
     select: { id: true },
   });
@@ -44,10 +46,11 @@ export function buscarSolicitudPendiente(
 // (nombre, foto, sector) y del proyecto relacionado.
 export function listarSolicitudesDeEstudiante(idEstudiante: string) {
   return db.solicitudes_mensaje.findMany({
-    where: { id_estudiante: idEstudiante },
+    where: { id_estudiante: idEstudiante, iniciador: 'empresario' },
     orderBy: { creado: 'desc' },
     select: {
       id: true,
+      id_empresario: true,
       asunto: true,
       mensaje: true,
       estado: true,
@@ -55,6 +58,28 @@ export function listarSolicitudesDeEstudiante(idEstudiante: string) {
       perfiles_empresario: {
         select: {
           sector: true,
+          usuarios: { select: { nombre: true, image_url: true } },
+        },
+      },
+      proyectos: { select: { id: true, titulo: true } },
+    },
+  });
+}
+
+// Lista las solicitudes recibidas por un empresario de parte de estudiantes.
+export function listarSolicitudesDeEmpresario(idEmpresario: string) {
+  return db.solicitudes_mensaje.findMany({
+    where: { id_empresario: idEmpresario, iniciador: 'estudiante' },
+    orderBy: { creado: 'desc' },
+    select: {
+      id: true,
+      id_estudiante: true,
+      asunto: true,
+      mensaje: true,
+      estado: true,
+      creado: true,
+      perfiles_estudiante: {
+        select: {
           usuarios: { select: { nombre: true, image_url: true } },
         },
       },
@@ -73,6 +98,7 @@ export function buscarSolicitudPorId(id: string) {
       id_estudiante: true,
       id_proyecto: true,
       estado: true,
+      iniciador: true,
       perfiles_estudiante: { select: { usuarios: { select: { nombre: true } } } },
     },
   });
@@ -83,5 +109,39 @@ export function actualizarEstadoSolicitud(id: string, estado: string) {
     where: { id },
     data: { estado, actualizado: new Date() },
     select: { id: true },
+  });
+}
+
+export function listarSolicitudesDeUsuario(idUsuario: string) {
+  return db.solicitudes_mensaje.findMany({
+    where: {
+      OR: [
+        { id_estudiante: idUsuario },
+        { id_empresario: idUsuario }
+      ]
+    },
+    orderBy: { creado: 'desc' },
+    select: {
+      id: true,
+      id_estudiante: true,
+      id_empresario: true,
+      asunto: true,
+      mensaje: true,
+      estado: true,
+      iniciador: true,
+      creado: true,
+      perfiles_empresario: {
+        select: {
+          sector: true,
+          usuarios: { select: { nombre: true, image_url: true } },
+        },
+      },
+      perfiles_estudiante: {
+        select: {
+          usuarios: { select: { nombre: true, image_url: true } },
+        },
+      },
+      proyectos: { select: { id: true, titulo: true } },
+    },
   });
 }
