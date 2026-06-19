@@ -44,6 +44,7 @@ export function LoginForm() {
         sessionStorage.setItem("fwd_active", "true");
       }
       if (data?.redirectTo) {
+        localStorage.setItem("fwd_dashboard", data.redirectTo);
         localStorage.setItem("fwd_redirect", data.redirectTo);
       }
 

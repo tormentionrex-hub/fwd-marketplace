@@ -1,5 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { getUser } from "@/server/auth/get-user";
+import { rutaPorRol } from "@/server/auth/rutas";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import StudentCarousel from "@/components/StudentCarousel";
@@ -53,6 +55,9 @@ export default async function Home() {
   const p  = await getTranslations("Projects");
   const f  = await getTranslations("Features");
 
+  const user = await getUser();
+  const dashboardHref = user ? rutaPorRol(user.roles.nombre) : null;
+
   const pasosEmpresario = [hw("paso1Emp"), hw("paso2Emp"), hw("paso3Emp"), hw("paso4Emp")];
   const pasosEstudiante = [hw("paso1Est"), hw("paso2Est"), hw("paso3Est"), hw("paso4Est")];
 
@@ -60,7 +65,7 @@ export default async function Home() {
     <ThemeProvider attribute="class" forcedTheme="light">
       <div className="flex flex-col min-h-screen relative overflow-x-hidden">
       <FloatingTriangles />
-      <Navbar />
+      <Navbar dashboardHref={dashboardHref} />
 
       {/* ── HERO ─────────────────────────────────── */}
       <section className="relative overflow-hidden flex-1 bg-[#0e1628]">
@@ -83,13 +88,23 @@ export default async function Home() {
             </p>
 
             <div data-hero="cta" className="flex flex-col sm:flex-row gap-4">
-              <Link
-                href="/register"
-                className="inline-flex items-center justify-center gap-2 bg-[#FFCB05] text-fwd-navy font-bold px-8 py-4 rounded-xl transition-all duration-300 text-base hover:scale-105 hover:brightness-110 active:scale-95"
-                style={{ boxShadow: "0 4px 25px #FFCB0566, 0 10px 40px #FFCB0533" }}
-              >
-                {h("ctaPublicar")} <span aria-hidden="true">▶</span>
-              </Link>
+              {dashboardHref ? (
+                <Link
+                  href={dashboardHref}
+                  className="inline-flex items-center justify-center gap-2 bg-[#FFCB05] text-fwd-navy font-bold px-8 py-4 rounded-xl transition-all duration-300 text-base hover:scale-105 hover:brightness-110 active:scale-95"
+                  style={{ boxShadow: "0 4px 25px #FFCB0566, 0 10px 40px #FFCB0533" }}
+                >
+                  Ir al dashboard <span aria-hidden="true">▶</span>
+                </Link>
+              ) : (
+                <Link
+                  href="/register"
+                  className="inline-flex items-center justify-center gap-2 bg-[#FFCB05] text-fwd-navy font-bold px-8 py-4 rounded-xl transition-all duration-300 text-base hover:scale-105 hover:brightness-110 active:scale-95"
+                  style={{ boxShadow: "0 4px 25px #FFCB0566, 0 10px 40px #FFCB0533" }}
+                >
+                  {h("ctaPublicar")} <span aria-hidden="true">▶</span>
+                </Link>
+              )}
               <Link
                 href="/marketplace"
                 className="inline-flex items-center justify-center gap-2 border-2 border-[#FFCB05] text-[#FFCB05] font-bold px-8 py-4 rounded-xl transition-all duration-300 text-base hover:scale-105 hover:bg-[#FFCB05] hover:text-fwd-navy active:scale-95"
@@ -143,11 +158,11 @@ export default async function Home() {
 
               <div className="mt-8">
                 <Link
-                  href="/register"
+                  href={dashboardHref ?? "/register"}
                   className="btn-empresa group relative flex items-center justify-center gap-3 w-full text-white font-bold py-4 rounded-xl overflow-hidden uppercase tracking-widest text-sm transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_8px_30px_#008FD566] active:scale-95"
                   style={{ background: "linear-gradient(90deg,#008FD5,#20BEC6)" }}
                 >
-                  <span className="relative z-10">{hw("ctaEmpresa")}</span>
+                  <span className="relative z-10">{dashboardHref ? "Continuar" : hw("ctaEmpresa")}</span>
                   <span className="relative z-10 text-base transition-transform duration-300 group-hover:translate-x-1">→</span>
                   <span className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] bg-white/20 skew-x-[-20deg] transition-transform duration-700" />
                 </Link>
@@ -178,11 +193,11 @@ export default async function Home() {
 
               <div className="mt-8">
                 <Link
-                  href="/register-estudiante"
+                  href={dashboardHref ?? "/register-estudiante"}
                   className="group relative flex items-center justify-center gap-3 w-full text-white font-bold py-4 rounded-xl overflow-hidden uppercase tracking-widest text-sm transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_8px_30px_#662E9166] active:scale-95"
                   style={{ background: "linear-gradient(90deg,#662E91,#ED008C)" }}
                 >
-                  <span className="relative z-10">{hw("ctaEstudiante")}</span>
+                  <span className="relative z-10">{dashboardHref ? "Continuar" : hw("ctaEstudiante")}</span>
                   <span className="relative z-10 text-base transition-transform duration-300 group-hover:translate-x-1">→</span>
                   <span className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] bg-white/20 skew-x-[-20deg] transition-transform duration-700" />
                 </Link>

@@ -1,6 +1,8 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Link } from "@/i18n/navigation";
+import { getUser } from "@/server/auth/get-user";
+import { rutaPorRol } from "@/server/auth/rutas";
 import AnimatedProjectsTitle from "@/components/AnimatedProjectsTitle";
 import type { ReactNode } from "react";
 
@@ -18,10 +20,12 @@ const SECCIONES = [
 
 const COLORES = ["#008FD5","#ED008C","#662D91","#20BEC6","#F7901E","#FFCB05","#008FD5","#ED008C","#662D91"];
 
-export default function PrivacidadPage() {
+export default async function PrivacidadPage() {
+  const user = await getUser();
+  const dashboardHref = user ? rutaPorRol(user.roles.nombre) : null;
   return (
     <div className="flex flex-col min-h-screen">
-      <Navbar />
+      <Navbar dashboardHref={dashboardHref} />
 
       {/* ── HERO ─────────────────────────────────────── */}
       <section

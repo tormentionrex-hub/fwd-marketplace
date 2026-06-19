@@ -116,6 +116,7 @@ export interface DatosCompletitudDTO {
   edad: number | null;
   correo: string;
   nombreEmpresa: string;
+  cedulaJuridica: string;
 }
 
 export async function estadoCompletitudEmpresario(
@@ -130,9 +131,10 @@ export async function estadoCompletitudEmpresario(
   const lastName = partes.slice(1).join(' ');
 
   const nombreEmpresa = perfil.nombre_empresa?.trim() ?? '';
+  const cedulaJuridica = perfil.numero_identificacion?.trim() ?? '';
 
   return {
-    completo: nombreEmpresa !== '',
+    completo: nombreEmpresa !== '' && cedulaJuridica !== '' && u?.edad != null,
     firstName,
     lastName,
     segundoNombre: u?.segundo_nombre?.trim() ?? '',
@@ -140,6 +142,7 @@ export async function estadoCompletitudEmpresario(
     edad: u?.edad ?? null,
     correo: u?.correo ?? '',
     nombreEmpresa,
+    cedulaJuridica,
   };
 }
 
@@ -156,23 +159,26 @@ export async function completarPerfilEmpresario(
     lastName: string;
     segundoNombre?: string | undefined;
     segundoApellido?: string | undefined;
-    edad?: number | null | undefined;
+    edad: number;
     nombreEmpresa: string;
+    cedulaJuridica: string;
   },
 ): Promise<ResultadoCompletarPerfil> {
   const firstName = entrada.firstName.trim();
   const lastName = entrada.lastName.trim();
   const segundoNombre = (entrada.segundoNombre ?? '').trim();
   const segundoApellido = (entrada.segundoApellido ?? '').trim();
-  const edad = entrada.edad ?? null;
+  const edad = entrada.edad;
   const nombreEmpresa = entrada.nombreEmpresa.trim();
+  const cedulaJuridica = entrada.cedulaJuridica.trim();
 
   if (!firstName || firstName.length > 50 || !NAME_RE.test(firstName)) return 'datos_invalidos';
   if (!lastName || lastName.length > 50 || !NAME_RE.test(lastName)) return 'datos_invalidos';
   if (segundoNombre && (segundoNombre.length > 50 || !NAME_RE.test(segundoNombre))) return 'datos_invalidos';
   if (segundoApellido && (segundoApellido.length > 50 || !NAME_RE.test(segundoApellido))) return 'datos_invalidos';
-  if (edad !== null && (edad < 18 || edad > 99)) return 'datos_invalidos';
+  if (edad < 18 || edad > 99) return 'datos_invalidos';
   if (!nombreEmpresa || nombreEmpresa.length > 200) return 'datos_invalidos';
+  if (!cedulaJuridica || cedulaJuridica.length < 4 || cedulaJuridica.length > 100) return 'datos_invalidos';
 
   const nombre = `${firstName} ${lastName}`.trim();
 
@@ -183,6 +189,7 @@ export async function completarPerfilEmpresario(
       segundoApellido: segundoApellido || null,
       edad,
       nombreEmpresa,
+      cedulaJuridica,
     });
     return { ok: true };
   } catch (e) {

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { redirect } from 'next/navigation';
 import { getUser } from '@/server/auth/get-user';
+import { BotonRegresarHome } from '@/components/layout/BotonRegresarHome';
 import { SinPermiso } from '@/components/layout/sin-permiso';
 import Sidebar from '@/components/layout/Sidebar';
 import { estadoCompletitudEmpresario } from '@/server/services/perfil-empresario.service';
@@ -101,12 +102,12 @@ const FWD_CSS = `
   .fwd-app .main { overflow-y:auto; position:relative; }
   .fwd-app .main::-webkit-scrollbar { width:11px; }
   .fwd-app .main::-webkit-scrollbar-thumb { background:var(--ink-300); border-radius:9px; border:3px solid var(--bg); }
-  /* padding-right reserva el espacio de la campana y botones fijos del layout (aprox 150px) */
-  .fwd-app .topbar { position:sticky; top:0; z-index:4; background:rgba(244,246,251,.82); backdrop-filter:blur(12px); border-bottom:1px solid var(--line); padding:16px 150px 16px 38px; display:flex; align-items:center; gap:18px; transition: background-color 0.3s ease, border-color 0.3s ease; }
+  /* padding-right reserva el espacio de los botones fijos del layout (Regresar + tema + campana) */
+  .fwd-app .topbar { position:sticky; top:0; z-index:4; background:rgba(244,246,251,.82); backdrop-filter:blur(12px); border-bottom:1px solid var(--line); padding:16px 340px 16px 38px; display:flex; align-items:center; gap:18px; transition: background-color 0.3s ease, border-color 0.3s ease; }
   html.dark .fwd-app .topbar { background:rgba(10,15,28,.7); }
   
   /* Botones fijos: anclados al shell (persisten entre páginas) */
-  .fwd-app .tb-actions { position:absolute; top:16px; right:38px; z-index:30; display: flex; gap: 10px; }
+  .fwd-app .tb-actions { position:absolute; top:16px; right:38px; z-index:30; display: flex; align-items: center; gap: 10px; }
   .fwd-app .tb-title { font-size:21px; font-weight:800; }
   .fwd-app .tb-sub { color:var(--ink-500); font-size:13.5px; margin-top:2px; }
   .fwd-app .tb-spacer { flex:1; }
@@ -247,8 +248,9 @@ const FWD_CSS = `
     }
     .fwd-app.sb-mobile-open .sidebar { transform: translateX(0); }
     .fwd-app.sb-mobile-open .sb-mobile-backdrop { display: block; }
-    .fwd-app .topbar { padding: 14px 88px 14px 52px !important; }
+    .fwd-app .topbar { padding: 14px 96px 14px 52px !important; }
     .fwd-app .tb-actions { right: 12px !important; top: 12px !important; }
+    .fwd-app .tb-actions .tb-home-label { display: none; }
     .fwd-app .main { min-width: 0; width: 100%; }
   }
 `;
@@ -270,7 +272,7 @@ export default async function EmpresarioLayout({
     redirect(`/${locale}/login`);
   }
   if (user.roles.nombre !== 'empresario') {
-    return <SinPermiso locale={locale} />;
+    return <SinPermiso locale={locale} rolActual={user.roles.nombre} rolRequerido="empresario" />;
   }
 
   const completitud = await estadoCompletitudEmpresario(user.id);
@@ -293,8 +295,28 @@ export default async function EmpresarioLayout({
       <Sidebar nombre={user?.nombre ?? 'Empresario'} fotoUrl={user?.image_url ?? null} />
       <main className="main">{children}</main>
 
-      {/* Acciones de la barra superior: Toggle Tema y Campana */}
+      {/* Acciones de la barra superior: Regresar, Toggle Tema y Campana */}
       <div className="tb-actions">
+        <BotonRegresarHome
+          href={`/${locale}`}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            fontSize: 14,
+            fontWeight: 800,
+            lineHeight: 1,
+            color: 'var(--ink-700)',
+            background: 'var(--surface)',
+            border: '1px solid var(--line)',
+            borderRadius: 24,
+            padding: '9px 20px 9px 14px',
+            cursor: 'pointer',
+            whiteSpace: 'nowrap',
+            transition: 'background 0.15s, border-color 0.15s',
+            fontFamily: 'var(--font-head)',
+          }}
+        />
         <ThemeToggle />
         <NotificacionesCampana />
       </div>

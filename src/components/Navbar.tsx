@@ -5,7 +5,15 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 
-export default function Navbar() {
+// Copia client-side de rutaPorRol para no importar código server-only en el cliente.
+function rutaDesdeRol(rol: string): string {
+  if (rol === "admin") return "/admin";
+  if (rol === "empresario") return "/empresario";
+  if (rol === "estudiante") return "/dashboard/estudiante";
+  return "/";
+}
+
+export default function Navbar({ dashboardHref: dashboardProp }: { dashboardHref?: string | null }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const router = useRouter();
@@ -13,45 +21,69 @@ export default function Navbar() {
 
   const [logueado, setLogueado] = useState(false);
   const [perfil, setPerfil] = useState<{ nombre: string; image_url: string | null } | null>(null);
-  const [redirectTo, setRedirectTo] = useState("/");
+  const [redirectTo, setRedirectTo] = useState<string>(dashboardProp ?? "/");
 
   useEffect(() => {
+    // Prop del servidor: fuente más confiable (viene de getUser()).
+    if (dashboardProp) {
+      setLogueado(true);
+      setRedirectTo(dashboardProp);
+      try {
+        const raw = localStorage.getItem("fwd_perfil");
+        if (raw) setPerfil(JSON.parse(raw));
+      } catch { /* sin storage */ }
+      return;
+    }
+    // Fallback: localStorage — soporta tanto fwd_dashboard (nuestro) como fwd_redirect (dev).
     try {
       const raw = localStorage.getItem("fwd_perfil");
-      if (raw) {
-        setLogueado(true);
-        setPerfil(JSON.parse(raw));
+      if (!raw) return;
+      setLogueado(true);
+      setPerfil(JSON.parse(raw));
+      const ruta =
+        localStorage.getItem("fwd_dashboard") ??
+        localStorage.getItem("fwd_redirect");
+      if (ruta) {
+        setRedirectTo(ruta);
+      } else {
+        const parsed = JSON.parse(raw) as { roles?: { nombre?: string }; rol?: string };
+        const rol = parsed?.roles?.nombre ?? parsed?.rol ?? "";
+        if (rol) setRedirectTo(rutaDesdeRol(rol));
       }
-      const redir = localStorage.getItem("fwd_redirect");
-      if (redir) setRedirectTo(redir);
-    } catch {
-      /* modo privado / sin storage: dejar botones visibles */
-    }
-  }, []);
+    } catch { /* modo privado / sin storage */ }
+  }, [dashboardProp]);
 
   async function cerrarSesion() {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
     } catch { /* ignorar */ }
     localStorage.removeItem("fwd_perfil");
+    localStorage.removeItem("fwd_dashboard");
     localStorage.removeItem("fwd_redirect");
     router.push("/login");
     router.refresh();
   }
 
-  const iniciales = perfil?.nombre
-    ?.split(" ")
-    .map((p) => p[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2) ?? "?";
+  const iniciales =
+    perfil?.nombre
+      ?.split(" ")
+      .map((p) => p[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2) ?? "?";
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 px-6 py-4">
       {/* Pill */}
-      <div className="group relative max-w-6xl mx-auto rounded-full px-7 py-4 flex items-center justify-between shadow-lg" style={{ background: "linear-gradient(90deg,#0e1628 0%,#2a1060 55%,#7b1fa2 85%,#ED008C 100%)" }}>
+      <div
+        className="group relative max-w-6xl mx-auto rounded-full px-7 py-4 flex items-center justify-between shadow-lg"
+        style={{ background: "linear-gradient(90deg,#0e1628 0%,#2a1060 55%,#7b1fa2 85%,#ED008C 100%)" }}
+      >
         {/* Shine sweep */}
-        <span className="pointer-events-none absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] bg-white/10 skew-x-[-20deg] transition-transform duration-700 z-0 rounded-full" style={{ clipPath: "inset(0 round 9999px)" }} />
+        <span
+          className="pointer-events-none absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] bg-white/10 skew-x-[-20deg] transition-transform duration-700 z-0 rounded-full"
+          style={{ clipPath: "inset(0 round 9999px)" }}
+        />
 
         {/* Logo */}
         <Link href="/" className="flex items-center gap-3 flex-shrink-0">
@@ -74,31 +106,22 @@ export default function Navbar() {
           />
         </Link>
 
-        {/* Desktop links */}
+        {/* Desktop nav links */}
         <nav className="hidden md:flex items-center gap-10">
-          <Link
-            href="/"
-            className="text-white/80 hover:text-[#20BEC7] text-base font-semibold transition-colors duration-200"
-          >
+          <Link href="/" className="text-white/80 hover:text-[#20BEC7] text-base font-semibold transition-colors duration-200">
             {t("inicio")}
           </Link>
-          <Link
-            href="/proyectos"
-            className="text-white/80 hover:text-[#20BEC7] text-base font-semibold transition-colors duration-200"
-          >
+          <Link href="/proyectos" className="text-white/80 hover:text-[#20BEC7] text-base font-semibold transition-colors duration-200">
             {t("proyectos")}
           </Link>
           {!logueado && (
-            <Link
-              href="/login"
-              className="text-white/80 hover:text-[#20BEC7] text-base font-semibold transition-colors duration-200"
-            >
+            <Link href="/login" className="text-white/80 hover:text-[#20BEC7] text-base font-semibold transition-colors duration-200">
               {t("iniciarSesion")}
             </Link>
           )}
         </nav>
 
-        {/* CTA / User */}
+        {/* CTA / Usuario logueado */}
         <div className="hidden md:flex items-center gap-3 flex-shrink-0">
           {logueado ? (
             <div className="relative">
@@ -108,21 +131,14 @@ export default function Navbar() {
               >
                 <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/20 text-xs font-bold text-white overflow-hidden">
                   {perfil?.image_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
                     <img src={perfil.image_url} alt="" className="h-full w-full object-cover" />
-                  ) : (
-                    iniciales
-                  )}
+                  ) : iniciales}
                 </span>
                 <span className="text-sm font-semibold">{perfil?.nombre}</span>
                 <svg
-                  width="12"
-                  height="12"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+                  width="12" height="12" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
                   className={`transition-transform ${dropdownOpen ? "rotate-180" : ""}`}
                 >
                   <polyline points="6 9 12 15 18 9" />
@@ -137,7 +153,7 @@ export default function Navbar() {
                       onClick={() => setDropdownOpen(false)}
                       className="block px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100"
                     >
-                      {t("miPanel")}
+                      Mi dashboard
                     </Link>
                     <hr className="my-1 border-gray-100" />
                     <button
@@ -183,13 +199,12 @@ export default function Navbar() {
           </Link>
           {logueado ? (
             <>
-              <div className="flex items-center gap-3 py-2 border-t border-white/10 pt-4">
+              <div className="flex items-center gap-3 border-t border-white/10 pt-4">
                 <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-sm font-bold text-white overflow-hidden">
                   {perfil?.image_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
                     <img src={perfil.image_url} alt="" className="h-full w-full object-cover" />
-                  ) : (
-                    iniciales
-                  )}
+                  ) : iniciales}
                 </span>
                 <span className="text-white font-semibold">{perfil?.nombre}</span>
               </div>
@@ -198,7 +213,7 @@ export default function Navbar() {
                 className="text-white/80 text-base font-semibold py-1 hover:text-[#20BEC7] transition-colors"
                 onClick={() => setMenuOpen(false)}
               >
-                {t("miPanel")}
+                Mi dashboard
               </Link>
               <button
                 onClick={() => { setMenuOpen(false); cerrarSesion(); }}

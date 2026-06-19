@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
+import gsap from 'gsap';
+import Swal from 'sweetalert2';
 import type { DatosCompletitudDTO } from '@/server/services/perfil-empresario.service';
 
 // Modal bloqueante "Completá tu perfil": sin cierre por backdrop, sin Escape, sin X.
@@ -50,22 +52,55 @@ export default function CompletarPerfilModal({ datos }: { datos: DatosCompletitu
   const [segundoApellido,      setSegundoApellido]      = useState(datos.segundoApellido);
   const [edad,                 setEdad]                 = useState(datos.edad !== null ? String(datos.edad) : '');
   const [nombreEmpresa,        setNombreEmpresa]        = useState(datos.nombreEmpresa);
+  const [cedulaJuridica,       setCedulaJuridica]       = useState(datos.cedulaJuridica);
 
   const [guardando, setGuardando] = useState(false);
-  const [error,     setError]     = useState('');
 
   useEffect(() => {
     setHost(document.querySelector<HTMLElement>('.fwd-app'));
   }, []);
 
+  async function mostrarError(texto: string) {
+    await Swal.fire({
+      imageUrl: '/imagenes/SweetalertsImagenes/FordyWarningRojo.jpeg',
+      imageWidth: 200,
+      imageHeight: 160,
+      imageAlt: 'Error',
+      title: 'Campos obligatorios incompletos',
+      text: texto,
+      showCloseButton: true,
+      confirmButtonText: 'Reintentar',
+      confirmButtonColor: '#dc2626',
+      closeButtonAriaLabel: 'Cerrar',
+      showClass: { popup: '', backdrop: 'swal2-backdrop-show' },
+      hideClass: { popup: '', backdrop: 'swal2-backdrop-hide' },
+      didOpen: (popup) => {
+        const img = popup.querySelector<HTMLElement>('.swal2-image');
+        if (img) {
+          img.style.mixBlendMode = 'multiply';
+          img.style.width = '200px';
+          img.style.height = 'auto';
+          img.style.marginTop = '24px';
+          img.style.marginBottom = '0';
+        }
+        gsap.fromTo(
+          popup,
+          { opacity: 0, scale: 0.82, y: -18 },
+          { opacity: 1, scale: 1, y: 0, duration: 0.45, ease: 'back.out(1.7)' },
+        );
+      },
+    });
+  }
+
   async function guardar() {
-    setError('');
     if (!firstName.trim() || !lastName.trim()) {
-      setError('El nombre y el apellido son obligatorios.');
+      await mostrarError('El nombre y el apellido son obligatorios para continuar.');
       return;
     }
-    if (!nombreEmpresa.trim()) {
-      setError('El nombre de empresa es obligatorio.');
+    if (!edad || !nombreEmpresa.trim() || !cedulaJuridica.trim()) {
+      await mostrarError(
+        'Por favor completá todos los campos obligatorios: Edad, Nombre de empresa y Cédula jurídica.',
+      );
       return;
     }
 
@@ -79,20 +114,21 @@ export default function CompletarPerfilModal({ datos }: { datos: DatosCompletitu
           lastName:             lastName.trim(),
           segundoNombre:        segundoNombre.trim() || undefined,
           segundoApellido:      segundoApellido.trim() || undefined,
-          edad:                 edad ? Number(edad) : null,
+          edad:                 Number(edad),
           nombreEmpresa:        nombreEmpresa.trim(),
+          cedulaJuridica:       cedulaJuridica.trim(),
         }),
       });
 
       if (!res.ok) {
         const data: { error?: string } = await res.json().catch(() => ({}));
-        setError(data.error ?? 'No se pudieron guardar los datos.');
+        await mostrarError(data.error ?? 'No se pudieron guardar los datos. Intentá de nuevo.');
         return;
       }
 
       router.refresh();
     } catch {
-      setError('Error de red. Intentá de nuevo.');
+      await mostrarError('Error de red. Verificá tu conexión e intentá de nuevo.');
     } finally {
       setGuardando(false);
     }
@@ -220,16 +256,18 @@ export default function CompletarPerfilModal({ datos }: { datos: DatosCompletitu
             />
           </div>
 
-          {/* Edad (opcional) */}
+          {/* Edad (obligatorio) */}
           <div style={{ ...fieldWrap, maxWidth: 160 }}>
-            <label style={labelStyle}>Edad</label>
+            <label style={labelStyle}>
+              Edad<span style={{ color: 'var(--magenta)' }}> *</span>
+            </label>
             <input
               type="number"
               value={edad}
               min={18}
               max={99}
               step={1}
-              placeholder="Ej. 28 (opcional)"
+              placeholder="Ej. 28"
               onChange={(e) => {
                 const v = e.target.value;
                 if (v.length <= 2) setEdad(v);
@@ -237,8 +275,6 @@ export default function CompletarPerfilModal({ datos }: { datos: DatosCompletitu
               style={inputStyle}
             />
           </div>
-
-
 
           {/* Nombre de empresa */}
           <div style={fieldWrap}>
@@ -255,9 +291,21 @@ export default function CompletarPerfilModal({ datos }: { datos: DatosCompletitu
             />
           </div>
 
-          {error && (
-            <p style={{ color: 'var(--magenta)', fontSize: 13, fontWeight: 500 }}>{error}</p>
-          )}
+          {/* Cédula jurídica */}
+          <div style={fieldWrap}>
+            <label style={labelStyle}>
+              Cédula jurídica<span style={{ color: 'var(--magenta)' }}> *</span>
+            </label>
+            <input
+              type="text"
+              value={cedulaJuridica}
+              maxLength={100}
+              placeholder="Ej. 3-101-123456"
+              onChange={(e) => setCedulaJuridica(e.target.value)}
+              style={inputStyle}
+            />
+          </div>
+
         </div>
 
         {/* Footer */}

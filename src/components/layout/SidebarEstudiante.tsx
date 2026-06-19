@@ -68,6 +68,7 @@ export default function SidebarEstudiante({
   async function cerrarSesion() {
     await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
     localStorage.removeItem("fwd_perfil");
+    localStorage.removeItem("fwd_dashboard");
     router.push(`/${locale}/login`);
     router.refresh();
   }
@@ -184,6 +185,24 @@ export default function SidebarEstudiante({
               </Link>
             );
           })}
+
+          {/* Cerrar sesión */}
+          <button
+            type="button"
+            onClick={cerrarSesion}
+            title={isCollapsed ? "Cerrar sesión" : undefined}
+            className={cn(
+              "group relative inline-flex shrink-0 items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 hover:translate-x-1 text-red-300 hover:bg-red-500/20 hover:text-red-200",
+              isCollapsed && "lg:justify-center lg:px-2"
+            )}
+          >
+            <span className={cn("grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-red-500/20 text-red-300 transition-all duration-200 group-hover:scale-110 group-hover:-rotate-6 group-hover:bg-red-500/30")}>
+              <IconLogout width={16} height={16} />
+            </span>
+            <span className={cn("whitespace-nowrap transition-all duration-300 overflow-hidden", isCollapsed ? "lg:w-0 lg:opacity-0" : "lg:opacity-100")}>
+              Cerrar sesión
+            </span>
+          </button>
         </nav>
 
         {/* Bottom section: profile, reputation, logout */}

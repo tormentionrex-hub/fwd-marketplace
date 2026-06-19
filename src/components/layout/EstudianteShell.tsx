@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
+import { BotonRegresarHome } from "@/components/layout/BotonRegresarHome";
 import { getUser } from "@/server/auth/get-user";
 import { generarAvatar } from "@/lib/avatar";
 import { SinPermiso } from "@/components/layout/sin-permiso";
@@ -17,7 +18,7 @@ export default async function EstudianteShell({ locale, children }: EstudianteSh
     redirect(`/${locale}/login`);
   }
   if (user.roles.nombre !== "estudiante") {
-    return <SinPermiso locale={locale} />;
+    return <SinPermiso locale={locale} rolActual={user.roles.nombre} rolRequerido="estudiante" />;
   }
 
   const resumen = await resumenDashboardEstudiante(user.id);
@@ -81,6 +82,12 @@ export default async function EstudianteShell({ locale, children }: EstudianteSh
         />
         <div className="min-w-0 flex-1 px-4 py-8 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-6xl">
+            <div className="mb-4 flex justify-end">
+              <BotonRegresarHome
+                href={`/${locale}`}
+                className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-2.5 text-sm font-extrabold text-white/80 backdrop-blur-sm transition-colors hover:bg-white/20 hover:text-white"
+              />
+            </div>
             {children}
           </div>
         </div>
