@@ -30,6 +30,7 @@ export type ActividadDataPoint = {
 
 interface ActividadChartProps {
   data: ActividadDataPoint[];
+  height?: number;
 }
 
 const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
@@ -60,10 +61,10 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   return null;
 };
 
-export function ActividadChart({ data }: ActividadChartProps) {
+export function ActividadChart({ data, height = 160 }: ActividadChartProps) {
   return (
-    <div style={{ width: '100%', height: '100%', fontSize: 11, color: 'var(--ink-400)', fontFamily: 'var(--font-body)' }}>
-      <ResponsiveContainer width="100%" height="100%">
+    <div style={{ width: '100%', fontSize: 11, color: 'var(--ink-400)', fontFamily: 'var(--font-body)' }}>
+      <ResponsiveContainer width="100%" height={height}>
         <AreaChart
           data={data}
           margin={{ top: 10, right: 15, left: -25, bottom: 0 }}

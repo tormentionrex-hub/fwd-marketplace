@@ -1,13 +1,10 @@
 import { obtenerEstadisticasAdmin } from "@/server/repositories/estadisticas-admin.repository";
 import { listarOfertasAdmin } from "@/server/repositories/oferta.repository";
 import {
-  normalizarEstadoOferta,
-  ESTADO_OFERTA_META,
-} from "@/lib/oferta-estado";
-import {
   AdminPageShell,
   AdminPageHeader,
 } from "@/components/features/admin/admin-page-header";
+import { GestionOfertasPanel } from "@/components/features/admin/gestion-ofertas-panel";
 
 // URL: /es/admin/ofertas — métricas de ofertas + listado reciente.
 export default async function AdminOfertasPage() {
@@ -15,6 +12,11 @@ export default async function AdminOfertasPage() {
     obtenerEstadisticasAdmin(),
     listarOfertasAdmin(),
   ]);
+
+  const serializableOfertas = ofertas.map((o) => ({
+    ...o,
+    enviado: o.enviado instanceof Date ? o.enviado.toISOString() : o.enviado,
+  }));
 
   const metricas = [
     {
@@ -42,67 +44,23 @@ export default async function AdminOfertasPage() {
         {metricas.map((m) => (
           <div
             key={m.label}
-            className="rounded-2xl p-5 shadow-lg"
+            className="rounded-2xl p-5 shadow-lg transition-all duration-300 hover:scale-[1.03] hover:shadow-xl cursor-default"
             style={{ backgroundColor: m.color }}
           >
-            <p className="text-sm font-medium text-white/80">{m.label}</p>
-            <p className="mt-1 text-4xl font-black tabular-nums text-white">
+            <p className="text-sm font-medium text-white/80 transition-all duration-300 hover:translate-x-1 hover:text-white select-none">{m.label}</p>
+            <p className="mt-1 text-4xl font-black tabular-nums text-white transition-all duration-300 hover:translate-x-1 hover:scale-105 origin-left select-none">
               {m.valor}
             </p>
-            <p className="mt-1 text-xs text-white/70">{m.hint}</p>
+            <p className="mt-1 text-xs text-white/70 transition-all duration-300 hover:translate-x-1 hover:text-white/90 select-none">{m.hint}</p>
           </div>
         ))}
       </div>
 
       <div>
-        <h2 className="mb-3 font-display text-lg font-bold text-white">
+        <h2 className="mb-3 font-display text-lg font-bold text-white transition-all duration-300 hover:text-fwd-magenta hover:translate-x-1 cursor-default select-none">
           Ofertas recientes
         </h2>
-        <div className="overflow-x-auto rounded-2xl border border-white/10 bg-white/[0.03]">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-white/5 text-white/50">
-              <tr>
-                <th className="px-4 py-3 font-semibold">Estudiante</th>
-                <th className="px-4 py-3 font-semibold">Proyecto</th>
-                <th className="px-4 py-3 font-semibold">Estado</th>
-                <th className="px-4 py-3 font-semibold">Enviada</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/[0.07]">
-              {ofertas.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="px-4 py-10 text-center text-white/40">
-                    Aún no hay ofertas.
-                  </td>
-                </tr>
-              ) : (
-                ofertas.map((o) => {
-                  const meta = ESTADO_OFERTA_META[normalizarEstadoOferta(o.estado)];
-                  return (
-                    <tr key={o.id} className="transition-colors hover:bg-white/5">
-                      <td className="px-4 py-3 font-medium text-white">
-                        {o.perfiles_estudiante?.usuarios?.nombre ?? "—"}
-                      </td>
-                      <td className="max-w-xs truncate px-4 py-3 text-white/55">
-                        {o.proyectos?.titulo ?? "—"}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${meta.badge}`}
-                        >
-                          {meta.label}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-white/45">
-                        {o.enviado.toLocaleDateString("es-CR")}
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+        <GestionOfertasPanel ofertas={serializableOfertas} />
       </div>
     </AdminPageShell>
   );

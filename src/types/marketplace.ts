@@ -65,3 +65,18 @@ export interface UsuarioCard {
   verificadoFwd?: boolean;
   fotoUrl?: string;
 }
+
+export interface ProyectoMarketplace {
+  id: string;
+  titulo: string;
+  descripcion: string;
+  areaNegocio: string | null;
+  plazoDias: number | null;
+  publicado: string | null;
+  tecnologias: string[];
+  empresario: {
+    nombre: string;
+    nombreEmpresa: string | null;
+    sector: string | null;
+  };
+}

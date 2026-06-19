@@ -382,3 +382,107 @@ export async function enviarConfirmacionContacto(
     text,
   });
 }
+
+const APP_URL = process.env.NEXT_PUBLIC_URL ?? 'http://localhost:3000';
+
+export async function enviarEmailInvitacion(email: string): Promise<void> {
+  const registroUrl = `${APP_URL}/es/register-estudiante`;
+  const titulo = "¡Fuiste invitado a FWD Marketplace!";
+  const cuerpo = `
+    <p style="margin:0 0 16px;color:#475569;font-size:15px;line-height:1.6;">Hola,</p>
+    <p style="margin:0 0 16px;color:#475569;font-size:15px;line-height:1.6;">
+      El equipo de <strong>FWD Marketplace</strong> te invitó a unirte a la plataforma.
+    </p>
+    <p style="margin:0 0 24px;color:#475569;font-size:15px;line-height:1.6;">
+      Hacé clic en el botón de abajo para completar tu registro con este correo (<strong>${email}</strong>).
+    </p>
+    <div style="margin:0 0 24px;text-align:center;">
+      <a href="${registroUrl}"
+         style="display:inline-block;background:#4f46e5;color:#ffffff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600;">
+        Completar registro
+      </a>
+    </div>
+    <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0"/>
+    <p style="color:#9ca3af;font-size:12px;margin:0;">Si no esperabas esta invitación, podés ignorar este correo.</p>
+  `;
+  const text = `¡Tenés una invitación!\n\nEl equipo de FWD Marketplace te invitó a unirte a la plataforma.\nCompletá tu registro aquí: ${registroUrl}\n\nSi no esperabas esta invitación, podés ignorar este correo.`;
+  await enviar({ to: email, subject: titulo, html: plantilla(titulo, cuerpo), text });
+}
+
+export async function enviarEmailSolicitudEspera(email: string): Promise<void> {
+  const titulo = "Solicitud de invitación recibida — FWD Marketplace";
+  const cuerpo = `
+    <p style="margin:0 0 16px;color:#475569;font-size:15px;line-height:1.6;">Hola,</p>
+    <p style="margin:0 0 16px;color:#475569;font-size:15px;line-height:1.6;">
+      Recibimos tu solicitud para unirte a <strong>FWD Marketplace</strong>.
+    </p>
+    <p style="margin:0 0 16px;color:#475569;font-size:15px;line-height:1.6;">
+      Tu solicitud ha entrado en nuestra lista de espera. El equipo de FWD Costa Rica revisará tu caso en un plazo máximo de <strong>24 horas</strong> para darte una respuesta.
+    </p>
+    <p style="margin:0 0 24px;color:#475569;font-size:15px;line-height:1.6;">
+      Te agradecemos la paciencia y el interés en formar parte de nuestra comunidad.
+    </p>
+    <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0"/>
+    <p style="color:#9ca3af;font-size:12px;margin:0;">FWD Marketplace — Forward Costa Rica</p>
+  `;
+  const text = `Solicitud de invitación recibida — FWD Marketplace\n\nRecibimos tu solicitud para unirte a FWD Marketplace. Tu solicitud ha entrado en nuestra lista de espera. El equipo de FWD Costa Rica revisará tu caso en un plazo máximo de 24 horas para darte una respuesta.`;
+  await enviar({ to: email, subject: titulo, html: plantilla(titulo, cuerpo), text });
+}
+
+export async function enviarEmailCuentaAprobada(email: string, nombre: string): Promise<void> {
+  const loginUrl = `${APP_URL}/es/login`;
+  const titulo = "¡Tu cuenta fue aprobada! — FWD Marketplace";
+  const cuerpo = `
+    <p style="margin:0 0 16px;color:#475569;font-size:15px;line-height:1.6;">¡Bienvenido, ${nombre}!</p>
+    <p style="margin:0 0 16px;color:#475569;font-size:15px;line-height:1.6;">
+      Tu cuenta en <strong>FWD Marketplace</strong> fue <strong>aprobada</strong> por el administrador.
+    </p>
+    <p style="margin:0 0 24px;color:#475569;font-size:15px;line-height:1.6;">
+      Ya podés iniciar sesión con tu correo y contraseña.
+    </p>
+    <div style="margin:0 0 24px;text-align:center;">
+      <a href="${loginUrl}"
+         style="display:inline-block;background:#4f46e5;color:#ffffff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600;">
+        Iniciar sesión
+      </a>
+    </div>
+    <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0"/>
+    <p style="color:#9ca3af;font-size:12px;margin:0;">FWD Marketplace — marketplace de proyectos universitarios</p>
+  `;
+  const text = `¡Bienvenido, ${nombre}!\n\nTu cuenta en FWD Marketplace fue aprobada. Ya podés iniciar sesión aquí: ${loginUrl}`;
+  await enviar({ to: email, subject: titulo, html: plantilla(titulo, cuerpo), text });
+}
+
+export async function enviarEmailCuentaRechazada(email: string, nombre: string): Promise<void> {
+  const titulo = "Solicitud de acceso denegada — FWD Marketplace";
+  const cuerpo = `
+    <p style="margin:0 0 16px;color:#475569;font-size:15px;line-height:1.6;">Hola, ${nombre}</p>
+    <p style="margin:0 0 16px;color:#475569;font-size:15px;line-height:1.6;">
+      Lamentamos informarte que tu solicitud de acceso a <strong>FWD Marketplace</strong> ha sido rechazada.
+    </p>
+    <p style="margin:0 0 24px;color:#475569;font-size:15px;line-height:1.6;">
+      Este portal es de uso exclusivo para estudiantes o graduados verificados de Forward Costa Rica. Si consideras que esto es un error, por favor ponte en contacto con la administración.
+    </p>
+    <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0"/>
+    <p style="color:#9ca3af;font-size:12px;margin:0;">FWD Marketplace — Forward Costa Rica</p>
+  `;
+  const text = `Solicitud de acceso denegada — FWD Marketplace\n\nHola, ${nombre}. Lamentamos informarte que tu solicitud de acceso a FWD Marketplace ha sido rechazada. Este portal es de uso exclusivo para estudiantes o graduados verificados de Forward Costa Rica.`;
+  await enviar({ to: email, subject: titulo, html: plantilla(titulo, cuerpo), text });
+}
+
+export async function enviarEmailInvitacionRechazada(email: string): Promise<void> {
+  const titulo = "Solicitud de invitación rechazada — FWD Marketplace";
+  const cuerpo = `
+    <p style="margin:0 0 16px;color:#475569;font-size:15px;line-height:1.6;">Hola,</p>
+    <p style="margin:0 0 16px;color:#475569;font-size:15px;line-height:1.6;">
+      Lamentamos informarte que tu solicitud de invitación para unirte a <strong>FWD Marketplace</strong> ha sido rechazada.
+    </p>
+    <p style="margin:0 0 24px;color:#475569;font-size:15px;line-height:1.6;">
+      Este portal es de uso exclusivo para estudiantes o graduados de Forward Costa Rica. Si consideras que esto es un error, por favor ponte en contacto con la administración.
+    </p>
+    <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0"/>
+    <p style="color:#9ca3af;font-size:12px;margin:0;">FWD Marketplace — Forward Costa Rica</p>
+  `;
+  const text = `Solicitud de invitación rechazada — FWD Marketplace\n\nLamentamos informarte que tu solicitud de invitación para unirte a FWD Marketplace ha sido rechazada. Este portal es de uso exclusivo para estudiantes o graduados de Forward Costa Rica.`;
+  await enviar({ to: email, subject: titulo, html: plantilla(titulo, cuerpo), text });
+}

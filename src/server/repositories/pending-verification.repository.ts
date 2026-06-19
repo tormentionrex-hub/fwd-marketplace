@@ -57,7 +57,15 @@ export function marcarRegistrado(email: string, idUsuario: string) {
 export function aprobarSolicitud(id: string) {
   return db.pending_verifications.update({
     where: { id },
-    data: { pending: false, resuelto: new Date() },
+    data: { tipo: 'invitacion', resuelto: new Date() },
+    select: { id: true, email: true },
+  });
+}
+
+// Admin rechaza una solicitud de invitación (la borra de la BD).
+export function rechazarSolicitud(id: string) {
+  return db.pending_verifications.delete({
+    where: { id },
     select: { id: true, email: true },
   });
 }

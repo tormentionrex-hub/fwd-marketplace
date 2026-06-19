@@ -11,9 +11,14 @@ export function listarOfertasAdmin() {
       id: true,
       estado: true,
       enviado: true,
-      proyectos: { select: { titulo: true } },
+      propuesta: true,
+      prototipo_url: true,
+      documentacion_url: true,
+      proyectos: { select: { id: true, titulo: true } },
       perfiles_estudiante: {
-        select: { usuarios: { select: { nombre: true } } },
+        select: {
+          usuarios: { select: { nombre: true, correo: true } },
+        },
       },
     },
   });

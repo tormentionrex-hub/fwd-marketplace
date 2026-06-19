@@ -12,7 +12,6 @@ export function obtenerPerfilEmpresario(idUsuario: string) {
       tipo: true,
       sector: true,
       descripcion: true,
-      reputacion: true,
       usuarios: {
         select: {
           nombre: true,
