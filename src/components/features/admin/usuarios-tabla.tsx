@@ -22,6 +22,11 @@ export type UsuarioFila = {
     reputacion: number;
     generacion_fwd: number | null;
     descripcion: string | null;
+    curriculums: {
+      file_name: string;
+      file_type: string;
+      actualizado: string;
+    } | null;
   } | null;
   perfiles_empresario: {
     tipo: string | null;
@@ -73,6 +78,30 @@ export function UsuariosTabla({
 
   // Modal de detalle
   const [detalleModal, setDetalleModal] = useState<UsuarioFila | null>(null);
+  const [cargandoCv, setCargandoCv] = useState<"ver" | "descargar" | null>(null);
+  const [cvError, setCvError] = useState("");
+
+  async function abrirCv(idUsuario: string, accion: "ver" | "descargar") {
+    setCvError("");
+    setCargandoCv(accion);
+    try {
+      const res = await fetch(`/api/admin/usuarios/${idUsuario}/cv?accion=${accion}`, { cache: "no-store" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        setCvError(data?.error ?? "No se pudo acceder al currículum.");
+        return;
+      }
+      const { cv } = await res.json();
+      const url = accion === "descargar" ? cv.downloadUrl : cv.viewUrl;
+      if (url) {
+        window.open(url, "_blank", "noopener");
+      }
+    } catch {
+      setCvError("Error de red. Intentá de nuevo.");
+    } finally {
+      setCargandoCv(null);
+    }
+  }
 
   const visibles = useMemo(() => {
     const f = q.trim().toLowerCase();
@@ -391,6 +420,39 @@ export function UsuariosTabla({
                         {detalleModal.perfiles_estudiante.estado_verificacion || "—"}
                       </p>
                     </div>
+                  </div>
+                  <div className="mt-4 border-t border-white/5 pt-4">
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-white/40 mb-2">Currículum Profesional</h4>
+                    {detalleModal.perfiles_estudiante.curriculums ? (
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm font-medium text-white truncate max-w-sm">
+                            {detalleModal.perfiles_estudiante.curriculums.file_name}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => abrirCv(detalleModal.id, "ver")}
+                            disabled={cargandoCv !== null}
+                            className="rounded-lg bg-fwd-blue/20 px-3 py-1.5 text-xs font-semibold text-fwd-blue hover:bg-fwd-blue/30 transition disabled:opacity-50"
+                          >
+                            {cargandoCv === "ver" ? "Abriendo…" : "Ver"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => abrirCv(detalleModal.id, "descargar")}
+                            disabled={cargandoCv !== null}
+                            className="rounded-lg bg-white/10 px-3 py-1.5 text-xs font-semibold text-white hover:bg-white/20 transition disabled:opacity-50"
+                          >
+                            {cargandoCv === "descargar" ? "Abriendo…" : "Descargar"}
+                          </button>
+                        </div>
+                        {cvError && (
+                          <p className="text-xs text-red-400 font-medium">{cvError}</p>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-white/40 italic">No ha subido currículum</p>
+                    )}
                   </div>
                   {detalleModal.perfiles_estudiante.descripcion && (
                     <div className="mt-3">
