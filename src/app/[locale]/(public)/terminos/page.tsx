@@ -1,6 +1,8 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Link } from "@/i18n/navigation";
+import { getUser } from "@/server/auth/get-user";
+import { rutaPorRol } from "@/server/auth/rutas";
 import AnimatedProjectsTitle from "@/components/AnimatedProjectsTitle";
 import DescargaPDFButton from "@/components/DescargaPDFButton";
 import Image from "next/image";
@@ -19,7 +21,9 @@ const SECCIONES = [
   { id: "seccion10", titulo: "10. Modificaciones y Vigencia" },
 ];
 
-export default function TerminosPage() {
+export default async function TerminosPage() {
+  const user = await getUser();
+  const dashboardHref = user ? rutaPorRol(user.roles.nombre) : null;
   return (
     <div className="flex flex-col min-h-screen">
 
@@ -58,7 +62,7 @@ export default function TerminosPage() {
         </div>
       </div>
 
-      <Navbar />
+      <Navbar dashboardHref={dashboardHref} />
 
       {/* ── HERO ─────────────────────────────────────── */}
       <section
