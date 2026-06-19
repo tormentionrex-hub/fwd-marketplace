@@ -4,7 +4,6 @@ import { Link } from "@/i18n/navigation";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import SettingsPanel from "@/components/SettingsPanel";
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -73,9 +72,8 @@ export default function Navbar() {
           )}
         </nav>
 
-        {/* CTA + Settings */}
+        {/* CTA */}
         <div className="hidden md:flex items-center gap-3 flex-shrink-0">
-          <SettingsPanel />
           {!logueado && (
             <Link
               href="/register"

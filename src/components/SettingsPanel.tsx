@@ -141,29 +141,56 @@ export default function SettingsPanel() {
 
   const close = () => { setOpen(false); setShowA11y(false); };
 
-  return (
-    <div className="relative" ref={ref}>
+  if (!isHomepage) return null;
 
-      {/* ── Botón engranaje ── */}
+  return (
+    <>
+      <style>{`
+        @keyframes fwd-pulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(32,190,198,0.55); }
+          50%       { box-shadow: 0 0 0 14px rgba(32,190,198,0); }
+        }
+        @keyframes fwd-bounce {
+          0%, 100% { transform: translateY(0); }
+          50%       { transform: translateY(-6px); }
+        }
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(10px) scale(0.97); }
+          to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .fwd-settings-btn { animation: fwd-pulse 2.2s ease-in-out infinite, fwd-bounce 3s ease-in-out infinite; }
+        .fwd-settings-btn:hover { animation: none; transform: scale(1.12); }
+        @media print { .fwd-settings-btn { display: none !important; } }
+      `}</style>
+
+    <div className="fixed bottom-6 left-6 z-50" ref={ref}>
+
+      {/* ── Botón flotante FWD ── */}
       <button
         onClick={() => { setOpen(!open); setShowA11y(false); }}
         aria-label="Ajustes"
-        className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all duration-200
-          ${open
-            ? "border-[#20BEC6] text-[#20BEC6] bg-[#20BEC6]/10"
-            : "border-white/25 text-white hover:border-[#20BEC6] hover:text-[#20BEC6] hover:bg-white/10"}`}
+        className="fwd-settings-btn relative w-14 h-14 rounded-full flex items-center justify-center transition-transform duration-200 overflow-hidden"
+        style={{
+          background: "linear-gradient(135deg, #20BEC6 0%, #662D91 100%)",
+          boxShadow: "0 8px 30px rgba(32,190,198,0.45)",
+        }}
       >
-        <IconGear />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/imagenes/FWD%20-%20Sintesis-01.png"
+          alt="Ajustes FWD"
+          className="relative z-10 w-10 h-10 object-contain"
+        />
       </button>
 
       {/* ── Panel ── */}
       {open && (
         <div
-          className="absolute right-0 top-14 w-80 rounded-2xl shadow-2xl z-50 overflow-hidden"
+          className="absolute left-0 bottom-16 w-80 rounded-2xl shadow-2xl overflow-hidden"
           style={{
             background: "linear-gradient(145deg, #0e1628 0%, #1a0a3e 55%, #0e1628 100%)",
             border: "1px solid rgba(255,255,255,0.1)",
-            animation: "fadeDown .18s ease",
+            animation: "fadeUp .18s ease",
             boxShadow: "0 25px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(32,190,198,0.15), 0 0 80px rgba(32,190,198,0.04)",
           }}
         >
@@ -380,12 +407,7 @@ export default function SettingsPanel() {
         </div>
       )}
 
-      <style>{`
-        @keyframes fadeDown {
-          from { opacity: 0; transform: translateY(-10px) scale(0.97); }
-          to   { opacity: 1; transform: translateY(0)    scale(1); }
-        }
-      `}</style>
     </div>
+    </>
   );
 }

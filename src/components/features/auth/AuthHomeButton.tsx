@@ -3,6 +3,7 @@
 import { Link } from "@/i18n/navigation";
 import { IconHome } from "@/components/ui/icons";
 import { GraduationCap } from "lucide-react";
+import { usePathname } from "next/navigation";
 
 type AuthHomeButtonProps = {
   userRole?: string | null;
@@ -16,7 +17,9 @@ const hoverShadow =
   "0 8px 28px rgba(237,0,140,0.65), 0 0 0 3px rgba(237,0,140,0.2)";
 
 export default function AuthHomeButton({ userRole }: AuthHomeButtonProps) {
-  const showStudentRegister = userRole !== "estudiante";
+  const pathname = usePathname();
+  const onRegisterPage = pathname?.includes("register-estudiante") || pathname?.includes("registro/estudiante");
+  const showStudentRegister = userRole !== "estudiante" && !onRegisterPage;
 
   return (
     <div className="absolute right-4 top-4 z-20 flex flex-col items-end gap-3 lg:right-6 lg:top-6">
