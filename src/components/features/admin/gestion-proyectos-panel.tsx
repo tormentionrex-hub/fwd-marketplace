@@ -1,3 +1,8 @@
+"use client";
+
+import { useMemo, useState, useCallback } from "react";
+import { useRouter } from "@/i18n/navigation";
+
 export type ProyectoAdmin = {
   id: string;
   titulo: string;
@@ -14,12 +19,24 @@ export type ProyectoAdmin = {
   _count: { ofertas: number };
 };
 
-"use client";
+const estadoProyectoColor: Record<string, string> = {
+  publicado: "bg-fwd-blue/15 text-fwd-blue border border-fwd-blue/20",
+  abierto: "bg-fwd-blue/15 text-fwd-blue border border-fwd-blue/20",
+  en_desarrollo: "bg-fwd-purple/20 text-fwd-purple border border-fwd-purple/20",
+  cerrado: "bg-white/10 text-white/60 border border-white/10",
+  borrador: "bg-fwd-yellow/15 text-fwd-yellow border border-fwd-yellow/20",
+  cancelado: "bg-red-500/15 text-red-300 border border-red-500/20",
+  pendiente_revision: "bg-orange-500/15 text-orange-400 border border-orange-500/20",
+};
 
-import { useMemo, useState, useCallback } from "react";
-import { useRouter } from "@/i18n/navigation";
+const TABS = [
+  { key: "todos", label: "Todos" },
+  { key: "publicado", label: "Publicados" },
+  { key: "pendiente_revision", label: "Pendientes de Revisión" },
+  { key: "en_desarrollo", label: "En Desarrollo" },
+  { key: "cerrado", label: "Cerrados" },
+] as const;
 
-// ... rest of the file remains unchanged ...
 export function GestionProyectosPanel({
   proyectos,
 }: {
