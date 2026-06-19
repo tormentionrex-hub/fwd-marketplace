@@ -77,7 +77,7 @@ export default function ProfileHeader({ perfil, profilePath }: ProfileHeaderProp
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: EASE }}
-          className="-mt-14 flex flex-col gap-5 sm:-mt-16 lg:flex-row lg:items-end lg:justify-between"
+          className="relative z-10 -mt-14 flex flex-col gap-5 sm:-mt-16 lg:flex-row lg:items-end lg:justify-between"
         >
           <div className="flex flex-col items-center gap-4 lg:flex-row lg:items-end">
             <Avatar name={perfil.nombre} src={perfil.fotoUrl} size={128} ring />

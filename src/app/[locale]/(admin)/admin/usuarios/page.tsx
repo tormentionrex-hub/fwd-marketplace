@@ -23,7 +23,22 @@ export default async function AdminUsuariosPage() {
     creado: u.creado instanceof Date ? u.creado.toISOString() : u.creado,
     ultima_sesion: u.ultima_sesion instanceof Date ? u.ultima_sesion.toISOString() : (u.ultima_sesion ?? null),
     image_url: u.image_url,
-    perfiles_estudiante: u.perfiles_estudiante,
+    perfiles_estudiante: u.perfiles_estudiante
+      ? {
+          titulo_profesional: u.perfiles_estudiante.titulo_profesional,
+          estado_verificacion: u.perfiles_estudiante.estado_verificacion,
+          reputacion: u.perfiles_estudiante.reputacion,
+          generacion_fwd: u.perfiles_estudiante.generacion_fwd,
+          descripcion: u.perfiles_estudiante.descripcion,
+          curriculums: u.perfiles_estudiante.curriculums
+            ? {
+                file_name: u.perfiles_estudiante.curriculums.file_name,
+                file_type: u.perfiles_estudiante.curriculums.file_type,
+                actualizado: u.perfiles_estudiante.curriculums.actualizado.toISOString(),
+              }
+            : null,
+        }
+      : null,
     perfiles_empresario: u.perfiles_empresario,
   }));
 

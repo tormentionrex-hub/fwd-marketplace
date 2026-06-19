@@ -219,6 +219,13 @@ export function listarUsuarios() {
           reputacion: true,
           generacion_fwd: true,
           descripcion: true,
+          curriculums: {
+            select: {
+              file_name: true,
+              file_type: true,
+              actualizado: true,
+            },
+          },
         },
       },
       perfiles_empresario: {
