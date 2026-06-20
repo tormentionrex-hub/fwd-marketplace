@@ -28,6 +28,108 @@
   --ring: #20bec6;
 }
 
+/* ====================================================
+   Panel de Administración — Sistema de colores adaptativo
+   (mismo patrón que .fwd-app del dashboard empresario)
+   ==================================================== */
+.admin-panel {
+  --adm-bg:          #F4F6FB;
+  --adm-sidebar:     #FFFFFF;
+  --adm-sidebar-bd:  #E4E9F1;
+  --adm-nav-txt:     #4C5E7C;
+  --adm-nav-txt-act: #0C1B33;
+  --adm-nav-hover:   rgba(0, 143, 212, 0.06);
+  --adm-nav-active:  rgba(236, 0, 140, 0.08);
+  --adm-ink:         #0C1B33;
+  --adm-ink-muted:   #6B7B96;
+  --adm-ink-faint:   #94A2B8;
+  --adm-line:        #E4E9F1;
+  --adm-card:        #FFFFFF;
+  --adm-card-sub:    #F4F6FB;
+  --adm-modal:       #FFFFFF;
+  --adm-modal-bd:    #E4E9F1;
+  --adm-table-head:  #F4F6FB;
+  --adm-input-bg:    #FFFFFF;
+}
+
+html.dark .admin-panel {
+  --adm-bg:          #0b1120;
+  --adm-sidebar:     #0e1628;
+  --adm-sidebar-bd:  rgba(255, 255, 255, 0.10);
+  --adm-nav-txt:     rgba(255, 255, 255, 0.55);
+  --adm-nav-txt-act: #FFFFFF;
+  --adm-nav-hover:   rgba(255, 255, 255, 0.05);
+  --adm-nav-active:  rgba(236, 0, 140, 0.15);
+  --adm-ink:         #FFFFFF;
+  --adm-ink-muted:   rgba(255, 255, 255, 0.50);
+  --adm-ink-faint:   rgba(255, 255, 255, 0.35);
+  --adm-line:        rgba(255, 255, 255, 0.10);
+  --adm-card:        rgba(255, 255, 255, 0.04);
+  --adm-card-sub:    rgba(255, 255, 255, 0.03);
+  --adm-modal:       #111827;
+  --adm-modal-bd:    rgba(255, 255, 255, 0.10);
+  --adm-table-head:  rgba(255, 255, 255, 0.05);
+  --adm-input-bg:    rgba(255, 255, 255, 0.05);
+}
+
+/* ── Overrides automáticos del área de contenido en modo claro ── */
+
+/* Texto blanco → tinta oscura */
+html:not(.dark) .admin-main [class*="text-white"] {
+  color: var(--adm-ink) !important;
+}
+/* Excepciones: fondos de color (FWD brand, verdes, degradados inline) */
+html:not(.dark) .admin-main [class*="bg-fwd-"][class*="text-white"],
+html:not(.dark) .admin-main [class*="bg-fwd-"] [class*="text-white"],
+html:not(.dark) .admin-main [class*="bg-\[#10b981\]"][class*="text-white"],
+html:not(.dark) .admin-main [class*="bg-\[#10b981\]"] [class*="text-white"],
+html:not(.dark) .admin-main [style*="linear-gradient"][class*="text-white"],
+html:not(.dark) .admin-main [style*="linear-gradient"] [class*="text-white"] {
+  color: #ffffff !important;
+}
+
+/* Fondos semi-transparentes oscuros → fondos claros */
+html:not(.dark) .admin-main :is(
+  [class~="bg-white/[0.02]"],
+  [class~="bg-white/[0.03]"],
+  [class~="bg-white/[0.04]"],
+  [class~="bg-white/5"],
+  [class~="bg-white/10"]
+) {
+  background-color: var(--adm-card) !important;
+}
+
+/* Header de tabla → fondo gris muy sutil */
+html:not(.dark) .admin-main thead {
+  background-color: var(--adm-table-head) !important;
+}
+
+/* Bordes translúcidos oscuros → claros */
+html:not(.dark) .admin-main [class*="border-white/"] {
+  border-color: var(--adm-line) !important;
+}
+
+/* Divisores de tabla */
+html:not(.dark) .admin-main [class*="divide-white/"] > * + * {
+  border-color: var(--adm-line) !important;
+}
+
+/* Modal oscuro → claro */
+html:not(.dark) .admin-main [class*="bg-\[#111827\]"] {
+  background-color: var(--adm-modal) !important;
+  border-color: var(--adm-modal-bd) !important;
+}
+
+/* Inputs dentro del contenido admin */
+html:not(.dark) .admin-main input {
+  background-color: var(--adm-input-bg) !important;
+  border-color: var(--adm-line) !important;
+  color: var(--adm-ink) !important;
+}
+html:not(.dark) .admin-main input::placeholder {
+  color: var(--adm-ink-faint) !important;
+}
+
 /*
   Sistema de diseño FWD · Costa Rica
   Paleta oficial (Libro de Marca, pág. 8) + navy de soporte.
