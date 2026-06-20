@@ -23,7 +23,8 @@ export function TabSessionGuard({ hasSession }: TabSessionGuardProps) {
       "/privacidad",
       "/solicitar-acceso",
       "/registro/estudiante",
-      "/marketplace"
+      "/marketplace",
+      "/noticias"
     ];
     const isPublic = publicPaths.some(p => pathname.includes(p)) || pathname === "/";
 
