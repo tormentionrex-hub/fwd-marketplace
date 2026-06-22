@@ -290,7 +290,7 @@ export default function FormularioEditarPerfil({ locale }: FormularioEditarPerfi
           <button
             key={item.id}
             type="button"
-            onClick={() => setSeccion(item.id)}
+            onClick={() => { setSeccion(item.id); window.scrollTo(0, 0); }}
             className={`shrink-0 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
               seccion === item.id
                 ? "bg-fwd-azul text-white shadow-sm"
