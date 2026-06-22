@@ -399,6 +399,8 @@ model curriculums {
   es_publico          Boolean             @default(false)
   subido              DateTime            @default(now()) @db.Timestamptz(6)
   actualizado         DateTime            @default(now()) @db.Timestamptz(6)
+  ultimo_analisis     Json?
+  fecha_analisis      DateTime?           @db.Timestamptz(6)
   perfiles_estudiante perfiles_estudiante @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade, onUpdate: NoAction)
   cv_accesos          cv_accesos[]
 }
