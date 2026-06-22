@@ -144,7 +144,8 @@ export default function SettingsPanel() {
       <button
         onClick={() => { setOpen(!open); setShowA11y(false); }}
         aria-label="Ajustes"
-        className="flex items-center justify-center w-10 h-10 rounded-full text-white/70 hover:text-white hover:bg-white/10 transition-all duration-200"
+        className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-white/10 transition-all duration-200"
+        style={{ color: "#20BEC6" }}
       >
         <IconGear />
       </button>

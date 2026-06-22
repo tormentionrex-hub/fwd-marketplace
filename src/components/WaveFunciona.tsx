@@ -42,7 +42,12 @@ export default function WaveFunciona() {
         gsap.to(char, { y: -10, color: getColor(), duration: 0.2, ease: "power2.out" });
       });
       char.addEventListener("mouseleave", () => {
-        gsap.to(char, { y: 0, color: "#1a0a40", duration: 0.4, ease: "elastic.out(1,0.5)" });
+        gsap.to(char, {
+          y: 0,
+          duration: 0.4,
+          ease: "elastic.out(1,0.5)",
+          onComplete: () => { char.style.color = ""; },
+        });
       });
     });
 
@@ -60,8 +65,8 @@ export default function WaveFunciona() {
           {word.split("").map((char, ci) => (
             <span
               key={ci}
-              className="func-char inline-block"
-              style={{ color: "#1a0a40", display: "inline-block", whiteSpace: "pre" }}
+              className="func-char inline-block text-text"
+              style={{ display: "inline-block", whiteSpace: "pre" }}
             >
               {char}
             </span>

@@ -47,21 +47,18 @@ export default function ProyectosPage() {
 
       {/* ── HERO HEADER + FILTROS ────────────────── */}
       <section
-        className="relative pt-32 pb-16 overflow-hidden"
+        className="relative pt-32 pb-16"
         style={{ background: "linear-gradient(135deg, #0e1628 0%, #0a2a4e 50%, #008FD4 100%)" }}
       >
-        {/* Brillo radial decorativo */}
-        <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(ellipse at 70% 50%, rgba(32,190,198,0.12) 0%, transparent 60%)" }} />
-
-        <ParticleBackground />
-
-        {/* Isotipo decorativo derecha */}
-        <div className="pointer-events-none absolute right-[-60px] top-1/2 -translate-y-1/2 opacity-20">
-          <FwdIsotipo style={{ width: "420px", height: "auto" }} />
-        </div>
-        {/* Isotipo pequeño izquierda */}
-        <div className="pointer-events-none absolute left-[-40px] bottom-[-20px] opacity-10">
-          <FwdIsotipo style={{ width: "200px", height: "auto" }} />
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at 70% 50%, rgba(32,190,198,0.12) 0%, transparent 60%)" }} />
+          <ParticleBackground />
+          <div className="absolute right-[-60px] top-1/2 -translate-y-1/2 opacity-20">
+            <FwdIsotipo style={{ width: "420px", height: "auto" }} />
+          </div>
+          <div className="absolute left-[-40px] bottom-[-20px] opacity-10">
+            <FwdIsotipo style={{ width: "200px", height: "auto" }} />
+          </div>
         </div>
 
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">

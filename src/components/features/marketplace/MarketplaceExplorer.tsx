@@ -222,20 +222,19 @@ export default function MarketplaceExplorer({ proyectos, locale }: Props) {
     <div>
       {/* ══ HERO ══ */}
       <section
-        className="relative pt-32 pb-6 overflow-hidden"
+        className="relative pt-32 pb-6"
         style={{ background: "linear-gradient(135deg, #0e1628 0%, #0a2a4e 40%, #1a0a3e 70%, #662D91 100%)" }}
       >
-        {/* Radial glows multicolor */}
-        <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(ellipse 70% 60% at 80% 30%, rgba(237,0,140,0.28) 0%, transparent 55%)" }} />
-        <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(ellipse 50% 50% at 10% 70%, rgba(32,190,198,0.22) 0%, transparent 55%)" }} />
-        <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(ellipse 40% 35% at 50% 0%, rgba(0,143,212,0.18) 0%, transparent 55%)" }} />
-        <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(ellipse 30% 40% at 0% 20%, rgba(102,45,145,0.2) 0%, transparent 50%)" }} />
-
-        {/* Particles */}
-        <ParticleBackground />
-
-        <div className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 opacity-[0.07] overflow-hidden">
-          <FwdIsotipo style={{ width: "380px", height: "auto" }} />
+        {/* Fondo con overflow-hidden propio para no clipear los dropdowns */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 70% 60% at 80% 30%, rgba(237,0,140,0.28) 0%, transparent 55%)" }} />
+          <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 50% 50% at 10% 70%, rgba(32,190,198,0.22) 0%, transparent 55%)" }} />
+          <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 40% 35% at 50% 0%, rgba(0,143,212,0.18) 0%, transparent 55%)" }} />
+          <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 30% 40% at 0% 20%, rgba(102,45,145,0.2) 0%, transparent 50%)" }} />
+          <ParticleBackground />
+          <div className="absolute right-0 top-1/2 -translate-y-1/2 opacity-[0.07]">
+            <FwdIsotipo style={{ width: "380px", height: "auto" }} />
+          </div>
         </div>
 
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -389,10 +388,7 @@ export default function MarketplaceExplorer({ proyectos, locale }: Props) {
       <div
         className="relative overflow-hidden bg-surface"
       >
-        <div className="absolute inset-0 z-0">
-          <ParticleBackground />
-        </div>
-        <div className="relative z-10 mx-auto w-full max-w-7xl px-6 py-10 sm:px-8">
+        <div className="mx-auto w-full max-w-7xl px-6 py-10 sm:px-8">
 
           <div className="flex items-center gap-3 mb-8" id="marketplace-grid">
             <p className="text-text-muted text-sm">
