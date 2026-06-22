@@ -7,6 +7,8 @@ import Badge from "@/components/ui/Badge";
 import Card from "@/components/ui/Card";
 import CvManager from "./CvManager";
 import CvIaManager from "./CvIaManager";
+import CvChatManager from "./CvChatManager";
+import CVValidator from "./CVValidator";
 import { IconCheck, IconPlus, IconUpload, IconX } from "@/components/ui/icons";
 import type { NivelHabilidad } from "@/types/sefora";
 import type {
@@ -566,17 +568,21 @@ export default function FormularioEditarPerfil({ locale }: FormularioEditarPerfi
       {seccion === "curriculum" && <CvManager />}
 
       {seccion === "cv-ia" && (
-        <CvIaManager
-          nombre={nombre}
-          correo={correo}
-          resumen={resumen}
-          habilidades={habilidades.map((h) => ({
-            nombre: catalogo.find((c) => c.id === h.id)?.nombre ?? h.id,
-            nivel: h.nivel,
-          }))}
-          portafolio={proyectos}
-          completados={completados}
-        />
+        <div className="flex flex-col gap-6">
+          <CvIaManager
+            nombre={nombre}
+            correo={correo}
+            resumen={resumen}
+            habilidades={habilidades.map((h) => ({
+              nombre: catalogo.find((c) => c.id === h.id)?.nombre ?? h.id,
+              nivel: h.nivel,
+            }))}
+            portafolio={proyectos}
+            completados={completados}
+          />
+          <CvChatManager nombre={nombre} correo={correo} />
+          <CVValidator />
+        </div>
       )}
 
       {seccion !== "curriculum" && seccion !== "cv-ia" && (

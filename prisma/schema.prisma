@@ -400,6 +400,8 @@ model curriculums {
   es_publico          Boolean             @default(false)
   subido              DateTime            @default(now()) @db.Timestamptz(6)
   actualizado         DateTime            @default(now()) @db.Timestamptz(6)
+  ultimo_analisis     Json?
+  fecha_analisis      DateTime?           @db.Timestamptz(6)
   perfiles_estudiante perfiles_estudiante @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade, onUpdate: NoAction)
   cv_accesos          cv_accesos[]
 }
@@ -431,3 +433,40 @@ model suspensiones {
   usuarios     usuarios @relation(fields: [id_usuario], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
+model marketing_metricas {
+  id            String   @id @db.VarChar(100)
+  label         String   @db.VarChar(150)
+  value         Float
+  unit          String   @db.VarChar(10)
+  display_value String   @db.VarChar(50)
+  context       String
+  kind          String   @db.VarChar(50)
+  region        String   @db.VarChar(50)
+  source        Json
+  creado        DateTime @default(now()) @db.Timestamptz(6)
+  actualizado   DateTime @default(now()) @db.Timestamptz(6)
+}
+
+model marketing_plataformas {
+  platform                 String   @id @db.VarChar(100)
+  audience_millions        Float
+  audience_label           String   @db.VarChar(50)
+  population_reach_percent Float
+  internet_reach_percent   Float?
+  adult_reach_percent      Float?
+  annual_growth_percent    Float?
+  note                     String
+  source                   Json
+  creado                   DateTime @default(now()) @db.Timestamptz(6)
+  actualizado              DateTime @default(now()) @db.Timestamptz(6)
+}
+
+model marketing_tendencias {
+  id          String   @id @db.VarChar(100)
+  title       String   @db.VarChar(200)
+  value       String   @db.VarChar(50)
+  description String
+  source      Json
+  creado      DateTime @default(now()) @db.Timestamptz(6)
+  actualizado DateTime @default(now()) @db.Timestamptz(6)
+}
