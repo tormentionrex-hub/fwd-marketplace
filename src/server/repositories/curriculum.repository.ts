@@ -1,4 +1,5 @@
 import 'server-only';
+import { Prisma } from '@prisma/client';
 import { db } from '@/lib/db';
 
 // Capa de datos del CV. Tabla curriculums (1→1 con perfiles_estudiante) +
@@ -58,6 +59,16 @@ export function registrarAccesoCv(datos: {
       id_empresario: datos.idEmpresario,
       accion: datos.accion,
       id_proyecto: datos.idProyecto ?? null,
+    },
+  });
+}
+
+export function guardarAnalisisCv(idUsuario: string, analisis: object) {
+  return db.curriculums.update({
+    where: { id_usuario: idUsuario },
+    data: {
+      ultimo_analisis: analisis as Prisma.InputJsonValue,
+      fecha_analisis: new Date(),
     },
   });
 }
