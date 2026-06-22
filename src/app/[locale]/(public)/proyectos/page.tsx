@@ -7,6 +7,7 @@ import Footer from "@/components/Footer";
 import { FwdIsotipo } from "@/components/ui/fwd-logo";
 import AnimatedProjectsTitle from "@/components/AnimatedProjectsTitle";
 import SelectFWD from "@/components/SelectFWD";
+import ParticleBackground from "@/components/ParticleBackground";
 
 /* ── Datos ───────────────────────────────────────── */
 const PROYECTOS = [
@@ -46,11 +47,13 @@ export default function ProyectosPage() {
 
       {/* ── HERO HEADER + FILTROS ────────────────── */}
       <section
-        className="relative pt-32 pb-16"
+        className="relative pt-32 pb-16 overflow-hidden"
         style={{ background: "linear-gradient(135deg, #0e1628 0%, #0a2a4e 50%, #008FD4 100%)" }}
       >
         {/* Brillo radial decorativo */}
         <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(ellipse at 70% 50%, rgba(32,190,198,0.12) 0%, transparent 60%)" }} />
+
+        <ParticleBackground />
 
         {/* Isotipo decorativo derecha */}
         <div className="pointer-events-none absolute right-[-60px] top-1/2 -translate-y-1/2 opacity-20">
@@ -102,8 +105,9 @@ export default function ProyectosPage() {
       </section>
 
       {/* ── GRID ─────────────────────────────────── */}
-      <section className="bg-white py-16 flex-1">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="bg-surface py-16 flex-1 relative overflow-hidden">
+        <ParticleBackground />
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* Contador */}
           <p className="text-gray-400 text-sm mb-8">

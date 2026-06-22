@@ -36,6 +36,7 @@ export async function listarProyectosParaMarketplace(): Promise<ProyectoMarketpl
     areaNegocio: p.area_negocio,
     plazoDias: p.plazo_dias,
     publicado: p.publicado?.toISOString() ?? null,
+    usaIA: p.usa_ia,
     tecnologias: p.proyectos_tecnologias.map((pt) => pt.tecnologias.nombre),
     empresario: {
       nombre: p.perfiles_empresario?.usuarios?.nombre ?? 'Empresa',

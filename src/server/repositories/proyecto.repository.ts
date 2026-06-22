@@ -219,6 +219,7 @@ export function listarProyectosPublicados() {
       area_negocio: true,
       plazo_dias: true,
       publicado: true,
+      usa_ia: true,
       perfiles_empresario: {
         select: {
           nombre_empresa: true,

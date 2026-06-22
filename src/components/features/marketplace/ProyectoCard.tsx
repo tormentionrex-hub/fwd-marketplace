@@ -5,9 +5,30 @@ import { motion } from "framer-motion";
 import { IconArrowRight, IconBriefcase, IconClock, IconCpu } from "@/components/ui/icons";
 import type { ProyectoMarketplace } from "@/types/marketplace";
 
+const COLOR_POR_AREA: Record<string, string> = {
+  // Categorias principales
+  "Tecnología":        "#008FD4",
+  "Educación":         "#662D91",
+  "Servicios":         "#20BEC6",
+  "Marketing":         "#008FD4",
+  "Emprendimiento":    "#F7901E",
+  "Innovación":        "#EC008C",
+  // Areas de negocio del marketplace
+  "Logística":         "#20BEC6",
+  "Comercio":          "#F7901E",
+  "Finanzas":          "#008FD4",
+  "Gastronomía":       "#EC008C",
+  "Recursos Humanos":  "#662D91",
+  "Salud":             "#20BEC6",
+  "Turismo":           "#008FD4",
+  "Operaciones":       "#F7901E",
+  "Mercadeo":          "#EC008C",
+};
+
 const COLORES_FWD = ["#008FD4", "#662D91", "#EC008C", "#20BEC6", "#F7901E"];
 
-function colorProyecto(id: string): string {
+function colorProyecto(id: string, areaNegocio: string | null): string {
+  if (areaNegocio && COLOR_POR_AREA[areaNegocio]) return COLOR_POR_AREA[areaNegocio]!;
   let h = 0;
   for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) % COLORES_FWD.length;
   return COLORES_FWD[h]!;
@@ -28,7 +49,7 @@ interface ProyectoCardProps {
 }
 
 export default function ProyectoCard({ proyecto, locale }: ProyectoCardProps) {
-  const color = colorProyecto(proyecto.id);
+  const color = colorProyecto(proyecto.id, proyecto.areaNegocio);
   const plazo = diasRestantesTexto(proyecto.publicado, proyecto.plazoDias);
   const empresa = proyecto.empresario.nombreEmpresa ?? proyecto.empresario.nombre;
 
@@ -42,7 +63,7 @@ export default function ProyectoCard({ proyecto, locale }: ProyectoCardProps) {
       whileHover={{ y: -6 }}
       className="group flex h-full flex-col overflow-hidden rounded-2xl bg-surface transition-all duration-300"
       style={{
-        border: "1px solid rgba(0,0,0,0.07)",
+        border: "1px solid var(--border)",
         boxShadow: "0 2px 16px rgba(0,0,0,0.07)",
       }}
       onMouseEnter={(e) => {
@@ -50,7 +71,7 @@ export default function ProyectoCard({ proyecto, locale }: ProyectoCardProps) {
         e.currentTarget.style.boxShadow = `0 12px 40px ${color}30, 0 2px 8px rgba(0,0,0,0.08)`;
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.border = "1px solid rgba(0,0,0,0.07)";
+        e.currentTarget.style.border = "1px solid var(--border)";
         e.currentTarget.style.boxShadow = "0 2px 16px rgba(0,0,0,0.07)";
       }}
     >
@@ -71,7 +92,7 @@ export default function ProyectoCard({ proyecto, locale }: ProyectoCardProps) {
         </svg>
 
         {proyecto.areaNegocio && (
-          <span className="absolute left-4 top-4 rounded-full bg-white/90 backdrop-blur-sm px-3 py-1 text-xs font-bold text-slate-700 shadow-sm">
+          <span className="absolute left-4 top-4 rounded-full bg-surface/90 backdrop-blur-sm px-3 py-1 text-xs font-bold text-text shadow-sm">
             {proyecto.areaNegocio}
           </span>
         )}

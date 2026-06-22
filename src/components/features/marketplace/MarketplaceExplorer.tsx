@@ -8,6 +8,9 @@ import AnimatedMarketplaceTitle from "@/components/AnimatedMarketplaceTitle";
 import SelectFWD from "@/components/SelectFWD";
 import TechFilterDropdown from "@/components/features/marketplace/TechFilterDropdown";
 import CategoriaFilterDropdown from "@/components/features/marketplace/CategoriaFilterDropdown";
+import CategoriesSection, { CATEGORIAS_CONFIG } from "@/components/features/marketplace/CategoriesSection";
+import SectionHeading from "@/components/ui/SectionHeading";
+import { Reveal } from "@/components/ui/motion";
 import { FwdIsotipo } from "@/components/ui/fwd-logo";
 import ParticleBackground from "@/components/ParticleBackground";
 
@@ -80,6 +83,7 @@ export default function MarketplaceExplorer({ proyectos, locale }: Props) {
   const [fecha,    setFecha]    = useState(TODA_FECHA);
   const [duracion, setDuracion] = useState(TODA_DURACION);
   const [categoria, setCategoria] = useState(TODA_CATEGORIA);
+  const [soloIA,   setSoloIA]   = useState(false);
   const [pagina,   setPagina]   = useState(1);
 
   const [semanticos,    setSemanticos]    = useState<ResultadoSemantico[]>([]);
@@ -132,11 +136,21 @@ export default function MarketplaceExplorer({ proyectos, locale }: Props) {
     tech !== TODA_TECH ||
     fecha !== TODA_FECHA ||
     duracion !== TODA_DURACION ||
-    categoria !== TODA_CATEGORIA;
+    categoria !== TODA_CATEGORIA ||
+    soloIA;
+
+  const activeFilterCount = [
+    area !== TODO_AREA,
+    tech !== TODA_TECH,
+    fecha !== TODA_FECHA,
+    duracion !== TODA_DURACION,
+    categoria !== TODA_CATEGORIA,
+    soloIA,
+  ].filter(Boolean).length;
 
   const clearFilters = () => {
     setQuery(""); setArea(TODO_AREA); setTech(TODA_TECH);
-    setOrden(ORDENES[0]); setPagina(1);
+    setOrden(ORDENES[0]); setPagina(1); setSoloIA(false);
     setSemanticos([]); setModoSemantico(false);
     setFecha(TODA_FECHA); setDuracion(TODA_DURACION); setCategoria(TODA_CATEGORIA);
   };
@@ -174,7 +188,8 @@ export default function MarketplaceExplorer({ proyectos, locale }: Props) {
       const matchCat  = categoria === TODA_CATEGORIA || matchCategoria(p, categoria);
       const matchF    = matchFecha(p, fecha);
       const matchD    = matchDuracion(p, duracion);
-      return matchArea && matchTech && matchCat && matchF && matchD;
+      const matchIA   = !soloIA || p.usaIA;
+      return matchArea && matchTech && matchCat && matchF && matchD && matchIA;
     });
 
     if (orden === "Más relevantes" && modoSemantico) {
@@ -184,10 +199,19 @@ export default function MarketplaceExplorer({ proyectos, locale }: Props) {
     }
 
     return lista;
-  }, [proyectos, query, area, tech, orden, modoSemantico, semanticos, similitudPor, categoria, fecha, duracion]);
+  }, [proyectos, query, area, tech, orden, modoSemantico, semanticos, similitudPor, categoria, fecha, duracion, soloIA]);
 
   const totalPaginas = Math.ceil(visibles.length / POR_PAGINA);
   const paginados    = visibles.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA);
+
+  // Conteo real de proyectos por categoria (sobre todos los proyectos, sin filtros activos)
+  const categoriaCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const cat of CATEGORIAS_CONFIG) {
+      counts[cat.nombre] = proyectos.filter((p) => matchCategoria(p, cat.nombre)).length;
+    }
+    return counts;
+  }, [proyectos]);
 
   const cambiarPagina = (p: number) => {
     setPagina(p);
@@ -198,15 +222,20 @@ export default function MarketplaceExplorer({ proyectos, locale }: Props) {
     <div>
       {/* ══ HERO ══ */}
       <section
-        className="relative pt-32 pb-6"
-        style={{ background: "linear-gradient(135deg, #0e1628 0%, #0a2a4e 50%, #008FD4 100%)" }}
+        className="relative pt-32 pb-6 overflow-hidden"
+        style={{ background: "linear-gradient(135deg, #0e1628 0%, #0a2a4e 40%, #1a0a3e 70%, #662D91 100%)" }}
       >
-        <div
-          className="pointer-events-none absolute inset-0"
-          style={{ background: "radial-gradient(ellipse at 70% 50%, rgba(32,190,198,0.2) 0%, transparent 60%)" }}
-        />
-        <div className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 opacity-10 overflow-hidden">
-          <FwdIsotipo style={{ width: "340px", height: "auto" }} />
+        {/* Radial glows multicolor */}
+        <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(ellipse 70% 60% at 80% 30%, rgba(237,0,140,0.28) 0%, transparent 55%)" }} />
+        <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(ellipse 50% 50% at 10% 70%, rgba(32,190,198,0.22) 0%, transparent 55%)" }} />
+        <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(ellipse 40% 35% at 50% 0%, rgba(0,143,212,0.18) 0%, transparent 55%)" }} />
+        <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(ellipse 30% 40% at 0% 20%, rgba(102,45,145,0.2) 0%, transparent 50%)" }} />
+
+        {/* Particles */}
+        <ParticleBackground />
+
+        <div className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 opacity-[0.07] overflow-hidden">
+          <FwdIsotipo style={{ width: "380px", height: "auto" }} />
         </div>
 
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -293,8 +322,8 @@ export default function MarketplaceExplorer({ proyectos, locale }: Props) {
             )}
           </div>
 
-          {/* ── Filtros ── */}
-          <div className="flex flex-wrap gap-3 justify-center">
+          {/* ── Filtros — Fila 1: filtros principales ── */}
+          <div className="flex flex-wrap gap-3 justify-center items-center">
             <CategoriaFilterDropdown value={categoria} onChange={(v) => { setCategoria(v); setPagina(1); }} />
             {areasOpciones.length > 1 && (
               <SelectFWD value={area} onChange={(v) => { setArea(v); setPagina(1); }} options={areasOpciones} />
@@ -302,31 +331,63 @@ export default function MarketplaceExplorer({ proyectos, locale }: Props) {
             {techOpciones.length > 1 && (
               <TechFilterDropdown value={tech} onChange={(v) => { setTech(v); setPagina(1); }} options={techOpciones} />
             )}
+            {/* Toggle Usa IA */}
+            <button
+              onClick={() => { setSoloIA((v) => !v); setPagina(1); }}
+              className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 backdrop-blur-sm"
+              style={{
+                background: soloIA ? "linear-gradient(135deg, rgba(102,45,145,0.5), rgba(237,0,140,0.4))" : "rgba(255,255,255,0.1)",
+                border: soloIA ? "1px solid #ED008C" : "1px solid rgba(255,255,255,0.2)",
+                color: soloIA ? "#fff" : "rgba(255,255,255,0.6)",
+                boxShadow: soloIA ? "0 0 16px rgba(237,0,140,0.3)" : "none",
+              }}
+            >
+              <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+              </svg>
+              Usa IA
+            </button>
+          </div>
+
+          {/* ── Filtros — Fila 2: fecha, duración, ordenar y limpiar ── */}
+          <div className="flex flex-wrap gap-3 justify-center items-center mt-3">
             <SelectFWD value={fecha}    onChange={(v) => { setFecha(v);    setPagina(1); }} options={FECHAS}    />
             <SelectFWD value={duracion} onChange={(v) => { setDuracion(v); setPagina(1); }} options={DURACIONES} />
+
+            {/* Divisor visual */}
+            <div className="hidden sm:block w-px h-8 rounded-full" style={{ background: "rgba(255,255,255,0.15)" }} />
+
             <SelectFWD
               value={orden}
               onChange={(v) => { setOrden(v); setPagina(1); }}
               options={modoSemantico ? ORDENES : (ORDENES.slice(0, 2) as [string, ...string[]])}
             />
+
+            {/* Limpiar con badge de conteo */}
             {hasFilters && (
               <button
                 onClick={clearFilters}
-                className="px-5 py-3 rounded-xl text-white/70 text-sm font-semibold transition-all duration-200 backdrop-blur-sm"
+                className="flex items-center gap-2 px-4 py-3 rounded-xl text-white/70 text-sm font-semibold transition-all duration-200 backdrop-blur-sm"
                 style={{ border: "1px solid rgba(255,255,255,0.2)" }}
                 onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#ED008C"; e.currentTarget.style.color = "#ED008C"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}
               >
-                Limpiar filtros
+                {activeFilterCount > 0 && (
+                  <span className="flex items-center justify-center w-5 h-5 rounded-full text-xs font-black text-white" style={{ background: "#ED008C" }}>
+                    {activeFilterCount}
+                  </span>
+                )}
+                Limpiar
               </button>
             )}
           </div>
         </div>
+
       </section>
 
       {/* ══ CONTENIDO ══ */}
       <div
-        className="relative overflow-hidden"
+        className="relative overflow-hidden bg-surface"
       >
         <div className="absolute inset-0 z-0">
           <ParticleBackground />
@@ -388,7 +449,7 @@ export default function MarketplaceExplorer({ proyectos, locale }: Props) {
                   style={
                     n === pagina
                       ? { background: "linear-gradient(135deg, #20BEC6, #008FD5)", color: "white", boxShadow: "0 4px 20px rgba(32,190,198,0.5), 0 0 0 3px rgba(32,190,198,0.2)" }
-                      : { background: "rgba(0,0,0,0.05)", color: "#64748b", border: "1px solid rgba(0,0,0,0.08)" }
+                      : { background: "var(--surface-2)", color: "var(--text-muted)", border: "1px solid var(--border)" }
                   }
                   onMouseEnter={(e) => {
                     if (n !== pagina) {
@@ -399,9 +460,9 @@ export default function MarketplaceExplorer({ proyectos, locale }: Props) {
                   }}
                   onMouseLeave={(e) => {
                     if (n !== pagina) {
-                      (e.currentTarget as HTMLElement).style.background = "rgba(0,0,0,0.05)";
-                      (e.currentTarget as HTMLElement).style.color = "#64748b";
-                      (e.currentTarget as HTMLElement).style.borderColor = "rgba(0,0,0,0.08)";
+                      (e.currentTarget as HTMLElement).style.background = "var(--surface-2)";
+                      (e.currentTarget as HTMLElement).style.color = "var(--text-muted)";
+                      (e.currentTarget as HTMLElement).style.borderColor = "var(--border)";
                     }
                   }}
                 >
@@ -465,11 +526,46 @@ export default function MarketplaceExplorer({ proyectos, locale }: Props) {
                 <div
                   key={i}
                   className="rounded-2xl overflow-hidden"
-                  style={{ height: 320, background: "rgba(0,0,0,0.04)", animation: "pulse 1.5s ease-in-out infinite" }}
+                  style={{ height: 320, background: "var(--surface-2)", animation: "pulse 1.5s ease-in-out infinite" }}
                 />
               ))}
             </div>
           )}
+        </div>
+      </div>
+
+      {/* ══ CATEGORIAS ══ */}
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-surface" />
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background: [
+              "radial-gradient(ellipse 60% 50% at 0% 0%, rgba(32,190,198,0.13) 0%, transparent 60%)",
+              "radial-gradient(ellipse 50% 55% at 100% 0%, rgba(102,45,145,0.10) 0%, transparent 60%)",
+              "radial-gradient(ellipse 45% 40% at 50% 100%, rgba(237,0,140,0.09) 0%, transparent 55%)",
+              "radial-gradient(ellipse 35% 30% at 100% 100%, rgba(0,143,213,0.08) 0%, transparent 50%)",
+            ].join(", "),
+          }}
+        />
+        <ParticleBackground />
+        <div className="relative z-10 mx-auto w-full max-w-7xl space-y-20 px-6 py-12 sm:px-8">
+          <section>
+            <Reveal>
+              <SectionHeading
+                eyebrow="Categorias Populares"
+                title="Explora por area de interes"
+                description="Hace clic en una categoria para filtrar los proyectos disponibles."
+              />
+            </Reveal>
+            <div className="mt-8">
+              <CategoriesSection
+                counts={categoriaCounts}
+                selected={categoria}
+                onSelect={(v) => { setCategoria(v); setPagina(1); }}
+              />
+            </div>
+          </section>
         </div>
       </div>
     </div>
