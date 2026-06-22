@@ -1,18 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Card from "@/components/ui/Card";
 import {
+  IconBolt,
   IconCheck,
-  IconCopy,
-  IconCpu,
-  IconDownload,
-  IconEye,
   IconFile,
   IconSparkles,
-  IconTrendingUp,
+  IconUpload,
   IconX,
 } from "@/components/ui/icons";
+import type { AnalisisCv } from "@/types/cv-analisis";
 
 interface HabilidadInfo {
   nombre: string;
@@ -44,59 +42,127 @@ interface CvIaManagerProps {
   completados: ProyectoCompletado[];
 }
 
-interface IaResult {
-  compatibilidad: number;
-  sugerencias: string[];
-  resumenOptimizado: string;
+// ── Score circular ────────────────────────────────────────────────────────────
+
+function ScoreCircle({ score }: { score: number }) {
+  const r = 38;
+  const circ = 2 * Math.PI * r;
+  const offset = circ * (1 - score / 100);
+  const color = score >= 75 ? "#10b981" : score >= 50 ? "#f59e0b" : "#ef4444";
+  const label = score >= 75 ? "Muy compatible" : score >= 50 ? "Compatible" : "Brechas importantes";
+  const labelColor =
+    score >= 75
+      ? "text-emerald-600 dark:text-emerald-400"
+      : score >= 50
+        ? "text-amber-600 dark:text-amber-500"
+        : "text-red-600 dark:text-red-400";
+
+  return (
+    <div className="flex shrink-0 flex-col items-center gap-1">
+      <svg width={88} height={88} viewBox="0 0 88 88" aria-hidden="true">
+        <circle cx={44} cy={44} r={r} fill="none" stroke="currentColor" strokeWidth={6} className="text-border" />
+        <circle
+          cx={44}
+          cy={44}
+          r={r}
+          fill="none"
+          stroke={color}
+          strokeWidth={6}
+          strokeDasharray={circ}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+          transform="rotate(-90 44 44)"
+          style={{ transition: "stroke-dashoffset 0.6s ease" }}
+        />
+        <text x={44} y={40} textAnchor="middle" dominantBaseline="middle" fontSize={20} fontWeight={700} fill={color}>
+          {score}
+        </text>
+        <text x={44} y={56} textAnchor="middle" dominantBaseline="middle" fontSize={9} fill="#94a3b8">
+          / 100
+        </text>
+      </svg>
+      <span className={`text-xs font-semibold ${labelColor}`}>{label}</span>
+    </div>
+  );
 }
 
-export default function CvIaManager({
-  nombre,
-  correo,
-  resumen,
-  habilidades,
-  portafolio,
-  completados,
-}: CvIaManagerProps) {
+// ── Badge prioridad ───────────────────────────────────────────────────────────
+
+function BadgePrioridad({ p }: { p: "alta" | "media" | "baja" }) {
+  const cls =
+    p === "alta"
+      ? "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-400"
+      : p === "media"
+        ? "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400"
+        : "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400";
+  return <span className={`rounded px-2 py-0.5 text-xs font-semibold ${cls}`}>{p}</span>;
+}
+
+const LABELS: Record<string, string> = {
+  tieneContacto: "Informacion de contacto",
+  tieneResumen: "Resumen profesional",
+  tieneExperiencia: "Experiencia o proyectos",
+  tieneEducacion: "Educacion",
+  tieneHabilidades: "Habilidades tecnicas",
+};
+
+// ── Componente principal ──────────────────────────────────────────────────────
+
+export default function CvIaManager({}: CvIaManagerProps) {
   const [puesto, setPuesto] = useState("");
+  const [archivo, setArchivo] = useState<File | null>(null);
+  const [arrastrando, setArrastrando] = useState(false);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState("");
-  const [resultado, setResultado] = useState<IaResult | null>(null);
-  const [copiado, setCopiado] = useState(false);
-  const [mostrarPreview, setMostrarPreview] = useState(false);
+  const [analisis, setAnalisis] = useState<AnalisisCv | null>(null);
+  const [expandido, setExpandido] = useState(true);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  function seleccionarArchivo(f: File | undefined) {
+    if (!f) return;
+    if (f.type !== "application/pdf") {
+      setError("El archivo debe ser un PDF.");
+      return;
+    }
+    if (f.size > 10 * 1024 * 1024) {
+      setError("El PDF no puede superar 10 MB.");
+      return;
+    }
+    setError("");
+    setArchivo(f);
+    setAnalisis(null);
+  }
 
   async function analizar() {
     if (!puesto.trim()) {
-      setError("Por favor, ingresa el puesto al que vas a aplicar.");
+      setError("Ingresa el puesto al que vas a aplicar.");
+      return;
+    }
+    if (!archivo) {
+      setError("Adjunta tu CV en PDF.");
       return;
     }
 
     setCargando(true);
     setError("");
-    setResultado(null);
-    setCopiado(false);
+    setAnalisis(null);
+
+    const fd = new FormData();
+    fd.append("puesto", puesto.trim());
+    fd.append("archivo", archivo);
 
     try {
-      const res = await fetch("/api/estudiante/cv-ia", {
+      const res = await fetch("/api/estudiante/cv-ia/analizar-puesto", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          puesto,
-          resumen,
-          habilidades: habilidades.map((h) => h.nombre),
-        }),
+        body: fd,
       });
-
+      const data = await res.json();
       if (!res.ok) {
-        const data = await res.json().catch(() => null);
-        setError(data?.error ?? "No se pudo completar el análisis con IA.");
+        setError(data.error ?? "No se pudo completar el analisis.");
         return;
       }
-
-      const data = await res.json();
-      setResultado(data.result);
+      setAnalisis(data.analisis);
+      setExpandido(true);
     } catch {
       setError("Error de red. Intenta de nuevo.");
     } finally {
@@ -104,400 +170,229 @@ export default function CvIaManager({
     }
   }
 
-  async function copiarAlPortapapeles(texto: string) {
-    try {
-      await navigator.clipboard.writeText(texto);
-      setCopiado(true);
-      setTimeout(() => setCopiado(false), 2000);
-    } catch {
-      // Fallback silencioso
-    }
-  }
-
-  function descargarMarkdown() {
-    if (!resultado) return;
-
-    let content = `# ${nombre}\n`;
-    content += `${correo} | Estudiante FWD Costa Rica\n\n`;
-
-    content += `## Resumen Profesional\n`;
-    content += `${resultado.resumenOptimizado}\n\n`;
-
-    if (habilidades && habilidades.length > 0) {
-      content += `## Habilidades Técnicas\n`;
-      habilidades.forEach((h) => {
-        content += `- ${h.nombre} (${h.nivel})\n`;
-      });
-      content += `\n`;
-    }
-
-    if (portafolio && portafolio.length > 0) {
-      content += `## Proyectos de Portafolio\n`;
-      portafolio.forEach((p) => {
-        content += `### ${p.titulo}${p.fecha ? ` (${p.fecha})` : ""}\n`;
-        if (p.tecnologias) content += `**Tecnologías:** ${p.tecnologias}\n\n`;
-        if (p.descripcion) content += `${p.descripcion}\n\n`;
-        if (p.repoUrl) content += `- **Repositorio:** ${p.repoUrl}\n`;
-        if (p.demoUrl) content += `- **Demo:** ${p.demoUrl}\n`;
-        content += `\n`;
-      });
-    }
-
-    if (completados && completados.length > 0) {
-      content += `## Proyectos Acreditados FWD\n`;
-      completados.forEach((c) => {
-        content += `- **${c.titulo}:** Calificación: ${c.calificacion}/5\n`;
-      });
-      content += `\n`;
-    }
-
-    const blob = new Blob([content], { type: "text/markdown;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", `CV_Optimizado_${nombre.replace(/\s+/g, "_")}.md`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }
+  const puedeAnalizar = puesto.trim().length > 0 && !!archivo && !cargando;
 
   return (
     <div className="flex flex-col gap-6">
       <Card className="flex flex-col gap-5 p-6">
         <div>
-          <h2 className="font-display text-lg font-bold text-text">CV IA - Optimización de Perfil</h2>
+          <h2 className="font-display text-lg font-bold text-text">Optimizacion de perfil</h2>
           <p className="text-sm text-text-muted">
-            Ingresa el puesto al que deseas postularte para evaluar tu compatibilidad y recibir sugerencias personalizadas de redacción y habilidades.
+            Ingresa el puesto al que queres aplicar y adjunta tu CV en PDF. La IA evaluara que tan compatible es tu perfil con ese rol.
           </p>
         </div>
 
-        {/* Input del puesto */}
+        {/* Input puesto */}
         <div className="flex flex-col gap-2">
-          <label htmlFor="puesto-interes" className="text-sm font-semibold text-text">
+          <label htmlFor="puesto-objetivo" className="text-sm font-semibold text-text">
             Puesto al que vas a aplicar
           </label>
-          <div className="flex gap-2">
-            <input
-              id="puesto-interes"
-              type="text"
-              placeholder="Ej. Desarrollador React Junior, Diseñador UX/UI, Soporte Técnico..."
-              value={puesto}
-              onChange={(e) => setPuesto(e.target.value)}
-              disabled={cargando}
-              className="h-11 w-full rounded-xl border border-border bg-surface px-3.5 text-sm text-text outline-none transition-colors placeholder:text-text-muted/60 focus:border-fwd-azul focus:ring-4 focus:ring-fwd-azul/10"
-            />
-            <button
-              type="button"
-              onClick={analizar}
-              disabled={cargando || !puesto.trim()}
-              className="inline-flex h-11 shrink-0 items-center gap-2 rounded-xl bg-fwd-azul px-6 text-sm font-semibold text-white shadow-sm transition hover:bg-fwd-azul/90 disabled:opacity-50"
+          <input
+            id="puesto-objetivo"
+            type="text"
+            placeholder="Ej. Desarrollador React Junior, Diseñador UX/UI, Analista de Datos..."
+            value={puesto}
+            onChange={(e) => setPuesto(e.target.value)}
+            disabled={cargando}
+            className="h-11 w-full rounded-xl border border-border bg-surface px-3.5 text-sm text-text outline-none transition-colors placeholder:text-text-muted/60 focus:border-fwd-azul focus:ring-4 focus:ring-fwd-azul/10"
+          />
+        </div>
+
+        {/* Upload PDF */}
+        <div className="flex flex-col gap-2">
+          <label className="text-sm font-semibold text-text">Tu CV en PDF</label>
+          {archivo ? (
+            <div className="flex items-center gap-3 rounded-xl border border-border bg-surface-2 px-4 py-3">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-red-500/10 text-red-600 dark:text-red-400">
+                <IconFile width={18} height={18} />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-text">{archivo.name}</p>
+                <p className="text-xs text-text-muted">{(archivo.size / (1024 * 1024)).toFixed(1)} MB</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => { setArchivo(null); setAnalisis(null); setError(""); }}
+                disabled={cargando}
+                className="text-text-muted transition-colors hover:text-text"
+                aria-label="Quitar archivo"
+              >
+                <IconX width={16} height={16} />
+              </button>
+            </div>
+          ) : (
+            <label
+              onDragOver={(e) => { e.preventDefault(); setArrastrando(true); }}
+              onDragLeave={() => setArrastrando(false)}
+              onDrop={(e) => { e.preventDefault(); setArrastrando(false); seleccionarArchivo(e.dataTransfer.files?.[0]); }}
+              className={`flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed p-6 text-center transition-colors ${
+                arrastrando ? "border-fwd-azul bg-fwd-azul/5" : "border-border hover:border-fwd-azul/50"
+              }`}
             >
-              <IconSparkles width={16} height={16} />
-              {cargando ? "Analizando…" : "Optimizar"}
-            </button>
-          </div>
+              <span className="grid h-10 w-10 place-items-center rounded-full bg-fwd-azul/10 text-fwd-azul">
+                <IconUpload width={20} height={20} />
+              </span>
+              <span className="text-sm font-medium text-text">Arrastra tu CV o haz clic para seleccionarlo</span>
+              <span className="text-xs text-text-muted">Solo PDF — max 10 MB</span>
+              <input
+                ref={inputRef}
+                type="file"
+                accept=".pdf,application/pdf"
+                className="hidden"
+                onChange={(e) => seleccionarArchivo(e.target.files?.[0])}
+              />
+            </label>
+          )}
         </div>
 
         {error && <p className="text-sm font-medium text-red-600 dark:text-red-400">{error}</p>}
+
+        <button
+          type="button"
+          onClick={analizar}
+          disabled={!puedeAnalizar}
+          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-fwd-azul px-6 text-sm font-semibold text-white shadow-sm transition hover:bg-fwd-azul/90 disabled:opacity-50"
+        >
+          <IconSparkles width={16} height={16} />
+          {cargando ? "Analizando..." : "Analizar compatibilidad"}
+        </button>
       </Card>
 
-      {/* Cargando */}
+      {/* Estado cargando */}
       {cargando && (
         <Card className="flex flex-col items-center justify-center p-12 text-center">
           <div className="relative flex h-16 w-16 items-center justify-center">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-fwd-azul/20 opacity-75"></span>
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-fwd-azul/20 opacity-75" />
             <span className="relative inline-flex h-12 w-12 items-center justify-center rounded-full bg-fwd-azul/10 text-fwd-azul">
-              <IconSparkles width={24} height={24} className="animate-spin duration-3000" />
+              <IconSparkles width={24} height={24} />
             </span>
           </div>
-          <h3 className="mt-4 font-display text-base font-bold text-text">Procesando perfil con IA...</h3>
+          <h3 className="mt-4 font-display text-base font-bold text-text">Analizando tu CV...</h3>
           <p className="mt-1 text-xs text-text-muted max-w-xs">
-            Evaluando coincidencia de palabras clave y reescribiendo resumen profesional.
+            Gemini esta evaluando tu perfil en relacion al puesto. Puede tardar unos segundos.
           </p>
         </Card>
       )}
 
-      {/* Resultados del análisis */}
-      {resultado && (
-        <div className="grid gap-6 md:grid-cols-[1fr_2fr] animate-in fade-in slide-in-from-bottom-2 duration-300">
-          {/* Compatibilidad */}
-          <Card className="flex flex-col items-center justify-center p-6 text-center">
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-text-muted mb-4">Compatibilidad</h3>
-            <div className="relative flex h-36 w-36 items-center justify-center rounded-full border-4 border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-white/[0.01]">
-              <span
-                className="absolute inset-0 rounded-full border-4 border-fwd-azul transition-all"
-                style={{
-                  clipPath: `polygon(50% 50%, 50% 0%, ${resultado.compatibilidad >= 25 ? '100% 0%,' : ''} ${resultado.compatibilidad >= 50 ? '100% 100%,' : ''} ${resultado.compatibilidad >= 75 ? '0% 100%,' : ''} ${resultado.compatibilidad >= 100 ? '0% 0%,' : ''} 50% 0%)`,
-                  transform: 'rotate(-45deg)',
-                }}
-              />
-              <div className="z-10 flex flex-col items-center">
-                <span className="text-4xl font-display font-black text-text">{resultado.compatibilidad}%</span>
-                <span className="text-[10px] font-semibold text-text-muted uppercase mt-0.5">Alineación</span>
-              </div>
-            </div>
-            <div className="mt-4 flex items-center gap-1.5 rounded-full bg-fwd-azul/10 px-3.5 py-1 text-xs font-bold text-fwd-azul">
-              <IconTrendingUp width={14} height={14} />
-              {resultado.compatibilidad > 75
-                ? "Listo para aplicar"
-                : resultado.compatibilidad > 50
-                ? "Buen potencial"
-                : "Se sugieren ajustes"}
-            </div>
-          </Card>
-
-          {/* Sugerencias y Resumen Optimizado */}
-          <div className="flex flex-col gap-6">
-            <Card className="p-6">
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-text-muted mb-4 flex items-center gap-2">
-                <IconCpu width={16} height={16} className="text-fwd-morado" />
-                Sugerencias de optimización
-              </h3>
-              <ul className="space-y-3">
-                {resultado.sugerencias.map((sug, idx) => (
-                  <li key={idx} className="flex items-start gap-2.5 text-sm text-text-muted">
-                    <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-fwd-morado" />
-                    {sug}
-                  </li>
-                ))}
-              </ul>
-            </Card>
-
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-text-muted flex items-center gap-2">
-                  <IconFile width={16} height={16} className="text-fwd-turquesa" />
-                  Propuesta de resumen optimizado
-                </h3>
-                <button
-                  type="button"
-                  onClick={() => copiarAlPortapapeles(resultado.resumenOptimizado)}
-                  className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-semibold text-text transition-colors hover:bg-surface-2"
-                >
-                  {copiado ? (
-                    <>
-                      <IconCheck width={14} height={14} className="text-emerald-500" />
-                      Copiado
-                    </>
-                  ) : (
-                    <>
-                      <IconCopy width={14} height={14} />
-                      Copiar texto
-                    </>
-                  )}
-                </button>
-              </div>
-              <div className="rounded-xl border border-border bg-slate-50/50 dark:bg-white/[0.01] p-4 text-sm leading-relaxed text-text whitespace-pre-wrap">
-                {resultado.resumenOptimizado}
-              </div>
-              <p className="mt-3 text-[11px] text-text-muted">
-                Tip: Copia esta propuesta y pégala en la sección de &ldquo;Datos personales&rdquo; para mejorar tu perfil de inmediato.
+      {/* Resultados */}
+      {analisis && !cargando && (
+        <Card className="flex flex-col gap-4 p-6">
+          <div className="flex items-start gap-4">
+            <ScoreCircle score={analisis.score} />
+            <div className="flex flex-col gap-2 pt-1">
+              <p className="text-xs font-semibold uppercase tracking-wider text-text-muted">
+                Compatibilidad con &ldquo;{puesto}&rdquo;
               </p>
-
-              {/* Botones de Vista Previa y Descarga */}
-              <div className="mt-5 flex flex-wrap gap-2.5 pt-4 border-t border-border">
-                <button
-                  type="button"
-                  onClick={() => setMostrarPreview(true)}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-fwd-azul px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-fwd-azul/90"
-                >
-                  <IconEye width={14} height={14} />
-                  Vista previa del nuevo CV
-                </button>
-                <button
-                  type="button"
-                  onClick={descargarMarkdown}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-border px-4 py-2 text-xs font-semibold text-text transition-colors hover:bg-surface-2"
-                >
-                  <IconDownload width={14} height={14} />
-                  Descargar Markdown (.md)
-                </button>
-              </div>
-            </Card>
+              {analisis.requiereCambiosUrgentes && (
+                <span className="inline-flex w-fit items-center gap-1.5 rounded-md bg-red-100 px-2.5 py-1 text-xs font-semibold text-red-700 dark:bg-red-500/15 dark:text-red-400">
+                  <IconBolt width={12} height={12} />
+                  Se necesitan mejoras antes de postular
+                </span>
+              )}
+              {!analisis.requiereCambiosUrgentes && analisis.score >= 75 && (
+                <span className="inline-flex w-fit items-center gap-1.5 rounded-md bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400">
+                  <IconCheck width={12} height={12} />
+                  Perfil listo para postular
+                </span>
+              )}
+              <p className="text-sm leading-relaxed text-text-muted">{analisis.mensajeGeneral}</p>
+            </div>
           </div>
-        </div>
-      )}
 
-      {/* Modal de Vista Previa de CV */}
-      {mostrarPreview && resultado && (
-        <div
-          className="fixed inset-0 z-[99999] flex flex-col items-center justify-start bg-black/70 p-4 md:p-8 overflow-y-auto"
-          onClick={() => setMostrarPreview(false)}
-        >
-          <style dangerouslySetInnerHTML={{ __html: `
-            @media print {
-              body * {
-                visibility: hidden;
-                background: none !important;
-              }
-              #cv-ia-print-area, #cv-ia-print-area * {
-                visibility: visible;
-              }
-              #cv-ia-print-area {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                max-width: 100% !important;
-                border: none !important;
-                box-shadow: none !important;
-                padding: 0 !important;
-                margin: 0 !important;
-                background: white !important;
-                color: black !important;
-              }
-              @page {
-                size: auto;
-                margin: 1.5cm;
-              }
-            }
-          `}} />
-
-          <div
-            className="relative w-full max-w-[21cm] rounded-2xl bg-surface dark:bg-[#1f2937] shadow-2xl flex flex-col my-auto border border-border"
-            onClick={(e) => e.stopPropagation()}
+          <button
+            type="button"
+            onClick={() => setExpandido((v) => !v)}
+            className="self-start text-xs font-medium text-fwd-azul underline-offset-2 hover:underline"
           >
-            {/* Header del Modal */}
-            <div className="flex items-center justify-between border-b border-border px-6 py-4">
-              <h3 className="font-display text-base font-bold text-text">Vista previa del currículum optimizado</h3>
-              <button
-                type="button"
-                onClick={() => setMostrarPreview(false)}
-                className="text-text-muted hover:text-text rounded-lg p-1 transition-colors"
-                aria-label="Cerrar"
-              >
-                <IconX width={20} height={20} />
-              </button>
-            </div>
+            {expandido ? "Ocultar detalle" : "Ver detalle completo"}
+          </button>
 
-            {/* Barra de Acciones del Modal */}
-            <div className="flex flex-wrap gap-3 bg-surface-2 dark:bg-[#111827]/50 px-6 py-3 border-b border-border">
-              <button
-                type="button"
-                onClick={() => window.print()}
-                className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-fwd-azul px-4 text-xs font-semibold text-white shadow-sm transition hover:bg-fwd-azul/90"
-              >
-                <IconDownload width={14} height={14} />
-                Imprimir / Guardar PDF
-              </button>
-              <button
-                type="button"
-                onClick={descargarMarkdown}
-                className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border px-4 text-xs font-semibold text-text transition-colors hover:bg-surface-2 bg-surface"
-              >
-                <IconFile width={14} height={14} />
-                Descargar Markdown (.md)
-              </button>
-            </div>
-
-            {/* Contenedor del CV tipo A4 */}
-            <div className="p-6 md:p-10 bg-slate-100 dark:bg-[#111827]/30 overflow-x-auto rounded-b-2xl">
-              <div
-                id="cv-ia-print-area"
-                className="mx-auto max-w-[21cm] border border-gray-200 dark:border-white/5 bg-white p-8 md:p-12 shadow-md rounded-xl text-slate-800 font-sans leading-relaxed"
-              >
-                {/* Cabecera */}
-                <div className="border-b border-slate-200 pb-4 mb-6">
-                  <h1 className="text-2xl font-bold tracking-tight text-slate-900">{nombre}</h1>
-                  <p className="text-xs text-slate-500 mt-1">{correo} | Estudiante FWD Costa Rica</p>
+          {expandido && (
+            <div className="flex flex-col gap-4">
+              {/* Secciones detectadas */}
+              <div className="flex flex-col gap-2">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-text-muted">
+                  Estructura detectada en el CV
+                </h3>
+                <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+                  {Object.entries(analisis.validacion).map(([clave, tiene]) => (
+                    <span key={clave} className="inline-flex items-center gap-2 text-sm">
+                      {tiene ? (
+                        <IconCheck width={14} height={14} className="shrink-0 text-emerald-500" />
+                      ) : (
+                        <IconX width={14} height={14} className="shrink-0 text-red-400" />
+                      )}
+                      <span className={tiene ? "text-text" : "text-text-muted"}>{LABELS[clave] ?? clave}</span>
+                    </span>
+                  ))}
                 </div>
+              </div>
 
-                {/* Resumen Profesional */}
-                <div className="mb-6">
-                  <h2 className="text-sm font-bold uppercase tracking-wider text-slate-900 border-b border-slate-200 pb-1 mb-2">
-                    Resumen Profesional
-                  </h2>
-                  <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap">
-                    {resultado.resumenOptimizado}
+              {/* Fortalezas */}
+              {analisis.fortalezas.length > 0 && (
+                <div className="flex flex-col gap-2">
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-text-muted">Fortalezas para el puesto</h3>
+                  <div className="flex flex-col gap-1.5">
+                    {analisis.fortalezas.map((f, i) => (
+                      <div
+                        key={i}
+                        className="flex items-start gap-2.5 rounded-lg border border-emerald-200/70 bg-emerald-50/80 px-3.5 py-2.5 dark:border-emerald-800/30 dark:bg-emerald-950/20"
+                      >
+                        <IconCheck width={14} height={14} className="mt-0.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                        <p className="text-sm leading-relaxed text-emerald-900 dark:text-emerald-200">{f}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Sugerencias */}
+              {analisis.sugerenciasMejora.length > 0 && (
+                <div className="flex flex-col gap-2">
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-text-muted">
+                    Que mejorar para ser mas competitivo
+                  </h3>
+                  <div className="flex flex-col gap-2">
+                    {analisis.sugerenciasMejora.map((s, i) => (
+                      <div
+                        key={i}
+                        className="flex flex-col gap-1.5 rounded-lg border border-slate-200/80 bg-slate-50/60 px-3.5 py-3 dark:border-white/8 dark:bg-white/[0.03]"
+                      >
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-sm font-semibold text-text">{s.seccion}</span>
+                          <BadgePrioridad p={s.prioridad} />
+                        </div>
+                        <p className="text-sm leading-relaxed text-text-muted">{s.consejo}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {analisis.requiereCambiosUrgentes && (
+                <div className="flex items-start gap-2.5 rounded-lg border border-amber-200/70 bg-amber-50/60 px-3.5 py-3 dark:border-amber-800/30 dark:bg-amber-950/20">
+                  <IconUpload width={14} height={14} className="mt-0.5 shrink-0 text-amber-600 dark:text-amber-400" />
+                  <p className="text-xs leading-relaxed text-amber-800 dark:text-amber-300">
+                    Aplica las sugerencias, actualiza tu CV con la version mejorada y vuelve a analizarlo antes de postular.
                   </p>
                 </div>
-
-                {/* Habilidades */}
-                {habilidades && habilidades.length > 0 && (
-                  <div className="mb-6">
-                    <h2 className="text-sm font-bold uppercase tracking-wider text-slate-900 border-b border-slate-200 pb-1 mb-2">
-                      Habilidades Técnicas
-                    </h2>
-                    <div className="flex flex-wrap gap-2">
-                      {habilidades.map((h, idx) => (
-                        <span
-                          key={idx}
-                          className="inline-block rounded bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-800 capitalize border border-slate-200"
-                        >
-                          {h.nombre} <span className="text-slate-400 font-normal">({h.nivel})</span>
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Portafolio */}
-                {portafolio && portafolio.length > 0 && (
-                  <div className="mb-6">
-                    <h2 className="text-sm font-bold uppercase tracking-wider text-slate-900 border-b border-slate-200 pb-1 mb-3">
-                      Proyectos de Portafolio
-                    </h2>
-                    <div className="space-y-4">
-                      {portafolio.map((p) => (
-                        <div key={p.id} className="text-xs">
-                          <div className="flex justify-between items-baseline font-semibold text-slate-800">
-                            <span>{p.titulo}</span>
-                            {p.fecha && <span className="text-[10px] font-normal text-slate-400">{p.fecha}</span>}
-                          </div>
-                          {p.tecnologias && (
-                            <p className="text-[10px] font-medium text-blue-600 mt-0.5">
-                              Tecnologías: {p.tecnologias}
-                            </p>
-                          )}
-                          {p.descripcion && (
-                            <p className="text-slate-600 mt-1 leading-relaxed whitespace-pre-wrap">
-                              {p.descripcion}
-                            </p>
-                          )}
-                          {(p.repoUrl || p.demoUrl) && (
-                            <div className="mt-2 flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] text-slate-400">
-                              {p.repoUrl && (
-                                <span>
-                                  Git: <span className="text-slate-500 break-all">{p.repoUrl}</span>
-                                </span>
-                              )}
-                              {p.demoUrl && (
-                                <span>
-                                  Demo: <span className="text-slate-500 break-all">{p.demoUrl}</span>
-                                </span>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* FWD Acreditados */}
-                {completados && completados.length > 0 && (
-                  <div>
-                    <h2 className="text-sm font-bold uppercase tracking-wider text-slate-900 border-b border-slate-200 pb-1 mb-2">
-                      Experiencia y Proyectos FWD
-                    </h2>
-                    <div className="space-y-2">
-                      {completados.map((c) => (
-                        <div key={c.id} className="flex justify-between text-xs text-slate-700">
-                          <span className="font-medium">{c.titulo}</span>
-                          <span className="text-slate-400 text-[10px]">
-                            Calificación: <span className="font-semibold text-slate-600">{c.calificacion}/5</span>
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
+              )}
             </div>
+          )}
+
+          <div className="flex items-center justify-end border-t border-border pt-3">
+            <button
+              type="button"
+              onClick={analizar}
+              disabled={cargando}
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-text-muted underline-offset-2 hover:underline disabled:opacity-50"
+            >
+              <IconSparkles width={12} height={12} />
+              Re-analizar
+            </button>
           </div>
-        </div>
+        </Card>
       )}
     </div>
   );
 }
-
