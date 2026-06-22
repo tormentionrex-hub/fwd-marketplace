@@ -4,6 +4,7 @@ import { FwdLogo, FwdIsotipo } from "@/components/ui/fwd-logo";
 import AuthAnimatedTitle from "@/components/features/auth/AuthAnimatedTitle";
 import AuthHomeButton from "@/components/features/auth/AuthHomeButton";
 import { getUser } from "@/server/auth/get-user";
+import Image from "next/image";
 
 /** Patrón decorativo de flechas multicolor (sistema gráfico, pág. 11). */
 function ArrowPattern() {
@@ -66,12 +67,14 @@ export async function AuthShell({ highlight, logo, children }: AuthShellProps) {
               {logo}
             </Link>
           ) : (
-            <Link
-              href="/"
-              aria-label="Ir al inicio"
-              className="inline-flex rounded-2xl bg-white px-5 py-3 shadow-lg transition hover:shadow-xl"
-            >
-              <FwdLogo />
+            <Link href="/" aria-label="Ir al inicio" className="inline-flex transition-opacity hover:opacity-85">
+              <Image
+                src="/imagenes/logo-FWD-removebg-preview.png"
+                alt="FWD Costa Rica"
+                width={180}
+                height={60}
+                className="h-16 w-auto object-contain drop-shadow-lg"
+              />
             </Link>
           )}
         </div>
@@ -90,7 +93,13 @@ export async function AuthShell({ highlight, logo, children }: AuthShellProps) {
       </aside>
 
       {/* Panel de formulario — scrollea con el documento normalmente */}
-      <main className="flex flex-1 flex-col bg-white dark:bg-[#0b1120]">
+      <main className="relative flex flex-1 flex-col bg-white dark:bg-[#0b1120]">
+        <style>{`
+          @keyframes fordy-float {
+            0%, 100% { transform: translateY(0) rotate(-2deg) scale(1); }
+            50%       { transform: translateY(-16px) rotate(2deg) scale(1.04); }
+          }
+        `}</style>
         <div className="flex min-h-screen flex-col items-center justify-center px-6 py-10 sm:px-10">
           {/* Logo compacto solo visible en móvil/tablet */}
           <div className="mb-8 lg:hidden">
@@ -99,6 +108,21 @@ export async function AuthShell({ highlight, logo, children }: AuthShellProps) {
             </Link>
           </div>
           <div className="w-full max-w-md">{children}</div>
+        </div>
+
+        {/* Fordy en esquina inferior derecha — fondo blanco se funde con el panel */}
+        <div className="hidden lg:block absolute bottom-4 right-4 pointer-events-none select-none">
+          <Image
+            src="/imagenes/fordy-saluda.png"
+            alt="Fordy saluda"
+            width={160}
+            height={160}
+            className="w-36 h-auto object-contain"
+            style={{
+              animation: "fordy-float 3.5s ease-in-out infinite",
+              mixBlendMode: "multiply",
+            }}
+          />
         </div>
       </main>
     </div>

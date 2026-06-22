@@ -4,9 +4,10 @@ import { useState, useEffect } from "react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { TextField } from "@/components/ui/text-field";
 import { IconArrowRight } from "@/components/ui/icons";
-import { SocialAuthButtons } from "@/components/features/auth/social-auth-buttons";
 import { PasswordToggle } from "@/components/ui/password-toggle";
+import { SocialAuthButtons } from "@/components/features/auth/social-auth-buttons";
 import AnimatedFormTitle from "@/components/features/auth/AnimatedFormTitle";
+import Swal from "sweetalert2";
 
 // Persistencia del form en sessionStorage: si el usuario navega a /terminos y
 // vuelve, recupera lo que llevaba escrito (excepto password). Se limpia al
@@ -159,6 +160,11 @@ export function RegisterForm() {
       // Perfil público (nombre, foto) -> localStorage. Lo privado va en la cookie.
       if (data?.perfil) {
         localStorage.setItem("fwd_perfil", JSON.stringify(data.perfil));
+        sessionStorage.setItem("fwd_active", "true");
+      }
+      if (data?.redirectTo) {
+        localStorage.setItem("fwd_dashboard", data.redirectTo);
+        localStorage.setItem("fwd_redirect", data.redirectTo);
       }
 
       router.push(data?.redirectTo ?? "/empresario");

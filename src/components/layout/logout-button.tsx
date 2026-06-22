@@ -7,10 +7,12 @@ import { useRouter } from "@/i18n/navigation";
 // limpia el perfil público de localStorage y manda a /login.
 export function LogoutButton({
   className,
+  style,
   label = "Cerrar sesión",
   children,
 }: {
   className?: string;
+  style?: React.CSSProperties;
   label?: string;
   children?: React.ReactNode;
 }) {
@@ -22,6 +24,7 @@ export function LogoutButton({
     try {
       await fetch("/api/auth/logout", { method: "POST" });
       localStorage.removeItem("fwd_perfil");
+      localStorage.removeItem("fwd_dashboard");
       router.push("/login");
       router.refresh();
     } catch {
@@ -34,6 +37,7 @@ export function LogoutButton({
       type="button"
       onClick={handleLogout}
       disabled={loading}
+      style={style}
       className={
         className ??
         "rounded-full bg-fwd-ink/5 px-3 py-1.5 text-xs font-medium text-fwd-ink/70 transition hover:bg-fwd-ink/10 disabled:opacity-60"

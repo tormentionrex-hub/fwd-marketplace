@@ -12,8 +12,9 @@ const completarPerfilSchema = z.object({
   lastName:             nameField(50),
   segundoNombre:        nameField(50).optional().or(z.literal('').transform(() => undefined)),
   segundoApellido:      nameField(50).optional().or(z.literal('').transform(() => undefined)),
-  edad:                 z.coerce.number().int().min(18).max(99).nullable().optional(),
+  edad:                 z.coerce.number().int().min(18).max(99),
   nombreEmpresa:        z.string().trim().min(2).max(200),
+  cedulaJuridica:       z.string().trim().min(4).max(100),
 });
 
 export async function POST(request: Request) {

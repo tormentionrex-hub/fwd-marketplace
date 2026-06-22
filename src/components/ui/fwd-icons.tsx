@@ -153,6 +153,15 @@ export const IconX = make(
   </>,
 );
 export const IconCheck = make(<path d="M20 6L9 17l-5-5" />);
+export const IconTrash = make(
+  <>
+    <polyline points="3 6 5 6 21 6" />
+    <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
+    <path d="M10 11v6" />
+    <path d="M14 11v6" />
+    <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" />
+  </>,
+);
 export const IconAlert = make(
   <>
     <circle cx="12" cy="12" r="9" />
@@ -238,3 +247,10 @@ export function IconComunidad({ size = 64 }: { size?: number }) {
     </svg>
   );
 }
+
+export const IconUser = make(
+  <>
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+    <circle cx="12" cy="7" r="4" />
+  </>
+);

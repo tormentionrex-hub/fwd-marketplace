@@ -148,12 +148,12 @@ export function actualizarHashContrasena(id: string, hashContrasena: string) {
     select: { id: true, correo: true },
   });
 }
-
 // Activa un usuario cambiando su estado a 'activo'. Lo llama el admin al aprobar.
 export function activarUsuario(id: string) {
   return db.usuarios.update({
     where: { id },
     data: { estado: 'activo' },
+    select: { id: true, nombre: true, correo: true },
   });
 }
 
@@ -162,6 +162,7 @@ export function rechazarUsuario(id: string) {
   return db.usuarios.update({
     where: { id },
     data: { estado: 'rechazado' },
+    select: { id: true, nombre: true, correo: true },
   });
 }
 
@@ -201,10 +202,41 @@ export function listarUsuarios() {
     select: {
       id: true,
       nombre: true,
+      segundo_nombre: true,
+      segundo_apellido: true,
       correo: true,
       estado: true,
       creado: true,
+      edad: true,
+      fecha_nacimiento: true,
+      ultima_sesion: true,
+      image_url: true,
       roles: { select: { nombre: true } },
+      perfiles_estudiante: {
+        select: {
+          titulo_profesional: true,
+          estado_verificacion: true,
+          reputacion: true,
+          generacion_fwd: true,
+          descripcion: true,
+          curriculums: {
+            select: {
+              file_name: true,
+              file_type: true,
+              actualizado: true,
+            },
+          },
+        },
+      },
+      perfiles_empresario: {
+        select: {
+          tipo: true,
+          sector: true,
+          nombre_empresa: true,
+          numero_identificacion: true,
+          descripcion: true,
+        },
+      },
     },
   });
 }

@@ -13,13 +13,13 @@ export function AdminPageHeader({
   return (
     <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div>
-        <p className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-fwd-turquoise">
-          <span className="text-fwd-blue">&#9654;&#9654;</span> FWD · Costa Rica
+        <p className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-fwd-turquoise transition-all duration-300 hover:text-fwd-blue hover:translate-x-1 cursor-default select-none">
+          <span className="text-fwd-blue transition-colors duration-300 hover:text-fwd-turquoise">&#9654;&#9654;</span> FWD · Costa Rica
         </p>
-        <h1 className="font-display text-3xl font-black tracking-tight text-white sm:text-4xl">
+        <h1 className="font-display text-3xl font-black tracking-tight sm:text-4xl transition-all duration-300 hover:text-fwd-blue hover:translate-x-1 cursor-default select-none" style={{ color: "var(--adm-ink)" }}>
           {title}
         </h1>
-        {subtitle ? <p className="mt-2 text-white/50">{subtitle}</p> : null}
+        {subtitle ? <p className="mt-2 transition-all duration-300 hover:translate-x-1 cursor-default select-none" style={{ color: "var(--adm-ink-muted)" }}>{subtitle}</p> : null}
       </div>
       {action}
     </header>

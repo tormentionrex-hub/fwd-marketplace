@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { redirect } from 'next/navigation';
 import { getUser } from '@/server/auth/get-user';
+import { BotonRegresarHome } from '@/components/layout/BotonRegresarHome';
 import { SinPermiso } from '@/components/layout/sin-permiso';
 import Sidebar from '@/components/layout/Sidebar';
 import { estadoCompletitudEmpresario } from '@/server/services/perfil-empresario.service';
@@ -65,10 +66,32 @@ const FWD_CSS = `
   .fwd-app .sb-section { font-family:var(--font-head); font-size:10.5px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; color:var(--ink-400); padding:14px 12px 7px; }
   .fwd-app .nav-item { display:flex; align-items:center; gap:11px; padding:10px 12px; border-radius:var(--r-sm); color:var(--ink-600); font-weight:500; font-size:14px; position:relative; transition:background .15s, color .15s, box-shadow .15s; width:100%; text-align:left; }
   .fwd-app .nav-item:hover { background:var(--bg); color:var(--ink-800); }
-  .fwd-app .nav-item.on { background:var(--azul-tint); color:var(--azul-700); font-weight:600; }
-  .fwd-app .nav-item.on::before { content:''; position:absolute; left:-16px; top:50%; transform:translateY(-50%); width:4px; height:22px; border-radius:0 4px 4px 0; background:var(--azul); }
-  html.dark .fwd-app .nav-item.on { box-shadow: inset 0 0 15px rgba(14,165,233,0.1); }
-  html.dark .fwd-app .nav-item.on::before { box-shadow: 0 0 10px rgba(14,165,233,0.8); }
+  .fwd-app .nav-item.on { 
+    background: linear-gradient(100deg, rgba(0,143,212,0.12), rgba(102,45,145,0.08) 50%, rgba(236,0,140,0.05));
+    color: var(--ink-900); 
+    font-weight: 600; 
+  }
+  .fwd-app .nav-item.on::before { 
+    content:''; 
+    position:absolute; 
+    left:-16px; 
+    top:50%; 
+    transform:translateY(-50%); 
+    width:4px; 
+    height:22px; 
+    border-radius:0 4px 4px 0; 
+    background: linear-gradient(to bottom, #008FD4, #662D91, #EC008C);
+  }
+  .fwd-app .nav-item.on svg { color: var(--azul); }
+  
+  html.dark .fwd-app .nav-item.on { 
+    background: linear-gradient(100deg, rgba(0,143,212,0.2), rgba(102,45,145,0.15) 50%, rgba(236,0,140,0.1));
+    color: #fff;
+    box-shadow: inset 0 0 15px rgba(0,143,212,0.1); 
+  }
+  html.dark .fwd-app .nav-item.on::before { 
+    box-shadow: 0 0 10px rgba(0,143,212,0.6); 
+  }
   .fwd-app .nav-item svg { flex-shrink:0; }
   .fwd-app .sb-foot { margin-top:auto; }
   .fwd-app .sb-user { display:flex; align-items:center; gap:11px; padding:10px; border-radius:var(--r-sm); border:1px solid var(--line); width:100%; transition: border-color 0.3s ease; }
@@ -79,12 +102,12 @@ const FWD_CSS = `
   .fwd-app .main { overflow-y:auto; position:relative; }
   .fwd-app .main::-webkit-scrollbar { width:11px; }
   .fwd-app .main::-webkit-scrollbar-thumb { background:var(--ink-300); border-radius:9px; border:3px solid var(--bg); }
-  /* padding-right reserva el espacio de la campana y botones fijos del layout (aprox 150px) */
-  .fwd-app .topbar { position:sticky; top:0; z-index:4; background:rgba(244,246,251,.82); backdrop-filter:blur(12px); border-bottom:1px solid var(--line); padding:16px 150px 16px 38px; display:flex; align-items:center; gap:18px; transition: background-color 0.3s ease, border-color 0.3s ease; }
+  /* padding-right reserva el espacio de los botones fijos del layout (Regresar + tema + campana) */
+  .fwd-app .topbar { position:sticky; top:0; z-index:4; background:rgba(244,246,251,.82); backdrop-filter:blur(12px); border-bottom:1px solid var(--line); padding:16px 340px 16px 38px; display:flex; align-items:center; gap:18px; transition: background-color 0.3s ease, border-color 0.3s ease; }
   html.dark .fwd-app .topbar { background:rgba(10,15,28,.7); }
   
   /* Botones fijos: anclados al shell (persisten entre páginas) */
-  .fwd-app .tb-actions { position:absolute; top:16px; right:38px; z-index:30; display: flex; gap: 10px; }
+  .fwd-app .tb-actions { position:absolute; top:16px; right:38px; z-index:30; display: flex; align-items: center; gap: 10px; }
   .fwd-app .tb-title { font-size:21px; font-weight:800; }
   .fwd-app .tb-sub { color:var(--ink-500); font-size:13.5px; margin-top:2px; }
   .fwd-app .tb-spacer { flex:1; }
@@ -185,6 +208,51 @@ const FWD_CSS = `
   @media (max-width:1100px) {
     .fwd-app .stat-grid { grid-template-columns:repeat(2,1fr); }
   }
+
+  /* Shell móvil empresario: menú overlay + contenido a ancho completo */
+  .fwd-app .sb-mobile-toggle {
+    display: none;
+    position: fixed;
+    top: 14px;
+    left: 12px;
+    z-index: 50;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--r-sm);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    color: var(--ink-700);
+    place-items: center;
+    box-shadow: var(--sh-sm);
+  }
+  .fwd-app .sb-mobile-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 44;
+    background: rgba(12,27,51,0.45);
+  }
+  @media (max-width: 768px) {
+    .fwd-app { grid-template-columns: 1fr !important; }
+    .fwd-app .sb-mobile-toggle { display: grid; }
+    .fwd-app .sidebar {
+      position: fixed !important;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      z-index: 45;
+      width: min(280px, 88vw) !important;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+      box-shadow: var(--sh);
+    }
+    .fwd-app.sb-mobile-open .sidebar { transform: translateX(0); }
+    .fwd-app.sb-mobile-open .sb-mobile-backdrop { display: block; }
+    .fwd-app .topbar { padding: 14px 96px 14px 52px !important; }
+    .fwd-app .tb-actions { right: 12px !important; top: 12px !important; }
+    .fwd-app .tb-actions .tb-home-label { display: none; }
+    .fwd-app .main { min-width: 0; width: 100%; }
+  }
 `;
 
 // Layout del grupo empresario: monta el Sidebar FWD una sola vez junto a {children},
@@ -204,7 +272,7 @@ export default async function EmpresarioLayout({
     redirect(`/${locale}/login`);
   }
   if (user.roles.nombre !== 'empresario') {
-    return <SinPermiso locale={locale} />;
+    return <SinPermiso locale={locale} rolActual={user.roles.nombre} rolRequerido="empresario" />;
   }
 
   const completitud = await estadoCompletitudEmpresario(user.id);
@@ -227,8 +295,28 @@ export default async function EmpresarioLayout({
       <Sidebar nombre={user?.nombre ?? 'Empresario'} fotoUrl={user?.image_url ?? null} />
       <main className="main">{children}</main>
 
-      {/* Acciones de la barra superior: Toggle Tema y Campana */}
+      {/* Acciones de la barra superior: Regresar, Toggle Tema y Campana */}
       <div className="tb-actions">
+        <BotonRegresarHome
+          href={`/${locale}`}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            fontSize: 14,
+            fontWeight: 800,
+            lineHeight: 1,
+            color: 'var(--ink-700)',
+            background: 'var(--surface)',
+            border: '1px solid var(--line)',
+            borderRadius: 24,
+            padding: '9px 20px 9px 14px',
+            cursor: 'pointer',
+            whiteSpace: 'nowrap',
+            transition: 'background 0.15s, border-color 0.15s',
+            fontFamily: 'var(--font-head)',
+          }}
+        />
         <ThemeToggle />
         <NotificacionesCampana />
       </div>

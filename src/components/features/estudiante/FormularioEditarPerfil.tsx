@@ -7,6 +7,7 @@ import Badge from "@/components/ui/Badge";
 import Card from "@/components/ui/Card";
 import CvManager from "./CvManager";
 import CvIaManager from "./CvIaManager";
+import CvChatManager from "./CvChatManager";
 import CVValidator from "./CVValidator";
 import { IconCheck, IconPlus, IconUpload, IconX } from "@/components/ui/icons";
 import type { NivelHabilidad } from "@/types/sefora";
@@ -579,6 +580,7 @@ export default function FormularioEditarPerfil({ locale }: FormularioEditarPerfi
             portafolio={proyectos}
             completados={completados}
           />
+          <CvChatManager nombre={nombre} correo={correo} />
           <CVValidator />
         </div>
       )}

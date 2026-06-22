@@ -3,8 +3,11 @@
   "Nav": {
     "inicio": "Inicio",
     "proyectos": "Proyectos",
+    "noticias": "Noticia",
     "iniciarSesion": "Iniciar sesión",
-    "registrarse": "Registrarse"
+    "registrarse": "Registrarse",
+    "miPanel": "Mi panel",
+    "cerrarSesion": "Cerrar sesión"
   },
   "Hero": {
     "badge": "Plataforma de innovación · FWD Costa Rica",

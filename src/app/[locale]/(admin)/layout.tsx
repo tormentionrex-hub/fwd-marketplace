@@ -28,9 +28,9 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="min-h-screen bg-[#0b1120] text-white">
+    <div className="admin-panel min-h-screen" style={{ background: "var(--adm-bg)", color: "var(--adm-ink)" }}>
       <AdminSidebar />
-      <main className="min-h-screen lg:pl-[240px]">{children}</main>
+      <main className="admin-main min-h-screen lg:pl-[240px]">{children}</main>
     </div>
   );
 }
