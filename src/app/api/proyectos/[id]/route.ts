@@ -29,7 +29,7 @@ export async function PATCH(
 ) {
   if (!mismoOrigen(request)) return error('Origen no permitido', 403);
 
-  const user = await getUser();
+  const user = await getUser(request);
   if (!user) return error('No autorizado', 401);
   if (user.roles.nombre !== 'empresario') return error('Solo empresarios', 403);
 
@@ -58,7 +58,7 @@ export async function DELETE(
 ) {
   if (!mismoOrigen(request)) return error('Origen no permitido', 403);
 
-  const user = await getUser();
+  const user = await getUser(request);
   if (!user) return error('No autorizado', 401);
   if (user.roles.nombre !== 'empresario') return error('Solo empresarios', 403);
 
