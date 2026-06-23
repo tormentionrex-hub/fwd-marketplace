@@ -1,7 +1,14 @@
 "use client";
 
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "@/i18n/navigation";
+import { Pencil, Trash2 } from "lucide-react";
+import {
+  confirmarAccion,
+  pedirMotivo,
+  toastExito,
+  alertaError,
+} from "@/lib/sweetalert-admin";
 
 export type ProyectoAdmin = {
   id: string;
@@ -46,19 +53,85 @@ export function GestionProyectosPanel({
   const [q, setQ] = useState("");
   const [tab, setTab] = useState<(typeof TABS)[number]["key"]>("todos");
   const [loading, setLoading] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
 
   // Modal de detalle
   const [detalleModal, setDetalleModal] = useState<ProyectoAdmin | null>(null);
 
-  // Modal de suspensión (pendiente de revisión)
-  const [suspendModal, setSuspendModal] = useState<ProyectoAdmin | null>(null);
-  const [motivoSuspender, setMotivoSuspender] = useState("");
+  // Edición dentro del modal de detalle
+  const [editando, setEditando] = useState(false);
+  const [guardando, setGuardando] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+  const [formProyecto, setFormProyecto] = useState({
+    titulo: "",
+    descripcion: "",
+    area_negocio: "",
+    plazo_dias: "",
+  });
 
-  // Modal de eliminación
-  const [eliminarModal, setEliminarModal] = useState<ProyectoAdmin | null>(null);
-  const [motivoEliminar, setMotivoEliminar] = useState("");
+  // Salir del modo edición al abrir/cerrar/cambiar el detalle.
+  useEffect(() => {
+    setEditando(false);
+    setEditError(null);
+  }, [detalleModal?.id]);
+
+  function iniciarEdicionProyecto(p: ProyectoAdmin) {
+    setEditError(null);
+    setFormProyecto({
+      titulo: p.titulo ?? "",
+      descripcion: p.descripcion ?? "",
+      area_negocio: p.area_negocio ?? "",
+      plazo_dias: p.plazo_dias != null ? String(p.plazo_dias) : "",
+    });
+    setEditando(true);
+  }
+
+  async function guardarEdicionProyecto() {
+    if (!detalleModal) return;
+    setEditError(null);
+    setGuardando(true);
+    try {
+      const res = await fetch(`/api/admin/proyectos/${detalleModal.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          accion: "editar",
+          titulo: formProyecto.titulo.trim(),
+          descripcion: formProyecto.descripcion.trim(),
+          area_negocio: formProyecto.area_negocio.trim() || null,
+          plazo_dias:
+            formProyecto.plazo_dias.trim() === ""
+              ? null
+              : Number(formProyecto.plazo_dias),
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        const msg = data?.error ?? "No se pudo guardar el proyecto.";
+        setEditError(msg);
+        alertaError(msg);
+        return;
+      }
+      setDetalleModal({
+        ...detalleModal,
+        titulo: formProyecto.titulo.trim(),
+        descripcion: formProyecto.descripcion.trim(),
+        area_negocio: formProyecto.area_negocio.trim() || null,
+        plazo_dias:
+          formProyecto.plazo_dias.trim() === ""
+            ? null
+            : Number(formProyecto.plazo_dias),
+      });
+      setEditando(false);
+      toastExito("Proyecto actualizado.");
+      router.refresh();
+    } catch {
+      const msg = "Error de red. Intentá de nuevo.";
+      setEditError(msg);
+      alertaError(msg);
+    } finally {
+      setGuardando(false);
+    }
+  }
 
   const visibles = useMemo(() => {
     const query = q.trim().toLowerCase();
@@ -76,92 +149,96 @@ export function GestionProyectosPanel({
     return lista;
   }, [proyectos, q, tab]);
 
-  const clearMessages = useCallback(() => {
-    setError(null);
-    setSuccess(null);
-  }, []);
-
-  // ── Suspender (Pendiente de revisión) ───────────────────
-  async function handleSuspender() {
-    if (!suspendModal || !motivoSuspender.trim()) return;
-    clearMessages();
-    setLoading(suspendModal.id);
+  // ── Suspender (Pendiente de revisión) — SweetAlert con motivo ───
+  async function suspenderProyecto(p: ProyectoAdmin) {
+    const motivo = await pedirMotivo({
+      titulo: `Suspender "${p.titulo}"`,
+      texto: "El proyecto pasará a 'pendiente de revisión'.",
+      label: "Motivo de la suspensión",
+      placeholder: "Describí el motivo de la suspensión…",
+      confirmText: "Suspender",
+    });
+    if (motivo === null) return;
+    setLoading(p.id);
     try {
-      const res = await fetch(`/api/admin/proyectos/${suspendModal.id}`, {
+      const res = await fetch(`/api/admin/proyectos/${p.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          accion: "suspender",
-          motivo: motivoSuspender.trim(),
-        }),
+        body: JSON.stringify({ accion: "suspender", motivo }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => null);
-        setError(data?.error ?? "No se pudo suspender el proyecto.");
+        alertaError(data?.error ?? "No se pudo suspender el proyecto.");
         return;
       }
-      setSuccess(`Proyecto "${suspendModal.titulo}" puesto en pendiente de revisión.`);
-      setSuspendModal(null);
-      setMotivoSuspender("");
+      toastExito(`Proyecto "${p.titulo}" puesto en revisión.`);
       router.refresh();
     } catch {
-      setError("Error de red. Intentá de nuevo.");
+      alertaError("Error de red. Intentá de nuevo.");
     } finally {
       setLoading(null);
     }
   }
 
-  // ── Dar Visto Bueno (Reactivar) ──────────────────────────
-  async function handleVistoBueno(proyecto: ProyectoAdmin) {
-    if (!proyecto) return;
-    clearMessages();
-    setLoading(proyecto.id);
+  // ── Dar Visto Bueno (Reactivar) — SweetAlert de confirmación ────
+  async function darVistoBueno(p: ProyectoAdmin) {
+    const ok = await confirmarAccion({
+      titulo: `¿Dar visto bueno a "${p.titulo}"?`,
+      texto: "El proyecto volverá a su estado anterior.",
+      confirmText: "Dar visto bueno",
+      icon: "question",
+    });
+    if (!ok) return;
+    setLoading(p.id);
     try {
-      const res = await fetch(`/api/admin/proyectos/${proyecto.id}`, {
+      const res = await fetch(`/api/admin/proyectos/${p.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          accion: "visto_bueno",
-        }),
+        body: JSON.stringify({ accion: "visto_bueno" }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => null);
-        setError(data?.error ?? "No se pudo reactivar el proyecto.");
+        alertaError(data?.error ?? "No se pudo reactivar el proyecto.");
         return;
       }
-      setSuccess(`Proyecto "${proyecto.titulo}" reactivado correctamente.`);
+      toastExito(`Proyecto "${p.titulo}" reactivado.`);
       router.refresh();
     } catch {
-      setError("Error de red. Intentá de nuevo.");
+      alertaError("Error de red. Intentá de nuevo.");
     } finally {
       setLoading(null);
     }
   }
 
-  // ── Eliminar Proyecto ──────────────────────────────────
-  async function handleEliminar() {
-    if (!eliminarModal || !motivoEliminar.trim()) return;
-    clearMessages();
-    setLoading(eliminarModal.id);
+  // ── Eliminar Proyecto — SweetAlert con motivo. Devuelve true si se eliminó. ──
+  async function eliminarProyecto(p: ProyectoAdmin): Promise<boolean> {
+    const motivo = await pedirMotivo({
+      titulo: `Eliminar "${p.titulo}"`,
+      texto: "Esta acción no se puede deshacer.",
+      label: "Motivo de la eliminación",
+      placeholder: "Describí el motivo de la eliminación…",
+      confirmText: "Eliminar proyecto",
+      peligro: true,
+    });
+    if (motivo === null) return false;
+    setLoading(p.id);
     try {
-      const res = await fetch(`/api/admin/proyectos/${eliminarModal.id}`, {
+      const res = await fetch(`/api/admin/proyectos/${p.id}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          motivo: motivoEliminar.trim(),
-        }),
+        body: JSON.stringify({ motivo }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => null);
-        setError(data?.error ?? "No se pudo eliminar el proyecto.");
-        return;
+        alertaError(data?.error ?? "No se pudo eliminar el proyecto.");
+        return false;
       }
-      setSuccess(`Proyecto "${eliminarModal.titulo}" eliminado exitosamente.`);
-      setEliminarModal(null);
-      setMotivoEliminar("");
+      toastExito(`Proyecto "${p.titulo}" eliminado.`);
       router.refresh();
+      return true;
     } catch {
-      setError("Error de red. Intentá de nuevo.");
+      alertaError("Error de red. Intentá de nuevo.");
+      return false;
     } finally {
       setLoading(null);
     }
@@ -244,24 +321,6 @@ export function GestionProyectosPanel({
         </p>
       </div>
 
-      {/* Alertas */}
-      {error && (
-        <p
-          role="alert"
-          className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300"
-        >
-          {error}
-        </p>
-      )}
-      {success && (
-        <p
-          role="status"
-          className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300"
-        >
-          {success}
-        </p>
-      )}
-
       {/* Tabla de proyectos */}
       <div className="overflow-x-auto rounded-2xl border border-white/10 bg-white/[0.03]">
         <table className="w-full text-left text-sm">
@@ -320,9 +379,9 @@ export function GestionProyectosPanel({
                         {enRevision ? (
                           <button
                             type="button"
-                            onClick={() => handleVistoBueno(p)}
+                            onClick={() => darVistoBueno(p)}
                             disabled={loading === p.id}
-                            className="rounded-lg px-2.5 py-1 text-xs font-semibold text-emerald-400 transition hover:bg-emerald-400/15 disabled:opacity-40"
+                            className="rounded-lg px-2.5 py-1 text-xs font-semibold text-emerald-500 transition hover:bg-emerald-500/15 disabled:opacity-40"
                             title="Dar Visto Bueno"
                           >
                             {loading === p.id ? "Procesando…" : "Visto Bueno"}
@@ -330,11 +389,7 @@ export function GestionProyectosPanel({
                         ) : (
                           <button
                             type="button"
-                            onClick={() => {
-                              clearMessages();
-                              setSuspendModal(p);
-                              setMotivoSuspender("");
-                            }}
+                            onClick={() => suspenderProyecto(p)}
                             disabled={loading === p.id}
                             className="rounded-lg px-2.5 py-1 text-xs font-semibold text-orange-400 transition hover:bg-orange-400/15 disabled:opacity-40"
                             title="Suspender revisión"
@@ -344,15 +399,12 @@ export function GestionProyectosPanel({
                         )}
                         <button
                           type="button"
-                          onClick={() => {
-                            clearMessages();
-                            setEliminarModal(p);
-                            setMotivoEliminar("");
-                          }}
+                          onClick={() => eliminarProyecto(p)}
                           disabled={loading === p.id}
-                          className="rounded-lg px-2.5 py-1 text-xs font-semibold text-red-400 transition hover:bg-red-400/15 disabled:opacity-40"
+                          className="inline-flex items-center gap-1 rounded-lg bg-red-500/10 px-2.5 py-1 text-xs font-semibold text-red-500 transition hover:bg-red-500/20 disabled:opacity-40"
                           title="Eliminar proyecto"
                         >
+                          <Trash2 className="h-3.5 w-3.5" />
                           Eliminar
                         </button>
                       </div>
@@ -364,88 +416,6 @@ export function GestionProyectosPanel({
           </tbody>
         </table>
       </div>
-
-      {/* Modal: Suspender / Pendiente de revisión */}
-      {suspendModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#111827] p-6 shadow-2xl">
-            <h3 className="text-lg font-bold text-white">Suspender Proyecto</h3>
-            <p className="mt-1 text-sm text-white/50">
-              Estás por colocar el proyecto <strong className="text-white">&quot;{suspendModal.titulo}&quot;</strong> en estado &quot;pendiente de revisión&quot;.
-            </p>
-
-            <label className="mt-4 block text-sm font-medium text-white/70">
-              Motivo de la suspensión <span className="text-red-400">*</span>
-            </label>
-            <textarea
-              value={motivoSuspender}
-              onChange={(e) => setMotivoSuspender(e.target.value)}
-              rows={3}
-              placeholder="Describí el motivo de la suspensión…"
-              className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20"
-            />
-
-            <div className="mt-5 flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setSuspendModal(null)}
-                className="rounded-xl px-4 py-2 text-sm font-semibold text-white/60 transition hover:text-white"
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={handleSuspender}
-                disabled={!motivoSuspender.trim() || loading === suspendModal.id}
-                className="rounded-xl bg-orange-600 px-4 py-2 text-sm font-bold text-white shadow transition hover:bg-orange-500 disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                {loading === suspendModal.id ? "Procesando…" : "Confirmar suspensión"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal: Eliminar */}
-      {eliminarModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#111827] p-6 shadow-2xl">
-            <h3 className="text-lg font-bold text-white text-red-400">Eliminar Proyecto</h3>
-            <p className="mt-1 text-sm text-white/50">
-              Estás por eliminar de manera permanente el proyecto <strong className="text-white">&quot;{eliminarModal.titulo}&quot;</strong>. Esta acción no se puede deshacer.
-            </p>
-
-            <label className="mt-4 block text-sm font-medium text-white/70">
-              Motivo de la eliminación <span className="text-red-400">*</span>
-            </label>
-            <textarea
-              value={motivoEliminar}
-              onChange={(e) => setMotivoEliminar(e.target.value)}
-              rows={3}
-              placeholder="Describí el motivo de la eliminación…"
-              className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-red-500 focus:ring-2 focus:ring-red-500/20"
-            />
-
-            <div className="mt-5 flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setEliminarModal(null)}
-                className="rounded-xl px-4 py-2 text-sm font-semibold text-white/60 transition hover:text-white"
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={handleEliminar}
-                disabled={!motivoEliminar.trim() || loading === eliminarModal.id}
-                className="rounded-xl bg-red-600 px-4 py-2 text-sm font-bold text-white shadow transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                {loading === eliminarModal.id ? "Eliminando…" : "Confirmar eliminación"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Modal: Detalle de Proyecto */}
       {detalleModal && (
@@ -464,15 +434,95 @@ export function GestionProyectosPanel({
                   {detalleModal.titulo}
                 </h3>
               </div>
-              <button
-                type="button"
-                onClick={() => setDetalleModal(null)}
-                className="text-white/40 hover:text-white transition-colors text-2xl font-bold px-2"
-              >
-                &times;
-              </button>
+              <div className="flex items-center gap-1">
+                {!editando && (
+                  <button
+                    type="button"
+                    onClick={() => iniciarEdicionProyecto(detalleModal)}
+                    title="Editar proyecto"
+                    aria-label="Editar proyecto"
+                    className="rounded-lg p-2 text-fwd-blue transition hover:bg-fwd-blue/15"
+                  >
+                    <Pencil className="h-[18px] w-[18px]" />
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const ok = await eliminarProyecto(detalleModal);
+                    if (ok) setDetalleModal(null);
+                  }}
+                  title="Eliminar proyecto"
+                  aria-label="Eliminar proyecto"
+                  className="rounded-lg bg-red-500/15 p-2 text-red-500 transition hover:bg-red-500/25"
+                >
+                  <Trash2 className="h-5 w-5" strokeWidth={2.4} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDetalleModal(null)}
+                  className="text-white/40 hover:text-white transition-colors text-2xl font-bold px-2"
+                  aria-label="Cerrar"
+                >
+                  &times;
+                </button>
+              </div>
             </div>
 
+            {editando && (
+              <div className="mt-4 space-y-3">
+                <p className="text-xs font-semibold uppercase tracking-wider text-fwd-blue">
+                  Editando proyecto
+                </p>
+                {editError && (
+                  <p
+                    role="alert"
+                    className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300"
+                  >
+                    {editError}
+                  </p>
+                )}
+                <label className="block">
+                  <span className="mb-1 block text-xs font-medium text-white/55">Título</span>
+                  <input
+                    value={formProyecto.titulo}
+                    onChange={(e) => setFormProyecto((f) => ({ ...f, titulo: e.target.value }))}
+                    className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:border-fwd-blue focus:ring-2 focus:ring-fwd-blue/20"
+                  />
+                </label>
+                <label className="block">
+                  <span className="mb-1 block text-xs font-medium text-white/55">Descripción</span>
+                  <textarea
+                    rows={4}
+                    value={formProyecto.descripcion}
+                    onChange={(e) => setFormProyecto((f) => ({ ...f, descripcion: e.target.value }))}
+                    className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:border-fwd-blue focus:ring-2 focus:ring-fwd-blue/20"
+                  />
+                </label>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <label className="block">
+                    <span className="mb-1 block text-xs font-medium text-white/55">Área de negocio</span>
+                    <input
+                      value={formProyecto.area_negocio}
+                      onChange={(e) => setFormProyecto((f) => ({ ...f, area_negocio: e.target.value }))}
+                      className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:border-fwd-blue focus:ring-2 focus:ring-fwd-blue/20"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="mb-1 block text-xs font-medium text-white/55">Plazo (días)</span>
+                    <input
+                      type="number"
+                      min={1}
+                      value={formProyecto.plazo_dias}
+                      onChange={(e) => setFormProyecto((f) => ({ ...f, plazo_dias: e.target.value }))}
+                      className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:border-fwd-blue focus:ring-2 focus:ring-fwd-blue/20"
+                    />
+                  </label>
+                </div>
+              </div>
+            )}
+
+            {!editando && (
             <div className="mt-4 space-y-4">
               <div>
                 <h4 className="text-xs font-semibold uppercase tracking-wider text-white/40">Descripción</h4>
@@ -567,15 +617,41 @@ export function GestionProyectosPanel({
                 </div>
               )}
             </div>
+            )}
 
-            <div className="mt-6 flex justify-end border-t border-white/10 pt-4">
-              <button
-                type="button"
-                onClick={() => setDetalleModal(null)}
-                className="rounded-xl bg-white/10 px-5 py-2 text-sm font-semibold text-white transition hover:bg-white/15"
-              >
-                Cerrar
-              </button>
+            <div className="mt-6 flex justify-end gap-3 border-t border-white/10 pt-4">
+              {editando ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setEditando(false)}
+                    disabled={guardando}
+                    className="rounded-xl px-4 py-2 text-sm font-semibold text-white/60 transition hover:text-white disabled:opacity-50"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={guardarEdicionProyecto}
+                    disabled={
+                      guardando ||
+                      !formProyecto.titulo.trim() ||
+                      !formProyecto.descripcion.trim()
+                    }
+                    className="rounded-xl bg-fwd-blue px-5 py-2 text-sm font-bold text-white shadow transition hover:bg-fwd-blue/90 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {guardando ? "Guardando…" : "Guardar cambios"}
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setDetalleModal(null)}
+                  className="rounded-xl bg-white/10 px-5 py-2 text-sm font-semibold text-white transition hover:bg-white/15"
+                >
+                  Cerrar
+                </button>
+              )}
             </div>
           </div>
         </div>

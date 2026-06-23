@@ -4,11 +4,15 @@ import {
   crearEmpresario,
   crearEstudiante,
   crearEstudiantePendiente,
+  crearUsuarioConRol,
   buscarRolIdPorNombre,
   registrarUltimaSesion,
+  activarUsuario,
+  actualizarUsuario,
 } from '@/server/repositories/usuario.repository';
 
 import { verifyPassword, hashPassword } from '@/server/auth/password';
+import { esRolStaff } from '@/server/auth/roles';
 import { generarToken } from '@/server/auth/token';
 import {
   buscarInvitacionPendientePorEmail,
@@ -172,6 +176,36 @@ export async function registrarEstudiante(
   const existente = await buscarUsuarioPorCorreo(correo);
   if (existente) return null;
 
+  // 2.b. Si la invitación trae un rol de STAFF (owner/admin/editor/moderator),
+  // se crea una cuenta de staff con ese rol (sin perfil estudiante/empresario).
+  const rolInvitado = invitacion.rol;
+  if (esRolStaff(rolInvitado)) {
+    const idRolStaff = await buscarRolIdPorNombre(rolInvitado as string);
+    if (!idRolStaff) throw new Error(`No existe el rol '${rolInvitado}' en la BD`);
+
+    const staff = await crearUsuarioConRol({
+      nombre,
+      segundoApellido: extra.segundoApellido,
+      correo,
+      hash: hashPassword(password),
+      idRol: idRolStaff,
+    });
+
+    await marcarRegistrado(correo, staff.id);
+    await enviarEmailCuentaAprobada(correo, nombre);
+
+    return {
+      token: generarToken(),
+      usuario: {
+        id: staff.id,
+        nombre: staff.nombre,
+        correo: staff.correo,
+        image_url: staff.image_url,
+        rol: rolInvitado as string,
+      },
+    };
+  }
+
   const idRol = await buscarRolIdPorNombre('estudiante');
   if (!idRol) throw new Error("No existe el rol 'estudiante' en la BD");
 
@@ -200,6 +234,74 @@ export async function registrarEstudiante(
       correo: usuario.correo,
       image_url: usuario.image_url,
       rol: 'estudiante',
+    },
+  };
+}
+
+// ─── REGISTRO POR INVITACIÓN CON TOKEN ───────────────────────────────────────
+// Flujo de la página /unirse: el rol viene del TOKEN firmado (no del cliente).
+// Igual valida que la invitación siga vigente en la BD (permite revocarla).
+// Crea la cuenta según el rol y la deja activa (la invitación es la aprobación).
+export async function registrarConInvitacion(datos: {
+  email: string;
+  rol: string;
+  nombre: string;
+  segundoApellido?: string | undefined;
+  edad?: number | undefined;
+  password: string;
+}): Promise<ResultadoAuth | 'no_invitado' | null> {
+  const emailNorm = datos.email.trim().toLowerCase();
+
+  // La invitación debe seguir pendiente (si el admin la revocó, se rechaza).
+  const invitacion = await buscarInvitacionPendientePorEmail(emailNorm);
+  if (!invitacion || !invitacion.pending || invitacion.tipo !== 'invitacion') {
+    return 'no_invitado';
+  }
+
+  // ¿Ya tiene cuenta?
+  if (await buscarUsuarioPorCorreo(emailNorm)) return null;
+
+  const idRol = await buscarRolIdPorNombre(datos.rol);
+  if (!idRol) throw new Error(`No existe el rol '${datos.rol}' en la BD`);
+
+  const hash = hashPassword(datos.password);
+  const base = {
+    nombre: datos.nombre,
+    segundoApellido: datos.segundoApellido,
+    correo: emailNorm,
+    hash,
+    idRol,
+  };
+
+  let usuario: { id: string; nombre: string; correo: string; image_url: string | null };
+
+  if (datos.rol === 'empresario') {
+    usuario = await crearEmpresario(base);
+    // Invitado por el admin: queda activo (crearEmpresario nace 'pendiente').
+    await activarUsuario(usuario.id);
+  } else if (esRolStaff(datos.rol)) {
+    usuario = await crearUsuarioConRol(base); // staff: cuenta sin perfil, activa
+  } else {
+    usuario = await crearEstudiante(base); // estudiante invitado: activo
+  }
+
+  // Edad (opcional) en la fila de usuarios.
+  if (datos.edad != null) {
+    await actualizarUsuario(usuario.id, { edad: datos.edad });
+  }
+
+  // Cerrar la invitación y avisar por correo.
+  await marcarRegistrado(emailNorm, usuario.id);
+  await enviarEmailCuentaAprobada(emailNorm, datos.nombre);
+
+  return {
+    token: generarToken(),
+    usuario: {
+      id: usuario.id,
+      nombre: usuario.nombre,
+      correo: usuario.correo,
+      image_url: usuario.image_url,
+      rol: datos.rol,
     },
   };
 }

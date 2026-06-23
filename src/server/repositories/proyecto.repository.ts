@@ -124,6 +124,7 @@ export function obtenerProyectoConDetalle(id: string) {
       plazo_dias: true,
       publicado: true,
       cierre: true,
+      imagenes: true,
       perfiles_empresario: {
         select: {
           sector: true,
@@ -219,6 +220,8 @@ export function listarProyectosPublicados() {
       area_negocio: true,
       plazo_dias: true,
       publicado: true,
+      usa_ia: true,
+      imagenes: true,
       perfiles_empresario: {
         select: {
           nombre_empresa: true,
@@ -314,6 +317,7 @@ export async function crearProyecto(data: {
   areaNegocio: string | null;
   plazoDias: number | null;
   tecnologias: string[];
+  imagenes: string[];
 }) {
   const techIds = await Promise.all(
     data.tecnologias.map((nombre) =>
@@ -353,6 +357,7 @@ export async function actualizarProyecto(
     areaNegocio?: string | null | undefined;
     plazoDias?: number | null | undefined;
     tecnologias?: string[] | undefined;
+    imagenes?: string[] | undefined;
   },
 ) {
   const { tecnologias, ...campos } = data;

@@ -131,6 +131,34 @@ export function crearEstudiantePendiente(datos: {
   });
 }
 
+// Crea una cuenta de STAFF (owner/admin/editor/moderator): fila en usuarios con
+// el rol indicado y estado 'activo', SIN perfil de estudiante ni empresario.
+// La usa el registro por invitación cuando la invitación trae un rol de staff.
+export function crearUsuarioConRol(datos: {
+  nombre: string;
+  segundoApellido?: string | undefined;
+  correo: string;
+  hash: string;
+  idRol: bigint;
+}) {
+  return db.usuarios.create({
+    data: {
+      nombre: datos.nombre,
+      segundo_apellido: datos.segundoApellido ?? null,
+      correo: datos.correo,
+      hash_contrasena: datos.hash,
+      id_rol: datos.idRol,
+      estado: 'activo', // la invitación es la aprobación del admin
+    },
+    select: {
+      id: true,
+      nombre: true,
+      correo: true,
+      image_url: true,
+    },
+  });
+}
+
 export async function obtenerHashContrasena(id: string): Promise<string | null> {
   const row = await db.usuarios.findUnique({
     where: { id },
@@ -256,6 +284,32 @@ export function registrarUltimaSesion(id: string) {
 // cascada según las FK del esquema. Lo usa el panel admin.
 export function eliminarUsuario(id: string) {
   return db.usuarios.delete({ where: { id } });
+}
+
+// Edita los datos básicos de un usuario (nombre, apellidos, correo, edad).
+// PATCH semántico: solo toca los campos presentes. El estado y el rol se
+// gestionan por flujos propios (suspensión, validación), no acá.
+export function actualizarUsuario(
+  id: string,
+  data: {
+    nombre?: string | undefined;
+    segundo_nombre?: string | null | undefined;
+    segundo_apellido?: string | null | undefined;
+    correo?: string | undefined;
+    edad?: number | null | undefined;
+  }
+) {
+  return db.usuarios.update({
+    where: { id },
+    data: {
+      ...(data.nombre !== undefined && { nombre: data.nombre }),
+      ...(data.segundo_nombre !== undefined && { segundo_nombre: data.segundo_nombre }),
+      ...(data.segundo_apellido !== undefined && { segundo_apellido: data.segundo_apellido }),
+      ...(data.correo !== undefined && { correo: data.correo }),
+      ...(data.edad !== undefined && { edad: data.edad }),
+    },
+    select: { id: true, nombre: true, correo: true },
+  });
 }
 
 // ─── Gestión de suspensiones / reactivaciones ───────────────────────────

@@ -52,7 +52,6 @@ export default async function LocaleLayout({
         {children}
         <AdminDashboardButton userRole={user?.roles.nombre} locale={locale} />
         <AlertaGlobal />
-        <SettingsPanel />
       </NextIntlClientProvider>
     </>
   );

@@ -136,6 +136,30 @@ export function buscarProyectoActivoDeEstudiante(idEstudiante: string) {
   });
 }
 
+// ── Gestión admin de ofertas ────────────────────────────────────────────────
+
+// Busca una oferta por id (existencia/validación en el panel admin).
+export function buscarOfertaPorId(id: string) {
+  return db.ofertas.findUnique({
+    where: { id },
+    select: { id: true, estado: true },
+  });
+}
+
+// El admin actualiza el estado de una oferta.
+export function actualizarEstadoOfertaAdmin(id: string, estado: string) {
+  return db.ofertas.update({
+    where: { id },
+    data: { estado },
+    select: { id: true, estado: true },
+  });
+}
+
+// El admin elimina una oferta (sin la restricción de pertenencia del estudiante).
+export function eliminarOfertaAdmin(id: string) {
+  return db.ofertas.delete({ where: { id }, select: { id: true } });
+}
+
 // Retira (elimina) una oferta. Verifica pertenencia y estado antes de borrar.
 export async function retirarOferta(
   idOferta: string,
