@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import React, { useMemo } from "react";
 import Link from "next/link";
 import {
   IconCheck,
@@ -12,7 +12,12 @@ import {
   IconAward,
   IconCpu,
   IconEye,
-  IconMail
+  IconMail,
+  IconAlertTriangle,
+  IconRocket,
+  IconFile,
+  IconPalette,
+  IconPartyPopper
 } from "@/components/ui/icons";
 
 interface MatchEmpleabilidadProps {
@@ -45,18 +50,18 @@ export default function MatchEmpleabilidad({
   let compatColorText = "text-[#F7901E]";
   let compatGradStart = "#F7901E";
   let compatGradEnd = "#EC008C";
-  let compatStatus = "⚠ Perfil en desarrollo";
+  let compatStatus = "Perfil en desarrollo";
   
   if (compatibilidadGeneral > 70) {
     compatColorText = "text-[#20BEC6]";
     compatGradStart = "#20BEC6";
     compatGradEnd = "#008FD4";
-    compatStatus = "⭐ Alta empleabilidad";
+    compatStatus = "Alta empleabilidad";
   } else if (compatibilidadGeneral > 40) {
     compatColorText = "text-[#FFCB05]";
     compatGradStart = "#FFCB05";
     compatGradEnd = "#20BEC6";
-    compatStatus = "🚀 Buen potencial";
+    compatStatus = "Buen potencial";
   }
 
   // Recomendaciones como misiones
@@ -64,7 +69,7 @@ export default function MatchEmpleabilidad({
     const recs = [];
     if (!habilidades.some(h => h.toLowerCase().includes("react"))) {
       recs.push({ 
-        icon: "✨", text: "Agregar React", 
+        icon: "sparkles", text: "Agregar React", 
         impact: 10, difficulty: "Baja", time: "2 minutos", 
         completed: false 
       });
@@ -72,7 +77,7 @@ export default function MatchEmpleabilidad({
     
     if (!tieneCV) {
       recs.push({ 
-        icon: "📄", text: "Subir CV", 
+        icon: "file", text: "Subir CV", 
         impact: 12, difficulty: "Media", time: "5 minutos", 
         completed: false 
       });
@@ -80,7 +85,7 @@ export default function MatchEmpleabilidad({
     
     if (!tienePortafolio) {
       recs.push({ 
-        icon: "🎨", text: "Completar Portafolio", 
+        icon: "sparkles", text: "Completar Portafolio", 
         impact: 18, difficulty: "Media", time: "10 minutos", 
         completed: false 
       });
@@ -88,7 +93,7 @@ export default function MatchEmpleabilidad({
     
     if (proyectosCompletados === 0) {
       recs.push({ 
-        icon: "💼", text: "Añadir Proyectos", 
+        icon: "briefcase", text: "Añadir Proyectos", 
         impact: 15, difficulty: "Alta", time: "20 minutos", 
         completed: false 
       });
@@ -96,6 +101,13 @@ export default function MatchEmpleabilidad({
     
     return recs;
   }, [habilidades, tieneCV, tienePortafolio, proyectosCompletados]);
+
+  const iconMap: Record<string, React.ReactNode> = {
+    sparkles: <IconSparkles className="text-[#20BEC6]" />,
+    file: <IconFile className="text-[#008FD4]" />,
+    palette: <IconPalette className="text-[#EC008C]" />,
+    briefcase: <IconBriefcase className="text-[#FFCB05]" />
+  };
 
   const nextStep = recomendaciones.find(r => !r.completed);
 
@@ -265,7 +277,7 @@ export default function MatchEmpleabilidad({
           {/* 3. RECOMENDACIONES IA (Panel Misiones) */}
           <div className="bg-black/20 border border-white/10 rounded-2xl p-6 backdrop-blur-md h-full flex flex-col">
             <h3 className="text-sm font-bold text-white/80 mb-4 flex items-center gap-2 uppercase tracking-wider">
-              <span className="text-[#EC008C]">✨</span> Misiones IA
+              <IconSparkles className="text-[#EC008C]" /> Misiones IA
             </h3>
             
             <div className="space-y-3 flex-1 overflow-y-auto pr-1 hide-scrollbar">
@@ -276,32 +288,28 @@ export default function MatchEmpleabilidad({
                     className="group relative p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/20 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer overflow-hidden"
                   >
                     <div aria-hidden className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
-                    <div className="relative z-10 flex items-start gap-3">
-                      <span className="text-lg leading-none mt-0.5">{rec.icon}</span>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex justify-between items-start mb-1">
-                          <h4 className="text-sm font-semibold text-white truncate">{rec.text}</h4>
-                          <span className="shrink-0 text-[10px] font-bold text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full">
-                            +{rec.impact}%
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-3 text-[10px] text-white/50">
-                          <span className="flex items-center gap-1">
-                            <span className={`w-1.5 h-1.5 rounded-full ${rec.difficulty === 'Baja' ? 'bg-emerald-400' : rec.difficulty === 'Media' ? 'bg-[#FFCB05]' : 'bg-[#EC008C]'}`} />
-                            {rec.difficulty}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <IconTrendingUp width={10} height={10} />
-                            {rec.time}
-                          </span>
+                      <div className="flex items-start gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex justify-between items-start mb-1">
+                            <h4 className="text-sm font-semibold text-white truncate">{rec.text}</h4>
+                            <span className="shrink-0 text-[10px] font-bold text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full">+{rec.impact}%</span>
+                          </div>
+                          <div className="flex items-center gap-3 text-[10px] text-white/50">
+                            <span className="flex items-center gap-1">
+                              <span className={`w-1.5 h-1.5 rounded-full ${rec.difficulty === 'Baja' ? 'bg-emerald-400' : rec.difficulty === 'Media' ? 'bg-[#FFCB05]' : 'bg-[#EC008C]'}`} />
+                              {rec.difficulty}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              {iconMap[rec.icon]}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                    </div>
                   </div>
                 ))
               ) : (
                 <div className="flex flex-col items-center justify-center h-full text-center opacity-70">
-                  <span className="text-3xl mb-2">🎉</span>
+                  <IconPartyPopper className="mr-1" />
                   <p className="text-sm text-white font-medium">¡Misiones completadas!</p>
                 </div>
               )}
@@ -392,7 +400,7 @@ export default function MatchEmpleabilidad({
             </div>
             
             <div className="col-span-2 sm:col-span-4 mt-1 bg-gradient-to-r from-[#662D91]/20 to-transparent p-3 rounded-xl border border-[#662D91]/30 flex items-center gap-3">
-              <span className="text-2xl">📈</span>
+              <IconSparkles className="mr-1" />
               <p className="text-sm text-white/90">
                 Tu perfil es mejor que el <strong className="text-[#20BEC6] font-bold">{percentil}%</strong> de los estudiantes de FWD.
               </p>

@@ -29,7 +29,7 @@ export async function PATCH(
 ) {
   if (!mismoOrigen(request)) return error('Origen no permitido', 403);
 
-  const user = await getUser();
+  const user = await getUser(request);
   if (!user) return error('No autorizado', 401);
   if (user.roles.nombre !== 'empresario') return error('Solo empresarios', 403);
 
@@ -39,7 +39,10 @@ export async function PATCH(
   if (!parseo.ok) return parseo.respuesta;
 
   try {
-    const resultado = await actualizarProyectoService(id, user.id, parseo.data);
+    const resultado = await actualizarProyectoService(id, user.id, {
+      ...parseo.data,
+      imagenes: parseo.data.imagenes,
+    });
     if (resultado === 'no_encontrado') return error('Proyecto no encontrado', 404);
     if (resultado === 'no_autorizado') return error('Este proyecto no es tuyo', 403);
     return NextResponse.json({ ok: true });
@@ -55,7 +58,7 @@ export async function DELETE(
 ) {
   if (!mismoOrigen(request)) return error('Origen no permitido', 403);
 
-  const user = await getUser();
+  const user = await getUser(request);
   if (!user) return error('No autorizado', 401);
   if (user.roles.nombre !== 'empresario') return error('Solo empresarios', 403);
 

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "@/i18n/navigation";
+import { confirmarAccion, toastExito, alertaError } from "@/lib/sweetalert-admin";
 
 export type CuentaPendiente = {
   id: string;
@@ -27,17 +28,25 @@ export function ValidacionesLista({
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"cuentas" | "invitaciones">("cuentas");
   const [busyId, setBusyId] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
   async function actuarCuenta(id: string, accion: "aprobar" | "rechazar") {
-    if (
-      accion === "rechazar" &&
-      !confirm("¿Rechazar esta cuenta? No podrá iniciar sesión.")
-    ) {
-      return;
-    }
+    const ok =
+      accion === "aprobar"
+        ? await confirmarAccion({
+            titulo: "¿Aprobar esta cuenta?",
+            texto: "La persona podrá iniciar sesión en la plataforma.",
+            confirmText: "Aprobar",
+            icon: "question",
+          })
+        : await confirmarAccion({
+            titulo: "¿Rechazar esta cuenta?",
+            texto: "No podrá iniciar sesión.",
+            confirmText: "Rechazar",
+            icon: "warning",
+            peligro: true,
+          });
+    if (!ok) return;
     setBusyId(id);
-    setError(null);
     try {
       const res = await fetch(`/api/admin/usuarios/${id}/estado`, {
         method: "PATCH",
@@ -46,26 +55,36 @@ export function ValidacionesLista({
       });
       if (!res.ok) {
         const data = await res.json().catch(() => null);
-        setError(data?.error ?? "No se pudo actualizar la cuenta.");
+        alertaError(data?.error ?? "No se pudo actualizar la cuenta.");
         return;
       }
+      toastExito(accion === "aprobar" ? "Cuenta aprobada." : "Cuenta rechazada.");
       router.refresh();
     } catch {
-      setError("Error de red. Intentá de nuevo.");
+      alertaError("Error de red. Intentá de nuevo.");
     } finally {
       setBusyId(null);
     }
   }
 
   async function actuarSolicitud(id: string, accion: "aprobar" | "rechazar") {
-    if (
-      accion === "rechazar" &&
-      !confirm("¿Rechazar esta solicitud de invitación?")
-    ) {
-      return;
-    }
+    const ok =
+      accion === "aprobar"
+        ? await confirmarAccion({
+            titulo: "¿Aprobar esta solicitud?",
+            texto: "Se enviará una invitación al correo para completar el registro.",
+            confirmText: "Aprobar",
+            icon: "question",
+          })
+        : await confirmarAccion({
+            titulo: "¿Rechazar esta solicitud?",
+            texto: "Se le notificará por correo que fue rechazada.",
+            confirmText: "Rechazar",
+            icon: "warning",
+            peligro: true,
+          });
+    if (!ok) return;
     setBusyId(id);
-    setError(null);
     try {
       const res = await fetch(`/api/admin/verificaciones`, {
         method: accion === "aprobar" ? "PATCH" : "DELETE",
@@ -74,12 +93,13 @@ export function ValidacionesLista({
       });
       if (!res.ok) {
         const data = await res.json().catch(() => null);
-        setError(data?.error ?? "No se pudo procesar la solicitud.");
+        alertaError(data?.error ?? "No se pudo procesar la solicitud.");
         return;
       }
+      toastExito(accion === "aprobar" ? "Invitación enviada." : "Solicitud rechazada.");
       router.refresh();
     } catch {
-      setError("Error de red. Intentá de nuevo.");
+      alertaError("Error de red. Intentá de nuevo.");
     } finally {
       setBusyId(null);
     }
@@ -93,7 +113,6 @@ export function ValidacionesLista({
           type="button"
           onClick={() => {
             setActiveTab("cuentas");
-            setError(null);
           }}
           className={`pb-3 text-sm font-semibold transition-colors relative ${
             activeTab === "cuentas" ? "text-white" : "text-white/45 hover:text-white"
@@ -108,7 +127,6 @@ export function ValidacionesLista({
           type="button"
           onClick={() => {
             setActiveTab("invitaciones");
-            setError(null);
           }}
           className={`pb-3 text-sm font-semibold transition-colors relative ${
             activeTab === "invitaciones" ? "text-white" : "text-white/45 hover:text-white"
@@ -120,15 +138,6 @@ export function ValidacionesLista({
           )}
         </button>
       </div>
-
-      {error && (
-        <p
-          role="alert"
-          className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300"
-        >
-          {error}
-        </p>
-      )}
 
       {/* Vista de Cuentas Registradas */}
       {activeTab === "cuentas" && (

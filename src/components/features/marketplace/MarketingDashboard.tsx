@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import type { ComponentType } from "react";
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import {
   Area,
   AreaChart,
@@ -12,6 +11,7 @@ import {
   Tooltip,
   XAxis,
   YAxis,
+  Cell,
 } from "recharts";
 import {
   AlertCircle,
@@ -20,29 +20,52 @@ import {
   BriefcaseBusiness,
   CalendarDays,
   ExternalLink,
-  Globe2,
-  Loader2,
   RefreshCw,
-  Share2,
   TrendingUp,
   Users,
+  Download,
+  Filter,
+  FileText,
+  FileImage,
+  FileSpreadsheet,
+  CheckCircle2,
+  Clock,
+  Globe2,
+  Activity,
+  ArrowUpRight,
+  ArrowDownRight,
+  Share2,
+  Target,
+  ChevronDown,
 } from "lucide-react";
-import type { MarketingInsightsPayload, MarketingMetric, MarketingPlatformReach } from "@/types/marketing";
+import PlatformSummaryCard from "@/components/ui/PlatformSummaryCard";
+import TrendCard from "@/components/ui/TrendCard";
+import KpiCard from "@/components/ui/KpiCard";
+import FilterBar from "@/components/ui/FilterBar";
+import {
+  MarketingInsightsPayload,
+  MarketingPlatformReach,
+  MarketingTrend,
+} from "@/types/marketing";
 
-const iconByMetric: Record<string, ComponentType<{ className?: string }>> = {
-  "cr-internet-users": Globe2,
-  "cr-social-users": Share2,
-  "cr-mobile-connections": Users,
-  "global-social-users": TrendingUp,
+// Colores FWD
+const FWD = {
+  navy: "#0B1F3A",
+  cyan: "#00AEEF",
+  magenta: "#EC008C",
+  purple: "#6A35FF",
+  white: "#FFFFFF",
 };
 
 const platformColors: Record<string, string> = {
-  YouTube: "#ef4444",
-  Facebook: "#008FD4",
-  Instagram: "#ED008C",
-  TikTok: "#111827",
-  LinkedIn: "#662D91",
+  YouTube: FWD.magenta,
+  Facebook: FWD.cyan,
+  Instagram: "#D4A5FF",
+  TikTok: FWD.white,
+  LinkedIn: FWD.purple,
 };
+
+// --- Hooks & Utilities ---
 
 function formatSourceDate(value: string) {
   return new Intl.DateTimeFormat("es-CR", {
@@ -51,340 +74,436 @@ function formatSourceDate(value: string) {
   }).format(new Date(`${value}T00:00:00`));
 }
 
-function MetricCard({ metric }: { metric: MarketingMetric }) {
-  const Icon = iconByMetric[metric.id] ?? BarChart3;
+function useAutoRefresh(fetchData: () => Promise<void>) {
+  const [countdown, setCountdown] = useState(180);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [syncStatus, setSyncStatus] = useState<"synced" | "syncing" | "error">("syncing");
+  const [showToast, setShowToast] = useState(false);
 
-  return (
-    <article className="relative overflow-hidden rounded-2xl border border-white/15 bg-white/[0.08] p-5 shadow-[0_18px_50px_rgba(4,19,48,0.22)] backdrop-blur-xl">
-      <div className="absolute right-0 top-0 h-24 w-24 rounded-bl-full bg-[#20BEC6]/15" />
-      <div className="relative flex items-start justify-between gap-4">
-        <span className="grid h-11 w-11 place-items-center rounded-xl bg-white/12 text-[#20BEC6]">
-          <Icon className="h-5 w-5" />
-        </span>
-        <span className="rounded-full border border-white/15 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-white/70">
-          {metric.region}
-        </span>
-      </div>
+  const performSync = useCallback(async () => {
+    setSyncStatus("syncing");
+    try {
+      await fetchData();
+      setLastUpdated(new Date());
+      setSyncStatus("synced");
+      setCountdown(180);
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+    } catch (error) {
+      setSyncStatus("error");
+    }
+  }, [fetchData]);
 
-      <div className="relative mt-5">
-        <p className="text-sm font-semibold text-white/70">{metric.label}</p>
-        <p className="mt-2 font-heading text-4xl font-black text-white">{metric.displayValue}</p>
-        <p className="mt-3 min-h-[48px] text-sm leading-relaxed text-white/68">{metric.context}</p>
-      </div>
+  useEffect(() => {
+    void performSync();
+  }, [performSync]);
 
-      <a
-        href={metric.source.url}
-        target="_blank"
-        rel="noreferrer"
-        className="relative mt-5 inline-flex items-center gap-2 text-xs font-bold text-[#20BEC6] transition hover:text-white"
-      >
-        {metric.source.name}
-        <ExternalLink className="h-3.5 w-3.5" />
-      </a>
-      <p className="relative mt-2 text-xs text-white/45">
-        Actualizado: {formatSourceDate(metric.source.updatedAt)}
-      </p>
-    </article>
-  );
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          void performSync();
+          return 180;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [performSync]);
+
+  const formatCountdown = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+  };
+
+  const formatTime = (date: Date | null) => {
+    if (!date) return "--:--:--";
+    return date.toLocaleTimeString("es-CR", { hour12: false });
+  };
+
+  return { countdown, lastUpdated, syncStatus, showToast, formatCountdown, formatTime };
 }
 
-function PlatformRow({ item }: { item: MarketingPlatformReach }) {
-  const color = platformColors[item.platform] ?? "#20BEC6";
+// --- Componentes Reutilizables ---
 
-  return (
-    <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="font-heading text-lg font-black text-slate-950">{item.platform}</p>
-          <p className="text-sm text-slate-500">{item.note}</p>
-        </div>
-        <span className="rounded-full px-3 py-1 text-sm font-black text-white" style={{ background: color }}>
-          {item.audienceLabel}
-        </span>
-      </div>
+function FloatingParticles({ contained = false }: { contained?: boolean }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
-      <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-100">
-        <div
-          className="h-full rounded-full"
-          style={{ width: `${Math.min(item.populationReachPercent, 100)}%`, background: color }}
-        />
-      </div>
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
 
-      <div className="mt-4 grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
-        <div>
-          <p className="text-slate-500">Poblacion</p>
-          <p className="font-black text-slate-950">{item.populationReachPercent}%</p>
-        </div>
-        <div>
-          <p className="text-slate-500">Internet</p>
-          <p className="font-black text-slate-950">
-            {item.internetReachPercent != null ? `${item.internetReachPercent}%` : "N/D"}
-          </p>
-        </div>
-        <div>
-          <p className="text-slate-500">Cambio anual</p>
-          <p className={`font-black ${Number(item.annualGrowthPercent) >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
-            {item.annualGrowthPercent != null && item.annualGrowthPercent > 0 ? "+" : ""}
-            {item.annualGrowthPercent != null ? `${item.annualGrowthPercent}%` : "N/D"}
-          </p>
-        </div>
-      </div>
-    </div>
-  );
+    let particlesArray: Particle[] = [];
+    let animationFrameId: number;
+
+    const getSize = () => ({
+      w: contained ? (canvas.parentElement?.offsetWidth ?? window.innerWidth) : window.innerWidth,
+      h: contained ? (canvas.parentElement?.offsetHeight ?? window.innerHeight) : window.innerHeight,
+    });
+
+    const resize = () => {
+      const { w, h } = getSize();
+      canvas.width = w;
+      canvas.height = h;
+      init();
+    };
+
+    class Particle {
+      x: number;
+      y: number;
+      size: number;
+      speedX: number;
+      speedY: number;
+
+      constructor() {
+        const { w, h } = getSize();
+        this.x = Math.random() * w;
+        this.y = Math.random() * h;
+        this.size = contained ? Math.random() * 2 + 2 : Math.random() * 3 + 3;
+        this.speedX = (Math.random() - 0.5) * 0.6;
+        this.speedY = (Math.random() - 0.5) * 0.6;
+      }
+
+      update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+        if (this.x < 0 || this.x > canvas!.width) this.speedX *= -1;
+        if (this.y < 0 || this.y > canvas!.height) this.speedY *= -1;
+      }
+
+      draw() {
+        if (!ctx) return;
+        ctx.fillStyle = "rgba(0, 174, 239, 0.5)";
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = "rgba(0, 174, 239, 0.8)";
+      }
+    }
+
+    const init = () => {
+      particlesArray = [];
+      const { w, h } = getSize();
+      const density = contained ? 8000 : 12000;
+      const count = Math.min((w * h) / density, contained ? 40 : 100);
+      for (let i = 0; i < count; i++) {
+        particlesArray.push(new Particle());
+      }
+    };
+
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let i = 0; i < particlesArray.length; i++) {
+        const pi = particlesArray[i];
+        if (!pi) continue;
+        pi.update();
+        pi.draw();
+        for (let j = i; j < particlesArray.length; j++) {
+          const pj = particlesArray[j];
+          if (!pj) continue;
+          const dx = pi.x - pj.x;
+          const dy = pi.y - pj.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          const linkDist = contained ? 100 : 140;
+          if (distance < linkDist) {
+            ctx.beginPath();
+            ctx.strokeStyle = `rgba(0, 174, 239, ${(contained ? 0.18 : 0.2) - distance / (linkDist * 5)})`;
+            ctx.lineWidth = 1;
+            ctx.moveTo(pi.x, pi.y);
+            ctx.lineTo(pj.x, pj.y);
+            ctx.stroke();
+          }
+        }
+      }
+      animationFrameId = requestAnimationFrame(animate);
+    };
+
+    resize();
+    window.addEventListener("resize", resize);
+    animate();
+
+    return () => {
+      window.removeEventListener("resize", resize);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [contained]);
+
+  return <canvas ref={canvasRef} className="pointer-events-none absolute inset-0 z-0 rounded-3xl" />;
 }
 
-function LoadingState() {
-  return (
-    <div className="grid gap-4 md:grid-cols-4">
-      {Array.from({ length: 4 }).map((_, index) => (
-        <div key={index} className="h-56 animate-pulse rounded-2xl bg-white/10" />
-      ))}
-    </div>
-  );
-}
-
-function ErrorState({ onRetry }: { onRetry: () => void }) {
-  return (
-    <div className="rounded-2xl border border-rose-200 bg-white p-6 text-slate-900 shadow-sm">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-start gap-3">
-          <span className="grid h-10 w-10 place-items-center rounded-xl bg-rose-50 text-rose-600">
-            <AlertCircle className="h-5 w-5" />
-          </span>
-          <div>
-            <p className="font-heading text-lg font-black">No se pudieron cargar los datos de Marketing</p>
-            <p className="mt-1 text-sm text-slate-600">
-              Intenta de nuevo. Si el problema continua, el dashboard mantiene los datos versionados en el servidor.
-            </p>
-          </div>
-        </div>
-        <button
-          type="button"
-          onClick={onRetry}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#662D91] px-4 py-3 text-sm font-black text-white transition hover:bg-[#4f2374]"
-        >
-          <RefreshCw className="h-4 w-4" />
-          Reintentar
-        </button>
-      </div>
-    </div>
-  );
-}
+// --- Main Dashboard ---
 
 export default function MarketingDashboard() {
   const [data, setData] = useState<MarketingInsightsPayload | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  const loadInsights = async () => {
-    setLoading(true);
-    setError(null);
+  const [filters, setFilters] = useState<Record<string, string>>({});
 
-    try {
-      const response = await fetch("/api/marketing/insights", {
-        headers: { Accept: "application/json" },
-      });
+  const fetchInsights = useCallback(async () => {
+    // Build query string from filters
+    const params = new URLSearchParams(filters);
+    const url = `/api/marketing/insights${params.toString() ? `?${params.toString()}` : ''}`;
+    const res = await fetch(url, { headers: { Accept: "application/json" } });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const payload = await res.json();
+    setData(payload);
+  }, [filters]);
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
+  const { countdown, lastUpdated, syncStatus, showToast, formatCountdown, formatTime } = useAutoRefresh(fetchInsights);
 
-      const payload = (await response.json()) as MarketingInsightsPayload;
-      setData(payload);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Error desconocido");
-    } finally {
-      setLoading(false);
-    }
+  const reachData = useMemo(() => {
+    return data?.platformReach.map((platform) => ({
+      name: platform.platform,
+      audiencia: platform.audienceMillions,
+      color: platformColors[platform.platform] ?? FWD.cyan,
+    })) ?? [];
+  }, [data]);
+
+  const trendCurve = useMemo(() => {
+    return data?.platformReach.map((platform) => ({
+      name: platform.platform,
+      crecimiento: platform.annualGrowthPercent ?? 0,
+    })) ?? [];
+  }, [data]);
+
+  const kpis = useMemo(() => {
+    if (!data) return null;
+    const maxGrowth = [...data.platformReach].sort((a, b) => (b.annualGrowthPercent ?? 0) - (a.annualGrowthPercent ?? 0))[0];
+    const maxPenetration = [...data.platformReach].sort((a, b) => b.populationReachPercent - a.populationReachPercent)[0];
+    const topTrend = data.trends[0];
+    const employmentMetric = data.metrics.find(m => m.kind === "employment");
+    const audienceMetric = data.metrics.find(m => m.kind === "audience");
+    const totalReach = audienceMetric?.displayValue ?? `${data.metrics.find(m => m.id === "cr-social-users")?.value ?? 0} M`;
+    return {
+      totalReach,
+      maxGrowth: maxGrowth ? `${maxGrowth.platform} (+${maxGrowth.annualGrowthPercent}%)` : "N/D",
+      maxPenetration: maxPenetration ? `${maxPenetration.platform} (${maxPenetration.populationReachPercent}%)` : "N/D",
+      topTrend: topTrend ? topTrend.value : "N/D",
+      employment: employmentMetric ? employmentMetric.displayValue : "N/D",
+      audience: audienceMetric ? audienceMetric.displayValue : "N/D",
+    };
+  }, [data]);
+
+  const handleExport = (type: string) => {
+    if (type === "pdf") window.print();
+    else alert(`La exportación a ${type} requeriría una integración backend para generar el archivo.`);
   };
 
-  useEffect(() => {
-    void loadInsights();
-  }, []);
-
-  const reachData = useMemo(
-    () =>
-      data?.platformReach.map((platform) => ({
-        name: platform.platform,
-        audiencia: platform.audienceMillions,
-        poblacion: platform.populationReachPercent,
-        crecimiento: platform.annualGrowthPercent ?? 0,
-        fill: platformColors[platform.platform],
-      })) ?? [],
-    [data],
-  );
-
-  const trendCurve = useMemo(
-    () =>
-      data?.platformReach.map((platform, index) => ({
-        name: platform.platform,
-        crecimiento: platform.annualGrowthPercent ?? 0,
-        orden: index + 1,
-      })) ?? [],
-    [data],
-  );
-
   return (
-    <section className="relative overflow-hidden bg-[#071528] py-16 text-white">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(32,190,198,0.24),transparent_34%),linear-gradient(135deg,rgba(102,45,145,0.55),rgba(0,143,212,0.22)_48%,rgba(237,0,140,0.18))]" />
-      <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-white/8 to-transparent" />
+    <section className="relative min-h-screen overflow-hidden py-10 text-white selection:bg-[#EC008C] selection:text-white" style={{ background: "linear-gradient(135deg, #0B1F3A 0%, #1a1050 25%, #2d0a4e 45%, #0d2d4a 65%, #0a1f3d 85%, #0B1F3A 100%)" }}>
+      {/* Fondos */}
+      <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(ellipse at top right, rgba(0,174,239,0.2) 0%, transparent 45%), radial-gradient(ellipse at bottom left, rgba(236,0,140,0.18) 0%, transparent 45%), radial-gradient(ellipse at center, rgba(106,53,255,0.15) 0%, transparent 60%)" }} />
 
-      <div className="relative mx-auto w-full max-w-7xl px-6 sm:px-8">
+      {/* Toast Sincronización */}
+      <div className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 rounded-2xl border border-white/10 bg-[#0B1F3A]/90 p-4 shadow-2xl backdrop-blur-xl transition-all duration-500 ${showToast ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0 pointer-events-none"}`}>
+        <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+        <div>
+          <p className="text-sm font-bold text-white">Datos sincronizados</p>
+          <p className="text-xs text-white/60">Actualizado a las {formatTime(lastUpdated)}</p>
+        </div>
+      </div>
+
+      <div className="relative mx-auto w-full max-w-[1440px] px-4 sm:px-6 lg:px-8">
+        
+        {/* Header & Controls */}
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-3xl">
-            <p className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-[#20BEC6]">
-              <BarChart3 className="h-4 w-4" />
-              Marketing Intelligence
-            </p>
-            <h2 className="mt-5 font-heading text-3xl font-black leading-tight sm:text-5xl">
-              Dashboard de marketing digital para Costa Rica y Latinoamerica
-            </h2>
-            <p className="mt-4 text-base leading-relaxed text-white/70 sm:text-lg">
-              Datos publicos verificados para tomar decisiones de pauta, contenido, talento y transformacion digital en FWD.
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-xl">
+          <div>
             <div className="flex items-center gap-3">
-              {loading ? <Loader2 className="h-5 w-5 animate-spin text-[#20BEC6]" /> : <CalendarDays className="h-5 w-5 text-[#20BEC6]" />}
-              <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-white/50">Corte del dashboard</p>
-                <p className="font-heading text-lg font-black">{data ? formatSourceDate(data.updatedAt) : "Cargando"}</p>
+              <span className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-black uppercase tracking-widest text-[#00AEEF]">
+                <Activity className="h-3.5 w-3.5" /> FWD Intelligence
+              </span>
+              
+              {/* Sync Status Badge */}
+              <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-bold">
+                {syncStatus === "syncing" && <RefreshCw className="h-3.5 w-3.5 animate-spin text-yellow-400" />}
+                {syncStatus === "synced" && <div className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />}
+                {syncStatus === "error" && <div className="h-2 w-2 rounded-full bg-rose-500" />}
+                <span className="text-white/70">
+                  {syncStatus === "syncing" ? "Actualizando..." : syncStatus === "error" ? "Error conexión" : `Actualizado: ${formatTime(lastUpdated)}`}
+                </span>
+                {syncStatus === "synced" && (
+                  <span className="ml-2 border-l border-white/20 pl-2 text-white/50">
+                    Próxima en {formatCountdown(countdown)}
+                  </span>
+                )}
               </div>
+            </div>
+
+            <h1 className="mt-6 font-heading text-4xl font-black leading-tight tracking-tight sm:text-5xl">
+              Dashboard de <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00AEEF] to-[#6A35FF]">Inteligencia Digital</span><br/> y Audiencias en Costa Rica
+            </h1>
+          </div>
+
+          <div className="flex flex-col items-end gap-4 print-only:hidden">
+            {/* FilterBar component for dynamic filters */}
+            <FilterBar onChange={setFilters} />
+
+            {/* Botones de Exportación */}
+            <div className="flex items-center gap-2">
+              <button onClick={() => handleExport('pdf')} className="flex items-center gap-2 rounded-xl bg-white/10 px-4 py-2 text-sm font-bold text-white hover:bg-white/20 transition">
+                <FileText className="h-4 w-4" /> PDF
+              </button>
+              <button onClick={() => handleExport('png')} className="flex items-center gap-2 rounded-xl bg-white/10 px-4 py-2 text-sm font-bold text-white hover:bg-white/20 transition">
+                <FileImage className="h-4 w-4" /> PNG
+              </button>
+              <button onClick={() => handleExport('excel')} className="flex items-center gap-2 rounded-xl bg-white/10 px-4 py-2 text-sm font-bold text-white hover:bg-white/20 transition">
+                <FileSpreadsheet className="h-4 w-4" /> Excel
+              </button>
             </div>
           </div>
         </div>
 
-        <div className="mt-10">
-          {loading && <LoadingState />}
-          {!loading && error && <ErrorState onRetry={loadInsights} />}
-          {!loading && !error && data && data.metrics.length === 0 && (
-            <div className="rounded-2xl border border-white/15 bg-white/10 p-8 text-center">
-              <p className="font-heading text-xl font-black">No hay datos disponibles</p>
-              <p className="mt-2 text-white/65">Cuando se publique una nueva fuente, el dashboard podra mostrarla aqui.</p>
-            </div>
-          )}
-          {!loading && !error && data && data.metrics.length > 0 && (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              {data.metrics.map((metric) => (
-                <MetricCard key={metric.id} metric={metric} />
-              ))}
-            </div>
-          )}
+        {/* KPIs Superiores */}
+        <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <KpiCard title="Alcance Total Digital" value={kpis?.totalReach || "..."} subtitle="Usuarios únicos aprox." icon={Globe2} color={FWD.cyan} />
+          <KpiCard title="Mayor Crecimiento" value={kpis?.maxGrowth || "..."} subtitle="Variación interanual" icon={TrendingUp} color={FWD.magenta} />
+          <KpiCard title="Mayor Penetración" value={kpis?.maxPenetration || "..."} subtitle="Porcentaje de la población" icon={Target} color={FWD.purple} />
+          <KpiCard title="Tendencia IA" value={kpis?.topTrend || "..."} subtitle="Productividad global" icon={Bot} color={FWD.white} />
+          <KpiCard title="Empleo" value={kpis?.employment || "..."} subtitle="Indicador de empleo" icon={Users} color={FWD.purple} />
         </div>
 
-        {!loading && !error && data && data.platformReach.length > 0 && (
-          <div className="mt-8 grid gap-6 lg:grid-cols-[1.08fr_0.92fr]">
-            <div className="rounded-2xl border border-white/15 bg-white p-5 text-slate-950 shadow-[0_20px_60px_rgba(0,0,0,0.18)]">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        {/* Layout Principal Grid */}
+        <div className="mt-8 grid gap-6 xl:grid-cols-[2fr_1fr]">
+          
+          {/* Columna Izquierda: Gráfico principal de audiencias */}
+          <div className="flex flex-col">
+            <div className="group flex-1 rounded-3xl border border-white/10 bg-white/[0.02] p-6 backdrop-blur-xl shadow-2xl transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_30px_60px_rgba(0,174,239,0.15)] hover:border-white/20">
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-bold uppercase tracking-[0.18em] text-[#662D91]">Alcance por plataforma</p>
-                  <h3 className="font-heading text-2xl font-black">Audiencias publicitarias en Costa Rica</h3>
+                  <h3 className="font-heading text-2xl font-black text-white">Audiencias Publicitarias en Costa Rica</h3>
+                  <p className="text-sm text-white/50">Millones de personas alcanzables por plataforma</p>
                 </div>
-                <p className="text-sm text-slate-500">Millones de personas o miembros reportados</p>
               </div>
 
-              <div className="mt-6 h-[320px]">
+              <div className="mt-8 h-[400px] w-full">
+                <style dangerouslySetInnerHTML={{ __html: `
+                  .recharts-bar-rectangle {
+                    transition: all 0.3s ease;
+                    transform-box: fill-box;
+                    transform-origin: bottom;
+                  }
+                  .recharts-bar-rectangle:hover {
+                    transform: scaleY(1.03) translateY(-8px);
+                    filter: brightness(1.2) drop-shadow(0 10px 15px rgba(0, 174, 239, 0.4));
+                  }
+                `}} />
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={reachData} margin={{ top: 12, right: 12, left: -18, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
-                    <XAxis dataKey="name" tick={{ fontSize: 12, fill: "#475569" }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fontSize: 12, fill: "#475569" }} axisLine={false} tickLine={false} />
+                  <BarChart data={reachData} margin={{ top: 20, right: 0, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                    <XAxis dataKey="name" tick={{ fill: "rgba(255,255,255,0.5)", fontSize: 12, fontWeight: 600 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill: "rgba(255,255,255,0.5)", fontSize: 12 }} axisLine={false} tickLine={false} />
                     <Tooltip
-                      formatter={(value, name) => [
-                        name === "audiencia" ? `${Number(value ?? 0).toFixed(2)} M` : `${value}%`,
-                        name === "audiencia" ? "Audiencia" : "Alcance poblacion",
-                      ]}
-                      contentStyle={{ borderRadius: 12, border: "1px solid #e2e8f0" }}
+                      cursor={{ fill: "rgba(255,255,255,0.02)" }}
+                      contentStyle={{ backgroundColor: "#0B1F3A", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px", color: "#fff", boxShadow: "0 10px 30px rgba(0,0,0,0.5)" }}
+                      itemStyle={{ fontWeight: "bold" }}
+                      formatter={(value: unknown) => [`${value} Millones`, "Audiencia"]}
                     />
-                    <Bar dataKey="audiencia" radius={[8, 8, 0, 0]} fill="#008FD4" />
+                    <Bar dataKey="audiencia" radius={[12, 12, 0, 0]} animationDuration={1500} animationEasing="ease-out">
+                      {reachData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </div>
+          </div>
 
-            <div className="grid gap-4">
-              {data.platformReach.map((platform) => (
-                <PlatformRow key={platform.platform} item={platform} />
+          {/* Columna Derecha: Tarjetas de Plataforma */}
+          <div className="flex flex-col gap-4">
+            {data?.platformReach.map((platform) => (
+              <PlatformSummaryCard key={platform.platform} item={platform} />
+            ))}
+          </div>
+
+        </div>
+
+        {/* Bottom Section: IA & Empleo + Crecimiento Anual */}
+        <div className="relative mt-6 overflow-hidden rounded-3xl">
+          <FloatingParticles contained />
+          <div className="relative z-10 grid gap-6 xl:grid-cols-2">
+          
+          {/* IA y Empleo */}
+          <div className="group rounded-3xl border border-white/10 bg-white/[0.02] p-6 backdrop-blur-xl shadow-2xl transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_30px_60px_rgba(236,0,140,0.15)] hover:border-white/20">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#EC008C]/10 text-[#EC008C]">
+                <BriefcaseBusiness className="h-6 w-6" />
+              </div>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-widest text-[#EC008C]">Insights Estratégicos</p>
+                <h3 className="font-heading text-2xl font-black text-white">IA y Empleo – Tendencias para FWD</h3>
+              </div>
+            </div>
+
+            <div className="mt-8 grid gap-4 sm:grid-cols-2">
+              {data?.trends.map(trend => (
+                <TrendCard key={trend.id} trend={trend} />
               ))}
             </div>
           </div>
-        )}
 
-        {!loading && !error && data && data.trends.length > 0 && (
-          <div className="mt-8 grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-            <div className="rounded-2xl border border-white/15 bg-white/[0.08] p-5 backdrop-blur-xl">
-              <div className="flex items-center gap-3">
-                <span className="grid h-11 w-11 place-items-center rounded-xl bg-[#ED008C]/20 text-[#ED008C]">
-                  <Bot className="h-5 w-5" />
-                </span>
-                <div>
-                  <p className="text-sm font-bold uppercase tracking-[0.18em] text-white/50">IA y empleo</p>
-                  <h3 className="font-heading text-2xl font-black">Tendencias para proyectos FWD</h3>
-                </div>
+          {/* Crecimiento Anual Area Chart */}
+          <div className="group rounded-3xl border border-white/10 bg-white/[0.02] p-6 backdrop-blur-xl shadow-2xl transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_30px_60px_rgba(106,53,255,0.15)] hover:border-white/20">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#6A35FF]/10 text-[#6A35FF]">
+                <TrendingUp className="h-6 w-6" />
               </div>
-
-              <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                {data.trends.map((trend) => (
-                  <article key={trend.id} className="rounded-2xl border border-white/12 bg-white/10 p-4">
-                    <p className="text-3xl font-black text-[#20BEC6]">{trend.value}</p>
-                    <p className="mt-2 font-heading text-lg font-black">{trend.title}</p>
-                    <p className="mt-2 text-sm leading-relaxed text-white/68">{trend.description}</p>
-                    <a
-                      href={trend.source.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="mt-4 inline-flex items-center gap-2 text-xs font-bold text-[#20BEC6] transition hover:text-white"
-                    >
-                      Fuente
-                      <ExternalLink className="h-3.5 w-3.5" />
-                    </a>
-                  </article>
-                ))}
+              <div>
+                <p className="text-xs font-bold uppercase tracking-widest text-[#6A35FF]">Crecimiento Anual</p>
+                <h3 className="font-heading text-2xl font-black text-white">Señales para priorizar canales</h3>
               </div>
             </div>
 
-            <div className="rounded-2xl border border-white/15 bg-white p-5 text-slate-950 shadow-[0_20px_60px_rgba(0,0,0,0.18)]">
-              <div className="flex items-center gap-3">
-                <span className="grid h-11 w-11 place-items-center rounded-xl bg-[#662D91]/10 text-[#662D91]">
-                  <BriefcaseBusiness className="h-5 w-5" />
-                </span>
-                <div>
-                  <p className="text-sm font-bold uppercase tracking-[0.18em] text-[#662D91]">Crecimiento anual</p>
-                  <h3 className="font-heading text-2xl font-black">Senales para priorizar canales</h3>
-                </div>
-              </div>
-
-              <div className="mt-6 h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={trendCurve} margin={{ top: 12, right: 12, left: -18, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="marketingGrowth" x1="0" x2="0" y1="0" y2="1">
-                        <stop offset="5%" stopColor="#662D91" stopOpacity={0.45} />
-                        <stop offset="95%" stopColor="#20BEC6" stopOpacity={0.02} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
-                    <XAxis dataKey="name" tick={{ fontSize: 12, fill: "#475569" }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fontSize: 12, fill: "#475569" }} axisLine={false} tickLine={false} />
-                    <Tooltip
-                      formatter={(value) => [`${value}%`, "Cambio anual"]}
-                      contentStyle={{ borderRadius: 12, border: "1px solid #e2e8f0" }}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="crecimiento"
-                      stroke="#662D91"
-                      strokeWidth={3}
-                      fill="url(#marketingGrowth)"
-                      dot={{ r: 5, fill: "#20BEC6", stroke: "#ffffff", strokeWidth: 2 }}
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
+            <div className="mt-8 h-[350px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={trendCurve} margin={{ top: 20, right: 0, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorCrecimiento" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stopColor={FWD.cyan} stopOpacity={0.6} />
+                      <stop offset="100%" stopColor={FWD.purple} stopOpacity={0.6} />
+                    </linearGradient>
+                    <linearGradient id="fillCrecimiento" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={FWD.purple} stopOpacity={0.3} />
+                      <stop offset="100%" stopColor={FWD.cyan} stopOpacity={0.0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                  <XAxis dataKey="name" tick={{ fill: "rgba(255,255,255,0.5)", fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: "rgba(255,255,255,0.5)", fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: "#0B1F3A", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px", color: "#fff" }}
+                    itemStyle={{ color: "#fff", fontWeight: "bold" }}
+                    formatter={(value: unknown) => [`${value}%`, "Crecimiento Anual"]}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="crecimiento"
+                    stroke="url(#colorCrecimiento)"
+                    strokeWidth={4}
+                    fill="url(#fillCrecimiento)"
+                    animationDuration={2000}
+                    dot={{ r: 6, fill: "#0B1F3A", stroke: FWD.cyan, strokeWidth: 2 }}
+                    activeDot={{ r: 8, fill: "#fff", stroke: FWD.purple, strokeWidth: 3 }}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
             </div>
           </div>
-        )}
+
+          </div>{/* end z-10 grid */}
+        </div>{/* end relative wrapper */}
+
+        {/* Footer info */}
+        <div className="mt-12 flex items-center justify-center border-t border-white/10 pt-6">
+          <p className="flex items-center gap-2 text-sm text-white/40">
+            <Clock className="h-4 w-4" />
+            Datos sincronizados automáticamente cada 3 minutos para garantizar información actualizada y relevante.
+          </p>
+        </div>
+
       </div>
     </section>
   );

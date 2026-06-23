@@ -13,6 +13,7 @@ import {
   crearProyecto,
   actualizarProyecto,
   publicarProyecto,
+  deshabilitarProyecto,
   eliminarProyecto,
   guardarEmbedding,
   obtenerDatosParaEmbedding,
@@ -36,6 +37,8 @@ export async function listarProyectosParaMarketplace(): Promise<ProyectoMarketpl
     areaNegocio: p.area_negocio,
     plazoDias: p.plazo_dias,
     publicado: p.publicado?.toISOString() ?? null,
+    usaIA: p.usa_ia,
+    imagenes: [],
     tecnologias: p.proyectos_tecnologias.map((pt) => pt.tecnologias.nombre),
     empresario: {
       nombre: p.perfiles_empresario?.usuarios?.nombre ?? 'Empresa',
@@ -60,6 +63,7 @@ export async function crearProyectoService(
     areaNegocio: string | null;
     plazoDias: number | null;
     tecnologias: string[];
+    imagenes: string[];
   },
 ) {
   const proyecto = await crearProyecto({ idEmpresario, ...data });
@@ -75,6 +79,7 @@ export async function actualizarProyectoService(
     areaNegocio?: string | null | undefined;
     plazoDias?: number | null | undefined;
     tecnologias?: string[] | undefined;
+    imagenes?: string[] | undefined;
   },
 ): Promise<'ok' | 'no_autorizado' | 'no_encontrado'> {
   const proyecto = await buscarProyectoActivo(idProyecto);
@@ -113,6 +118,18 @@ export async function publicarProyectoService(
     }
   });
 
+  return 'ok';
+}
+
+export async function deshabilitarProyectoService(
+  idProyecto: string,
+  idEmpresario: string,
+): Promise<'ok' | 'no_autorizado' | 'no_encontrado' | 'no_publicado'> {
+  const proyecto = await buscarProyectoActivo(idProyecto);
+  if (!proyecto) return 'no_encontrado';
+  if (proyecto.id_empresario !== idEmpresario) return 'no_autorizado';
+  if (proyecto.estado !== 'publicado') return 'no_publicado';
+  await deshabilitarProyecto(idProyecto);
   return 'ok';
 }
 
@@ -345,6 +362,7 @@ export interface ProyectoDetalleDTO {
   descripcion: string;
   area: string;
   tecnologias: string[];
+  imagenes: string[];
   diasRestantes: number;
   /** Fecha límite (ISO) o null si el proyecto no define cierre. */
   fechaLimite: string | null;
@@ -394,6 +412,7 @@ export async function obtenerDetalleProyecto(id: string): Promise<ProyectoDetall
     descripcion: p.descripcion,
     area: p.area_negocio ?? 'General',
     tecnologias: p.proyectos_tecnologias.map((t) => t.tecnologias.nombre),
+    imagenes: [],
     diasRestantes,
     fechaLimite: p.cierre ? p.cierre.toISOString() : null,
     empresario: {

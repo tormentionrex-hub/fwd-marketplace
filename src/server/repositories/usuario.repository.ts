@@ -29,6 +29,25 @@ export function buscarUsuarioPorId(id: string) {
   });
 }
 
+// Variante extendida solo para la página de editar perfil del admin.
+// Selecciona campos adicionales sin afectar buscarUsuarioPorId (usado en auth).
+export function buscarPerfilAdminPorId(id: string) {
+  return db.usuarios.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      nombre: true,
+      segundo_nombre: true,
+      segundo_apellido: true,
+      correo: true,
+      image_url: true,
+      estado: true,
+      id_rol: true,
+      roles: { select: { nombre: true } },
+    },
+  });
+}
+
 // Crea un empresario: la fila en usuarios (rol empresario) y su perfil vacío,
 // en una sola operación atómica (Prisma nested create) para que nunca quede un
 // usuario sin su perfil.
@@ -122,6 +141,34 @@ export function crearEstudiantePendiente(datos: {
       perfiles_estudiante: {
         create: { generacion_fwd: datos.generacionFwd ?? null },
       },
+    },
+    select: {
+      id: true,
+      nombre: true,
+      correo: true,
+      image_url: true,
+    },
+  });
+}
+
+// Crea una cuenta de STAFF (owner/admin/staff/moderator): fila en usuarios con
+// el rol indicado y estado 'activo', SIN perfil de estudiante ni empresario.
+// La usa el registro por invitación cuando la invitación trae un rol de staff.
+export function crearUsuarioConRol(datos: {
+  nombre: string;
+  segundoApellido?: string | undefined;
+  correo: string;
+  hash: string;
+  idRol: bigint;
+}) {
+  return db.usuarios.create({
+    data: {
+      nombre: datos.nombre,
+      segundo_apellido: datos.segundoApellido ?? null,
+      correo: datos.correo,
+      hash_contrasena: datos.hash,
+      id_rol: datos.idRol,
+      estado: 'activo', // la invitación es la aprobación del admin
     },
     select: {
       id: true,
@@ -259,6 +306,34 @@ export function eliminarUsuario(id: string) {
   return db.usuarios.delete({ where: { id } });
 }
 
+// Edita los datos básicos de un usuario (nombre, apellidos, correo, edad).
+// PATCH semántico: solo toca los campos presentes. El estado y el rol se
+// gestionan por flujos propios (suspensión, validación), no acá.
+export function actualizarUsuario(
+  id: string,
+  data: {
+    nombre?: string | undefined;
+    segundo_nombre?: string | null | undefined;
+    segundo_apellido?: string | null | undefined;
+    correo?: string | undefined;
+    edad?: number | null | undefined;
+    image_url?: string | null | undefined;
+  }
+) {
+  return db.usuarios.update({
+    where: { id },
+    data: {
+      ...(data.nombre !== undefined && { nombre: data.nombre }),
+      ...(data.segundo_nombre !== undefined && { segundo_nombre: data.segundo_nombre }),
+      ...(data.segundo_apellido !== undefined && { segundo_apellido: data.segundo_apellido }),
+      ...(data.correo !== undefined && { correo: data.correo }),
+      ...(data.edad !== undefined && { edad: data.edad }),
+      ...(data.image_url !== undefined && { image_url: data.image_url }),
+    },
+    select: { id: true, nombre: true, correo: true },
+  });
+}
+
 // ─── Gestión de suspensiones / reactivaciones ───────────────────────────
 
 // Suspende una cuenta (estado 'suspendido') y registra en el historial.
@@ -343,4 +418,37 @@ export function listarUsuariosSuspendidos() {
 // Cuenta las cuentas suspendidas actualmente.
 export function contarUsuariosSuspendidos() {
   return db.usuarios.count({ where: { estado: 'suspendido' } });
+}
+
+// Busca usuarios por nombre o correo para el panel de gestión de roles.
+// Requiere al menos 2 caracteres para evitar cargar todos los usuarios.
+export function buscarUsuariosParaGestion(q: string, limite = 15) {
+  const termino = q.trim();
+  if (termino.length < 2) return Promise.resolve([]);
+  return db.usuarios.findMany({
+    where: {
+      OR: [
+        { nombre: { contains: termino, mode: 'insensitive' } },
+        { correo: { contains: termino, mode: 'insensitive' } },
+      ],
+    },
+    select: {
+      id: true,
+      nombre: true,
+      correo: true,
+      estado: true,
+      roles: { select: { id: true, nombre: true } },
+    },
+    orderBy: { nombre: 'asc' },
+    take: limite,
+  });
+}
+
+// Cambia el rol de un usuario por su ID de rol numérico.
+export function cambiarRolUsuario(id: string, idRol: bigint) {
+  return db.usuarios.update({
+    where: { id },
+    data: { id_rol: idRol },
+    select: { id: true, roles: { select: { nombre: true } } },
+  });
 }

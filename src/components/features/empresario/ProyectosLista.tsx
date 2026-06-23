@@ -1,15 +1,32 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { Link } from '@/i18n/navigation';
 import { ProyectoRow } from '@/components/features/empresario/lista-proyectos';
 import type { FilaProyectoEmpresario } from '@/server/services/proyecto.service';
-import { IconTrash, IconEdit, IconSend } from '@/components/ui/fwd-icons';
+import { IconTrash, IconEdit, IconSend, IconEye, IconX } from '@/components/ui/fwd-icons';
+import Swal from 'sweetalert2';
 
 interface Props {
   proyectos: FilaProyectoEmpresario[];
 }
+
+const btnBase: React.CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 5,
+  padding: '5px 12px',
+  borderRadius: 8,
+  fontSize: 12.5,
+  fontWeight: 600,
+  cursor: 'pointer',
+  border: 'none',
+  transition: 'all 0.15s',
+  textDecoration: 'none',
+};
+
+// ─── Acciones para proyectos en BORRADOR ────────────────────────────────────
 
 function AccionesBorrador({ proyecto }: { proyecto: FilaProyectoEmpresario }) {
   const router = useRouter();
@@ -49,18 +66,10 @@ function AccionesBorrador({ proyecto }: { proyecto: FilaProyectoEmpresario }) {
     startTransition(() => { router.refresh(); });
   };
 
-  const btnBase: React.CSSProperties = {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: 5,
-    padding: '5px 12px',
-    borderRadius: 8,
-    fontSize: 12.5,
-    fontWeight: 600,
+  const estiloBtn: React.CSSProperties = {
+    ...btnBase,
     cursor: pending ? 'not-allowed' : 'pointer',
-    border: 'none',
     opacity: pending ? 0.5 : 1,
-    transition: 'all 0.15s',
   };
 
   return (
@@ -71,7 +80,7 @@ function AccionesBorrador({ proyecto }: { proyecto: FilaProyectoEmpresario }) {
 
       <Link
         href={`/empresario/proyectos/${proyecto.id}/editar`}
-        style={{ ...btnBase, background: 'rgba(0,143,212,0.1)', color: 'var(--azul)' }}
+        style={{ ...estiloBtn, background: 'rgba(0,143,212,0.1)', color: 'var(--azul)' }}
       >
         <IconEdit size={13} />
         Editar
@@ -81,7 +90,7 @@ function AccionesBorrador({ proyecto }: { proyecto: FilaProyectoEmpresario }) {
         type="button"
         onClick={publicar}
         disabled={pending}
-        style={{ ...btnBase, background: 'rgba(34,197,94,0.1)', color: '#16a34a' }}
+        style={{ ...estiloBtn, background: 'rgba(34,197,94,0.1)', color: '#16a34a' }}
       >
         <IconSend size={13} />
         {accion === 'publicar' ? 'Publicando...' : 'Publicar'}
@@ -94,7 +103,7 @@ function AccionesBorrador({ proyecto }: { proyecto: FilaProyectoEmpresario }) {
             type="button"
             onClick={eliminar}
             disabled={pending}
-            style={{ ...btnBase, background: 'rgba(220,38,38,0.12)', color: '#dc2626' }}
+            style={{ ...estiloBtn, background: 'rgba(220,38,38,0.12)', color: '#dc2626' }}
           >
             {accion === 'eliminar' ? 'Eliminando...' : 'Si, eliminar'}
           </button>
@@ -102,7 +111,7 @@ function AccionesBorrador({ proyecto }: { proyecto: FilaProyectoEmpresario }) {
             type="button"
             onClick={() => setConfirmandoEliminar(false)}
             disabled={pending}
-            style={{ ...btnBase, background: 'transparent', color: 'var(--ink-500)', border: '1px solid var(--line)' }}
+            style={{ ...estiloBtn, background: 'transparent', color: 'var(--ink-500)', border: '1px solid var(--line)' }}
           >
             Cancelar
           </button>
@@ -112,7 +121,7 @@ function AccionesBorrador({ proyecto }: { proyecto: FilaProyectoEmpresario }) {
           type="button"
           onClick={() => setConfirmandoEliminar(true)}
           disabled={pending}
-          style={{ ...btnBase, background: 'rgba(220,38,38,0.08)', color: '#dc2626' }}
+          style={{ ...estiloBtn, background: 'rgba(220,38,38,0.08)', color: '#dc2626' }}
         >
           <IconTrash size={13} />
           Eliminar
@@ -121,6 +130,109 @@ function AccionesBorrador({ proyecto }: { proyecto: FilaProyectoEmpresario }) {
     </div>
   );
 }
+
+// ─── Acciones para proyectos PUBLICADOS ─────────────────────────────────────
+
+function AccionesPublicado({ proyecto }: { proyecto: FilaProyectoEmpresario }) {
+  const router = useRouter();
+  const params = useParams<{ locale: string }>();
+  const locale = params?.locale ?? 'es';
+  const [deshabilitando, setDeshabilitando] = useState(false);
+
+  const verDetalles = () => {
+    window.open(`/${locale}/marketplace/${proyecto.id}`, '_blank', 'noopener,noreferrer');
+  };
+
+  const deshabilitar = async () => {
+    const resultado = await Swal.fire({
+      title: 'Deshabilitar proyecto',
+      html: `
+        <p style="margin:0;color:#374151;font-size:14px;line-height:1.6">
+          Al deshabilitar <strong>${proyecto.titulo}</strong>, el proyecto
+          <strong>dejará de mostrarse en el marketplace</strong> y pasará al
+          estado <strong>Borrador</strong>.<br><br>
+          Desde Borrador podrás editarlo y volver a publicarlo cuando quieras.
+        </p>
+      `,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Deshabilitar proyecto',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#6b7280',
+      reverseButtons: true,
+      focusCancel: true,
+    });
+
+    if (!resultado.isConfirmed) return;
+
+    setDeshabilitando(true);
+    try {
+      const res = await fetch(`/api/proyectos/${proyecto.id}/deshabilitar`, {
+        method: 'PATCH',
+      });
+      if (!res.ok) {
+        const data = (await res.json()) as { error?: string };
+        await Swal.fire({
+          title: 'Error',
+          text: data.error ?? 'No se pudo deshabilitar el proyecto.',
+          icon: 'error',
+          confirmButtonColor: '#008fd4',
+        });
+        return;
+      }
+      await Swal.fire({
+        title: 'Proyecto deshabilitado',
+        text: 'El proyecto fue movido a Borradores. Ya podés editarlo o volver a publicarlo.',
+        icon: 'success',
+        confirmButtonColor: '#008fd4',
+        timer: 2500,
+        timerProgressBar: true,
+      });
+      router.refresh();
+    } catch {
+      await Swal.fire({
+        title: 'Error de red',
+        text: 'No se pudo conectar. Intentá de nuevo.',
+        icon: 'error',
+        confirmButtonColor: '#008fd4',
+      });
+    } finally {
+      setDeshabilitando(false);
+    }
+  };
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+      <button
+        type="button"
+        onClick={verDetalles}
+        style={{ ...btnBase, background: 'rgba(0,143,212,0.1)', color: 'var(--azul)' }}
+      >
+        <IconEye size={13} />
+        Ver detalles
+      </button>
+
+      <button
+        type="button"
+        onClick={deshabilitar}
+        disabled={deshabilitando}
+        style={{
+          ...btnBase,
+          background: 'rgba(220,38,38,0.08)',
+          color: '#dc2626',
+          opacity: deshabilitando ? 0.5 : 1,
+          cursor: deshabilitando ? 'not-allowed' : 'pointer',
+        }}
+      >
+        <IconX size={13} />
+        {deshabilitando ? 'Deshabilitando...' : 'Deshabilitar'}
+      </button>
+    </div>
+  );
+}
+
+// ─── Lista principal ─────────────────────────────────────────────────────────
 
 export default function ProyectosLista({ proyectos }: Props) {
   if (proyectos.length === 0) {
@@ -143,17 +255,16 @@ export default function ProyectosLista({ proyectos }: Props) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
       {proyectos.map((p) => {
         const esBorrador = p.estado === 'borrador';
+        const esPublicado = p.estado === 'publicado';
 
         return (
           <div
             key={p.id}
-            style={{
-              borderBottom: '1px solid var(--line)',
-              padding: '4px 0',
-            }}
+            style={{ borderBottom: '1px solid var(--line)', padding: '4px 0' }}
           >
             <ProyectoRow p={p} />
-            {esBorrador && (
+
+            {(esBorrador || esPublicado) && (
               <div
                 style={{
                   paddingLeft: 16,
@@ -175,7 +286,8 @@ export default function ProyectosLista({ proyectos }: Props) {
                 >
                   Acciones:
                 </span>
-                <AccionesBorrador proyecto={p} />
+                {esBorrador && <AccionesBorrador proyecto={p} />}
+                {esPublicado && <AccionesPublicado proyecto={p} />}
               </div>
             )}
           </div>

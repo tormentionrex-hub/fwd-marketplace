@@ -1,19 +1,19 @@
 import { getUser } from "@/server/auth/get-user";
+import { buscarPerfilAdminPorId } from "@/server/repositories/usuario.repository";
 import {
   AdminPageShell,
   AdminPageHeader,
 } from "@/components/features/admin/admin-page-header";
 import { LogoutButton } from "@/components/features/admin/logout-button";
+import { GestionRolesPanel } from "@/components/features/admin/gestion-roles-panel";
+import { EditarPerfilPanel } from "@/components/features/admin/editar-perfil-panel";
 
 // URL: /es/admin/configuracion — datos de la cuenta del admin.
 export default async function AdminConfiguracionPage() {
   const user = await getUser();
+  const perfil = user ? await buscarPerfilAdminPorId(user.id) : null;
 
-  const campos = [
-    { label: "Nombre", valor: user?.nombre ?? "—" },
-    { label: "Correo", valor: user?.correo ?? "—" },
-    { label: "Rol", valor: user?.roles.nombre ?? "—" },
-  ];
+  const rolActual = user?.roles.nombre ?? "admin";
 
   return (
     <AdminPageShell>
@@ -22,25 +22,23 @@ export default async function AdminConfiguracionPage() {
         subtitle="Datos de tu cuenta de administrador."
       />
 
-      <div className="max-w-lg rounded-2xl border border-white/10 bg-white/[0.04] p-6">
-        <h2 className="font-display text-lg font-bold text-white">Tu cuenta</h2>
-        <dl className="mt-4 flex flex-col divide-y divide-white/[0.07]">
-          {campos.map((c) => (
-            <div
-              key={c.label}
-              className="flex items-center justify-between gap-4 py-3"
-            >
-              <dt className="text-sm text-white/50">{c.label}</dt>
-              <dd className="text-sm font-medium capitalize text-white">
-                {c.valor}
-              </dd>
-            </div>
-          ))}
-        </dl>
+      <div className="flex flex-col gap-8">
+        {/* Editar perfil */}
+        <EditarPerfilPanel
+          nombre={perfil?.nombre ?? ""}
+          segundoApellido={perfil?.segundo_apellido ?? null}
+          correo={perfil?.correo ?? ""}
+          imageUrl={perfil?.image_url ?? null}
+          rol={rolActual}
+        />
 
-        <div className="mt-6 border-t border-white/[0.07] pt-5">
+        {/* Cerrar sesión */}
+        <div className="max-w-sm">
           <LogoutButton />
         </div>
+
+        {/* Panel de gestión de roles */}
+        <GestionRolesPanel rolActual={rolActual} />
       </div>
     </AdminPageShell>
   );

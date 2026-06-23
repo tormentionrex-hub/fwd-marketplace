@@ -1,11 +1,24 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "@/i18n/navigation";
+import { Pencil, Trash2 } from "lucide-react";
+import { confirmarEliminacion, toastExito, alertaError } from "@/lib/sweetalert-admin";
 import {
   normalizarEstadoOferta,
   ESTADO_OFERTA_META,
   EstadoOfertaDetalle,
 } from "@/lib/oferta-estado";
+
+// Estados editables por el admin (orden canónico).
+const ESTADOS_OFERTA: EstadoOfertaDetalle[] = [
+  "enviada",
+  "en_revision",
+  "preseleccionado",
+  "aceptado",
+  "rechazado",
+  "cancelado",
+];
 
 type OfertaAdmin = {
   id: string;
@@ -30,9 +43,79 @@ const TABS = [
 ] as const;
 
 export function GestionOfertasPanel({ ofertas }: { ofertas: OfertaAdmin[] }) {
+  const router = useRouter();
   const [q, setQ] = useState("");
   const [tab, setTab] = useState<(typeof TABS)[number]["key"] | EstadoOfertaDetalle>("todos");
   const [detalleModal, setDetalleModal] = useState<OfertaAdmin | null>(null);
+
+  // Edición de estado + eliminación dentro del modal de detalle
+  const [editando, setEditando] = useState(false);
+  const [nuevoEstado, setNuevoEstado] = useState<EstadoOfertaDetalle>("enviada");
+  const [guardando, setGuardando] = useState(false);
+  const [eliminando, setEliminando] = useState(false);
+
+  // Salir del modo edición al abrir/cerrar/cambiar la oferta.
+  useEffect(() => {
+    setEditando(false);
+  }, [detalleModal?.id]);
+
+  function iniciarEdicion(o: OfertaAdmin) {
+    setNuevoEstado(normalizarEstadoOferta(o.estado));
+    setEditando(true);
+  }
+
+  async function guardarEstado() {
+    if (!detalleModal) return;
+    setGuardando(true);
+    try {
+      const res = await fetch(`/api/admin/ofertas/${detalleModal.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ estado: nuevoEstado }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        alertaError(data?.error ?? "No se pudo actualizar la oferta.");
+        return;
+      }
+      setDetalleModal({ ...detalleModal, estado: nuevoEstado });
+      setEditando(false);
+      toastExito("Estado de la oferta actualizado.");
+      router.refresh();
+    } catch {
+      alertaError("Error de red. Intentá de nuevo.");
+    } finally {
+      setGuardando(false);
+    }
+  }
+
+  async function eliminarOferta() {
+    if (!detalleModal) return;
+    const ok = await confirmarEliminacion({
+      titulo: "¿Eliminar esta oferta?",
+      texto: "Esta acción no se puede deshacer.",
+      confirmText: "Eliminar oferta",
+    });
+    if (!ok) return;
+    setEliminando(true);
+    try {
+      const res = await fetch(`/api/admin/ofertas/${detalleModal.id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        alertaError(data?.error ?? "No se pudo eliminar la oferta.");
+        return;
+      }
+      setDetalleModal(null);
+      toastExito("Oferta eliminada.");
+      router.refresh();
+    } catch {
+      alertaError("Error de red. Intentá de nuevo.");
+    } finally {
+      setEliminando(false);
+    }
+  }
 
   const visibles = useMemo(() => {
     const query = q.trim().toLowerCase();
@@ -181,14 +264,59 @@ export function GestionOfertasPanel({ ofertas }: { ofertas: OfertaAdmin[] }) {
                   {detalleModal.perfiles_estudiante?.usuarios?.correo}
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => setDetalleModal(null)}
-                className="text-white/40 hover:text-white transition-colors text-2xl font-bold px-2"
-              >
-                &times;
-              </button>
+              <div className="flex items-center gap-1">
+                {!editando && (
+                  <button
+                    type="button"
+                    onClick={() => iniciarEdicion(detalleModal)}
+                    title="Editar estado"
+                    aria-label="Editar estado"
+                    className="rounded-lg p-2 text-fwd-blue transition hover:bg-fwd-blue/15"
+                  >
+                    <Pencil className="h-[18px] w-[18px]" />
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={eliminarOferta}
+                  disabled={eliminando}
+                  title="Eliminar oferta"
+                  aria-label="Eliminar oferta"
+                  className="rounded-lg bg-red-500/15 p-2 text-red-500 transition hover:bg-red-500/25 disabled:opacity-50"
+                >
+                  <Trash2 className="h-5 w-5" strokeWidth={2.4} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDetalleModal(null)}
+                  className="text-white/40 hover:text-white transition-colors text-2xl font-bold px-2"
+                  aria-label="Cerrar"
+                >
+                  &times;
+                </button>
+              </div>
             </div>
+
+            {editando && (
+              <div className="mt-4 rounded-xl border border-fwd-blue/20 bg-fwd-blue/5 p-4">
+                <label className="block">
+                  <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-fwd-blue">
+                    Cambiar estado de la oferta
+                  </span>
+                  <select
+                    value={nuevoEstado}
+                    onChange={(e) => setNuevoEstado(e.target.value as EstadoOfertaDetalle)}
+                    className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:border-fwd-blue focus:ring-2 focus:ring-fwd-blue/20"
+                  >
+                    {ESTADOS_OFERTA.map((est) => (
+                      <option key={est} value={est} className="bg-[#111827] text-white">
+                        {ESTADO_OFERTA_META[est].label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+            )}
 
             <div className="mt-4 space-y-4">
               <div>
@@ -259,14 +387,35 @@ export function GestionOfertasPanel({ ofertas }: { ofertas: OfertaAdmin[] }) {
               )}
             </div>
 
-            <div className="mt-6 flex justify-end border-t border-white/10 pt-4">
-              <button
-                type="button"
-                onClick={() => setDetalleModal(null)}
-                className="rounded-xl bg-white/10 px-5 py-2 text-sm font-semibold text-white transition hover:bg-white/15"
-              >
-                Cerrar
-              </button>
+            <div className="mt-6 flex justify-end gap-3 border-t border-white/10 pt-4">
+              {editando ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setEditando(false)}
+                    disabled={guardando}
+                    className="rounded-xl px-4 py-2 text-sm font-semibold text-white/60 transition hover:text-white disabled:opacity-50"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={guardarEstado}
+                    disabled={guardando}
+                    className="rounded-xl bg-fwd-blue px-5 py-2 text-sm font-bold text-white shadow transition hover:bg-fwd-blue/90 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {guardando ? "Guardando…" : "Guardar estado"}
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setDetalleModal(null)}
+                  className="rounded-xl bg-white/10 px-5 py-2 text-sm font-semibold text-white transition hover:bg-white/15"
+                >
+                  Cerrar
+                </button>
+              )}
             </div>
           </div>
         </div>

@@ -1,6 +1,7 @@
 import 'server-only';
 import * as repo from '@/server/repositories/curriculum.repository';
 import * as storage from '@/server/storage/curriculum-storage';
+import type { AnalisisCv } from '@/types/cv-analisis';
 
 // Tipos MIME permitidos → extensión.
 export const TIPOS_CV: Record<string, string> = {
@@ -21,6 +22,8 @@ export interface CvDTO {
   actualizado: string;
   /** URL firmada para ver el archivo (inline), ~10 min. */
   viewUrl: string | null;
+  ultimoAnalisis: AnalisisCv | null;
+  fechaAnalisis: string | null;
 }
 
 type FilaCv = {
@@ -31,6 +34,8 @@ type FilaCv = {
   subido: Date;
   actualizado: Date;
   storage_path: string;
+  ultimo_analisis: unknown;
+  fecha_analisis: Date | null;
 };
 
 async function mapDto(cv: FilaCv, withUrl = true): Promise<CvDTO> {
@@ -42,6 +47,8 @@ async function mapDto(cv: FilaCv, withUrl = true): Promise<CvDTO> {
     subido: cv.subido.toISOString(),
     actualizado: cv.actualizado.toISOString(),
     viewUrl: withUrl ? await storage.urlFirmadaCv(cv.storage_path) : null,
+    ultimoAnalisis: (cv.ultimo_analisis as AnalisisCv | null) ?? null,
+    fechaAnalisis: cv.fecha_analisis ? cv.fecha_analisis.toISOString() : null,
   };
 }
 

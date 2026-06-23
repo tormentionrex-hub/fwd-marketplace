@@ -55,7 +55,7 @@ export async function POST(request: Request) {
   }
 
   // Moderadores no pueden alterar los catálogos del sistema
-  if (user.tipo_staff === 'moderador') {
+  if (user.staffSubRole === 'moderador') {
     return error('Sin permiso para modificar catálogos', 403);
   }
 
@@ -117,7 +117,7 @@ export async function PATCH(request: Request) {
   }
 
   // Moderadores no pueden alterar los catálogos del sistema
-  if (user.tipo_staff === 'moderador') {
+  if (user.staffSubRole === 'moderador') {
     return error('Sin permiso para modificar catálogos', 403);
   }
 

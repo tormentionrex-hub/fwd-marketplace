@@ -28,7 +28,7 @@ interface CatalogosPanelProps {
   initialTecnologias: ItemBase[];
   initialHabilidades: HabilidadItem[];
   initialCategoriasNegocio: ItemBase[];
-  tipoStaff: string;
+  staffSubRole: string;
 }
 
 type TabType = 'tecnologia' | 'categoria_negocio' | 'habilidad';
@@ -37,7 +37,7 @@ export function CatalogosPanel({
   initialTecnologias,
   initialHabilidades,
   initialCategoriasNegocio,
-  tipoStaff,
+  staffSubRole,
 }: CatalogosPanelProps) {
   const [activeTab, setActiveTab] = useState<TabType>('tecnologia');
   const [tecnologias, setTecnologias] = useState<ItemBase[]>(initialTecnologias);
@@ -55,7 +55,7 @@ export function CatalogosPanel({
   const [editingCategoria, setEditingCategoria] = useState('');
   const [loadingEdit, setLoadingEdit] = useState(false);
 
-  const esModerador = tipoStaff === 'moderador';
+  const esModerador = staffSubRole === 'moderador';
 
   // Filters items by tab and query
   const getFilteredItems = () => {

@@ -20,7 +20,7 @@ export default async function AdminInvitacionesPage({
   }
 
   // Only General Staff (Super Admins) can manage invitations and staff members
-  if (user.tipo_staff === 'moderador') {
+  if (user.staffSubRole === 'moderador') {
     redirect(`/${locale}/admin`);
   }
 

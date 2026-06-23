@@ -1,7 +1,13 @@
 "use client";
 
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "@/i18n/navigation";
+import {
+  pedirMotivo,
+  confirmarAccion,
+  toastExito,
+  alertaError,
+} from "@/lib/sweetalert-admin";
 
 type Usuario = {
   id: string;
@@ -53,16 +59,6 @@ export function GestionCuentasPanel({
   const [q, setQ] = useState("");
   const [tab, setTab] = useState<(typeof TABS)[number]["key"]>("todos");
   const [loading, setLoading] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-
-  // Modal de suspensión
-  const [suspendModal, setSuspendModal] = useState<Usuario | null>(null);
-  const [motivo, setMotivo] = useState("");
-
-  // Modal de reactivación
-  const [reactivarModal, setReactivarModal] = useState<Usuario | null>(null);
-  const [motivoReactivar, setMotivoReactivar] = useState("");
 
   // Modal de historial
   const [historialModal, setHistorialModal] = useState<Usuario | null>(null);
@@ -84,65 +80,63 @@ export function GestionCuentasPanel({
     return lista;
   }, [usuarios, q, tab]);
 
-  const clearMessages = useCallback(() => {
-    setError(null);
-    setSuccess(null);
-  }, []);
-
-  // ── Suspender ────────────────────────────────────────────
-  async function handleSuspender() {
-    if (!suspendModal || !motivo.trim()) return;
-    clearMessages();
-    setLoading(suspendModal.id);
+  // ── Suspender — SweetAlert con motivo ────────────────────
+  async function suspenderCuenta(u: Usuario) {
+    const motivo = await pedirMotivo({
+      titulo: `Suspender a ${u.nombre}`,
+      texto: "La cuenta no podrá iniciar sesión hasta reactivarla.",
+      label: "Motivo de la suspensión",
+      placeholder: "Describí el motivo de la suspensión…",
+      confirmText: "Suspender",
+      peligro: true,
+    });
+    if (motivo === null) return;
+    setLoading(u.id);
     try {
-      const res = await fetch(`/api/admin/usuarios/${suspendModal.id}/suspension`, {
+      const res = await fetch(`/api/admin/usuarios/${u.id}/suspension`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ motivo: motivo.trim() }),
+        body: JSON.stringify({ motivo }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => null);
-        setError(data?.error ?? "No se pudo suspender la cuenta.");
+        alertaError(data?.error ?? "No se pudo suspender la cuenta.");
         return;
       }
-      setSuccess(`Cuenta de ${suspendModal.nombre} suspendida exitosamente.`);
-      setSuspendModal(null);
-      setMotivo("");
+      toastExito(`Cuenta de ${u.nombre} suspendida.`);
       router.refresh();
     } catch {
-      setError("Error de red. Intentá de nuevo.");
+      alertaError("Error de red. Intentá de nuevo.");
     } finally {
       setLoading(null);
     }
   }
 
-  // ── Reactivar ────────────────────────────────────────────
-  async function handleReactivar() {
-    if (!reactivarModal) return;
-    clearMessages();
-    setLoading(reactivarModal.id);
+  // ── Reactivar — SweetAlert de confirmación ───────────────
+  async function reactivarCuenta(u: Usuario) {
+    const ok = await confirmarAccion({
+      titulo: `¿Reactivar a ${u.nombre}?`,
+      texto: "La cuenta podrá volver a iniciar sesión.",
+      confirmText: "Reactivar",
+      icon: "question",
+    });
+    if (!ok) return;
+    setLoading(u.id);
     try {
-      const res = await fetch(
-        `/api/admin/usuarios/${reactivarModal.id}/suspension`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            motivo: motivoReactivar.trim() || undefined,
-          }),
-        }
-      );
+      const res = await fetch(`/api/admin/usuarios/${u.id}/suspension`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
       if (!res.ok) {
         const data = await res.json().catch(() => null);
-        setError(data?.error ?? "No se pudo reactivar la cuenta.");
+        alertaError(data?.error ?? "No se pudo reactivar la cuenta.");
         return;
       }
-      setSuccess(`Cuenta de ${reactivarModal.nombre} reactivada exitosamente.`);
-      setReactivarModal(null);
-      setMotivoReactivar("");
+      toastExito(`Cuenta de ${u.nombre} reactivada.`);
       router.refresh();
     } catch {
-      setError("Error de red. Intentá de nuevo.");
+      alertaError("Error de red. Intentá de nuevo.");
     } finally {
       setLoading(null);
     }
@@ -245,24 +239,6 @@ export function GestionCuentasPanel({
         </p>
       </div>
 
-      {/* Alertas */}
-      {error && (
-        <p
-          role="alert"
-          className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300"
-        >
-          {error}
-        </p>
-      )}
-      {success && (
-        <p
-          role="status"
-          className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300"
-        >
-          {success}
-        </p>
-      )}
-
       {/* Tabla */}
       <div className="overflow-x-auto rounded-2xl border border-white/10 bg-white/[0.03]">
         <table className="w-full text-left text-sm">
@@ -343,11 +319,7 @@ export function GestionCuentasPanel({
                         {puedeAccion && !suspendido && (
                           <button
                             type="button"
-                            onClick={() => {
-                              clearMessages();
-                              setSuspendModal(u);
-                              setMotivo("");
-                            }}
+                            onClick={() => suspenderCuenta(u)}
                             disabled={loading === u.id}
                             className="rounded-lg px-2.5 py-1 text-xs font-semibold text-amber-400 transition hover:bg-amber-400/15 disabled:cursor-not-allowed disabled:text-white/25"
                             title="Suspender cuenta"
@@ -359,11 +331,7 @@ export function GestionCuentasPanel({
                         {puedeAccion && suspendido && (
                           <button
                             type="button"
-                            onClick={() => {
-                              clearMessages();
-                              setReactivarModal(u);
-                              setMotivoReactivar("");
-                            }}
+                            onClick={() => reactivarCuenta(u)}
                             disabled={loading === u.id}
                             className="rounded-lg px-2.5 py-1 text-xs font-semibold text-emerald-400 transition hover:bg-emerald-400/15 disabled:cursor-not-allowed disabled:text-white/25"
                             title="Reactivar cuenta"
@@ -386,101 +354,6 @@ export function GestionCuentasPanel({
           </tbody>
         </table>
       </div>
-
-      {/* ── Modal: Suspender ──────────────────────────────── */}
-      {suspendModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#111827] p-6 shadow-2xl">
-            <h3 className="text-lg font-bold text-white">
-              Suspender cuenta
-            </h3>
-            <p className="mt-1 text-sm text-white/50">
-              Estás por suspender a{" "}
-              <strong className="text-white">{suspendModal.nombre}</strong> (
-              {suspendModal.correo}).
-            </p>
-
-            <label className="mt-4 block text-sm font-medium text-white/70">
-              Motivo de suspensión <span className="text-red-400">*</span>
-            </label>
-            <textarea
-              value={motivo}
-              onChange={(e) => setMotivo(e.target.value)}
-              rows={3}
-              placeholder="Describí el motivo de la suspensión…"
-              className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
-            />
-
-            <div className="mt-5 flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setSuspendModal(null)}
-                className="rounded-xl px-4 py-2 text-sm font-semibold text-white/60 transition hover:text-white"
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={handleSuspender}
-                disabled={!motivo.trim() || loading === suspendModal.id}
-                className="rounded-xl bg-amber-600 px-4 py-2 text-sm font-bold text-white shadow transition hover:bg-amber-500 disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                {loading === suspendModal.id
-                  ? "Suspendiendo…"
-                  : "Confirmar suspensión"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── Modal: Reactivar ──────────────────────────────── */}
-      {reactivarModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#111827] p-6 shadow-2xl">
-            <h3 className="text-lg font-bold text-white">
-              Reactivar cuenta
-            </h3>
-            <p className="mt-1 text-sm text-white/50">
-              Estás por reactivar a{" "}
-              <strong className="text-white">{reactivarModal.nombre}</strong> (
-              {reactivarModal.correo}).
-            </p>
-
-            <label className="mt-4 block text-sm font-medium text-white/70">
-              Motivo de reactivación{" "}
-              <span className="text-white/30">(opcional)</span>
-            </label>
-            <textarea
-              value={motivoReactivar}
-              onChange={(e) => setMotivoReactivar(e.target.value)}
-              rows={2}
-              placeholder="Motivo opcional…"
-              className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
-            />
-
-            <div className="mt-5 flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setReactivarModal(null)}
-                className="rounded-xl px-4 py-2 text-sm font-semibold text-white/60 transition hover:text-white"
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={handleReactivar}
-                disabled={loading === reactivarModal.id}
-                className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white shadow transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                {loading === reactivarModal.id
-                  ? "Reactivando…"
-                  : "Confirmar reactivación"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ── Modal: Historial ──────────────────────────────── */}
       {historialModal && (

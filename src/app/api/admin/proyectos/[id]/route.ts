@@ -1,12 +1,19 @@
 import { NextResponse } from 'next/server';
 import { getUser } from '@/server/auth/get-user';
+import { puedeAccederPanelAdmin } from '@/server/auth/roles';
 import { mismoOrigen } from '@/server/http/request';
 import { db } from '@/lib/db';
 import {
   suspenderProyectoRepo,
   vistoBuenoProyectoRepo,
   eliminarProyectoRepo,
+  actualizarProyecto,
 } from '@/server/repositories/proyecto.repository';
+import { editarProyectoSchema } from '@/server/validation/admin.schema';
+
+// Ruta de mutación protegida por cookie: siempre dinámica (sin optimización
+// estática que, en dev con poca memoria, levanta un worker que puede crashear).
+export const dynamic = 'force-dynamic';
 
 // DELETE /api/admin/proyectos/:id — elimina un proyecto.
 // Body: { motivo: string }
@@ -22,7 +29,7 @@ export async function DELETE(
   if (!user) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
   }
-  if (user.roles.nombre !== 'admin' && user.roles.nombre !== 'staff') {
+  if (!puedeAccederPanelAdmin(user.roles.nombre)) {
     return NextResponse.json({ error: 'Sin permiso' }, { status: 403 });
   }
 
@@ -66,8 +73,8 @@ export async function DELETE(
   }
 }
 
-// PATCH /api/admin/proyectos/:id — suspende o da visto bueno a un proyecto.
-// Body: { accion: 'suspender' | 'visto_bueno', motivo?: string }
+// PATCH /api/admin/proyectos/:id — suspende, da visto bueno, edita, recomienda o sugiere mejora.
+// Body: { accion: 'suspender' | 'visto_bueno' | 'editar' | 'recomendar' | 'sugerir_mejora', ... }
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -80,20 +87,28 @@ export async function PATCH(
   if (!user) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
   }
-  if (user.roles.nombre !== 'admin' && user.roles.nombre !== 'staff') {
+  if (!puedeAccederPanelAdmin(user.roles.nombre)) {
     return NextResponse.json({ error: 'Sin permiso' }, { status: 403 });
   }
 
   const { id } = await params;
 
-  let body: { accion?: 'suspender' | 'visto_bueno'; motivo?: string };
+  let body: {
+    accion?: 'suspender' | 'visto_bueno' | 'editar' | 'recomendar' | 'sugerir_mejora';
+    motivo?: string;
+    titulo?: string;
+    descripcion?: string;
+    area_negocio?: string | null;
+    plazo_dias?: number | null;
+  };
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: 'Cuerpo inválido' }, { status: 400 });
   }
 
-  if (!body.accion || (body.accion !== 'suspender' && body.accion !== 'visto_bueno')) {
+  const ACCIONES_VALIDAS = ['suspender', 'visto_bueno', 'editar', 'recomendar', 'sugerir_mejora'];
+  if (!body.accion || !ACCIONES_VALIDAS.includes(body.accion)) {
     return NextResponse.json(
       { error: 'Acción no permitida o no especificada' },
       { status: 400 }
@@ -106,6 +121,95 @@ export async function PATCH(
   });
   if (!proyecto) {
     return NextResponse.json({ error: 'Proyecto no encontrado' }, { status: 404 });
+  }
+
+  // ── Editar campos del proyecto ──────────────────────────────────────────
+  if (body.accion === 'editar') {
+    const parseo = editarProyectoSchema.safeParse(body);
+    if (!parseo.success) {
+      const mensaje = parseo.error.issues[0]?.message ?? 'Datos inválidos';
+      return NextResponse.json({ error: mensaje }, { status: 400 });
+    }
+    const { titulo, descripcion, area_negocio, plazo_dias } = parseo.data;
+    try {
+      await actualizarProyecto(id, {
+        titulo,
+        descripcion,
+        areaNegocio: area_negocio ?? null,
+        plazoDias: plazo_dias ?? null,
+      });
+      return NextResponse.json({ ok: true });
+    } catch (error) {
+      console.error('Error al editar proyecto:', error);
+      return NextResponse.json(
+        { error: 'No se pudo editar el proyecto' },
+        { status: 500 }
+      );
+    }
+  }
+
+  // ── Recomendar proyecto (destacado admin) ──────────────────────────────────
+  if (body.accion === 'recomendar') {
+    try {
+      // Garantizar que existe la mejora ADMIN_DESTACADO (precio 0, admin-only).
+      const mejora = await db.mejoras.upsert({
+        where: { codigo: 'ADMIN_DESTACADO' },
+        create: {
+          codigo: 'ADMIN_DESTACADO',
+          nombre: 'Proyecto destacado por administrador',
+          descripcion: 'El proyecto ha sido marcado como recomendado por el equipo FWD.',
+          precio: 0,
+          moneda: 'USD',
+          activa: true,
+        },
+        update: {},
+        select: { id: true },
+      });
+
+      await db.proyecto_mejoras.upsert({
+        where: { id_proyecto_id_mejora: { id_proyecto: id, id_mejora: mejora.id } },
+        create: { id_proyecto: id, id_mejora: mejora.id, precio_pagado: 0, moneda: 'USD' },
+        update: {},
+      });
+
+      // Notificar al empresario
+      const proyecto = await db.proyectos.findUnique({ where: { id }, select: { id_empresario: true, titulo: true } });
+      if (proyecto) {
+        await db.notificaciones.create({
+          data: {
+            id_usuario: proyecto.id_empresario,
+            tipo: 'proyecto_recomendado',
+            mensaje: `Tu proyecto "${proyecto.titulo}" ha sido destacado por el equipo FWD y aparecerá de forma prominente en el marketplace.`,
+          },
+        });
+      }
+
+      return NextResponse.json({ ok: true });
+    } catch (error) {
+      console.error('Error al recomendar proyecto:', error);
+      return NextResponse.json({ error: 'No se pudo recomendar el proyecto' }, { status: 500 });
+    }
+  }
+
+  // ── Sugerir mejora al empresario ────────────────────────────────────────────
+  if (body.accion === 'sugerir_mejora') {
+    try {
+      const proyecto = await db.proyectos.findUnique({ where: { id }, select: { id_empresario: true, titulo: true } });
+      if (!proyecto) {
+        return NextResponse.json({ error: 'Proyecto no encontrado' }, { status: 404 });
+      }
+      await db.notificaciones.create({
+        data: {
+          id_usuario: proyecto.id_empresario,
+          tipo: 'sugerencia_mejora',
+          mensaje: `El equipo FWD sugiere revisar el proyecto "${proyecto.titulo}". Considera actualizar el precio, la descripción o el stack tecnológico para aumentar las posibilidades de recibir ofertas.`,
+        },
+      });
+      return NextResponse.json({ ok: true });
+    } catch (error) {
+      console.error('Error al sugerir mejora:', error);
+      return NextResponse.json({ error: 'No se pudo enviar la sugerencia' }, { status: 500 });
+    }
   }
 
   if (body.accion === 'suspender') {

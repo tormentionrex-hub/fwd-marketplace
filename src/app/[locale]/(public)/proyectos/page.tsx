@@ -7,21 +7,46 @@ import Footer from "@/components/Footer";
 import { FwdIsotipo } from "@/components/ui/fwd-logo";
 import AnimatedProjectsTitle from "@/components/AnimatedProjectsTitle";
 import SelectFWD from "@/components/SelectFWD";
+import ParticleBackground from "@/components/ParticleBackground";
 
 /* ── Datos ───────────────────────────────────────── */
 const PROYECTOS = [
-  { id:"1", titulo:"Sistema de gestión de inventario con IA",   area:"Retail & Logística",  techs:["React","Node.js","PostgreSQL"],        empresario:"Carlos Mora",       dias:12, color:"#008FD5" },
-  { id:"2", titulo:"Plataforma de pagos digitales para PYMES",  area:"Fintech",             techs:["Next.js","Stripe","Supabase"],          empresario:"Ana Jiménez",       dias:5,  color:"#ED008C" },
-  { id:"3", titulo:"App móvil de telemedicina",                 area:"Salud & Bienestar",   techs:["React Native","Firebase","Python"],     empresario:"Dr. Luis Solano",   dias:20, color:"#662E91" },
-  { id:"4", titulo:"Dashboard de análisis de ventas",           area:"Finanzas",            techs:["React","D3.js","Node.js"],              empresario:"María Rodríguez",   dias:8,  color:"#20BEC7" },
-  { id:"5", titulo:"Automatización de procesos RH",             area:"Operaciones",         techs:["Python","FastAPI","PostgreSQL"],        empresario:"Roberto Chaves",    dias:15, color:"#FFCB05" },
-  { id:"6", titulo:"E-commerce con recomendaciones IA",         area:"Mercadeo",            techs:["Next.js","Supabase","OpenAI"],          empresario:"Laura Vega",        dias:3,  color:"#F8901F" },
+  { id:"1", titulo:"Sistema de gestión de inventario con IA", area:"Retail & Logística", techs:["React","Node.js","PostgreSQL"], empresario:"Carlos Mora", dias:12, color:"#008FD5" },
+  { id:"2", titulo:"Plataforma de pagos digitales para PYMES", area:"Fintech", techs:["Next.js","Stripe","Supabase"], empresario:"Ana Jiménez", dias:5, color:"#ED008C" },
+  { id:"3", titulo:"App móvil de telemedicina", area:"Salud & Bienestar", techs:["React Native","Firebase","Python"], empresario:"Dr. Luis Solano", dias:20, color:"#662E91" },
+  { id:"4", titulo:"Dashboard de análisis de ventas", area:"Finanzas", techs:["React","D3.js","Node.js"], empresario:"María Rodríguez", dias:8, color:"#20BEC7" },
+  { id:"5", titulo:"Automatización de procesos RH", area:"Operaciones", techs:["Python","FastAPI","PostgreSQL"], empresario:"Roberto Chaves", dias:15, color:"#FFCB05" },
+  { id:"6", titulo:"E‑commerce con recomendaciones IA", area:"Mercadeo", techs:["Next.js","Supabase","OpenAI"], empresario:"Laura Vega", dias:3, color:"#F8901F" },
+  { id:"7", titulo:"Plataforma de aprendizaje adaptativo", area:"Educación", techs:["Next.js","TypeScript","Supabase"], empresario:"EduTech Solutions", dias:10, color:"#0E1628" },
+  { id:"8", titulo:"Sistema de reservas para turismo sostenible", area:"Turismo", techs:["React","Node.js","MongoDB"], empresario:"EcoTravel Co.", dias:7, color:"#008FD4" },
+  { id:"9", titulo:"Herramienta de visualización de datos para IA", area:"Inteligencia Artificial", techs:["React","TensorFlow","Python"], empresario:"DataMind Labs", dias:14, color:"#ED008C" },
+  { id:"10", titulo:"Aplicación de gestión de proyectos ágil", area:"Desarrollo Web", techs:["Next.js","Prisma","PostgreSQL"], empresario:"AgileWorks", dias:9, color:"#20BEC7" },
+  { id:"11", titulo:"Portal de empleo para freelancers", area:"Desarrollo Web", techs:["React","Node.js","MongoDB"], empresario:"Freelance Hub", dias:6, color:"#FFCB05" },
+  { id:"12", titulo:"Sistema de monitoreo de energía solar", area:"Ciencia de Datos", techs:["Python","FastAPI","PostgreSQL"], empresario:"SolarMetrics", dias:13, color:"#F8901F" },
+  { id:"13", titulo:"App de bienestar corporativo", area:"Recursos Humanos", techs:["React Native","Firebase","Node.js"], empresario:"WellCorp", dias:11, color:"#662E91" },
+  { id:"14", titulo:"Plataforma de streaming educativa", area:"Educación", techs:["Next.js","TailwindCSS","Supabase"], empresario:"LearnStream", dias:4, color:"#0E1628" },
+  { id:"15", titulo:"Marketplace de productos artesanales", area:"Comercio Electrónico", techs:["React","Node.js","PostgreSQL"], empresario:"ArtiMarket", dias:8, color:"#008FD5" },
+  { id:"16", titulo:"Solución de logística con IoT", area:"Logística", techs:["Node.js","MongoDB","AWS"], empresario:"LogiTech", dias:12, color:"#ED008C" },
+  { id:"17", titulo:"Chatbot de atención al cliente con NLP", area:"Inteligencia Artificial", techs:["Python","OpenAI","FastAPI"], empresario:"TalkAI", dias:9, color:"#20BEC7" },
+  { id:"18", titulo:"Sistema de gestión de eventos deportivos", area:"Deporte", techs:["React","Node.js","PostgreSQL"], empresario:"SportEvent Co.", dias:5, color:"#FFCB05" },
+  { id:"19", titulo:"Plataforma de crowdfunding para startups", area:"Finanzas", techs:["Next.js","Stripe","Supabase"], empresario:"FundRise", dias:7, color:"#F8901F" },
+  { id:"20", titulo:"Aplicación de diagnóstico médico con IA", area:"Salud & Bienestar", techs:["React Native","TensorFlow","Python"], empresario:"MediTech", dias:16, color:"#662E91" },
+  { id:"21", titulo:"Suite de analítica para retail", area:"Retail & Logística", techs:["React","D3.js","PostgreSQL"], empresario:"RetailAnalytics", dias:10, color:"#008FD4" },
+  { id:"22", titulo:"Herramienta de diseño UI/UX colaborativo", area:"Diseño UX/UI", techs:["Next.js","TailwindCSS","Supabase"], empresario:"DesignCollab", dias:6, color:"#0E1628" },
+  { id:"23", titulo:"Plataforma de gestión de inventario para restaurantes", area:"Comercio Electrónico", techs:["React","Node.js","MongoDB"], empresario:"FoodStock", dias:9, color:"#008FD5" },
+  { id:"24", titulo:"Sistema de alertas para fraude financiero", area:"Finanzas", techs:["Python","FastAPI","PostgreSQL"], empresario:"SecureFin", dias:13, color:"#ED008C" },
+  { id:"25", titulo:"App de realidad aumentada para turismo cultural", area:"Turismo", techs:["React Native","ARCore","Node.js"], empresario:"CultureAR", dias:14, color:"#20BEC7" },
+  { id:"26", titulo:"Plataforma de matchmaking para mentores y startups", area:"Emprendimiento", techs:["Next.js","Supabase","TypeScript"], empresario:"MentorMatch", dias:8, color:"#FFCB05" },
+  { id:"27", titulo:"Sistema de gestión de documentos legales", area:"Legal", techs:["React","Node.js","PostgreSQL"], empresario:"LegalDocs", dias:11, color:"#F8901F" },
+  { id:"28", titulo:"Aplicación de entrenamiento personalizado con IA", area:"Deporte", techs:["React Native","TensorFlow","Python"], empresario:"FitAI", dias:12, color:"#662E91" },
+  { id:"29", titulo:"Plataforma de auditoría de código automatizada", area:"Desarrollo Web", techs:["Next.js","TypeScript","Node.js"], empresario:"CodeAudit", dias:7, color:"#0E1628" },
+  { id:"30", titulo:"Red social interna para empresas", area:"Recursos Humanos", techs:["React","Supabase","TailwindCSS"], empresario:"IntraConnect", dias:5, color:"#008FD4" }
 ];
 
 const TODAS_AREAS = "Todas las áreas";
 const TODAS_TECHS = "Todas las tecnologías";
 
-const AREAS  = [TODAS_AREAS,"Retail & Logística","Fintech","Salud & Bienestar","Tecnología","Mercadeo","Finanzas","Operaciones"];
+const AREAS  = [TODAS_AREAS,"Retail & Logística","Fintech","Salud & Bienestar","Finanzas","Operaciones","Mercadeo","Educación","Turismo","Inteligencia Artificial","Desarrollo Web","Ciencia de Datos","Recursos Humanos","Diseño UX/UI","Comercio Electrónico","Logística","Deporte","Emprendimiento","Legal","Tecnología"];
 const TECHS  = [TODAS_TECHS,"React","Next.js","Node.js","Python","PostgreSQL","Supabase","Firebase","React Native"];
 
 /* ── Page ────────────────────────────────────────── */
@@ -49,16 +74,15 @@ export default function ProyectosPage() {
         className="relative pt-32 pb-16"
         style={{ background: "linear-gradient(135deg, #0e1628 0%, #0a2a4e 50%, #008FD4 100%)" }}
       >
-        {/* Brillo radial decorativo */}
-        <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(ellipse at 70% 50%, rgba(32,190,198,0.12) 0%, transparent 60%)" }} />
-
-        {/* Isotipo decorativo derecha */}
-        <div className="pointer-events-none absolute right-[-60px] top-1/2 -translate-y-1/2 opacity-20">
-          <FwdIsotipo style={{ width: "420px", height: "auto" }} />
-        </div>
-        {/* Isotipo pequeño izquierda */}
-        <div className="pointer-events-none absolute left-[-40px] bottom-[-20px] opacity-10">
-          <FwdIsotipo style={{ width: "200px", height: "auto" }} />
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at 70% 50%, rgba(32,190,198,0.12) 0%, transparent 60%)" }} />
+          <ParticleBackground />
+          <div className="absolute right-[-60px] top-1/2 -translate-y-1/2 opacity-20">
+            <FwdIsotipo style={{ width: "420px", height: "auto" }} />
+          </div>
+          <div className="absolute left-[-40px] bottom-[-20px] opacity-10">
+            <FwdIsotipo style={{ width: "200px", height: "auto" }} />
+          </div>
         </div>
 
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -102,8 +126,9 @@ export default function ProyectosPage() {
       </section>
 
       {/* ── GRID ─────────────────────────────────── */}
-      <section className="bg-white py-16 flex-1">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="bg-surface py-16 flex-1 relative overflow-hidden">
+        <ParticleBackground />
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* Contador */}
           <p className="text-gray-400 text-sm mb-8">

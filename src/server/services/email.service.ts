@@ -385,14 +385,32 @@ export async function enviarConfirmacionContacto(
 
 const APP_URL = process.env.NEXT_PUBLIC_URL ?? 'http://localhost:3000';
 
-export async function enviarEmailInvitacion(email: string): Promise<void> {
-  const registroUrl = `${APP_URL}/es/register-estudiante`;
-  const titulo = "¡Fuiste invitado a FWD Marketplace!";
+// Etiquetas legibles del rol para el correo de invitación.
+const ETIQUETA_ROL_INVITACION: Record<string, string> = {
+  admin: "administrador",
+  staff: "staff",
+  moderator: "moderador",
+  empresario: "empresario",
+  estudiante: "estudiante",
+};
+
+// Envía la invitación. Si se pasa `rol` el correo lo menciona; si se pasa `url`
+// (enlace con token firmado) se usa ese — si no, cae al registro clásico.
+export async function enviarEmailInvitacion(
+  email: string,
+  opts?: { rol?: string | null; url?: string },
+): Promise<void> {
+  const registroUrl = opts?.url ?? `${APP_URL}/es/register-estudiante`;
+  const rolLabel = opts?.rol ? ETIQUETA_ROL_INVITACION[opts.rol] ?? opts.rol : null;
+  const titulo = rolLabel
+    ? `Fuiste invitado a FWD Marketplace como ${rolLabel}`
+    : "¡Fuiste invitado a FWD Marketplace!";
+  const intro = rolLabel
+    ? `El equipo de <strong>FWD Marketplace</strong> te invitó a unirte como <strong>${rolLabel}</strong>.`
+    : `El equipo de <strong>FWD Marketplace</strong> te invitó a unirte a la plataforma.`;
   const cuerpo = `
     <p style="margin:0 0 16px;color:#475569;font-size:15px;line-height:1.6;">Hola,</p>
-    <p style="margin:0 0 16px;color:#475569;font-size:15px;line-height:1.6;">
-      El equipo de <strong>FWD Marketplace</strong> te invitó a unirte a la plataforma.
-    </p>
+    <p style="margin:0 0 16px;color:#475569;font-size:15px;line-height:1.6;">${intro}</p>
     <p style="margin:0 0 24px;color:#475569;font-size:15px;line-height:1.6;">
       Hacé clic en el botón de abajo para completar tu registro con este correo (<strong>${email}</strong>).
     </p>
@@ -403,9 +421,9 @@ export async function enviarEmailInvitacion(email: string): Promise<void> {
       </a>
     </div>
     <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0"/>
-    <p style="color:#9ca3af;font-size:12px;margin:0;">Si no esperabas esta invitación, podés ignorar este correo.</p>
+    <p style="color:#9ca3af;font-size:12px;margin:0;">Este enlace es personal y vence en 72 horas. Si no esperabas esta invitación, podés ignorar este correo.</p>
   `;
-  const text = `¡Tenés una invitación!\n\nEl equipo de FWD Marketplace te invitó a unirte a la plataforma.\nCompletá tu registro aquí: ${registroUrl}\n\nSi no esperabas esta invitación, podés ignorar este correo.`;
+  const text = `Fuiste invitado a FWD Marketplace${rolLabel ? ` como ${rolLabel}` : ""}.\nCompletá tu registro aquí: ${registroUrl}\n\nEl enlace vence en 72 horas. Si no esperabas esta invitación, podés ignorar este correo.`;
   await enviar({ to: email, subject: titulo, html: plantilla(titulo, cuerpo), text });
 }
 

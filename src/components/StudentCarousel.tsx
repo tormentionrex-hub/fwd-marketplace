@@ -242,7 +242,7 @@ export default function StudentCarousel() {
   );
 
   return (
-    <section className="bg-gray-50 py-20 overflow-hidden">
+    <section className="bg-surface-2 py-20 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-14">
@@ -250,7 +250,7 @@ export default function StudentCarousel() {
             Comunidad FWD
           </span>
           <AnimatedStudentsTitle />
-          <p className="text-gray-500 text-lg max-w-xl mx-auto">
+          <p className="text-text-muted text-lg max-w-xl mx-auto">
             Conocé a los talentos que transforman ideas en soluciones reales.
           </p>
 
@@ -330,11 +330,11 @@ export default function StudentCarousel() {
           {visible.map((est, i) => (
             <div
               key={i}
-              className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow flex flex-col"
+              className="bg-surface rounded-2xl p-6 shadow-sm border border-border hover:shadow-md transition-shadow flex flex-col"
             >
               {/* Avatar + info */}
               <div className="flex items-center gap-4 mb-5">
-                <div className="w-14 h-14 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-white shadow-sm bg-gray-100">
+                <div className="w-14 h-14 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-border shadow-sm bg-surface-2">
                   {/* Foto realista (IA · persona no real); si falla, cae al avatar generado por nombre. */}
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
@@ -351,16 +351,16 @@ export default function StudentCarousel() {
                   />
                 </div>
                 <div>
-                  <h3 className="font-heading font-bold text-fwd-navy text-base leading-tight">
+                  <h3 className="font-heading font-bold text-text text-base leading-tight">
                     {est.nombre}
                   </h3>
-                  <p className="text-sm text-gray-500">{est.rol}</p>
+                  <p className="text-sm text-text-muted">{est.rol}</p>
                 </div>
               </div>
 
               {/* Quote */}
               <blockquote
-                className="text-gray-600 text-sm leading-relaxed mb-5 italic border-l-[3px] pl-4 flex-1"
+                className="text-text-muted text-sm leading-relaxed mb-5 italic border-l-[3px] pl-4 flex-1"
                 style={{ borderColor: est.color }}
               >
                 &ldquo;{est.frase}&rdquo;
@@ -412,7 +412,7 @@ export default function StudentCarousel() {
                   height: "8px",
                   background: i === current
                     ? "linear-gradient(90deg, #20BEC6, #662D91)"
-                    : "#D1D5DB",
+                    : "var(--border)",
                   boxShadow: i === current ? "0 0 10px #20BEC688, 0 0 20px #662D9144" : "none",
                 }}
               />

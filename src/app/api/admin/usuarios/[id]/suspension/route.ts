@@ -1,11 +1,15 @@
 import { NextResponse } from 'next/server';
 import { getUser } from '@/server/auth/get-user';
+import { puedeAccederPanelAdmin } from '@/server/auth/roles';
 import { mismoOrigen } from '@/server/http/request';
 import {
   suspenderUsuario,
   reactivarUsuario,
   buscarUsuarioPorId,
 } from '@/server/repositories/usuario.repository';
+
+// Ruta admin protegida por cookie: siempre dinámica (sin optimización estática).
+export const dynamic = 'force-dynamic';
 
 // POST /api/admin/usuarios/:id/suspension — suspende una cuenta.
 // Body: { motivo: string }
@@ -21,7 +25,7 @@ export async function POST(
   if (!user) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
   }
-  if (user.roles.nombre !== 'admin' && user.roles.nombre !== 'staff') {
+  if (!puedeAccederPanelAdmin(user.roles.nombre)) {
     return NextResponse.json({ error: 'Sin permiso' }, { status: 403 });
   }
 
@@ -84,7 +88,7 @@ export async function PATCH(
   if (!user) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
   }
-  if (user.roles.nombre !== 'admin' && user.roles.nombre !== 'staff') {
+  if (!puedeAccederPanelAdmin(user.roles.nombre)) {
     return NextResponse.json({ error: 'Sin permiso' }, { status: 403 });
   }
 

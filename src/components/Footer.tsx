@@ -4,6 +4,7 @@ import { Link } from "@/i18n/navigation";
 import Image from "next/image";
 import { useState } from "react";
 import DonacionModal from "@/components/DonacionModal";
+import ParticleBackground from "@/components/ParticleBackground";
 
 type EstadoEnvio = "idle" | "enviando" | "ok" | "error";
 
@@ -57,9 +58,11 @@ export default function Footer() {
   return (
     <>
     <footer
-      className="text-white relative"
+      className="text-white relative overflow-hidden"
       style={{ background: "linear-gradient(135deg, #0e1628 0%, #2a1060 55%, #7b1fa2 85%, #ED008C 100%)" }}
     >
+      <ParticleBackground />
+
       {/* Ola animada superior */}
       <div className="footer-wave-wrap relative w-full overflow-hidden" style={{ height: "70px" }}>
         <svg

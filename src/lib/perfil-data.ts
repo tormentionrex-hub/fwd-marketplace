@@ -79,6 +79,7 @@ export const getPerfilPublico = cache(async (username: string): Promise<PerfilPu
             select: { nivel: true, habilidades: { select: { nombre: true, categoria: true } } },
           },
           portafolio_proyectos: {
+            where: { es_publico: true },
             select: {
               id: true,
               titulo: true,

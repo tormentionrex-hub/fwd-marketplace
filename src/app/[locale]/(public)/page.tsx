@@ -13,7 +13,6 @@ import AnimatedHeroTitle from "@/components/AnimatedHeroTitle";
 import TiltCard from "@/components/TiltCard";
 import AnimatedSubtitle from "@/components/AnimatedSubtitle";
 import WhatsAppButton from "@/components/WhatsAppButton";
-import { ThemeProvider } from "@/components/theme/ThemeProvider";
 
 /* ─── Hardcoded data ─────────────────────────────── */
 
@@ -62,8 +61,7 @@ export default async function Home() {
   const pasosEstudiante = [hw("paso1Est"), hw("paso2Est"), hw("paso3Est"), hw("paso4Est")];
 
   return (
-    <ThemeProvider attribute="class" forcedTheme="light">
-      <div className="flex flex-col min-h-screen relative overflow-x-hidden">
+    <div className="flex flex-col min-h-screen relative overflow-x-hidden">
       <FloatingTriangles />
       <Navbar dashboardHref={dashboardHref} />
 
@@ -120,7 +118,7 @@ export default async function Home() {
       {/* Sin `relative`: si la sección se posiciona, su fondo pinta ENCIMA de la capa
           de FloatingTriangles (z-0) y la franja pierde la decoración. El div interno
           ya es `relative` y mantiene el contenido por encima. */}
-      <section className="py-28 overflow-hidden bg-[#f7f6f4]">
+      <section className="py-28 overflow-hidden bg-surface">
 
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
 
@@ -134,7 +132,7 @@ export default async function Home() {
           <div data-reveal="stagger" className="grid md:grid-cols-2 gap-6">
 
             {/* ── Empresario */}
-            <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 flex flex-col">
+            <div className="bg-surface rounded-2xl p-8 shadow-sm border border-border flex flex-col">
               <div className="flex items-center gap-3 mb-8">
                 <div className="w-12 h-12 rounded-xl bg-[#008FD5] flex items-center justify-center shadow-sm flex-shrink-0">
                   <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
@@ -151,7 +149,7 @@ export default async function Home() {
                     <span className="flex-shrink-0 w-8 h-8 rounded-full border-2 border-[#008FD5] text-[#008FD5] text-sm font-bold flex items-center justify-center">
                       {i + 1}
                     </span>
-                    <p className="text-gray-700 text-base font-normal leading-snug">{texto}</p>
+                    <p className="text-text-muted text-base font-normal leading-snug">{texto}</p>
                   </li>
                 ))}
               </ol>
@@ -170,7 +168,7 @@ export default async function Home() {
             </div>
 
             {/* ── Estudiante */}
-            <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 flex flex-col">
+            <div className="bg-surface rounded-2xl p-8 shadow-sm border border-border flex flex-col">
               <div className="flex items-center gap-3 mb-8">
                 <div className="w-12 h-12 rounded-xl bg-[#662E91] flex items-center justify-center shadow-sm flex-shrink-0">
                   <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
@@ -186,7 +184,7 @@ export default async function Home() {
                     <span className="flex-shrink-0 w-8 h-8 rounded-full border-2 border-[#662E91] text-[#662E91] text-sm font-bold flex items-center justify-center">
                       {i + 1}
                     </span>
-                    <p className="text-gray-700 text-base font-normal leading-snug">{texto}</p>
+                    <p className="text-text-muted text-base font-normal leading-snug">{texto}</p>
                   </li>
                 ))}
               </ol>
@@ -256,7 +254,7 @@ export default async function Home() {
       </section>
 
       {/* ── CARACTERÍSTICAS ──────────────────────── */}
-      <section className="bg-gray-50 py-16">
+      <section className="bg-surface-2 py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div data-reveal="stagger" className="grid md:grid-cols-3 gap-6">
 
@@ -313,6 +311,5 @@ export default async function Home() {
       <Footer />
       <WhatsAppButton />
     </div>
-    </ThemeProvider>
   );
 }

@@ -2,52 +2,99 @@
 
 import { useEffect, useState } from "react";
 import { Link, usePathname } from "@/i18n/navigation";
+import { useSearchParams } from "next/navigation";
 import { useTheme } from "next-themes";
+import {
+  LayoutDashboard,
+  BarChart3,
+  Users,
+  FolderKanban,
+  Tag,
+  ShieldCheck,
+  LineChart,
+  Settings,
+  UserCog,
+  UserPlus,
+  MailPlus,
+  Home,
+  LogOut,
+  Sun,
+  Moon,
+  ChevronDown,
+  Menu,
+  X,
+  type LucideIcon,
+} from "lucide-react";
 import { LogoutButton } from "@/components/layout/logout-button";
 
-/* ── Íconos SVG inline (sin emojis, REGLA #6) ───────────────── */
-type IcoProps = { d: string; extra?: string | undefined; className?: string };
-function Ico({ d, extra, className }: IcoProps) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className ?? "h-[18px] w-[18px]"}
-      aria-hidden="true"
-    >
-      <path d={d} />
-      {extra ? <path d={extra} /> : null}
-    </svg>
-  );
+// ── Estructura del menú (secciones + submenú colapsable) ─────────────────────
+type NavItem = {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  // Subitems opcionales (menú colapsable, p. ej. Usuarios por rol).
+  subitems?: { href: string; label: string; rol: string }[];
+};
+
+type NavSection = { titulo: string; items: NavItem[] };
+
+function buildSecciones(tipoStaff?: string): NavSection[] {
+  const base: NavSection[] = [
+    {
+      titulo: "Resumen",
+      items: [
+        { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+        { href: "/admin/estadisticas", label: "Estadísticas", icon: BarChart3 },
+      ],
+    },
+    {
+      titulo: "Usuarios y Roles",
+      items: [
+        {
+          href: "/admin/usuarios",
+          label: "Usuarios",
+          icon: Users,
+          subitems: [
+            { href: "/admin/usuarios?rol=estudiante", label: "Estudiantes", rol: "estudiante" },
+            { href: "/admin/usuarios?rol=empresario", label: "Empresarios", rol: "empresario" },
+            { href: "/admin/usuarios?rol=admin", label: "Admins", rol: "admin" },
+          ],
+        },
+      ],
+    },
+    {
+      titulo: "Actividad",
+      items: [
+        { href: "/admin/proyectos", label: "Proyectos", icon: FolderKanban },
+        { href: "/admin/ofertas", label: "Ofertas", icon: Tag },
+      ],
+    },
+    {
+      titulo: "Herramientas",
+      items: [
+        { href: "/admin/validaciones", label: "Validaciones", icon: ShieldCheck },
+        { href: "/admin/reportes", label: "Reportes de Actividad", icon: LineChart },
+        { href: "/admin/configuracion", label: "Configuración", icon: Settings },
+        { href: "/admin/gestion-cuentas", label: "Gestión Cuentas", icon: UserCog },
+      ],
+    },
+  ];
+
+  // Solo el staff que no es moderador puede ver la sección de Administración.
+  if (tipoStaff !== "moderador") {
+    base.push({
+      titulo: "Administración",
+      items: [
+        { href: "/admin/invitaciones/admins", label: "Invitar admins", icon: UserPlus },
+        { href: "/admin/invitaciones/usuarios", label: "Invitaciones de usuarios", icon: MailPlus },
+      ],
+    });
+  }
+
+  return base;
 }
 
-const ICON = {
-  dashboard:    { d: "M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z" },
-  usuarios:     { d: "M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2", extra: "M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" },
-  proyectos:    { d: "M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" },
-  ofertas:      { d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z", extra: "M14 2v6h6M16 13H8M16 17H8M10 9H8" },
-  validaciones: { d: "M22 11.08V12a10 10 0 1 1-5.93-9.14", extra: "M22 4 12 14.01l-3-3" },
-  configuracion: {
-    d: "M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z",
-    extra: "M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z",
-  },
-  gestionCuentas: { d: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" },
-  inicio:  { d: "M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z" },
-  menu:    { d: "M3 6h18M3 12h18M3 18h18" },
-  close:   { d: "M18 6 6 18M6 6l12 12" },
-  logout:  { d: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4", extra: "M16 17l5-5-5-5M21 12H9" },
-  sun:     { d: "M12 3v1M12 20v1M4.22 4.22l.7.7M18.36 18.36l.7.7M3 12h1M20 12h1M4.22 19.78l.7-.7M18.36 5.64l.7-.7M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0z" },
-  moon:    { d: "M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" },
-  catalogos: { d: "M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" },
-  reportes: { d: "M12 20V10M18 20V4M6 20v-4" },
-  equipo: { d: "M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2", extra: "M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8" },
-} as const;
-
-/* Botón de toggle de tema — siempre usa los colores del sidebar (nav vars). */
+/* Botón de toggle de tema — usa los colores del sidebar (nav vars). */
 function SidebarThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -76,26 +123,25 @@ function SidebarThemeToggle() {
         color: "var(--adm-nav-txt)",
       }}
     >
-      <Ico d={isDark ? ICON.sun.d : ICON.moon.d} />
+      {isDark ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}
     </button>
   );
 }
 
-export function AdminSidebar({ tipoStaff }: { tipoStaff?: string }) {
+export function AdminSidebar({ role, staffSubRole }: { role: string; staffSubRole?: string }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const rolActivo = searchParams.get("rol");
   const [open, setOpen] = useState(false);
+  const [usuariosOpen, setUsuariosOpen] = useState(pathname === "/admin/usuarios");
 
-  const navItems: { href: string; label: string; icon: { readonly d: string; readonly extra?: string } }[] = [
-    { href: "/admin",              label: "Dashboard",      icon: ICON.dashboard },
-    { href: "/admin/usuarios",     label: "Usuarios",       icon: ICON.usuarios },
-    { href: "/admin/validaciones", label: "Validaciones",   icon: ICON.validaciones },
-    { href: "/admin/catalogos",    label: "Catálogos",      icon: ICON.catalogos },
-    { href: "/admin/reportes",      label: "Reportes",        icon: ICON.reportes },
-  ];
+  // Abrir el submenú de Usuarios al navegar a esa sección.
+  useEffect(() => {
+    if (pathname === "/admin/usuarios") setUsuariosOpen(true);
+  }, [pathname]);
 
-  if (tipoStaff !== "moderador") {
-    navItems.push({ href: "/admin/invitaciones", label: "Equipo", icon: ICON.equipo });
-  }
+  const cerrarMovil = () => setOpen(false);
+  const SECCIONES = buildSecciones(tipoStaff);
 
   return (
     <>
@@ -111,14 +157,14 @@ export function AdminSidebar({ tipoStaff }: { tipoStaff?: string }) {
         }}
         aria-label="Abrir menú"
       >
-        <Ico d={ICON.menu.d} />
+        <Menu className="h-[18px] w-[18px]" />
       </button>
 
       {/* Backdrop mobile */}
       {open && (
         <div
           className="fixed inset-0 z-40 bg-black/60 lg:hidden"
-          onClick={() => setOpen(false)}
+          onClick={cerrarMovil}
           aria-hidden
         />
       )}
@@ -134,7 +180,7 @@ export function AdminSidebar({ tipoStaff }: { tipoStaff?: string }) {
         }}
       >
         {/* Marca */}
-        <div className="flex items-center justify-between px-2 pb-6">
+        <div className="flex items-center justify-between px-2 pb-5">
           <div className="flex flex-col leading-none">
             <span
               className="font-display text-2xl font-black tracking-tighter"
@@ -148,53 +194,136 @@ export function AdminSidebar({ tipoStaff }: { tipoStaff?: string }) {
           </div>
           <button
             type="button"
-            onClick={() => setOpen(false)}
+            onClick={cerrarMovil}
             className="lg:hidden transition"
             style={{ color: "var(--adm-nav-txt)" }}
             aria-label="Cerrar menú"
           >
-            <Ico d={ICON.close.d} />
+            <X className="h-[18px] w-[18px]" />
           </button>
         </div>
 
         {/* Navegación */}
-        <nav className="flex flex-1 flex-col gap-1">
-          {navItems.map((item) => {
-            const activo = pathname === item.href;
-            return (
-              <Link
-                key={item.label}
-                href={item.href}
-                onClick={() => setOpen(false)}
-                className="group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition"
-                style={{
-                  background: activo ? "var(--adm-nav-active)" : "transparent",
-                  color: activo ? "var(--adm-nav-txt-act)" : "var(--adm-nav-txt)",
-                }}
-                onMouseEnter={(e) => {
-                  if (!activo) (e.currentTarget as HTMLElement).style.background = "var(--adm-nav-hover)";
-                }}
-                onMouseLeave={(e) => {
-                  if (!activo) (e.currentTarget as HTMLElement).style.background = "transparent";
-                }}
+        <nav className="flex flex-1 flex-col gap-4 overflow-y-auto pr-1">
+          {SECCIONES.map((seccion) => (
+            <div key={seccion.titulo} className="flex flex-col gap-1">
+              <p
+                className="px-3 pb-1 text-[0.65rem] font-bold uppercase tracking-[0.12em]"
+                style={{ color: "var(--adm-ink-faint)" }}
               >
-                {activo && (
-                  <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-fwd-magenta" />
-                )}
-                <span style={{ color: activo ? "var(--color-fwd-magenta, #EC008C)" : "inherit" }}>
-                  <Ico d={item.icon.d} {...("extra" in item.icon ? { extra: item.icon.extra } : {})} />
-                </span>
-                {item.label}
-              </Link>
-            );
-          })}
+                {seccion.titulo}
+              </p>
+
+              {seccion.items.map((item) => {
+                const Icono = item.icon;
+                const activo = pathname === item.href;
+
+                // Item con submenú colapsable (Usuarios).
+                if (item.subitems) {
+                  return (
+                    <div key={item.label} className="flex flex-col">
+                      <div
+                        className="group relative flex items-center rounded-xl text-sm font-semibold transition"
+                        style={{
+                          background: activo ? "var(--adm-nav-active)" : "transparent",
+                          color: activo ? "var(--adm-nav-txt-act)" : "var(--adm-nav-txt)",
+                        }}
+                      >
+                        {activo && (
+                          <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-fwd-magenta" />
+                        )}
+                        <Link
+                          href={item.href}
+                          onClick={cerrarMovil}
+                          className="flex flex-1 items-center gap-3 px-3 py-2.5"
+                        >
+                          <Icono className="h-[18px] w-[18px]" />
+                          {item.label}
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => setUsuariosOpen((v) => !v)}
+                          aria-label={usuariosOpen ? "Contraer" : "Expandir"}
+                          aria-expanded={usuariosOpen}
+                          className="px-2.5 py-2.5 transition"
+                          style={{ color: "inherit" }}
+                        >
+                          <ChevronDown
+                            className={`h-4 w-4 transition-transform ${
+                              usuariosOpen ? "rotate-180" : ""
+                            }`}
+                          />
+                        </button>
+                      </div>
+
+                      {usuariosOpen && (
+                        <div
+                          className="ml-5 mt-1 flex flex-col gap-0.5 border-l pl-3"
+                          style={{ borderColor: "var(--adm-sidebar-bd)" }}
+                        >
+                          {item.subitems.map((sub) => {
+                            const subActivo =
+                              pathname === "/admin/usuarios" && rolActivo === sub.rol;
+                            return (
+                              <Link
+                                key={sub.rol}
+                                href={sub.href}
+                                onClick={cerrarMovil}
+                                className="rounded-lg px-3 py-2 text-sm transition"
+                                style={{
+                                  background: subActivo ? "var(--adm-nav-active)" : "transparent",
+                                  color: subActivo
+                                    ? "var(--adm-nav-txt-act)"
+                                    : "var(--adm-nav-txt)",
+                                  fontWeight: subActivo ? 600 : 500,
+                                }}
+                              >
+                                {sub.label}
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
+
+                // Item simple.
+                return (
+                  <Link
+                    key={item.label}
+                    href={item.href}
+                    onClick={cerrarMovil}
+                    className="group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition"
+                    style={{
+                      background: activo ? "var(--adm-nav-active)" : "transparent",
+                      color: activo ? "var(--adm-nav-txt-act)" : "var(--adm-nav-txt)",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!activo)
+                        (e.currentTarget as HTMLElement).style.background = "var(--adm-nav-hover)";
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!activo) (e.currentTarget as HTMLElement).style.background = "transparent";
+                    }}
+                  >
+                    {activo && (
+                      <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-fwd-magenta" />
+                    )}
+                    <Icono className="h-[18px] w-[18px]" />
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
         </nav>
 
         {/* Acciones al fondo: Inicio | Tema | Salir */}
         <div className="mt-4 flex gap-2">
           <Link
             href="/"
-            onClick={() => setOpen(false)}
+            onClick={cerrarMovil}
             className="flex flex-1 items-center justify-center gap-2 rounded-xl border px-2.5 py-2.5 text-xs font-semibold transition hover:border-fwd-turquoise/50 hover:bg-fwd-turquoise/10 hover:text-fwd-turquoise"
             style={{
               borderColor: "var(--adm-sidebar-bd)",
@@ -202,7 +331,7 @@ export function AdminSidebar({ tipoStaff }: { tipoStaff?: string }) {
               color: "var(--adm-nav-txt)",
             }}
           >
-            <Ico d={ICON.inicio.d} />
+            <Home className="h-4 w-4" />
             Inicio
           </Link>
           <SidebarThemeToggle />
@@ -210,7 +339,7 @@ export function AdminSidebar({ tipoStaff }: { tipoStaff?: string }) {
             className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-2.5 py-2.5 text-xs font-semibold text-red-500 transition hover:border-red-500/40 hover:bg-red-500/20 disabled:opacity-60"
             label="Salir"
           >
-            <Ico d={ICON.logout.d} extra={ICON.logout.extra} />
+            <LogOut className="h-4 w-4" />
             Salir
           </LogoutButton>
         </div>

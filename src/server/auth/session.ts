@@ -47,20 +47,16 @@ export async function crearCookieSesion(payload: PayloadSesion): Promise<void> {
   });
 }
 
-export async function leerCookieSesion(): Promise<PayloadSesion | null> {
-  const cookieStore = await cookies();
-  const cookie = cookieStore.get(COOKIE)?.value;
-  if (!cookie) return null;
-
+// Valida y decodifica el valor de la cookie fwd_session.
+// Extrae el payload si la firma HMAC es válida, o null si no.
+function verificarCookieSesion(cookieValue: string): PayloadSesion | null {
   try {
-    // Separar payload y firma por el último '.' (el base64 no contiene puntos).
-    const idx = cookie.lastIndexOf('.');
+    const idx = cookieValue.lastIndexOf('.');
     if (idx <= 0) return null;
 
-    const valor = cookie.slice(0, idx);
-    const sig = cookie.slice(idx + 1);
+    const valor = cookieValue.slice(0, idx);
+    const sig = cookieValue.slice(idx + 1);
 
-    // Verificar la firma en tiempo constante antes de confiar en el contenido.
     const recibido = Buffer.from(sig);
     const esperado = Buffer.from(firmaSesion(valor));
     if (recibido.length !== esperado.length || !timingSafeEqual(recibido, esperado)) {
@@ -71,10 +67,28 @@ export async function leerCookieSesion(): Promise<PayloadSesion | null> {
     const payload = JSON.parse(json) as PayloadSesion;
     return payload?.uid ? payload : null;
   } catch (err) {
-    // Firma inválida, JSON corrupto o AUTH_TOKEN_SECRET ausente: denegar acceso.
     console.error('[session] cookie inválida o secreto ausente', err);
     return null;
   }
+}
+
+// Lee la sesión desde cookies() de next/headers (Server Components y páginas).
+export async function leerCookieSesion(): Promise<PayloadSesion | null> {
+  const cookieStore = await cookies();
+  const cookieValue = cookieStore.get(COOKIE)?.value;
+  if (!cookieValue) return null;
+  return verificarCookieSesion(cookieValue);
+}
+
+// Lee la sesión directamente desde el header Cookie del Request
+// (Route Handlers que tienen acceso al objeto request).
+// Evita depender de cookies() de next/headers en contextos API.
+export function leerCookieSesionDeRequest(request: Request): PayloadSesion | null {
+  const header = request.headers.get('cookie') ?? '';
+  const match = header.match(new RegExp(`(?:^|;\\s*)${COOKIE}=([^;]+)`));
+  if (!match) return null;
+  const cookieValue = decodeURIComponent(match[1]);
+  return verificarCookieSesion(cookieValue);
 }
 
 export async function borrarCookieSesion(): Promise<void> {

@@ -6,9 +6,9 @@ import { db } from '@/lib/db';
 // El estudiante aún no existe en usuarios. Cuando se registre con ese email
 // la fila se completa con su id_usuario y pending pasa a false.
 
-export function crearInvitacion(email: string) {
+export function crearInvitacion(email: string, rol?: string | null) {
   return db.pending_verifications.create({
-    data: { email, pending: true, tipo: 'invitacion' },
+    data: { email, pending: true, tipo: 'invitacion', rol: rol ?? null },
   });
 }
 
@@ -37,6 +37,29 @@ export function listarPendingVerifications() {
   return db.pending_verifications.findMany({
     where: { pending: true },
     orderBy: { solicitado: 'asc' },
+  });
+}
+
+// Lista las INVITACIONES enviadas que siguen pendientes (tipo 'invitacion').
+// Las usa el panel admin para mostrar "Invitaciones enviadas".
+export function listarInvitacionesPendientes() {
+  return db.pending_verifications.findMany({
+    where: { pending: true, tipo: 'invitacion' },
+    orderBy: { solicitado: 'desc' },
+  });
+}
+
+// Busca una invitación por id (para reenviar / revocar desde el panel).
+export function buscarInvitacionPorId(id: string) {
+  return db.pending_verifications.findUnique({ where: { id } });
+}
+
+// Revoca (elimina) una invitación pendiente. Solo debe usarse con filas tipo
+// 'invitacion' que aún no fueron completadas.
+export function eliminarInvitacion(id: string) {
+  return db.pending_verifications.delete({
+    where: { id },
+    select: { id: true, email: true },
   });
 }
 

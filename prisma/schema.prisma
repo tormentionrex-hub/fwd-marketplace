@@ -151,9 +151,9 @@ model solicitudes_mensaje {
   asunto              String              @db.VarChar(200)
   mensaje             String
   estado              String              @default("pendiente") @db.VarChar(20)
-  iniciador           String              @default("empresario") @db.VarChar(50)
   creado              DateTime            @default(now()) @db.Timestamptz(6)
   actualizado         DateTime            @default(now()) @db.Timestamptz(6)
+  iniciador           String              @default("empresario") @db.VarChar(50)
   perfiles_empresario perfiles_empresario @relation(fields: [id_empresario], references: [id_usuario], onDelete: Cascade, map: "fk_solicitudes_empresario")
   perfiles_estudiante perfiles_estudiante @relation(fields: [id_estudiante], references: [id_usuario], onDelete: Cascade, map: "fk_solicitudes_estudiante")
   proyectos           proyectos?          @relation(fields: [id_proyecto], references: [id], map: "fk_solicitudes_proyecto")
@@ -162,6 +162,7 @@ model solicitudes_mensaje {
   @@index([id_empresario], map: "idx_solicitudes_empresario")
   @@index([estado], map: "idx_solicitudes_estado")
 }
+
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model ofertas {
   id                  String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -191,6 +192,7 @@ model pending_verifications {
   solicitado DateTime  @default(now()) @db.Timestamptz(6)
   resuelto   DateTime? @db.Timestamptz(6)
   tipo       String    @default("invitacion") @db.VarChar(20)
+  rol        String?   @db.VarChar(50)
 
   @@index([id_usuario], map: "idx_pending_verifications_id_usuario")
   @@index([pending], map: "idx_pending_verifications_pending")
@@ -253,6 +255,7 @@ model portafolio_proyectos {
   repo_url            String?
   demo_url            String?
   creado              DateTime            @default(now()) @db.Timestamptz(6)
+  es_publico          Boolean             @default(true)
   perfiles_estudiante perfiles_estudiante @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade, onUpdate: NoAction, map: "fk_portafolio_estudiante")
 
   @@index([id_usuario], map: "idx_portafolio_id_usuario")
@@ -276,19 +279,20 @@ model proyecto_mejoras {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model proyectos {
-  id                    String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  id_empresario         String                      @db.Uuid
-  titulo                String                      @db.VarChar(200)
+  id                    String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id_empresario         String                  @db.Uuid
+  titulo                String                  @db.VarChar(200)
   descripcion           String
-  area_negocio          String?                     @db.VarChar(150)
-  usa_ia                Boolean                     @default(false)
+  area_negocio          String?                 @db.VarChar(150)
+  usa_ia                Boolean                 @default(false)
   plazo_dias            Int?
-  estado                String                      @default("borrador") @db.VarChar(50)
+  estado                String                  @default("borrador") @db.VarChar(50)
+  publicado             DateTime?               @db.Timestamptz(6)
+  cierre                DateTime?               @db.Timestamptz(6)
+  estado_previo         String?                 @db.VarChar(50)
   motivo_estado         String?
-  estado_previo         String?                     @db.VarChar(50)
-  publicado             DateTime?                   @db.Timestamptz(6)
-  cierre                DateTime?                   @db.Timestamptz(6)
   embedding             Unsupported("vector(768)")?
+  imagenes              String[]                    @default([])
   chats                 chats[]
   conversaciones_ia     conversaciones_ia[]
   cv_accesos            cv_accesos[]
@@ -407,6 +411,8 @@ model curriculums {
   es_publico          Boolean             @default(false)
   subido              DateTime            @default(now()) @db.Timestamptz(6)
   actualizado         DateTime            @default(now()) @db.Timestamptz(6)
+  ultimo_analisis     Json?
+  fecha_analisis      DateTime?           @db.Timestamptz(6)
   perfiles_estudiante perfiles_estudiante @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade, onUpdate: NoAction)
   cv_accesos          cv_accesos[]
 }
@@ -487,5 +493,43 @@ model categorias_negocio {
   id     BigInt  @id @default(autoincrement())
   nombre String  @unique @db.VarChar(150)
   activa Boolean @default(true)
+}
+
+model marketing_metricas {
+  id            String   @id @db.VarChar(100)
+  label         String   @db.VarChar(150)
+  value         Float
+  unit          String   @db.VarChar(10)
+  display_value String   @db.VarChar(50)
+  context       String
+  kind          String   @db.VarChar(50)
+  region        String   @db.VarChar(50)
+  source        Json
+  creado        DateTime @default(now()) @db.Timestamptz(6)
+  actualizado   DateTime @default(now()) @db.Timestamptz(6)
+}
+
+model marketing_plataformas {
+  platform                 String   @id @db.VarChar(100)
+  audience_millions        Float
+  audience_label           String   @db.VarChar(50)
+  population_reach_percent Float
+  internet_reach_percent   Float?
+  adult_reach_percent      Float?
+  annual_growth_percent    Float?
+  note                     String
+  source                   Json
+  creado                   DateTime @default(now()) @db.Timestamptz(6)
+  actualizado              DateTime @default(now()) @db.Timestamptz(6)
+}
+
+model marketing_tendencias {
+  id          String   @id @db.VarChar(100)
+  title       String   @db.VarChar(200)
+  value       String   @db.VarChar(50)
+  description String
+  source      Json
+  creado      DateTime @default(now()) @db.Timestamptz(6)
+  actualizado DateTime @default(now()) @db.Timestamptz(6)
 }
 

@@ -69,7 +69,7 @@ export async function GET(request: Request) {
     return error('No autorizado', 401);
   }
 
-  if (user.tipo_staff === 'moderador') {
+  if (user.staffSubRole === 'moderador') {
     return error('No autorizado', 403);
   }
 
@@ -113,7 +113,7 @@ export async function POST(request: Request) {
     return error('No autorizado', 401);
   }
 
-  if (user.tipo_staff === 'moderador') {
+  if (user.staffSubRole === 'moderador') {
     return error('No autorizado', 403);
   }
 

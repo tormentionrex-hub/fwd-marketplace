@@ -59,7 +59,7 @@ export default async function AdminCatalogosPage({
         initialTecnologias={tecnologias}
         initialHabilidades={habilidades}
         initialCategoriasNegocio={categoriasNegocio}
-        tipoStaff={user.tipo_staff ?? ''}
+        staffSubRole={user.staffSubRole ?? ''}
       />
     </AdminPageShell>
   );

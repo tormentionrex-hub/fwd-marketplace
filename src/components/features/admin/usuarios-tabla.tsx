@@ -1,7 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "@/i18n/navigation";
+import { Pencil, Trash2 } from "lucide-react";
+import { confirmarEliminacion, toastExito, alertaError } from "@/lib/sweetalert-admin";
 
 export type UsuarioFila = {
   id: string;
@@ -41,14 +43,13 @@ const colorRol: Record<string, string> = {
   estudiante: "bg-fwd-blue/15 text-fwd-blue",
   empresario: "bg-fwd-purple/20 text-fwd-purple",
   admin: "bg-fwd-magenta/15 text-fwd-magenta",
-  staff: "bg-fwd-magenta/15 text-fwd-magenta",
 };
 
 const TABS = [
   { key: "todos", label: "Todos" },
   { key: "estudiante", label: "Estudiantes" },
   { key: "empresario", label: "Empresarios" },
-  { key: "staff", label: "Staff" },
+  { key: "admin", label: "Admins" },
 ] as const;
 
 type SortKey = "nombre" | "correo" | "rol" | "estado" | "creado";
@@ -60,71 +61,117 @@ const COLUMNS: { key: SortKey; label: string }[] = [
   { key: "creado", label: "Registrado" },
 ];
 
+type RolKey = (typeof TABS)[number]["key"];
+
 export function UsuariosTabla({
   usuarios,
   currentUserId,
+  rolInicial = "todos",
 }: {
   usuarios: UsuarioFila[];
   currentUserId: string;
+  rolInicial?: string;
 }) {
   const router = useRouter();
   const [q, setQ] = useState("");
-  const [rolFiltro, setRolFiltro] = useState<(typeof TABS)[number]["key"]>("todos");
+  const [rolFiltro, setRolFiltro] = useState<RolKey>(
+    (TABS.some((t) => t.key === rolInicial) ? rolInicial : "todos") as RolKey
+  );
+
+  // Sincroniza el filtro cuando se navega con ?rol= desde el sidebar (la página
+  // se re-renderiza sin desmontar este componente).
+  useEffect(() => {
+    setRolFiltro((TABS.some((t) => t.key === rolInicial) ? rolInicial : "todos") as RolKey);
+  }, [rolInicial]);
   const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" }>({
     key: "creado",
     dir: "desc",
   });
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
   // Modal de detalle
   const [detalleModal, setDetalleModal] = useState<UsuarioFila | null>(null);
   const [cargandoCv, setCargandoCv] = useState<"ver" | "descargar" | null>(null);
   const [cvError, setCvError] = useState("");
 
-  // Estados para suspension/reactivacion
-  const [suspensionModal, setSuspensionModal] = useState<{ usuario: UsuarioFila; accion: "suspender" | "reactivar" } | null>(null);
-  const [motivoSuspension, setMotivoSuspension] = useState("");
-  const [procesandoSuspension, setProcesandoSuspension] = useState(false);
-  const [suspensionError, setSuspensionError] = useState("");
+  // Edición dentro del modal de detalle
+  const [editando, setEditando] = useState(false);
+  const [guardando, setGuardando] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+  const [form, setForm] = useState({
+    nombre: "",
+    segundo_nombre: "",
+    segundo_apellido: "",
+    correo: "",
+    edad: "",
+  });
 
-  async function ejecutarSuspensionReactivacion() {
-    if (!suspensionModal) return;
-    const { usuario, accion } = suspensionModal;
+  // Al abrir/cerrar/cambiar de usuario, salir del modo edición.
+  useEffect(() => {
+    setEditando(false);
+    setEditError(null);
+  }, [detalleModal?.id]);
 
-    if (!motivoSuspension.trim()) {
-      setSuspensionError("El motivo es obligatorio.");
-      return;
-    }
+  function iniciarEdicion(u: UsuarioFila) {
+    setEditError(null);
+    setForm({
+      nombre: u.nombre ?? "",
+      segundo_nombre: u.segundo_nombre ?? "",
+      segundo_apellido: u.segundo_apellido ?? "",
+      correo: u.correo ?? "",
+      edad: u.edad != null ? String(u.edad) : "",
+    });
+    setEditando(true);
+  }
 
-    setProcesandoSuspension(true);
-    setSuspensionError("");
-
+  async function guardarEdicion() {
+    if (!detalleModal) return;
+    setEditError(null);
+    setGuardando(true);
     try {
-      const url = `/api/admin/usuarios/${usuario.id}/suspension`;
-      const method = accion === "suspender" ? "POST" : "PATCH";
-
-      const res = await fetch(url, {
-        method,
+      const payload: Record<string, unknown> = {
+        nombre: form.nombre.trim(),
+        segundo_nombre: form.segundo_nombre.trim() || null,
+        segundo_apellido: form.segundo_apellido.trim() || null,
+        correo: form.correo.trim().toLowerCase(),
+        edad: form.edad.trim() === "" ? null : Number(form.edad),
+      };
+      const res = await fetch(`/api/admin/usuarios/${detalleModal.id}`, {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ motivo: motivoSuspension.trim() }),
+        body: JSON.stringify(payload),
       });
-
       if (!res.ok) {
         const data = await res.json().catch(() => null);
-        setSuspensionError(data?.error ?? "Ocurrió un error.");
+        const msg = data?.error ?? "No se pudo guardar el usuario.";
+        setEditError(msg);
+        alertaError(msg);
         return;
       }
-
-      setSuspensionModal(null);
-      setMotivoSuspension("");
-      setDetalleModal(null); // Cerrar el detalle
-      router.refresh();      // Recargar datos
+      // Refleja los cambios en el modal y refresca la tabla.
+      setDetalleModal({
+        ...detalleModal,
+        nombre: String(payload.nombre),
+        segundo_nombre: payload.segundo_nombre as string | null,
+        segundo_apellido: payload.segundo_apellido as string | null,
+        correo: String(payload.correo),
+        edad: payload.edad as number | null,
+      });
+      setEditando(false);
+      toastExito("Usuario actualizado.");
+      router.refresh();
     } catch {
-      setSuspensionError("Error de red. Intentá de nuevo.");
+      const msg = "Error de red. Intentá de nuevo.";
+      setEditError(msg);
+      alertaError(msg);
     } finally {
-      setProcesandoSuspension(false);
+      setGuardando(false);
     }
+  }
+
+  async function eliminarDesdeModal(u: UsuarioFila) {
+    const ok = await eliminar(u);
+    if (ok) setDetalleModal(null);
   }
 
   async function abrirCv(idUsuario: string, accion: "ver" | "descargar") {
@@ -152,9 +199,7 @@ export function UsuariosTabla({
   const visibles = useMemo(() => {
     const f = q.trim().toLowerCase();
     let lista = usuarios;
-    if (rolFiltro !== "todos") {
-      lista = lista.filter((u) => u.rol === rolFiltro || (rolFiltro === "staff" && u.rol === "admin"));
-    }
+    if (rolFiltro !== "todos") lista = lista.filter((u) => u.rol === rolFiltro);
     if (f) {
       lista = lista.filter(
         (u) =>
@@ -183,24 +228,29 @@ export function UsuariosTabla({
     );
   }
 
-  async function eliminar(u: UsuarioFila) {
-    if (!confirm(`¿Eliminar a ${u.nombre}? Esta acción no se puede deshacer.`)) {
-      return;
-    }
+  async function eliminar(u: UsuarioFila): Promise<boolean> {
+    const ok = await confirmarEliminacion({
+      titulo: `¿Eliminar a ${u.nombre}?`,
+      texto: "Esta acción no se puede deshacer.",
+      confirmText: "Eliminar usuario",
+    });
+    if (!ok) return false;
     setDeletingId(u.id);
-    setError(null);
     try {
       const res = await fetch(`/api/admin/usuarios/${u.id}`, {
         method: "DELETE",
       });
       if (!res.ok) {
         const data = await res.json().catch(() => null);
-        setError(data?.error ?? "No se pudo eliminar el usuario.");
-        return;
+        alertaError(data?.error ?? "No se pudo eliminar el usuario.");
+        return false;
       }
+      toastExito(`${u.nombre} fue eliminado.`);
       router.refresh(); // recarga la lista desde el servidor
+      return true;
     } catch {
-      setError("Error de red. Intentá de nuevo.");
+      alertaError("Error de red. Intentá de nuevo.");
+      return false;
     } finally {
       setDeletingId(null);
     }
@@ -244,14 +294,6 @@ export function UsuariosTabla({
         </p>
       </div>
 
-      {error && (
-        <p
-          role="alert"
-          className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300"
-        >
-          {error}
-        </p>
-      )}
 
       <div className="overflow-x-auto rounded-2xl border border-white/10 bg-white/[0.03]">
         <table className="w-full text-left text-sm">
@@ -327,7 +369,7 @@ export function UsuariosTabla({
                           onClick={() => eliminar(u)}
                           disabled={esYo || deletingId === u.id}
                           title={esYo ? "No puedes eliminar tu propia cuenta" : "Eliminar usuario"}
-                          className="rounded-lg px-2.5 py-1 text-xs font-semibold text-fwd-magenta transition hover:bg-fwd-magenta/15 disabled:cursor-not-allowed disabled:text-white/25 disabled:hover:bg-transparent"
+                          className="inline-flex items-center gap-1 rounded-lg bg-red-500/10 px-2.5 py-1 text-xs font-semibold text-red-500 transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:bg-transparent disabled:text-white/25 disabled:hover:bg-transparent"
                         >
                           {deletingId === u.id ? "Eliminando…" : "Eliminar"}
                         </button>
@@ -374,15 +416,106 @@ export function UsuariosTabla({
                   <p className="text-sm text-white/50">{detalleModal.correo}</p>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setDetalleModal(null)}
-                className="text-white/40 hover:text-white transition-colors text-2xl font-bold px-2"
-              >
-                &times;
-              </button>
+              <div className="flex items-center gap-1">
+                {!editando && (
+                  <button
+                    type="button"
+                    onClick={() => iniciarEdicion(detalleModal)}
+                    title="Editar usuario"
+                    aria-label="Editar usuario"
+                    className="rounded-lg p-2 text-fwd-blue transition hover:bg-fwd-blue/15"
+                  >
+                    <Pencil className="h-[18px] w-[18px]" />
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => eliminarDesdeModal(detalleModal)}
+                  disabled={detalleModal.id === currentUserId || deletingId === detalleModal.id}
+                  title={
+                    detalleModal.id === currentUserId
+                      ? "No puedes eliminar tu propia cuenta"
+                      : "Eliminar usuario"
+                  }
+                  aria-label="Eliminar usuario"
+                  className="rounded-lg bg-red-500/15 p-2 text-red-500 transition hover:bg-red-500/25 disabled:cursor-not-allowed disabled:bg-transparent disabled:text-white/25"
+                >
+                  <Trash2 className="h-5 w-5" strokeWidth={2.4} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDetalleModal(null)}
+                  className="text-white/40 hover:text-white transition-colors text-2xl font-bold px-2"
+                  aria-label="Cerrar"
+                >
+                  &times;
+                </button>
+              </div>
             </div>
 
+            {editando && (
+              <div className="mt-4 space-y-3">
+                <p className="text-xs font-semibold uppercase tracking-wider text-fwd-blue">
+                  Editando usuario
+                </p>
+                {editError && (
+                  <p
+                    role="alert"
+                    className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300"
+                  >
+                    {editError}
+                  </p>
+                )}
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <label className="block">
+                    <span className="mb-1 block text-xs font-medium text-white/55">Nombre</span>
+                    <input
+                      value={form.nombre}
+                      onChange={(e) => setForm((f) => ({ ...f, nombre: e.target.value }))}
+                      className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:border-fwd-blue focus:ring-2 focus:ring-fwd-blue/20"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="mb-1 block text-xs font-medium text-white/55">Segundo nombre</span>
+                    <input
+                      value={form.segundo_nombre}
+                      onChange={(e) => setForm((f) => ({ ...f, segundo_nombre: e.target.value }))}
+                      className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:border-fwd-blue focus:ring-2 focus:ring-fwd-blue/20"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="mb-1 block text-xs font-medium text-white/55">Segundo apellido</span>
+                    <input
+                      value={form.segundo_apellido}
+                      onChange={(e) => setForm((f) => ({ ...f, segundo_apellido: e.target.value }))}
+                      className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:border-fwd-blue focus:ring-2 focus:ring-fwd-blue/20"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="mb-1 block text-xs font-medium text-white/55">Edad</span>
+                    <input
+                      type="number"
+                      min={0}
+                      max={120}
+                      value={form.edad}
+                      onChange={(e) => setForm((f) => ({ ...f, edad: e.target.value }))}
+                      className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:border-fwd-blue focus:ring-2 focus:ring-fwd-blue/20"
+                    />
+                  </label>
+                  <label className="block sm:col-span-2">
+                    <span className="mb-1 block text-xs font-medium text-white/55">Correo</span>
+                    <input
+                      type="email"
+                      value={form.correo}
+                      onChange={(e) => setForm((f) => ({ ...f, correo: e.target.value }))}
+                      className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:border-fwd-blue focus:ring-2 focus:ring-fwd-blue/20"
+                    />
+                  </label>
+                </div>
+              </div>
+            )}
+
+            {!editando && (
             <div className="mt-4 space-y-4">
               {/* Info personal */}
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -554,98 +687,37 @@ export function UsuariosTabla({
                 </div>
               )}
             </div>
-
-            <div className="mt-6 flex justify-between items-center border-t border-white/10 pt-4">
-              <div>
-                {detalleModal.id !== currentUserId && (
-                  detalleModal.estado === "suspendido" ? (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSuspensionModal({ usuario: detalleModal, accion: "reactivar" });
-                        setSuspensionError("");
-                        setMotivoSuspension("");
-                      }}
-                      className="rounded-xl bg-[#10b981]/20 px-5 py-2 text-sm font-semibold text-[#10b981] hover:bg-[#10b981]/30 transition"
-                    >
-                      Reactivar cuenta
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSuspensionModal({ usuario: detalleModal, accion: "suspender" });
-                        setSuspensionError("");
-                        setMotivoSuspension("");
-                      }}
-                      className="rounded-xl bg-red-500/20 px-5 py-2 text-sm font-semibold text-red-400 hover:bg-red-500/30 transition"
-                    >
-                      Suspender cuenta
-                    </button>
-                  )
-                )}
-              </div>
-              <button
-                type="button"
-                onClick={() => setDetalleModal(null)}
-                className="rounded-xl bg-white/10 px-5 py-2 text-sm font-semibold text-white transition hover:bg-white/15"
-              >
-                Cerrar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal de confirmación de suspensión/reactivación */}
-      {suspensionModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#1f2937] p-6 shadow-2xl">
-            <h3 className="text-lg font-bold text-white mb-2 capitalize">
-              {suspensionModal.accion === "suspender" ? "Suspender" : "Reactivar"} Cuenta
-            </h3>
-            <p className="text-sm text-white/70 mb-4">
-              ¿Estás seguro de que deseas {suspensionModal.accion === "suspender" ? "suspender" : "reactivar"} la cuenta de <strong>{suspensionModal.usuario.nombre}</strong>?
-            </p>
-            
-            <div className="flex flex-col gap-2">
-              <label htmlFor="motivo-suspension" className="text-xs font-semibold uppercase tracking-wider text-white/50">
-                Motivo / Justificación (Obligatorio)
-              </label>
-              <textarea
-                id="motivo-suspension"
-                value={motivoSuspension}
-                onChange={(e) => setMotivoSuspension(e.target.value)}
-                placeholder="Escribe el motivo detallado de esta acción..."
-                rows={3}
-                className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-white outline-none focus:border-fwd-blue transition resize-none"
-              />
-            </div>
-
-            {suspensionError && (
-              <p role="alert" className="mt-3 text-xs text-red-400 font-semibold">{suspensionError}</p>
             )}
 
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setSuspensionModal(null)}
-                className="rounded-xl bg-white/10 px-4 py-2 text-sm font-semibold text-white hover:bg-white/15 transition"
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={ejecutarSuspensionReactivacion}
-                disabled={procesandoSuspension}
-                className={`rounded-xl px-4 py-2 text-sm font-semibold text-white transition ${
-                  suspensionModal.accion === "suspender"
-                    ? "bg-red-600 hover:bg-red-700"
-                    : "bg-[#10b981] hover:bg-[#059669]"
-                }`}
-              >
-                {procesandoSuspension ? "Procesando..." : "Confirmar"}
-              </button>
+            <div className="mt-6 flex justify-end gap-3 border-t border-white/10 pt-4">
+              {editando ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setEditando(false)}
+                    disabled={guardando}
+                    className="rounded-xl px-4 py-2 text-sm font-semibold text-white/60 transition hover:text-white disabled:opacity-50"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={guardarEdicion}
+                    disabled={guardando || !form.nombre.trim() || !form.correo.trim()}
+                    className="rounded-xl bg-fwd-blue px-5 py-2 text-sm font-bold text-white shadow transition hover:bg-fwd-blue/90 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {guardando ? "Guardando…" : "Guardar cambios"}
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setDetalleModal(null)}
+                  className="rounded-xl bg-white/10 px-5 py-2 text-sm font-semibold text-white transition hover:bg-white/15"
+                >
+                  Cerrar
+                </button>
+              )}
             </div>
           </div>
         </div>

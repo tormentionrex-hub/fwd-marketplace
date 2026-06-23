@@ -24,6 +24,7 @@ export const crearProyectoSchema = z.object({
     .optional()
     .nullable(),
   tecnologias: z.array(z.string().trim().min(1).max(80)).max(20).optional().default([]),
+  imagenes: z.array(z.string().url()).max(5).optional().default([]),
 });
 
 export type CrearProyectoInput = z.infer<typeof crearProyectoSchema>;
@@ -35,6 +36,7 @@ export const actualizarProyectoSchema = z.object({
   areaNegocio: z.string().trim().max(100).optional().nullable(),
   plazoDias: z.coerce.number().int().positive().max(365).optional().nullable(),
   tecnologias: z.array(z.string().trim().min(1).max(80)).max(20).optional(),
+  imagenes: z.array(z.string().url()).max(5).optional(),
 });
 
 export type ActualizarProyectoInput = z.infer<typeof actualizarProyectoSchema>;

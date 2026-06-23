@@ -1,18 +1,22 @@
 import 'server-only';
-import { leerCookieSesion } from '@/server/auth/session';
+import { leerCookieSesion, leerCookieSesionDeRequest } from '@/server/auth/session';
 import { buscarUsuarioPorId } from '@/server/repositories/usuario.repository';
 
 // Devuelve el usuario autenticado (o null) leyendo la cookie de sesión.
-// Toma el id de la cookie y trae el usuario fresco de la DB (con el nombre del
-// rol) — la DB es la fuente de verdad, no confiamos en el rol de la cookie para
-// autorizar. Úsalo en Server Components y Route Handlers.
-//
-// Ejemplo en un Route Handler:
-//   const user = await getUser();
-//   if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-export async function getUser() {
-  const sesion = await leerCookieSesion();
+// En Server Components (sin request): usa cookies() de next/headers.
+// En Route Handlers (con request): lee el header Cookie directamente del Request.
+// La DB es la fuente de verdad — el rol siempre se trae fresco.
+export async function getUser(request?: Request) {
+  const sesion = request
+    ? leerCookieSesionDeRequest(request)
+    : await leerCookieSesion();
   if (!sesion) return null;
 
-  return buscarUsuarioPorId(sesion.uid);
+  try {
+    const user = await buscarUsuarioPorId(sesion.uid);
+    if (!user) return null;
+    return { ...user, staffSubRole: user.tipo_staff };
+  } catch {
+    return null;
+  }
 }

@@ -16,11 +16,22 @@ function hashPassword(plain: string): string {
 }
 
 async function main() {
-  const correo = 'staff@fwdcr.com';
+  // Roles de staff del equipo FWD. Idempotente (upsert por nombre único).
+  // owner/admin acceden al panel; staff/moderator se crean para uso futuro.
+  for (const nombre of ['owner', 'staff', 'moderator']) {
+    await db.roles.upsert({
+      where: { nombre },
+      update: {},
+      create: { nombre },
+    });
+  }
+  console.log('Roles de staff verificados: owner, staff, moderator');
 
-  const rolStaff = await db.roles.findUnique({ where: { nombre: 'staff' } });
-  if (!rolStaff) {
-    throw new Error("No existe el rol 'staff' en la tabla roles.");
+  const correo = 'admin@fwd.cr';
+
+  const rolAdmin = await db.roles.findUnique({ where: { nombre: 'admin' } });
+  if (!rolAdmin) {
+    throw new Error("No existe el rol 'admin' en la tabla roles.");
   }
 
   const admin = await db.usuarios.upsert({
@@ -30,8 +41,7 @@ async function main() {
       nombre: 'Administrador FWD',
       correo,
       hash_contrasena: hashPassword('FwdAdmin2026!'),
-      id_rol: rolStaff.id,
-      tipo_staff: 'admin_general',
+      id_rol: rolAdmin.id,
     },
     select: { id: true, correo: true },
   });
