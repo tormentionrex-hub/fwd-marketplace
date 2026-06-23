@@ -315,6 +315,7 @@ export async function crearProyecto(data: {
   areaNegocio: string | null;
   plazoDias: number | null;
   tecnologias: string[];
+  imagenes: string[];
 }) {
   const techIds = await Promise.all(
     data.tecnologias.map((nombre) =>
@@ -354,6 +355,7 @@ export async function actualizarProyecto(
     areaNegocio?: string | null | undefined;
     plazoDias?: number | null | undefined;
     tecnologias?: string[] | undefined;
+    imagenes?: string[] | undefined;
   },
 ) {
   const { tecnologias, ...campos } = data;

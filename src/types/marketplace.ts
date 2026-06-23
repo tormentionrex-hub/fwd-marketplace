@@ -74,6 +74,7 @@ export interface ProyectoMarketplace {
   plazoDias: number | null;
   publicado: string | null;
   usaIA: boolean;
+  imagenes: string[];
   tecnologias: string[];
   empresario: {
     nombre: string;

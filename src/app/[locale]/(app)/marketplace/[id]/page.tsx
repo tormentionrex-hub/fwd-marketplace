@@ -5,6 +5,7 @@ import ParticleBackground from "@/components/ParticleBackground";
 import HomeButton from "@/components/HomeButton";
 import SettingsPanel from "@/components/SettingsPanel";
 import { FwdIsotipo } from "@/components/ui/fwd-logo";
+import CarruselImagenes from "@/components/features/marketplace/CarruselImagenes";
 
 const COLOR_POR_AREA: Record<string, string> = {
   "Tecnología":       "#008FD4",
@@ -61,6 +62,7 @@ export default async function MarketplaceItemPage({
   const color = areaColor(proyecto.area);
   const empresa = proyecto.empresario.nombre;
   const estaAbierto = proyecto.estado === "abierto";
+  const portada = proyecto.imagenes?.[0] ?? null;
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -72,25 +74,54 @@ export default async function MarketplaceItemPage({
       {/* ══ HERO ══ */}
       <section
         className="relative overflow-hidden pt-28 pb-16"
-        style={{ background: `linear-gradient(135deg, #0e1628 0%, #0a2a4e 45%, ${color}cc 100%)` }}
+        style={
+          portada
+            ? { background: "#0e1628" }
+            : { background: `linear-gradient(135deg, #0e1628 0%, #0a2a4e 45%, ${color}cc 100%)` }
+        }
       >
-        {/* Radial glow del color del área */}
-        <div
-          className="pointer-events-none absolute inset-0"
-          style={{ background: `radial-gradient(ellipse at 75% 40%, ${color}35 0%, transparent 60%)` }}
-        />
-        {/* Segundo glow */}
-        <div
-          className="pointer-events-none absolute inset-0"
-          style={{ background: "radial-gradient(ellipse at 20% 80%, rgba(102,45,145,0.25) 0%, transparent 55%)" }}
-        />
+        {/* Imagen de portada como fondo (si existe) */}
+        {portada && (
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={portada}
+              alt=""
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 w-full h-full object-cover"
+              style={{ opacity: 0.35 }}
+            />
+            {/* Overlay oscuro para legibilidad */}
+            <div
+              className="pointer-events-none absolute inset-0"
+              style={{
+                background: `linear-gradient(135deg, rgba(14,22,40,0.92) 0%, rgba(10,42,78,0.78) 45%, ${color}88 100%)`,
+              }}
+            />
+          </>
+        )}
+
+        {/* Glows (solo sin portada o como refuerzo) */}
+        {!portada && (
+          <>
+            <div
+              className="pointer-events-none absolute inset-0"
+              style={{ background: `radial-gradient(ellipse at 75% 40%, ${color}35 0%, transparent 60%)` }}
+            />
+            <div
+              className="pointer-events-none absolute inset-0"
+              style={{ background: "radial-gradient(ellipse at 20% 80%, rgba(102,45,145,0.25) 0%, transparent 55%)" }}
+            />
+          </>
+        )}
 
         {/* FWD Isotipo decorativo */}
         <div className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 opacity-[0.07] overflow-hidden">
           <FwdIsotipo style={{ width: "380px", height: "auto" }} />
         </div>
 
-        <ParticleBackground />
+        {/* Particles solo cuando no hay portada */}
+        {!portada && <ParticleBackground />}
 
         <div className="relative z-10 mx-auto max-w-5xl px-6 sm:px-8">
           {/* Volver */}
@@ -107,9 +138,9 @@ export default async function MarketplaceItemPage({
             <span
               className="inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-black uppercase tracking-wider text-white"
               style={{
-            background: estaAbierto ? "rgba(16,185,129,0.25)" : "rgba(239,68,68,0.15)",
-            border: estaAbierto ? "1px solid rgba(16,185,129,0.5)" : "1px solid rgba(239,68,68,0.4)",
-          }}
+                background: estaAbierto ? "rgba(16,185,129,0.25)" : "rgba(239,68,68,0.15)",
+                border: estaAbierto ? "1px solid rgba(16,185,129,0.5)" : "1px solid rgba(239,68,68,0.4)",
+              }}
             >
               <span
                 className="w-1.5 h-1.5 rounded-full"
@@ -127,7 +158,7 @@ export default async function MarketplaceItemPage({
             )}
           </div>
 
-          {/* Título con efecto shimmer */}
+          {/* Título */}
           <div className="relative mb-6">
             <style>{`
               @keyframes shimmerText {
@@ -148,12 +179,12 @@ export default async function MarketplaceItemPage({
             </h1>
           </div>
 
-          {/* Descripción resumida en el hero */}
+          {/* Descripción resumida */}
           <p className="text-white/65 text-base leading-relaxed max-w-2xl">
             {proyecto.descripcion.slice(0, 200)}{proyecto.descripcion.length > 200 ? "…" : ""}
           </p>
 
-          {/* Chips rápidos de info */}
+          {/* Chips rápidos */}
           <div className="flex flex-wrap gap-3 mt-8">
             {proyecto.fechaLimite && (
               <div className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-white/80"
@@ -177,7 +208,7 @@ export default async function MarketplaceItemPage({
           </div>
         </div>
 
-        {/* Wave decorativo */}
+        {/* Wave */}
         <div className="absolute bottom-0 left-0 right-0 h-12 pointer-events-none"
           style={{ background: "linear-gradient(to top, var(--surface), transparent)" }} />
       </section>
@@ -202,6 +233,11 @@ export default async function MarketplaceItemPage({
 
             {/* ── Columna principal ── */}
             <div className="flex flex-col gap-10">
+
+              {/* Carrusel de imagenes (solo si hay) */}
+              {proyecto.imagenes && proyecto.imagenes.length > 0 && (
+                <CarruselImagenes imagenes={proyecto.imagenes} titulo={proyecto.titulo} />
+              )}
 
               {/* Descripción completa */}
               <div
@@ -266,7 +302,6 @@ export default async function MarketplaceItemPage({
                 className="rounded-2xl overflow-hidden"
                 style={{ border: `1px solid ${color}30`, boxShadow: `0 4px 24px ${color}12` }}
               >
-                {/* Header coloreado */}
                 <div
                   className="px-5 py-4"
                   style={{ background: `linear-gradient(135deg, ${color}22, ${color}10)` }}
