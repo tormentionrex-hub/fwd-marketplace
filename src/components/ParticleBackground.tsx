@@ -117,6 +117,7 @@ export default function ParticleBackground() {
         height: "100%",
         zIndex: 0,
         display: "block",
+        pointerEvents: "none",
       }}
     />
   );

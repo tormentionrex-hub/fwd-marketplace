@@ -289,6 +289,7 @@ model proyectos {
   publicado             DateTime?                   @db.Timestamptz(6)
   cierre                DateTime?                   @db.Timestamptz(6)
   embedding             Unsupported("vector(768)")?
+  imagenes              String[]                    @default([])
   chats                 chats[]
   conversaciones_ia     conversaciones_ia[]
   cv_accesos            cv_accesos[]
