@@ -4,6 +4,7 @@ import { Link, useRouter } from "@/i18n/navigation";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
+import Swal from "sweetalert2";
 
 // Copia client-side de rutaPorRol para no importar código server-only en el cliente.
 function rutaDesdeRol(rol: string): string {
@@ -15,7 +16,6 @@ function rutaDesdeRol(rol: string): string {
 
 export default function Navbar({ dashboardHref: dashboardProp }: { dashboardHref?: string | null }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
   const router = useRouter();
   const t = useTranslations("Nav");
 
@@ -62,6 +62,26 @@ export default function Navbar({ dashboardHref: dashboardProp }: { dashboardHref
     localStorage.removeItem("fwd_redirect");
     router.push("/login");
     router.refresh();
+  }
+
+  // Confirma con SweetAlert antes de cerrar sesión (temático claro/oscuro).
+  async function confirmarCerrarSesion() {
+    const dark = document.documentElement.classList.contains("dark");
+    const r = await Swal.fire({
+      background: dark ? "#111827" : "#ffffff",
+      color: dark ? "#f1f5f9" : "#0c1b33",
+      icon: "question",
+      title: "¿Cerrar sesión?",
+      text: "Vas a salir de tu cuenta de FWD Marketplace.",
+      showCancelButton: true,
+      confirmButtonText: "Sí, cerrar sesión",
+      cancelButtonText: "No, volver",
+      confirmButtonColor: "#EF4444",
+      cancelButtonColor: "#6B7280",
+      reverseButtons: true,
+      focusCancel: true,
+    });
+    if (r.isConfirmed) cerrarSesion();
   }
 
   const iniciales =
@@ -128,11 +148,13 @@ export default function Navbar({ dashboardHref: dashboardProp }: { dashboardHref
         </nav>
 
         {/* CTA / Usuario logueado */}
-        <div className="hidden md:flex items-center gap-3 flex-shrink-0">
+        <div className="hidden md:flex items-center gap-2.5 flex-shrink-0">
           {logueado ? (
-            <div className="relative">
-              <button
-                onClick={() => setDropdownOpen(!dropdownOpen)}
+            <>
+              {/* Perfil: clic redirige al dashboard según el rol (datos de la BD) */}
+              <Link
+                href={redirectTo}
+                title="Ir a mi dashboard"
                 className="flex items-center gap-2 rounded-full bg-white/10 pl-2 pr-4 py-1.5 text-white transition hover:bg-white/20"
               >
                 <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/20 text-xs font-bold text-white overflow-hidden">
@@ -141,37 +163,27 @@ export default function Navbar({ dashboardHref: dashboardProp }: { dashboardHref
                     <img src={perfil.image_url} alt="" className="h-full w-full object-cover" />
                   ) : iniciales}
                 </span>
-                <span className="text-sm font-semibold">{perfil?.nombre}</span>
+                <span className="text-sm font-semibold">{perfil?.nombre ?? "Mi cuenta"}</span>
+              </Link>
+
+              {/* Cerrar sesión (rojo) con confirmación SweetAlert */}
+              <button
+                type="button"
+                onClick={confirmarCerrarSesion}
+                className="inline-flex items-center gap-1.5 rounded-full bg-red-500 px-4 py-2 text-sm font-bold text-white shadow-md transition hover:scale-105 hover:bg-red-600 active:scale-95"
+              >
                 <svg
-                  width="12" height="12" viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-                  className={`transition-transform ${dropdownOpen ? "rotate-180" : ""}`}
+                  width="15" height="15" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
+                  aria-hidden="true"
                 >
-                  <polyline points="6 9 12 15 18 9" />
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                  <path d="m16 17 5-5-5-5" />
+                  <path d="M21 12H9" />
                 </svg>
+                {t("cerrarSesion")}
               </button>
-              {dropdownOpen && (
-                <>
-                  <div className="fixed inset-0 z-10" onClick={() => setDropdownOpen(false)} />
-                  <div className="absolute right-0 top-full mt-2 z-20 w-52 rounded-xl bg-white shadow-xl py-2">
-                    <Link
-                      href={redirectTo}
-                      onClick={() => setDropdownOpen(false)}
-                      className="block px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100"
-                    >
-                      Mi dashboard
-                    </Link>
-                    <hr className="my-1 border-gray-100" />
-                    <button
-                      onClick={cerrarSesion}
-                      className="w-full text-left px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50"
-                    >
-                      {t("cerrarSesion")}
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
+            </>
           ) : (
             <Link
               href="/register"
@@ -225,8 +237,8 @@ export default function Navbar({ dashboardHref: dashboardProp }: { dashboardHref
                 Mi dashboard
               </Link>
               <button
-                onClick={() => { setMenuOpen(false); cerrarSesion(); }}
-                className="text-left text-red-300 text-base font-semibold py-1 hover:text-red-200 transition-colors"
+                onClick={() => { setMenuOpen(false); confirmarCerrarSesion(); }}
+                className="text-left text-red-400 text-base font-bold py-1 hover:text-red-300 transition-colors"
               >
                 {t("cerrarSesion")}
               </button>
