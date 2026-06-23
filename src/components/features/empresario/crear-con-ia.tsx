@@ -174,33 +174,56 @@ export default function CrearConIA({ nombre: _nombre }: { nombre: string }) {
           0%, 80%, 100% { opacity: 0.25; transform: translateY(0); }
           40% { opacity: 1; transform: translateY(-4px); }
         }
+
+        .crear-ia-container {
+          display: grid;
+          grid-template-columns: 1fr 400px;
+          height: 100vh;
+          overflow: hidden;
+        }
+
+        .crear-ia-left {
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          padding: 0 64px;
+          background: var(--surface);
+          position: relative;
+          overflow-y: auto;
+        }
+
+        .crear-ia-right {
+          background: #0f0c29;
+          position: relative;
+          overflow: hidden;
+        }
+
+        @media (max-width: 900px) {
+          .crear-ia-container {
+            grid-template-columns: 1fr;
+          }
+          .crear-ia-left {
+            padding: 40px 20px;
+            justify-content: flex-start;
+          }
+          .crear-ia-right {
+            display: none;
+          }
+          .crear-ia-title {
+            font-size: 32px !important;
+          }
+        }
       `}</style>
 
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 400px',
-          height: '100vh',
-          overflow: 'hidden',
-        }}
-      >
+      <div className="crear-ia-container">
         {/* ─── Columna izquierda ─── */}
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            padding: '0 64px',
-            background: 'var(--surface)',
-            position: 'relative',
-            overflow: 'hidden',
-          }}
-        >
+        <div className="crear-ia-left">
 
           {/* ── STEP: brief ── */}
           {paso === 'brief' && (
             <div style={{ maxWidth: 520 }}>
               <h1
+                className="crear-ia-title"
                 style={{
                   fontFamily: 'var(--font-head)',
                   fontWeight: 900,
@@ -631,13 +654,7 @@ export default function CrearConIA({ nombre: _nombre }: { nombre: string }) {
         </div>
 
         {/* ─── Columna derecha: video de Fordy ─── */}
-        <div
-          style={{
-            background: '#0f0c29',
-            position: 'relative',
-            overflow: 'hidden',
-          }}
-        >
+        <div className="crear-ia-right">
           <video
             src="/videos/lv_0_20260616153411.mp4"
             autoPlay

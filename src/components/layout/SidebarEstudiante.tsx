@@ -92,9 +92,9 @@ export default function SidebarEstudiante({
         isCollapsed ? "lg:w-[72px]" : "lg:w-64"
       )}
     >
-      <div className="relative h-full overflow-hidden rounded-b-3xl lg:rounded-none lg:rounded-r-3xl bg-gradient-to-b from-fwd-morado via-fwd-azul to-fwd-azul p-3 shadow-xl shadow-fwd-morado/25 lg:p-4 flex flex-col">
-        <div aria-hidden className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-white/15 blur-2xl" />
-        <div aria-hidden className="pointer-events-none absolute -bottom-16 -left-10 h-40 w-40 rounded-full bg-fwd-turquesa/30 blur-2xl" />
+      <div className="relative h-full overflow-hidden rounded-b-3xl lg:rounded-none lg:rounded-r-3xl bg-white dark:bg-[#0f172a] border-r border-[#E4E9F1] dark:border-white/8 p-3 shadow-sm lg:p-4 flex flex-col">
+        <div aria-hidden className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-transparent blur-2xl" />
+        <div aria-hidden className="pointer-events-none absolute -bottom-16 -left-10 h-40 w-40 rounded-full bg-transparent blur-2xl" />
 
         {/* Header: logo + toggle button */}
         <div className="relative z-10 mb-2 hidden items-center justify-between lg:flex">
@@ -113,7 +113,7 @@ export default function SidebarEstudiante({
               priority
               className="h-11 w-auto object-contain shrink-0"
             />
-            <span className="font-display text-lg font-extrabold tracking-tight text-purple-400 drop-shadow-[0_0_8px_rgba(192,132,252,0.55)] whitespace-nowrap">
+            <span className="font-display text-lg font-extrabold tracking-tight text-[#662D91] dark:text-purple-400 whitespace-nowrap">
               Marketplace
             </span>
           </Link>
@@ -124,7 +124,7 @@ export default function SidebarEstudiante({
             onClick={toggleCollapsed}
             aria-label={isCollapsed ? "Expandir menú" : "Colapsar menú"}
             className={cn(
-              "flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/15 text-white transition-all duration-200 hover:bg-white/25 hover:scale-105",
+              "flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#F4F6FB] dark:bg-white/10 text-[#4C5E7C] dark:text-white/70 border border-[#E4E9F1] dark:border-white/10 transition-all duration-200 hover:bg-[#EAEEF6] dark:hover:bg-white/20 hover:scale-105",
               isCollapsed && "mx-auto"
             )}
           >
@@ -151,15 +151,15 @@ export default function SidebarEstudiante({
                 className={cn(
                   "group relative inline-flex shrink-0 items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 hover:translate-x-1",
                   activo
-                    ? "bg-white/95 text-fwd-azul shadow-lg shadow-fwd-azul/30"
-                    : "text-white/80 hover:bg-white/15 hover:text-white",
+                    ? "bg-[#F0E7F7] dark:bg-purple-900/30 text-[#662D91] dark:text-purple-300 font-semibold"
+                    : "text-[#4C5E7C] dark:text-white/70 hover:bg-[#F4F6FB] dark:hover:bg-white/10 hover:text-[#1B2C49] dark:hover:text-white",
                   isCollapsed && "lg:justify-center lg:px-2"
                 )}
               >
                 <span
                   aria-hidden
                   className={cn(
-                    "absolute -left-0.5 top-1/2 hidden h-6 w-1 -translate-y-1/2 rounded-full bg-fwd-amarillo shadow-[0_0_12px] shadow-fwd-amarillo/80 transition-opacity duration-200 lg:block",
+                    "absolute -left-0.5 top-1/2 hidden h-6 w-1 -translate-y-1/2 rounded-full bg-[#662D91] transition-opacity duration-200 lg:block",
                     activo ? "opacity-100" : "opacity-0",
                     isCollapsed && "lg:hidden"
                   )}
@@ -168,8 +168,8 @@ export default function SidebarEstudiante({
                   className={cn(
                     "grid h-7 w-7 shrink-0 place-items-center rounded-lg transition-all duration-200 group-hover:scale-110 group-hover:-rotate-6",
                     activo
-                      ? "bg-gradient-to-br from-fwd-azul to-fwd-turquesa text-white"
-                      : "bg-white/10 text-white group-hover:bg-white/20",
+                      ? "bg-[#662D91] text-white"
+                      : "bg-[#F4F6FB] dark:bg-white/10 text-[#4C5E7C] dark:text-white/70 group-hover:bg-[#EAEEF6] dark:group-hover:bg-white/20",
                   )}
                 >
                   <Icon width={16} height={16} />
@@ -192,11 +192,11 @@ export default function SidebarEstudiante({
             onClick={cerrarSesion}
             title={isCollapsed ? "Cerrar sesión" : undefined}
             className={cn(
-              "group relative inline-flex shrink-0 items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 hover:translate-x-1 text-red-300 hover:bg-red-500/20 hover:text-red-200",
+              "group relative inline-flex shrink-0 items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 hover:translate-x-1 text-[#EC008C] dark:text-pink-400 hover:bg-[#FCE3F1] dark:hover:bg-pink-900/20 hover:text-[#B40A6B] dark:hover:text-pink-300",
               isCollapsed && "lg:justify-center lg:px-2"
             )}
           >
-            <span className={cn("grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-red-500/20 text-red-300 transition-all duration-200 group-hover:scale-110 group-hover:-rotate-6 group-hover:bg-red-500/30")}>
+            <span className={cn("grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-[#FCE3F1] dark:bg-pink-900/20 text-[#EC008C] dark:text-pink-400 transition-all duration-200 group-hover:scale-110 group-hover:-rotate-6 group-hover:bg-[#f9c9e5] dark:group-hover:bg-pink-900/30")}>
               <IconLogout width={16} height={16} />
             </span>
             <span className={cn("whitespace-nowrap transition-all duration-300 overflow-hidden", isCollapsed ? "lg:w-0 lg:opacity-0" : "lg:opacity-100")}>
@@ -206,11 +206,11 @@ export default function SidebarEstudiante({
         </nav>
 
         {/* Bottom section: profile, reputation, logout */}
-        <div className="relative z-10 mt-3 hidden flex-col gap-3 border-t border-white/20 pt-3 lg:flex">
+        <div className="relative z-10 mt-3 hidden flex-col gap-3 border-t border-[#E4E9F1] dark:border-white/10 pt-3 lg:flex">
           {/* Avatar + info */}
           <div
             className={cn(
-              "flex items-center gap-3 rounded-2xl bg-white/10 p-2.5 backdrop-blur-sm transition-all duration-300",
+              "flex items-center gap-3 rounded-2xl bg-[#F4F6FB] dark:bg-white/5 p-2.5 transition-all duration-300",
               isCollapsed && "justify-center"
             )}
             title={isCollapsed ? `${nombre} · ${nivel}` : undefined}
@@ -219,7 +219,7 @@ export default function SidebarEstudiante({
             <img
               src={fotoUrl}
               alt={nombre}
-              className="h-10 w-10 shrink-0 rounded-full object-cover ring-2 ring-white/40"
+              className="h-10 w-10 shrink-0 rounded-full object-cover ring-2 ring-[#C2CCDB] dark:ring-white/20"
             />
             <div
               className={cn(
@@ -227,20 +227,20 @@ export default function SidebarEstudiante({
                 isCollapsed ? "w-0 opacity-0" : "opacity-100"
               )}
             >
-              <p className="truncate text-sm font-semibold text-white">{nombre}</p>
-              <p className="truncate text-xs text-white/70">{nivel}</p>
+              <p className="truncate text-sm font-semibold text-[#0C1B33] dark:text-white">{nombre}</p>
+              <p className="truncate text-xs text-[#6B7B96] dark:text-white/60">{nivel}</p>
             </div>
           </div>
 
           {/* Reputation */}
           <div
             className={cn(
-              "flex items-center rounded-2xl bg-white/10 px-3 py-2 backdrop-blur-sm transition-all duration-300",
+              "flex items-center rounded-2xl bg-[#F4F6FB] dark:bg-white/5 px-3 py-2 transition-all duration-300",
               isCollapsed ? "justify-center" : "justify-between"
             )}
             title={isCollapsed ? `Reputación: ${reputacion.toFixed(1)}` : undefined}
           >
-            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-white/80">
+            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#4C5E7C] dark:text-white/60">
               <IconStar width={14} height={14} className="text-fwd-amarillo shrink-0" />
               <span
                 className={cn(
@@ -253,7 +253,7 @@ export default function SidebarEstudiante({
             </span>
             <span
               className={cn(
-                "text-sm font-bold text-white transition-all duration-300",
+                "text-sm font-bold text-[#0C1B33] dark:text-white transition-all duration-300",
                 isCollapsed && "hidden"
               )}
             >
@@ -270,7 +270,7 @@ export default function SidebarEstudiante({
               type="button"
               onClick={cerrarSesion}
               title={isCollapsed ? "Cerrar sesión" : undefined}
-              className="inline-flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium text-white/85 transition-colors hover:bg-white/15 hover:text-white"
+              className="inline-flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium text-[#4C5E7C] dark:text-white/60 transition-colors hover:bg-[#F4F6FB] dark:hover:bg-white/10 hover:text-[#0C1B33] dark:hover:text-white"
             >
               <IconLogout width={18} height={18} className="shrink-0" />
               <span
