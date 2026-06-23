@@ -362,6 +362,101 @@ Reglas:
   };
 }
 
+async function _analizarCvParaPuesto(ai: GoogleGenAI, buffer: Buffer, puesto: string): Promise<AnalisisCv> {
+  const systemPrompt = `Sos un consultor especializado en seleccion de talento tecnologico para el mercado latinoamericano.
+
+PUESTO OBJETIVO: "${puesto}"
+
+Tu tarea es evaluar si el curriculum presentado es competitivo para el puesto de "${puesto}". Analiza que tan bien encajan las habilidades, experiencia y formacion del candidato con los requisitos tipicos de ese rol en el mercado actual.
+
+REGLA FUNDAMENTAL — ANTI-ALUCINACION:
+Evalua UNICAMENTE lo que esta explicita y literalmente en el documento. Jamas inferas, supongas ni inventes informacion ausente. Si el documento no es un CV, indicalo en mensajeGeneral y asigna score 0.
+
+CRITERIOS DE EVALUACION PARA EL PUESTO:
+
+1. RELEVANCIA DE HABILIDADES TECNICAS
+   - Las tecnologias mencionadas corresponden a las esperadas para este puesto?
+   - Faltan habilidades clave que el mercado exige para este rol?
+   - El nivel de experiencia declarado es adecuado para el puesto?
+
+2. EXPERIENCIA Y PROYECTOS
+   - Los proyectos y experiencias son relevantes para el puesto?
+   - Los logros descritos demuestran competencias aplicables al rol?
+   - Se aplica el metodo STAR: Situacion, Tarea, Accion, Resultado con metricas?
+
+3. COMPATIBILIDAD ATS
+   - El CV incluye palabras clave que un ATS buscaria para este rol?
+   - El formato es limpio y procesable por sistemas de seguimiento?
+
+4. RESUMEN PROFESIONAL
+   - El resumen esta orientado al tipo de rol?
+   - Menciona el valor diferencial del candidato para el puesto objetivo?
+
+5. FORMACION Y CERTIFICACIONES
+   - La formacion es relevante para el puesto?
+   - Hay certificaciones que aporten valor para este rol en particular?
+
+ESCALA DE SCORE (en relacion al puesto objetivo):
+- 85-100: Perfil altamente competitivo. Cumple o supera los requisitos tipicos del puesto.
+- 70-84: Buen candidato con brechas menores. Puede postular con ajustes puntuales.
+- 50-69: Candidato con potencial pero con gaps importantes para el puesto.
+- 30-49: Perfil con brechas significativas. Necesita desarrollo antes de postular.
+- 0-29: Perfil no alineado con el puesto en su estado actual.
+
+Devuelve UNICAMENTE este JSON sin markdown ni texto adicional:
+{
+  "score": 75,
+  "mensajeGeneral": "Dos oraciones maximas. Primera: que tan compatible es el perfil con este puesto. Segunda: la accion mas importante para mejorar la candidatura.",
+  "fortalezas": ["Fortaleza especifica del candidato relevante para el puesto"],
+  "sugerenciasMejora": [
+    {
+      "seccion": "Seccion o habilidad especifica",
+      "consejo": "Que agregar o mejorar para ser mas competitivo en este puesto. Con ejemplo si aplica.",
+      "prioridad": "alta"
+    }
+  ],
+  "requiereCambiosUrgentes": false,
+  "validacion": {
+    "tieneContacto": true,
+    "tieneResumen": true,
+    "tieneExperiencia": false,
+    "tieneEducacion": true,
+    "tieneHabilidades": true
+  }
+}
+
+Reglas del JSON:
+- score: entero 0-100 segun la escala definida. Refleja compatibilidad con el puesto especifico.
+- mensajeGeneral: maximo 2 oraciones. Honesto sobre la compatibilidad con el puesto.
+- fortalezas: 2 a 5 items relevantes para el puesto. Solo los que esten en el documento.
+- sugerenciasMejora: 3 a 6 items ordenados por prioridad. Cada consejo debe orientar hacia el puesto.
+- requiereCambiosUrgentes: true si score < 50.
+- validacion: true solo si la seccion existe y tiene contenido sustancial.
+- Responde siempre en espanol, tono profesional y directo. Sin emojis.`;
+
+  const response = await ai.models.generateContent({
+    model: MODELO,
+    contents: [
+      {
+        role: 'user',
+        parts: [
+          { inlineData: { data: buffer.toString('base64'), mimeType: 'application/pdf' } },
+          { text: `Analiza este curriculum evaluando su compatibilidad con el puesto de "${puesto}". Devuelve el JSON estructurado segun las instrucciones del sistema.` },
+        ],
+      },
+    ],
+    config: {
+      systemInstruction: systemPrompt,
+      temperature: 0.2,
+      responseMimeType: 'application/json',
+    },
+  });
+
+  const texto = response.text ?? '';
+  if (!texto) throw new Error('Respuesta vacia de Gemini');
+  return sanearRespuesta(extraerJSON(texto));
+}
+
 // ── API pública — usa conFallback con todas las keys disponibles ───────────────
 
 export interface ResultadoOptimizacion {
@@ -388,4 +483,8 @@ export async function optimizarPerfilParaPuesto(
   habilidades: string[],
 ): Promise<ResultadoOptimizacion> {
   return conFallback(geminiClients().map((ai) => () => _optimizarPerfilParaPuesto(ai, puesto, resumen, habilidades)));
+}
+
+export async function analizarCvParaPuesto(buffer: Buffer, puesto: string): Promise<AnalisisCv> {
+  return conFallback(geminiClients().map((ai) => () => _analizarCvParaPuesto(ai, buffer, puesto)));
 }

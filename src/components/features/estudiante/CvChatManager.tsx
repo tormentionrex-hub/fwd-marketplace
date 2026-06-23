@@ -189,7 +189,7 @@ export default function CvChatManager({ nombre, correo }: CvChatManagerProps) {
         )}
       </div>
 
-      <div className="flex min-h-[380px] max-h-[480px] flex-col gap-4 overflow-y-auto px-5 py-5">
+      <div data-lenis-prevent className="flex min-h-[380px] max-h-[480px] flex-col gap-4 overflow-y-auto px-5 py-5">
         {mensajes.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center gap-6 text-center">
             <div>

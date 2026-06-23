@@ -8,7 +8,6 @@ import Card from "@/components/ui/Card";
 import CvManager from "./CvManager";
 import CvIaManager from "./CvIaManager";
 import CvChatManager from "./CvChatManager";
-import CVValidator from "./CVValidator";
 import { IconCheck, IconPlus, IconUpload, IconX } from "@/components/ui/icons";
 import type { NivelHabilidad } from "@/types/sefora";
 import type {
@@ -290,7 +289,7 @@ export default function FormularioEditarPerfil({ locale }: FormularioEditarPerfi
           <button
             key={item.id}
             type="button"
-            onClick={() => setSeccion(item.id)}
+            onClick={() => { setSeccion(item.id); window.scrollTo(0, 0); }}
             className={`shrink-0 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
               seccion === item.id
                 ? "bg-fwd-azul text-white shadow-sm"
@@ -581,7 +580,6 @@ export default function FormularioEditarPerfil({ locale }: FormularioEditarPerfi
             completados={completados}
           />
           <CvChatManager nombre={nombre} correo={correo} />
-          <CVValidator />
         </div>
       )}
 
