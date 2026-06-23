@@ -19,7 +19,6 @@ import type {
 // src/server/auth/roles.ts). Solo 'owner' y 'admin' acceden al panel por ahora;
 // 'editor'/'moderator' se crean pero su acceso se habilita más adelante.
 const ROLES: Array<{ value: string; label: string }> = [
-  { value: "owner", label: "Owner" },
   { value: "admin", label: "Admin" },
   { value: "editor", label: "Editor" },
   { value: "moderator", label: "Moderador" },

@@ -14,6 +14,8 @@ import {
   LineChart,
   Settings,
   UserCog,
+  UserPlus,
+  MailPlus,
   Home,
   LogOut,
   Sun,
@@ -73,6 +75,13 @@ const SECCIONES: NavSection[] = [
       { href: "/admin/reportes", label: "Reportes de Actividad", icon: LineChart },
       { href: "/admin/configuracion", label: "Configuración", icon: Settings },
       { href: "/admin/gestion-cuentas", label: "Gestión Cuentas", icon: UserCog },
+    ],
+  },
+  {
+    titulo: "Administración",
+    items: [
+      { href: "/admin/invitaciones/admins", label: "Invitar admins", icon: UserPlus },
+      { href: "/admin/invitaciones/usuarios", label: "Invitaciones de usuarios", icon: MailPlus },
     ],
   },
 ];

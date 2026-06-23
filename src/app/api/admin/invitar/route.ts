@@ -8,9 +8,18 @@ import {
   eliminarInvitacion,
 } from '@/server/repositories/pending-verification.repository';
 import { enviarEmailInvitacion } from '@/lib/email';
+import { firmarInvitacion } from '@/server/auth/invite-token';
 import { mismoOrigen } from '@/server/http/request';
 import { error, errorInterno, parsearBody } from '@/server/http/responder';
 import { invitarSchema, invitacionIdSchema } from '@/server/validation/admin.schema';
+
+const APP_URL = process.env.NEXT_PUBLIC_URL ?? 'http://localhost:3000';
+
+// Construye el enlace de invitación con token firmado (email + rol + expiración).
+function enlaceInvitacion(email: string, rol: string): string {
+  const token = firmarInvitacion({ email, rol });
+  return `${APP_URL}/es/unirse?token=${encodeURIComponent(token)}`;
+}
 
 // Ruta admin protegida por cookie: siempre dinámica (sin optimización estática).
 export const dynamic = 'force-dynamic';
@@ -37,8 +46,12 @@ export async function POST(request: Request) {
       return error('Ese correo ya tiene una invitación registrada.', 409);
     }
 
+    const rolFinal = rol ?? 'estudiante';
     await crearInvitacion(email, rol ?? null);
-    await enviarEmailInvitacion(email);
+    await enviarEmailInvitacion(email, {
+      rol: rolFinal,
+      url: enlaceInvitacion(email, rolFinal),
+    });
 
     return NextResponse.json({
       ok: true,
@@ -67,7 +80,11 @@ export async function PATCH(request: Request) {
       return error('La invitación no existe o ya fue completada.', 404);
     }
 
-    await enviarEmailInvitacion(invitacion.email);
+    const rolFinal = invitacion.rol ?? 'estudiante';
+    await enviarEmailInvitacion(invitacion.email, {
+      rol: rolFinal,
+      url: enlaceInvitacion(invitacion.email, rolFinal),
+    });
 
     return NextResponse.json({
       ok: true,
