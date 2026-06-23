@@ -13,6 +13,7 @@ import {
   crearProyecto,
   actualizarProyecto,
   publicarProyecto,
+  deshabilitarProyecto,
   eliminarProyecto,
   guardarEmbedding,
   obtenerDatosParaEmbedding,
@@ -117,6 +118,18 @@ export async function publicarProyectoService(
     }
   });
 
+  return 'ok';
+}
+
+export async function deshabilitarProyectoService(
+  idProyecto: string,
+  idEmpresario: string,
+): Promise<'ok' | 'no_autorizado' | 'no_encontrado' | 'no_publicado'> {
+  const proyecto = await buscarProyectoActivo(idProyecto);
+  if (!proyecto) return 'no_encontrado';
+  if (proyecto.id_empresario !== idEmpresario) return 'no_autorizado';
+  if (proyecto.estado !== 'publicado') return 'no_publicado';
+  await deshabilitarProyecto(idProyecto);
   return 'ok';
 }
 

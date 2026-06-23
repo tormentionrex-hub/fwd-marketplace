@@ -17,17 +17,17 @@ import type {
 
 // Roles que se pueden invitar (en sync con ROLES_INVITABLES de
 // src/server/auth/roles.ts). Solo 'owner' y 'admin' acceden al panel por ahora;
-// 'editor'/'moderator' se crean pero su acceso se habilita más adelante.
+// 'staff'/'moderator' se crean pero su acceso se habilita más adelante.
 const ROLES: Array<{ value: string; label: string }> = [
   { value: "admin", label: "Admin" },
-  { value: "editor", label: "Editor" },
+  { value: "staff", label: "Staff" },
   { value: "moderator", label: "Moderador" },
 ];
 
 const ETIQUETA_ROL: Record<string, string> = {
   owner: "Owner",
   admin: "Admin",
-  editor: "Editor",
+  staff: "Staff",
   moderator: "Moderador",
   estudiante: "Estudiante",
   empresario: "Empresario",
@@ -183,7 +183,7 @@ export function InvitacionesPanel({
               })}
             </div>
             <p className="mt-1.5 text-xs text-white/35">
-              Owner y Admin acceden al panel. Editor y Moderador se crean para uso futuro.
+              Owner y Admin acceden al panel. Staff y Moderador se crean para uso futuro.
             </p>
           </div>
 

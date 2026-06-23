@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import { getUser } from '@/server/auth/get-user';
-import { publicarProyectoService } from '@/server/services/proyecto.service';
+import { deshabilitarProyectoService } from '@/server/services/proyecto.service';
 import { mismoOrigen } from '@/server/http/request';
 import { error, errorInterno } from '@/server/http/responder';
 
-// PATCH /api/proyectos/:id/publicar — Cambia estado borrador → publicado. Solo el dueño.
+// PATCH /api/proyectos/:id/deshabilitar
+// Regresa un proyecto publicado a borrador. Solo el dueño del proyecto puede hacerlo.
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -18,12 +19,12 @@ export async function PATCH(
   const { id } = await params;
 
   try {
-    const resultado = await publicarProyectoService(id, user.id);
+    const resultado = await deshabilitarProyectoService(id, user.id);
     if (resultado === 'no_encontrado') return error('Proyecto no encontrado', 404);
-    if (resultado === 'no_autorizado') return error('Este proyecto no es tuyo', 403);
-    if (resultado === 'ya_publicado') return error('El proyecto ya está publicado', 409);
+    if (resultado === 'no_autorizado') return error('No tienes permiso para deshabilitar este proyecto', 403);
+    if (resultado === 'no_publicado') return error('Solo se pueden deshabilitar proyectos publicados', 409);
     return NextResponse.json({ ok: true });
   } catch (e) {
-    return errorInterno('proyectos/publicar/PATCH', e);
+    return errorInterno('proyectos/deshabilitar/PATCH', e);
   }
 }

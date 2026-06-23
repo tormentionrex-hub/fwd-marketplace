@@ -13,7 +13,7 @@ export const invitarSchema = z.object({
     .transform((s) => s.trim().toLowerCase())
     .pipe(z.string().email("Ingresá un correo electrónico válido")),
   rol: z
-    .enum(["admin", "editor", "moderator", "estudiante", "empresario"])
+    .enum(["admin", "staff", "moderator", "estudiante", "empresario"])
     .optional(),
 });
 

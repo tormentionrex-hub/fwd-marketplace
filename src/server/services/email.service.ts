@@ -388,7 +388,7 @@ const APP_URL = process.env.NEXT_PUBLIC_URL ?? 'http://localhost:3000';
 // Etiquetas legibles del rol para el correo de invitación.
 const ETIQUETA_ROL_INVITACION: Record<string, string> = {
   admin: "administrador",
-  editor: "editor",
+  staff: "staff",
   moderator: "moderador",
   empresario: "empresario",
   estudiante: "estudiante",

@@ -1,7 +1,9 @@
 import { obtenerEstadisticasAdmin } from "@/server/repositories/estadisticas-admin.repository";
+import { autoCerrarProyectosViejos } from "@/server/repositories/estadisticas-admin.repository";
 import { listarProyectosAdmin } from "@/server/repositories/proyecto.repository";
-import {AdminPageShell,AdminPageHeader } from "@/components/features/admin/admin-page-header";
+import { AdminPageShell, AdminPageHeader } from "@/components/features/admin/admin-page-header";
 import { GestionProyectosPanel } from "@/components/features/admin/gestion-proyectos-panel";
+import { EstadisticasOperativasPanel } from "@/components/features/admin/estadisticas-operativas-panel";
 import type { ProyectoAdmin } from "@/components/features/admin/gestion-proyectos-panel";
 
 
@@ -10,6 +12,8 @@ export default async function AdminProyectosPage() {
   const [stats, rawProyectos] = await Promise.all([
     obtenerEstadisticasAdmin(),
     listarProyectosAdmin(),
+    // Auto-cierre de proyectos sin ofertas después de 60 días (fuego y olvida).
+    autoCerrarProyectosViejos(),
   ]);
   const proyectos = rawProyectos as ProyectoAdmin[];
 
@@ -25,18 +29,21 @@ export default async function AdminProyectosPage() {
       valor: stats.proyectosActivos,
       hint: "Recibiendo ofertas ahora",
       color: "#008FD4",
+      tipo: "activos" as const,
     },
     {
       label: "Cerrados este mes",
       valor: stats.proyectosCerradosMes,
       hint: "Proyectos finalizados",
       color: "#662D91",
+      tipo: "cerrados" as const,
     },
     {
       label: "Ofertas del período",
       valor: stats.ofertasEnviadas,
       hint: `${stats.ofertasAdjudicadas} adjudicadas`,
       color: "#20BEC6",
+      tipo: "ofertas" as const,
     },
   ];
 
@@ -47,24 +54,8 @@ export default async function AdminProyectosPage() {
         subtitle="Operación del marketplace durante el mes."
       />
 
-      {/* Resumen operativo */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        {operativas.map((m) => (
-          <div
-            key={m.label}
-
-            className="rounded-2xl p-5 shadow-lg transition-all duration-300 hover:scale-[1.03] hover:shadow-xl cursor-default"
-            style={{ backgroundColor: m.color }}
-          
-          >
-            <p className="text-sm font-medium text-white/80 transition-all duration-300 hover:translate-x-1 hover:text-white select-none">{m.label}</p>
-            <p className="mt-1 text-4xl font-black tabular-nums text-white transition-all duration-300 hover:translate-x-1 hover:scale-105 origin-left select-none">
-              {m.valor}
-            </p>
-            <p className="mt-1 text-xs text-white/70 transition-all duration-300 hover:translate-x-1 hover:text-white/90 select-none">{m.hint}</p>
-          </div>
-        ))}
-      </div>
+      {/* Resumen operativo con botones Ver detalles */}
+      <EstadisticasOperativasPanel operativas={operativas} />
 
       {/* Listado de proyectos */}
       <div>
@@ -76,4 +67,3 @@ export default async function AdminProyectosPage() {
     </AdminPageShell>
   );
 }
-

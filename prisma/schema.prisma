@@ -290,9 +290,6 @@ model proyectos {
   cierre                DateTime?               @db.Timestamptz(6)
   estado_previo         String?                 @db.VarChar(50)
   motivo_estado         String?
-  estado_previo         String?                     @db.VarChar(50)
-  publicado             DateTime?                   @db.Timestamptz(6)
-  cierre                DateTime?                   @db.Timestamptz(6)
   embedding             Unsupported("vector(768)")?
   imagenes              String[]                    @default([])
   chats                 chats[]

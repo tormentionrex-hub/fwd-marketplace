@@ -28,7 +28,7 @@ export const dynamic = 'force-dynamic';
 // El admin escribe un email (y opcionalmente un rol de staff) → se guarda en
 // pending_verifications → se envía el correo de invitación para que la persona
 // complete su registro. Si se envía `rol`, al registrarse recibirá ese rol.
-// Body: { email: string, rol?: 'owner' | 'admin' | 'editor' | 'moderator' }
+// Body: { email: string, rol?: 'admin' | 'staff' | 'moderator' | 'estudiante' | 'empresario' }
 export async function POST(request: Request) {
   if (!mismoOrigen(request)) return error('Origen no permitido', 403);
 

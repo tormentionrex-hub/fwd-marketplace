@@ -6,14 +6,14 @@ import { InvitarPanel } from "@/components/features/admin/invitar-panel";
 import { listarInvitacionesPendientes } from "@/server/repositories/pending-verification.repository";
 import { tiempoRelativo } from "@/lib/tiempo";
 
-const ROLES_STAFF = ["admin", "editor", "moderator"];
+const ROLES_STAFF = ["admin", "staff", "moderator"];
 const ETIQUETA: Record<string, string> = {
   admin: "Administrador",
-  editor: "Editor",
+  staff: "Staff",
   moderator: "Moderador",
 };
 
-// URL: /es/admin/invitaciones/admins — invitar staff (admin/editor/moderator).
+// URL: /es/admin/invitaciones/admins — invitar staff (admin/staff/moderator).
 // El owner NO se invita (rol exclusivo). El invitado recibe un enlace con token
 // firmado y completa su registro en /unirse.
 export default async function InvitarAdminsPage() {
@@ -31,12 +31,12 @@ export default async function InvitarAdminsPage() {
     <AdminPageShell>
       <AdminPageHeader
         title="Invitar admins"
-        subtitle="Invitá miembros del staff por correo. Solo owner y admin acceden al panel; editor y moderador se crean para uso futuro."
+        subtitle="Invitá miembros del staff por correo. Solo owner y admin acceden al panel; staff y moderador se crean para uso futuro."
       />
       <InvitarPanel
         roles={[
           { value: "admin", label: "Administrador" },
-          { value: "editor", label: "Editor" },
+          { value: "staff", label: "Staff" },
           { value: "moderator", label: "Moderador" },
         ]}
         rolDefault="admin"

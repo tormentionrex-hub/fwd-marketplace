@@ -403,6 +403,15 @@ export function publicarProyecto(idProyecto: string) {
   });
 }
 
+// Regresa el proyecto a borrador desde publicado (lo deshabilita del marketplace).
+export function deshabilitarProyecto(idProyecto: string) {
+  return db.proyectos.update({
+    where: { id: idProyecto },
+    data: { estado: 'borrador', estado_previo: 'publicado' },
+    select: { id: true },
+  });
+}
+
 // Elimina el proyecto y sus relaciones de tecnologías.
 // La guarda de "solo borrador" la hace la capa de servicio.
 export async function eliminarProyecto(idProyecto: string) {

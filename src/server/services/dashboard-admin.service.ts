@@ -95,7 +95,7 @@ const ETIQUETA_ROL: Record<string, string> = {
   empresario: 'Empresario',
   admin: 'Admin',
   owner: 'Owner',
-  editor: 'Editor',
+  staff: 'Staff',
   moderator: 'Moderador',
 };
 

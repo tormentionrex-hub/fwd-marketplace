@@ -2,18 +2,18 @@
 // Sin dependencias de DB → seguro de importar tanto en servidor como en cliente.
 
 // Roles internos del equipo (no son estudiantes ni empresarios).
-export const ROLES_STAFF = ['owner', 'admin', 'editor', 'moderator'] as const;
+export const ROLES_STAFF = ['owner', 'admin', 'staff', 'moderator'] as const;
 export type RolStaff = (typeof ROLES_STAFF)[number];
 
 // Roles de staff que HOY pueden entrar al panel /admin.
-// Por ahora solo owner y admin; editor/moderator existen en la BD pero su
+// Por ahora solo owner y admin; staff/moderator existen en la BD pero su
 // acceso al panel se habilitará más adelante.
 export const ROLES_PANEL_ADMIN = ['owner', 'admin'] as const;
 
 // Roles que se pueden invitar por correo con rol asignado desde el panel.
 // OWNER queda EXCLUIDO a propósito: es un rol exclusivo (único) y no se invita.
-// Incluye staff (admin/editor/moderator) y usuarios normales (estudiante/empresario).
-export const ROLES_INVITABLES = ['admin', 'editor', 'moderator', 'estudiante', 'empresario'] as const;
+// Incluye staff (admin/staff/moderator) y usuarios normales (estudiante/empresario).
+export const ROLES_INVITABLES = ['admin', 'staff', 'moderator', 'estudiante', 'empresario'] as const;
 export type RolInvitable = (typeof ROLES_INVITABLES)[number];
 
 // ¿Este rol puede acceder al panel de administración?
