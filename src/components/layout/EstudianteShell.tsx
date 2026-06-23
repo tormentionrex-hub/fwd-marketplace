@@ -32,19 +32,13 @@ export default async function EstudianteShell({ locale, children }: EstudianteSh
   return (
     <div className="relative min-h-screen">
       <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at 15% 0%, rgba(0,143,212,0.16), transparent 45%), radial-gradient(circle at 85% 20%, rgba(102,45,145,0.18), transparent 50%), radial-gradient(circle at 50% 100%, rgba(32,190,198,0.14), transparent 55%)",
-          }}
-        />
-        <div className="animate-aurora absolute -left-32 -top-24 h-96 w-96 rounded-full bg-fwd-azul/25 blur-3xl" />
-        <div className="animate-aurora absolute right-[-8%] top-32 h-80 w-80 rounded-full bg-fwd-morado/20 blur-3xl [animation-delay:5s]" />
-        <div className="animate-aurora absolute bottom-[-10%] left-1/3 h-96 w-96 rounded-full bg-fwd-turquesa/18 blur-3xl [animation-delay:9s]" />
-        <div className="absolute right-1/4 top-10 h-24 w-24 rounded-full bg-fwd-amarillo/20 blur-2xl" />
-        <div className="absolute bottom-1/4 right-10 h-28 w-28 rounded-full bg-fwd-magenta/15 blur-2xl" />
-        <svg className="absolute inset-0 h-full w-full opacity-[0.35] dark:opacity-25" preserveAspectRatio="none">
+        <div className="absolute inset-0" />
+        <div className="animate-aurora absolute -left-32 -top-24 h-96 w-96 rounded-full bg-transparent blur-3xl" />
+        <div className="animate-aurora absolute right-[-8%] top-32 h-80 w-80 rounded-full bg-transparent blur-3xl [animation-delay:5s]" />
+        <div className="animate-aurora absolute bottom-[-10%] left-1/3 h-96 w-96 rounded-full bg-transparent blur-3xl [animation-delay:9s]" />
+        <div className="absolute right-1/4 top-10 h-24 w-24 rounded-full bg-transparent blur-2xl" />
+        <div className="absolute bottom-1/4 right-10 h-28 w-28 rounded-full bg-transparent blur-2xl" />
+        <svg className="absolute inset-0 h-full w-full opacity-0" preserveAspectRatio="none">
           <defs>
             <linearGradient id="netline" x1="0" y1="0" x2="1" y2="1">
               <stop offset="0%" stopColor="#008FD4" />
@@ -85,7 +79,7 @@ export default async function EstudianteShell({ locale, children }: EstudianteSh
             <div className="mb-4 flex justify-end">
               <BotonRegresarHome
                 href={`/${locale}`}
-                className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-2.5 text-sm font-extrabold text-white/80 backdrop-blur-sm transition-colors hover:bg-white/20 hover:text-white"
+                className="inline-flex items-center gap-2 rounded-full border border-[#E4E9F1] bg-white px-5 py-2.5 text-sm font-extrabold text-[#344563] transition-colors hover:bg-[#F4F6FB] hover:text-[#0C1B33]"
               />
             </div>
             {children}
