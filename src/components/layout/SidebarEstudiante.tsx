@@ -92,9 +92,9 @@ export default function SidebarEstudiante({
         isCollapsed ? "lg:w-[72px]" : "lg:w-64"
       )}
     >
-      <div className="relative h-full overflow-hidden rounded-b-3xl lg:rounded-none lg:rounded-r-3xl bg-gradient-to-b from-fwd-morado via-fwd-azul to-fwd-azul p-3 shadow-xl shadow-fwd-morado/25 lg:p-4 flex flex-col">
-        <div aria-hidden className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-white/15 blur-2xl" />
-        <div aria-hidden className="pointer-events-none absolute -bottom-16 -left-10 h-40 w-40 rounded-full bg-fwd-turquesa/30 blur-2xl" />
+      <div className="relative h-full overflow-hidden rounded-none bg-gradient-to-b from-fwd-turquesa via-cyan-500 to-fwd-azul p-3 shadow-xl shadow-fwd-turquesa/25 lg:p-4 flex flex-col">
+        <div aria-hidden className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 bg-white/15 blur-2xl" />
+        <div aria-hidden className="pointer-events-none absolute -bottom-16 -left-10 h-40 w-40 bg-cyan-300/20 blur-2xl" />
 
         {/* Header: logo + toggle button */}
         <div className="relative z-10 mb-2 hidden items-center justify-between lg:flex">
@@ -113,7 +113,7 @@ export default function SidebarEstudiante({
               priority
               className="h-11 w-auto object-contain shrink-0"
             />
-            <span className="font-display text-lg font-extrabold tracking-tight text-purple-400 drop-shadow-[0_0_8px_rgba(192,132,252,0.55)] whitespace-nowrap">
+            <span className="font-display text-lg font-extrabold tracking-tight text-cyan-200 drop-shadow-[0_0_8px_rgba(32,190,198,0.55)] whitespace-nowrap">
               Marketplace
             </span>
           </Link>
@@ -124,7 +124,7 @@ export default function SidebarEstudiante({
             onClick={toggleCollapsed}
             aria-label={isCollapsed ? "Expandir menú" : "Colapsar menú"}
             className={cn(
-              "flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/15 text-white transition-all duration-200 hover:bg-white/25 hover:scale-105",
+              "flex h-8 w-8 shrink-0 items-center justify-center rounded-none bg-white/15 text-white transition-all duration-200 hover:bg-white/25 hover:scale-105",
               isCollapsed && "mx-auto"
             )}
           >
@@ -149,7 +149,7 @@ export default function SidebarEstudiante({
                 aria-current={activo ? "page" : undefined}
                 title={isCollapsed ? label : undefined}
                 className={cn(
-                  "group relative inline-flex shrink-0 items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 hover:translate-x-1",
+                  "group relative inline-flex shrink-0 items-center gap-2.5 rounded-none px-3 py-2.5 text-sm font-medium transition-all duration-200 hover:translate-x-1",
                   activo
                     ? "bg-white/95 text-fwd-azul shadow-lg shadow-fwd-azul/30"
                     : "text-white/80 hover:bg-white/15 hover:text-white",
@@ -159,14 +159,14 @@ export default function SidebarEstudiante({
                 <span
                   aria-hidden
                   className={cn(
-                    "absolute -left-0.5 top-1/2 hidden h-6 w-1 -translate-y-1/2 rounded-full bg-fwd-amarillo shadow-[0_0_12px] shadow-fwd-amarillo/80 transition-opacity duration-200 lg:block",
+                    "absolute -left-0.5 top-1/2 hidden h-6 w-1 -translate-y-1/2 rounded-none bg-fwd-amarillo shadow-[0_0_12px] shadow-fwd-amarillo/80 transition-opacity duration-200 lg:block",
                     activo ? "opacity-100" : "opacity-0",
                     isCollapsed && "lg:hidden"
                   )}
                 />
                 <span
                   className={cn(
-                    "grid h-7 w-7 shrink-0 place-items-center rounded-lg transition-all duration-200 group-hover:scale-110 group-hover:-rotate-6",
+                    "grid h-7 w-7 shrink-0 place-items-center rounded-none transition-all duration-200 group-hover:scale-110 group-hover:-rotate-6",
                     activo
                       ? "bg-gradient-to-br from-fwd-azul to-fwd-turquesa text-white"
                       : "bg-white/10 text-white group-hover:bg-white/20",
@@ -192,11 +192,11 @@ export default function SidebarEstudiante({
             onClick={cerrarSesion}
             title={isCollapsed ? "Cerrar sesión" : undefined}
             className={cn(
-              "group relative inline-flex shrink-0 items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 hover:translate-x-1 text-red-300 hover:bg-red-500/20 hover:text-red-200",
+              "group relative inline-flex shrink-0 items-center gap-2.5 rounded-none px-3 py-2.5 text-sm font-medium transition-all duration-200 hover:translate-x-1 text-red-300 hover:bg-red-500/20 hover:text-red-200",
               isCollapsed && "lg:justify-center lg:px-2"
             )}
           >
-            <span className={cn("grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-red-500/20 text-red-300 transition-all duration-200 group-hover:scale-110 group-hover:-rotate-6 group-hover:bg-red-500/30")}>
+            <span className={cn("grid h-7 w-7 shrink-0 place-items-center rounded-none bg-red-500/20 text-red-300 transition-all duration-200 group-hover:scale-110 group-hover:-rotate-6 group-hover:bg-red-500/30")}>
               <IconLogout width={16} height={16} />
             </span>
             <span className={cn("whitespace-nowrap transition-all duration-300 overflow-hidden", isCollapsed ? "lg:w-0 lg:opacity-0" : "lg:opacity-100")}>
@@ -210,7 +210,7 @@ export default function SidebarEstudiante({
           {/* Avatar + info */}
           <div
             className={cn(
-              "flex items-center gap-3 rounded-2xl bg-white/10 p-2.5 backdrop-blur-sm transition-all duration-300",
+              "flex items-center gap-3 rounded-none bg-white/10 p-2.5 backdrop-blur-sm transition-all duration-300",
               isCollapsed && "justify-center"
             )}
             title={isCollapsed ? `${nombre} · ${nivel}` : undefined}
@@ -235,7 +235,7 @@ export default function SidebarEstudiante({
           {/* Reputation */}
           <div
             className={cn(
-              "flex items-center rounded-2xl bg-white/10 px-3 py-2 backdrop-blur-sm transition-all duration-300",
+              "flex items-center rounded-none bg-white/10 px-3 py-2 backdrop-blur-sm transition-all duration-300",
               isCollapsed ? "justify-center" : "justify-between"
             )}
             title={isCollapsed ? `Reputación: ${reputacion.toFixed(1)}` : undefined}
@@ -266,23 +266,19 @@ export default function SidebarEstudiante({
             "flex items-center gap-2 pt-1 transition-all duration-300",
             isCollapsed ? "justify-center" : "justify-between"
           )}>
-            <button
-              type="button"
-              onClick={cerrarSesion}
-              title={isCollapsed ? "Cerrar sesión" : undefined}
-              className="inline-flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium text-white/85 transition-colors hover:bg-white/15 hover:text-white"
-            >
-              <IconLogout width={18} height={18} className="shrink-0" />
-              <span
-                className={cn(
-                  "transition-all duration-300 overflow-hidden whitespace-nowrap",
-                  isCollapsed ? "w-0 opacity-0" : "opacity-100"
-                )}
+            {!isCollapsed && (
+              <button
+                type="button"
+                onClick={cerrarSesion}
+                className="inline-flex items-center gap-2.5 rounded-none px-3 py-2 text-sm font-medium text-white/85 transition-colors hover:bg-white/15 hover:text-white"
               >
-                Cerrar sesión
-              </span>
-            </button>
-            <ThemeToggle />
+                <IconLogout width={18} height={18} className="shrink-0" />
+                <span className="transition-all duration-300 overflow-hidden whitespace-nowrap">
+                  Cerrar sesión
+                </span>
+              </button>
+            )}
+            <ThemeToggle className={cn("rounded-none bg-white/10 border-white/15 text-white/80 hover:bg-white/20 hover:text-white hover:border-white/25", isCollapsed && "mx-auto")} />
           </div>
         </div>
       </div>

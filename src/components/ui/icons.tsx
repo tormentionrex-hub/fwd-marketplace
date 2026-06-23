@@ -500,3 +500,44 @@ export function IconFacebook(props: IconProps) {
     </svg>
   );
 }
+
+export function IconAlertTriangle(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+      <line x1="12" y1="9" x2="12" y2="13" />
+      <line x1="12" y1="17" x2="12.01" y2="17" />
+    </Base>
+  );
+}
+
+export function IconPalette(props: IconProps) {
+  return (
+    <Base {...props}>
+      <circle cx="13.5" cy="6.5" r=".5" fill="currentColor" />
+      <circle cx="17.5" cy="10.5" r=".5" fill="currentColor" />
+      <circle cx="8.5" cy="7.5" r=".5" fill="currentColor" />
+      <circle cx="6.5" cy="12.5" r=".5" fill="currentColor" />
+      <path d="M12 2C6.479 2 2 6.479 2 12s4.479 10 10 10c.928 0 1.765-.2 2.601-.5.385-.15.42-.486.29-.877a2.001 2.001 0 0 1 1.488-2.613c.42-.09.84-.1 1.259-.1h.362c4.001 0 6-3.003 6-7.01 0-4.962-4.479-8.9-10-8.9Z" />
+    </Base>
+  );
+}
+
+export function IconPartyPopper(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M5.8 11.3 2 22l10.7-3.8" />
+      <path d="M4 14h.01" />
+      <path d="M22 2c-2.3 0-4.4.9-6 2.5a8.7 8.7 0 0 0-2.3 5.4c-.2 2.2.8 4.3 2.5 6a8.7 8.7 0 0 0 5.4 2.3c2.2.2 4.3-.8 6-2.5a8.7 8.7 0 0 0 2.3-5.4A8.7 8.7 0 0 0 22 2Z" />
+      <path d="M16 8h.01" />
+      <path d="M12 15h.01" />
+      <path d="m14 14-2-2" />
+      <path d="M20 4h.01" />
+      <path d="m11 8.5-2-2" />
+      <path d="M14 6h.01" />
+      <path d="M18 10h.01" />
+      <path d="M9.5 12 8 10.5" />
+    </Base>
+  );
+}
+
