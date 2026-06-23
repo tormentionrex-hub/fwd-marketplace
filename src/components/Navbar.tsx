@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import Swal from "sweetalert2";
+import SettingsPanel from "@/components/SettingsPanel";
 
 // Copia client-side de rutaPorRol para no importar código server-only en el cliente.
 function rutaDesdeRol(rol: string): string {
@@ -149,6 +150,7 @@ export default function Navbar({ dashboardHref: dashboardProp }: { dashboardHref
 
         {/* CTA / Usuario logueado */}
         <div className="hidden md:flex items-center gap-2.5 flex-shrink-0">
+          <SettingsPanel />
           {logueado ? (
             <>
               {/* Perfil: clic redirige al dashboard según el rol (datos de la BD) */}

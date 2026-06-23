@@ -201,12 +201,16 @@ export default function MarketplaceExplorer({ proyectos, locale }: Props) {
         className="relative pt-32 pb-6"
         style={{ background: "linear-gradient(135deg, #0e1628 0%, #0a2a4e 50%, #008FD4 100%)" }}
       >
-        <div
-          className="pointer-events-none absolute inset-0"
-          style={{ background: "radial-gradient(ellipse at 70% 50%, rgba(32,190,198,0.2) 0%, transparent 60%)" }}
-        />
-        <div className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 opacity-10 overflow-hidden">
-          <FwdIsotipo style={{ width: "340px", height: "auto" }} />
+        {/* Glows en div interno con overflow-hidden para no recortar dropdowns */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div
+            className="absolute inset-0"
+            style={{ background: "radial-gradient(ellipse at 70% 50%, rgba(32,190,198,0.12) 0%, transparent 60%)" }}
+          />
+          <div className="absolute right-0 top-1/2 -translate-y-1/2 opacity-10">
+            <FwdIsotipo style={{ width: "340px", height: "auto" }} />
+          </div>
+          <ParticleBackground />
         </div>
 
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -325,12 +329,8 @@ export default function MarketplaceExplorer({ proyectos, locale }: Props) {
       </section>
 
       {/* ══ CONTENIDO ══ */}
-      <div
-        className="relative overflow-hidden"
-      >
-        <div className="absolute inset-0 z-0">
-          <ParticleBackground />
-        </div>
+      <div className="relative overflow-hidden">
+        <ParticleBackground />
         <div className="relative z-10 mx-auto w-full max-w-7xl px-6 py-10 sm:px-8">
 
           <div className="flex items-center gap-3 mb-8" id="marketplace-grid">

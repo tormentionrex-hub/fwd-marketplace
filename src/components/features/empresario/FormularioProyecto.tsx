@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { IconPlus, IconX } from '@/components/ui/fwd-icons';
 
@@ -16,6 +16,7 @@ interface ProyectoInicial {
   areaNegocio: string | null;
   plazoDias: number | null;
   tecnologias: string[];
+  imagenes: string[];
 }
 
 interface Props {
@@ -27,6 +28,7 @@ interface Props {
 export default function FormularioProyecto({ tecnologiasDisponibles, modo, proyecto }: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [titulo, setTitulo] = useState(proyecto?.titulo ?? '');
   const [descripcion, setDescripcion] = useState(proyecto?.descripcion ?? '');
@@ -38,6 +40,14 @@ export default function FormularioProyecto({ tecnologiasDisponibles, modo, proye
   const [tecnoCustom, setTecnoCustom] = useState('');
   const [mensajeError, setMensajeError] = useState<string | null>(null);
   const [publicando, setPublicando] = useState(false);
+
+  // Imagenes del proyecto
+  const [imagenes, setImagenes] = useState<string[]>(proyecto?.imagenes ?? []);
+  const [subiendoImagen, setSubiendoImagen] = useState(false);
+  const [errorImagen, setErrorImagen] = useState<string | null>(null);
+  const [dragOver, setDragOver] = useState(false);
+
+  const MAX_IMAGENES = 5;
 
   const toggleTecno = (nombre: string) => {
     setTecnosSeleccionadas((prev) =>
@@ -52,6 +62,43 @@ export default function FormularioProyecto({ tecnologiasDisponibles, modo, proye
     setTecnoCustom('');
   };
 
+  const subirImagen = async (file: File) => {
+    if (imagenes.length >= MAX_IMAGENES) {
+      setErrorImagen(`Máximo ${MAX_IMAGENES} imágenes por proyecto`);
+      return;
+    }
+    setErrorImagen(null);
+    setSubiendoImagen(true);
+    try {
+      const fd = new FormData();
+      fd.append('archivo', file);
+      const res = await fetch('/api/proyectos/imagenes', { method: 'POST', body: fd });
+      const data = (await res.json()) as { ok?: boolean; url?: string; error?: string };
+      if (!res.ok || !data.url) {
+        setErrorImagen(data.error ?? 'Error al subir la imagen');
+      } else {
+        setImagenes((prev) => [...prev, data.url!]);
+      }
+    } catch {
+      setErrorImagen('Error de red al subir la imagen');
+    } finally {
+      setSubiendoImagen(false);
+    }
+  };
+
+  const onSeleccionArchivos = async (files: FileList | null) => {
+    if (!files) return;
+    const disponibles = MAX_IMAGENES - imagenes.length;
+    const toUpload = Array.from(files).slice(0, disponibles);
+    for (const file of toUpload) {
+      await subirImagen(file);
+    }
+  };
+
+  const eliminarImagen = (idx: number) => {
+    setImagenes((prev) => prev.filter((_, i) => i !== idx));
+  };
+
   const guardar = async (publicar: boolean) => {
     setMensajeError(null);
     setPublicando(publicar);
@@ -62,6 +109,7 @@ export default function FormularioProyecto({ tecnologiasDisponibles, modo, proye
       areaNegocio: areaNegocio.trim() || null,
       plazoDias: plazoDias ? parseInt(plazoDias, 10) : null,
       tecnologias: tecnosSeleccionadas,
+      imagenes,
     };
 
     let res: Response;
@@ -213,6 +261,142 @@ export default function FormularioProyecto({ tecnologiasDisponibles, modo, proye
             onBlur={(e) => { e.currentTarget.style.borderColor = 'var(--line)'; }}
           />
         </div>
+      </div>
+
+      {/* Imagenes del proyecto */}
+      <div>
+        <label style={labelStyle}>
+          Imagenes del proyecto
+          <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, marginLeft: 8, color: 'var(--ink-400)' }}>
+            (hasta {MAX_IMAGENES} — JPEG, PNG, WEBP, GIF · max 5 MB c/u)
+          </span>
+        </label>
+
+        {/* Zona de drop */}
+        {imagenes.length < MAX_IMAGENES && (
+          <div
+            onClick={() => fileInputRef.current?.click()}
+            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragOver(false);
+              void onSeleccionArchivos(e.dataTransfer.files);
+            }}
+            style={{
+              border: `2px dashed ${dragOver ? 'var(--azul)' : 'var(--line)'}`,
+              borderRadius: 12,
+              padding: '28px 20px',
+              textAlign: 'center',
+              cursor: subiendoImagen ? 'wait' : 'pointer',
+              background: dragOver ? 'rgba(0,143,212,0.06)' : 'var(--bg)',
+              transition: 'all 0.18s',
+              opacity: subiendoImagen ? 0.7 : 1,
+            }}
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              multiple
+              style={{ display: 'none' }}
+              onChange={(e) => void onSeleccionArchivos(e.target.files)}
+            />
+            {subiendoImagen ? (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, color: 'var(--azul)' }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="animate-spin">
+                  <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
+                  <path d="M12 2a10 10 0 0 1 10 10" />
+                </svg>
+                <span style={{ fontSize: 14, fontWeight: 600 }}>Subiendo imagen...</span>
+              </div>
+            ) : (
+              <>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--ink-400)" strokeWidth="1.5" style={{ margin: '0 auto 10px' }}>
+                  <rect x="3" y="3" width="18" height="18" rx="3" />
+                  <circle cx="8.5" cy="8.5" r="1.5" />
+                  <path d="m21 15-5-5L5 21" />
+                </svg>
+                <p style={{ fontSize: 14, color: 'var(--ink-500)', fontWeight: 600, margin: 0 }}>
+                  Haz clic o arrastra imagenes aquí
+                </p>
+                <p style={{ fontSize: 12, color: 'var(--ink-400)', margin: '4px 0 0' }}>
+                  {imagenes.length}/{MAX_IMAGENES} subidas — La primera imagen sera la portada del proyecto
+                </p>
+              </>
+            )}
+          </div>
+        )}
+
+        {errorImagen && (
+          <p style={{ fontSize: 12.5, color: '#dc2626', marginTop: 6, fontWeight: 600 }}>
+            {errorImagen}
+          </p>
+        )}
+
+        {/* Previews */}
+        {imagenes.length > 0 && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 10, marginTop: 14 }}>
+            {imagenes.map((url, idx) => (
+              <div
+                key={url}
+                style={{
+                  position: 'relative',
+                  borderRadius: 10,
+                  overflow: 'hidden',
+                  aspectRatio: '16/9',
+                  border: idx === 0 ? '2px solid var(--azul)' : '1.5px solid var(--line)',
+                }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={url}
+                  alt={`Imagen ${idx + 1}`}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                />
+                {idx === 0 && (
+                  <span style={{
+                    position: 'absolute', top: 4, left: 4,
+                    background: 'var(--azul)', color: '#fff',
+                    fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 20,
+                    letterSpacing: '0.3px',
+                  }}>
+                    Portada
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={() => eliminarImagen(idx)}
+                  style={{
+                    position: 'absolute', top: 4, right: 4,
+                    width: 22, height: 22, borderRadius: '50%',
+                    background: 'rgba(0,0,0,0.65)', border: 'none',
+                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: '#fff',
+                  }}
+                >
+                  <IconX size={11} />
+                </button>
+              </div>
+            ))}
+            {imagenes.length < MAX_IMAGENES && (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                style={{
+                  borderRadius: 10, aspectRatio: '16/9',
+                  border: '1.5px dashed var(--line)',
+                  background: 'transparent', cursor: 'pointer',
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                  gap: 6, color: 'var(--ink-400)',
+                }}
+              >
+                <IconPlus size={18} />
+                <span style={{ fontSize: 11, fontWeight: 600 }}>Agregar</span>
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Tecnologias */}

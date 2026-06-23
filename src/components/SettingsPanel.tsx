@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "@/i18n/navigation";
 import { useTheme } from "next-themes";
-import { usePathname } from "next/navigation";
 
 type Lang = "es" | "en";
 
@@ -119,9 +118,6 @@ export default function SettingsPanel() {
   const [fontSize, setFontSize] = useState(100);
   const [showA11y, setShowA11y] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const pathname = usePathname();
-
-  const isHomepage = pathname === "/" || pathname === "/es" || pathname === "/en" || pathname === "/es/" || pathname === "/en/";
   const isDark = resolvedTheme === "dark";
 
   useEffect(() => {
@@ -141,59 +137,38 @@ export default function SettingsPanel() {
 
   const close = () => { setOpen(false); setShowA11y(false); };
 
-  if (!isHomepage) return null;
-
   return (
-    <>
-      <style>{`
-        @keyframes fwd-pulse {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(32,190,198,0.55); }
-          50%       { box-shadow: 0 0 0 14px rgba(32,190,198,0); }
-        }
-        @keyframes fwd-bounce {
-          0%, 100% { transform: translateY(0); }
-          50%       { transform: translateY(-6px); }
-        }
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(10px) scale(0.97); }
-          to   { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        .fwd-settings-btn { animation: fwd-pulse 2.2s ease-in-out infinite, fwd-bounce 3s ease-in-out infinite; }
-        .fwd-settings-btn:hover { animation: none; transform: scale(1.12); }
-        @media print { .fwd-settings-btn { display: none !important; } }
-      `}</style>
+    <div className="relative" ref={ref}>
 
-    <div className="fixed bottom-6 left-6 z-50" ref={ref}>
-
-      {/* ── Botón flotante FWD ── */}
+      {/* ── Botón engranaje ── */}
       <button
         onClick={() => { setOpen(!open); setShowA11y(false); }}
         aria-label="Ajustes"
-        className="fwd-settings-btn relative w-14 h-14 rounded-full flex items-center justify-center transition-transform duration-200 overflow-hidden"
-        style={{
-          background: "linear-gradient(135deg, #20BEC6 0%, #662D91 100%)",
-          boxShadow: "0 8px 30px rgba(32,190,198,0.45)",
-        }}
+        className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-white/10 transition-all duration-200"
+        style={{ color: "#20BEC6" }}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/imagenes/FWD%20-%20Sintesis-01.png"
-          alt="Ajustes FWD"
-          className="relative z-10 w-10 h-10 object-contain"
-        />
+        <IconGear />
       </button>
 
       {/* ── Panel ── */}
       {open && (
-        <div
-          className="absolute left-0 bottom-16 w-80 rounded-2xl shadow-2xl overflow-hidden"
-          style={{
-            background: "linear-gradient(145deg, #0e1628 0%, #1a0a3e 55%, #0e1628 100%)",
-            border: "1px solid rgba(255,255,255,0.1)",
-            animation: "fadeUp .18s ease",
-            boxShadow: "0 25px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(32,190,198,0.15), 0 0 80px rgba(32,190,198,0.04)",
-          }}
-        >
+        <>
+          <div className="fixed inset-0 z-10" onClick={close} />
+          <div
+            className="absolute right-0 top-full mt-3 z-20 w-80 rounded-2xl shadow-2xl overflow-hidden"
+            style={{
+              background: "linear-gradient(145deg, #0e1628 0%, #1a0a3e 55%, #0e1628 100%)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              animation: "fadeDown .18s ease",
+              boxShadow: "0 25px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(32,190,198,0.15)",
+            }}
+          >
+        <style>{`
+          @keyframes fadeDown {
+            from { opacity: 0; transform: translateY(-8px) scale(0.97); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+          }
+        `}</style>
           {/* Barra arcoiris */}
           <div className="h-0.5" style={{ background: "linear-gradient(90deg,#20BEC6,#008FD5,#662D91,#ED008C)" }} />
 
@@ -275,22 +250,20 @@ export default function SettingsPanel() {
               <div className="px-4 pt-3 pb-3">
                 <SectionLabel accent="linear-gradient(180deg, #662D91, #ED008C)">Apariencia e Inclusión</SectionLabel>
 
-                {!isHomepage && (
-                  <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150"
-                    onMouseEnter={(e) => (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)"}
-                    onMouseLeave={(e) => (e.currentTarget as HTMLElement).style.background = "transparent"}
-                  >
-                    <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                      style={{ background: "linear-gradient(135deg,#008FD5,#20BEC6)" }}>
-                      <span className="text-white"><IconMoon /></span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-white text-sm leading-tight">Modo Oscuro</p>
-                      <p className="text-[11px] text-white/40">Cambia el tema visual</p>
-                    </div>
-                    <Toggle on={isDark} onToggle={() => setTheme(isDark ? "light" : "dark")} />
+                <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150"
+                  onMouseEnter={(e) => (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)"}
+                  onMouseLeave={(e) => (e.currentTarget as HTMLElement).style.background = "transparent"}
+                >
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{ background: "linear-gradient(135deg,#008FD5,#20BEC6)" }}>
+                    <span className="text-white"><IconMoon /></span>
                   </div>
-                )}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-white text-sm leading-tight">Modo Oscuro</p>
+                    <p className="text-[11px] text-white/40">Cambia el tema visual</p>
+                  </div>
+                  <Toggle on={isDark} onToggle={() => setTheme(isDark ? "light" : "dark")} />
+                </div>
 
                 <button onClick={() => setShowA11y(true)}
                   className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 w-full mt-1"
@@ -404,10 +377,10 @@ export default function SettingsPanel() {
             </div>
           )}
 
-        </div>
+          </div>
+        </>
       )}
 
     </div>
-    </>
   );
 }

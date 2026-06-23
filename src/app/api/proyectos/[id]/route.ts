@@ -39,7 +39,10 @@ export async function PATCH(
   if (!parseo.ok) return parseo.respuesta;
 
   try {
-    const resultado = await actualizarProyectoService(id, user.id, parseo.data);
+    const resultado = await actualizarProyectoService(id, user.id, {
+      ...parseo.data,
+      imagenes: parseo.data.imagenes,
+    });
     if (resultado === 'no_encontrado') return error('Proyecto no encontrado', 404);
     if (resultado === 'no_autorizado') return error('Este proyecto no es tuyo', 403);
     return NextResponse.json({ ok: true });

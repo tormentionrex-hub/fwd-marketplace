@@ -16,7 +16,7 @@ export async function POST(request: Request) {
   const parseo = await parsearBody(request, crearProyectoSchema);
   if (!parseo.ok) return parseo.respuesta;
 
-  const { titulo, descripcion, areaNegocio, plazoDias, tecnologias } = parseo.data;
+  const { titulo, descripcion, areaNegocio, plazoDias, tecnologias, imagenes } = parseo.data;
 
   try {
     const { id } = await crearProyectoService(user.id, {
@@ -25,6 +25,7 @@ export async function POST(request: Request) {
       areaNegocio: areaNegocio ?? null,
       plazoDias: plazoDias ?? null,
       tecnologias: tecnologias ?? [],
+      imagenes: imagenes ?? [],
     });
     return NextResponse.json({ ok: true, id }, { status: 201 });
   } catch (e) {

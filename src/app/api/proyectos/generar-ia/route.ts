@@ -43,6 +43,7 @@ export async function POST(request: Request) {
       areaNegocio: datos.areaNegocio,
       plazoDias: datos.plazoDias,
       tecnologias: datos.tecnologias,
+      imagenes: [],
     });
     return NextResponse.json({ ok: true, id }, { status: 201 });
   } catch (e) {
