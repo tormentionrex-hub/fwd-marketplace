@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+
 import { NextIntlClientProvider, hasLocale } from 'next-intl';
 import { setRequestLocale, getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
@@ -11,6 +12,9 @@ import CursorGlow from '@/components/CursorGlow';
 import PageLoader from '@/components/PageLoader';
 import { getUser } from '@/server/auth/get-user';
 import { TabSessionGuard } from '@/components/layout/TabSessionGuard';
+import FloatingThemeToggle from '@/components/layout/FloatingThemeToggle';
+import SettingsPanel from '@/components/SettingsPanel';
+
 
 export const metadata: Metadata = {
   title: 'FWD · Costa Rica — Marketplace',
@@ -42,6 +46,7 @@ export default async function LocaleLayout({
       <SmoothScroll />
       <AnimationsInit />
       <CursorGlow />
+      <FloatingThemeToggle />
       <NextIntlClientProvider messages={messages}>
         <TabSessionGuard hasSession={!!user} />
         {children}

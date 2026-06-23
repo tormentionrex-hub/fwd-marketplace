@@ -149,7 +149,7 @@ export default function SidebarEstudiante({
                 aria-current={activo ? "page" : undefined}
                 title={isCollapsed ? label : undefined}
                 className={cn(
-                  "group relative inline-flex shrink-0 items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 hover:translate-x-1",
+                  "group relative inline-flex shrink-0 items-center gap-2.5 rounded-none px-3 py-2.5 text-sm font-medium transition-all duration-200 hover:translate-x-1",
                   activo
                     ? "bg-[#F0E7F7] dark:bg-purple-900/30 text-[#662D91] dark:text-purple-300 font-semibold"
                     : "text-[#4C5E7C] dark:text-white/70 hover:bg-[#F4F6FB] dark:hover:bg-white/10 hover:text-[#1B2C49] dark:hover:text-white",
@@ -166,7 +166,7 @@ export default function SidebarEstudiante({
                 />
                 <span
                   className={cn(
-                    "grid h-7 w-7 shrink-0 place-items-center rounded-lg transition-all duration-200 group-hover:scale-110 group-hover:-rotate-6",
+                    "grid h-7 w-7 shrink-0 place-items-center rounded-none transition-all duration-200 group-hover:scale-110 group-hover:-rotate-6",
                     activo
                       ? "bg-[#662D91] text-white"
                       : "bg-[#F4F6FB] dark:bg-white/10 text-[#4C5E7C] dark:text-white/70 group-hover:bg-[#EAEEF6] dark:group-hover:bg-white/20",

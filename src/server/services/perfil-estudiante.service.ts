@@ -25,6 +25,7 @@ export interface PortafolioItem {
   fecha: string;
   repoUrl: string;
   demoUrl: string;
+  esPublico: boolean;
 }
 
 export interface PerfilEditable {
@@ -72,6 +73,7 @@ export async function cargarPerfilEditable(idUsuario: string): Promise<PerfilEdi
       fecha: p.fecha ? p.fecha.toISOString().slice(0, 10) : '',
       repoUrl: p.repo_url ?? '',
       demoUrl: p.demo_url ?? '',
+      esPublico: p.es_publico,
     })),
   };
 }
@@ -106,6 +108,7 @@ export async function guardarPerfilEditable(
       fecha?: string;
       repoUrl?: string;
       demoUrl?: string;
+      esPublico?: boolean;
     }[];
   },
 ): Promise<ResultadoGuardar> {
@@ -146,6 +149,7 @@ export async function guardarPerfilEditable(
       fecha,
       repoUrl: repoUrl || null,
       demoUrl: demoUrl || null,
+      esPublico: p?.esPublico ?? true,
     });
   }
 

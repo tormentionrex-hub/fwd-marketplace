@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { Pencil, Trash2 } from "lucide-react";
 import Badge from "@/components/ui/Badge";
 import Card from "@/components/ui/Card";
 import CvManager from "./CvManager";
 import CvIaManager from "./CvIaManager";
 import CvChatManager from "./CvChatManager";
-import { IconCheck, IconPlus, IconUpload, IconX } from "@/components/ui/icons";
+import { IconCheck, IconPlus, IconUpload, IconX, IconEye, IconEyeOff } from "@/components/ui/icons";
 import type { NivelHabilidad } from "@/types/sefora";
 import type {
   HabilidadCatalogo,
@@ -30,6 +31,7 @@ interface BorradorProyecto {
   fecha: string;
   repoUrl: string;
   demoUrl: string;
+  esPublico: boolean;
 }
 
 const NIVELES: NivelHabilidad[] = ["básico", "intermedio", "avanzado"];
@@ -48,6 +50,7 @@ const borradorInicial: BorradorProyecto = {
   fecha: "",
   repoUrl: "",
   demoUrl: "",
+  esPublico: true,
 };
 
 function urlValida(valor: string): boolean {
@@ -96,6 +99,7 @@ export default function FormularioEditarPerfil({ locale }: FormularioEditarPerfi
   const [completados, setCompletados] = useState<ProyectoCompletado[]>([]);
   const [proyectos, setProyectos] = useState<(BorradorProyecto & { id: string })[]>([]);
   const [borrador, setBorrador] = useState<BorradorProyecto>(borradorInicial);
+  const [idProyectoEdicion, setIdProyectoEdicion] = useState<string | null>(null);
 
   // Guardar / validación Git
   const [guardado, setGuardado] = useState<Guardado>("idle");
@@ -198,14 +202,51 @@ export default function FormularioEditarPerfil({ locale }: FormularioEditarPerfi
     }
   }
 
-  function agregarProyecto() {
+  function startEditing(proyecto: BorradorProyecto & { id: string }) {
+    setIdProyectoEdicion(proyecto.id);
+    setBorrador({
+      titulo: proyecto.titulo,
+      descripcion: proyecto.descripcion,
+      tecnologias: proyecto.tecnologias,
+      fecha: proyecto.fecha,
+      repoUrl: proyecto.repoUrl,
+      demoUrl: proyecto.demoUrl,
+      esPublico: proyecto.esPublico,
+    });
+    setGitEstado("idle");
+  }
+
+  function cancelEditing() {
+    setIdProyectoEdicion(null);
+    setBorrador(borradorInicial);
+    setGitEstado("idle");
+  }
+
+  function alternarVisibilidadProyecto(id: string) {
+    setProyectos((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, esPublico: !p.esPublico } : p))
+    );
+  }
+
+  function agregarOEditarProyecto() {
     if (!puedeAgregar) return;
-    setProyectos((prev) => [...prev, { ...borrador, id: `manual-${Date.now()}` }]);
+    if (idProyectoEdicion) {
+      setProyectos((prev) =>
+        prev.map((p) => (p.id === idProyectoEdicion ? { ...p, ...borrador } : p))
+      );
+      setIdProyectoEdicion(null);
+    } else {
+      setProyectos((prev) => [...prev, { ...borrador, id: `manual-${Date.now()}` }]);
+    }
     setBorrador(borradorInicial);
     setGitEstado("idle");
   }
 
   function eliminarProyecto(id: string) {
+    if (idProyectoEdicion === id) {
+      setIdProyectoEdicion(null);
+      setBorrador(borradorInicial);
+    }
     setProyectos((prev) => prev.filter((p) => p.id !== id));
   }
 
@@ -230,6 +271,7 @@ export default function FormularioEditarPerfil({ locale }: FormularioEditarPerfi
             fecha: p.fecha,
             repoUrl: p.repoUrl,
             demoUrl: p.demoUrl,
+            esPublico: p.esPublico,
           })),
         }),
       });
@@ -459,28 +501,127 @@ export default function FormularioEditarPerfil({ locale }: FormularioEditarPerfi
             )}
           </div>
 
-          <div className="flex flex-col gap-3">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-text-muted">Proyectos manuales</h2>
-            {proyectos.map((p) => (
-              <div
-                key={p.id}
-                className="flex items-start justify-between gap-3 rounded-xl border border-slate-200 px-4 py-3 dark:border-white/10"
-              >
-                <div className="flex flex-col gap-1">
-                  <span className="text-sm font-medium text-text">{p.titulo}</span>
-                  {p.tecnologias && <span className="text-xs text-text-muted">{p.tecnologias}</span>}
+          <div className="flex flex-col gap-5">
+            {/* Proyectos activos / visibles */}
+            <div className="flex flex-col gap-3">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-text-muted">
+                Proyectos activos (Públicos / Visibles)
+              </h2>
+              {proyectos.filter((p) => p.esPublico).length === 0 ? (
+                <p className="text-sm text-text-muted italic bg-slate-50 dark:bg-white/[0.01] p-3 rounded-xl border border-slate-100 dark:border-white/5">
+                  No tenés proyectos públicos activos.
+                </p>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {proyectos.filter((p) => p.esPublico).map((p) => (
+                    <div
+                      key={p.id}
+                      className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 px-4 py-3 dark:border-white/10 bg-white dark:bg-white/[0.02] shadow-sm hover:border-slate-300 dark:hover:border-white/20 transition-all"
+                    >
+                      <div className="flex flex-col gap-1">
+                        <span className="text-sm font-medium text-text">{p.titulo}</span>
+                        {p.tecnologias && <span className="text-xs text-text-muted">{p.tecnologias}</span>}
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => alternarVisibilidadProyecto(p.id)}
+                          title="Ocultar proyecto"
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
+                        >
+                          <IconEye width={18} height={18} className="text-emerald-500" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => startEditing(p)}
+                          title="Editar"
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-fwd-azul hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
+                        >
+                          <Pencil size={16} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => eliminarProyecto(p.id)}
+                          title="Eliminar"
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <button
-                  type="button"
-                  onClick={() => eliminarProyecto(p.id)}
-                  className="text-sm font-medium text-red-600 transition-colors hover:text-red-500"
-                >
-                  Eliminar
-                </button>
-              </div>
-            ))}
+              )}
+            </div>
+
+            {/* Proyectos ocultos / no visibles */}
+            <div className="flex flex-col gap-3">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-text-muted">
+                Proyectos ocultos (No visibles / Privados)
+              </h2>
+              {proyectos.filter((p) => !p.esPublico).length === 0 ? (
+                <p className="text-sm text-text-muted italic bg-slate-50 dark:bg-white/[0.01] p-3 rounded-xl border border-slate-100 dark:border-white/5">
+                  No tenés proyectos privados u ocultos.
+                </p>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {proyectos.filter((p) => !p.esPublico).map((p) => (
+                    <div
+                      key={p.id}
+                      className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 px-4 py-3 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.01] opacity-75 hover:opacity-100 transition-opacity"
+                    >
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-text">{p.titulo}</span>
+                          <span className="text-[10px] font-medium bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300 px-1.5 py-0.5 rounded">Oculto</span>
+                        </div>
+                        {p.tecnologias && <span className="text-xs text-text-muted">{p.tecnologias}</span>}
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => alternarVisibilidadProyecto(p.id)}
+                          title="Hacer público"
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
+                        >
+                          <IconEyeOff width={18} height={18} className="text-slate-400" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => startEditing(p)}
+                          title="Editar"
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-fwd-azul hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
+                        >
+                          <Pencil size={16} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => eliminarProyecto(p.id)}
+                          title="Eliminar"
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
             <div className="flex flex-col gap-3 rounded-xl border border-dashed border-slate-300 p-4 dark:border-white/15">
+              {idProyectoEdicion && (
+                <div className="flex items-center justify-between bg-fwd-azul/5 px-3 py-2 rounded-lg border border-fwd-azul/20">
+                  <span className="text-xs font-semibold text-fwd-azul">Editando proyecto: &ldquo;{borrador.titulo}&rdquo;</span>
+                  <button
+                    type="button"
+                    onClick={cancelEditing}
+                    className="text-xs font-semibold text-red-600 hover:text-red-500"
+                  >
+                    Cancelar edición
+                  </button>
+                </div>
+              )}
               <input
                 type="text"
                 placeholder="Título del proyecto"
@@ -547,14 +688,33 @@ export default function FormularioEditarPerfil({ locale }: FormularioEditarPerfi
                 )}
               </div>
 
+              <label className="flex items-center gap-2 text-sm font-medium text-text cursor-pointer select-none py-1">
+                <input
+                  type="checkbox"
+                  checked={borrador.esPublico}
+                  onChange={(e) => setBorrador((p) => ({ ...p, esPublico: e.target.checked }))}
+                  className="h-4 w-4 rounded border-slate-300 text-fwd-azul focus:ring-fwd-azul"
+                />
+                <span>Proyecto visible públicamente</span>
+              </label>
+
               <button
                 type="button"
-                onClick={agregarProyecto}
+                onClick={agregarOEditarProyecto}
                 disabled={!puedeAgregar}
                 className="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl border border-fwd-azul px-5 text-sm font-semibold text-fwd-azul transition-colors hover:bg-fwd-azul/5 disabled:cursor-not-allowed disabled:opacity-40"
               >
-                <IconPlus width={16} height={16} />
-                Agregar proyecto
+                {idProyectoEdicion ? (
+                  <>
+                    <IconCheck width={16} height={16} />
+                    Guardar cambios de proyecto
+                  </>
+                ) : (
+                  <>
+                    <IconPlus width={16} height={16} />
+                    Agregar proyecto
+                  </>
+                )}
               </button>
               <p className="text-xs text-text-muted">
                 Los proyectos se guardan al presionar &ldquo;Guardar cambios&rdquo;.

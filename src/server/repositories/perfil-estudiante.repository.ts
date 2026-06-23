@@ -59,6 +59,7 @@ export function listarPortafolio(idUsuario: string) {
       fecha: true,
       repo_url: true,
       demo_url: true,
+      es_publico: true,
     },
   });
 }
@@ -70,6 +71,7 @@ export interface PortafolioPersistencia {
   fecha: Date | null;
   repoUrl: string | null;
   demoUrl: string | null;
+  esPublico?: boolean;
 }
 
 // Guarda datos personales + reemplaza los sets de habilidades y portafolio,
@@ -119,6 +121,7 @@ export function guardarPerfilCompleto(
         fecha: p.fecha,
         repo_url: p.repoUrl,
         demo_url: p.demoUrl,
+        es_publico: p.esPublico ?? true,
       })),
     }),
   ]);
