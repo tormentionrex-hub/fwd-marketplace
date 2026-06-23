@@ -13,7 +13,7 @@ import { InvitacionesPanel } from "@/components/features/admin/dashboard/invitac
 const ROL_LABEL: Record<string, string> = {
   owner: "Owner",
   admin: "Administrador",
-  editor: "Editor",
+  staff: "Staff",
   moderator: "Moderador",
 };
 
