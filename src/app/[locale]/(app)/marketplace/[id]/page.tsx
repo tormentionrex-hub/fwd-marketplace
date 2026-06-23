@@ -6,6 +6,14 @@ import HomeButton from "@/components/HomeButton";
 import SettingsPanel from "@/components/SettingsPanel";
 import { FwdIsotipo } from "@/components/ui/fwd-logo";
 import CarruselImagenes from "@/components/features/marketplace/CarruselImagenes";
+import GaleriaImagenes from "@/components/features/marketplace/GaleriaImagenes";
+
+// Calidad automática para imágenes de Cloudinary: sin pérdida visual perceptible.
+function cdnCalidad(url: string, ancho = 1200): string {
+  if (!url.includes("res.cloudinary.com")) return url;
+  if (url.includes("/upload/q_") || url.includes("/upload/f_")) return url;
+  return url.replace("/upload/", `/upload/q_auto,f_auto,c_limit,w_${ancho}/`);
+}
 
 const COLOR_POR_AREA: Record<string, string> = {
   "Tecnología":       "#008FD4",
@@ -85,11 +93,11 @@ export default async function MarketplaceItemPage({
           <>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={portada}
+              src={cdnCalidad(portada, 1400)}
               alt=""
               aria-hidden="true"
               className="pointer-events-none absolute inset-0 w-full h-full object-cover"
-              style={{ opacity: 0.35 }}
+              style={{ opacity: 0.5 }}
             />
             {/* Overlay oscuro para legibilidad */}
             <div
@@ -402,6 +410,19 @@ export default async function MarketplaceItemPage({
                 <IconArrowLeft width={15} height={15} />
                 Ver mas proyectos
               </Link>
+
+              {/* Galería de imágenes del proyecto (solo si hay imágenes) */}
+              {proyecto.imagenes && proyecto.imagenes.length > 0 && (
+                <div>
+                  <p
+                    className="mb-2 text-[10px] font-black uppercase tracking-widest"
+                    style={{ color: "var(--text-muted)" }}
+                  >
+                    Imagenes del proyecto
+                  </p>
+                  <GaleriaImagenes imagenes={proyecto.imagenes} />
+                </div>
+              )}
 
               {/* Mini badge FWD */}
               <div className="flex items-center justify-center gap-2 pt-2">
