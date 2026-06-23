@@ -7,9 +7,12 @@ import {
   IconDownload,
   IconEye,
   IconFile,
+  IconSparkles,
   IconUpload,
   IconX,
 } from "@/components/ui/icons";
+import CvAnalyzer from "@/components/features/estudiante/CvAnalyzer";
+import type { AnalisisCv } from "@/types/cv-analisis";
 
 const MAX_MB = 10;
 const ACCEPT = ".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document";
@@ -22,6 +25,8 @@ interface CvData {
   subido: string;
   actualizado: string;
   viewUrl: string | null;
+  ultimoAnalisis: AnalisisCv | null;
+  fechaAnalisis: string | null;
 }
 
 function formatBytes(n: number): string {
@@ -242,6 +247,21 @@ export default function CvManager() {
               </p>
             </div>
           </div>
+
+          {/* Analizador IA — solo PDFs */}
+          {esPdf ? (
+            <CvAnalyzer
+              initialAnalisis={cv.ultimoAnalisis}
+              fechaAnalisis={cv.fechaAnalisis}
+            />
+          ) : (
+            <div className="flex items-start gap-2.5 rounded-xl border border-amber-200/70 bg-amber-50/80 px-4 py-3 dark:border-amber-800/30 dark:bg-amber-950/20">
+              <IconSparkles width={15} height={15} className="mt-0.5 shrink-0 text-amber-600 dark:text-amber-400" />
+              <p className="text-sm text-amber-800 dark:text-amber-200">
+                El análisis con IA solo está disponible para PDF. Reemplazá tu CV en formato PDF para usar esta función.
+              </p>
+            </div>
+          )}
 
           {/* Privacidad */}
           <label className="flex items-center gap-2.5 rounded-lg bg-surface-2 px-3 py-2.5 text-sm">

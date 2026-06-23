@@ -191,6 +191,7 @@ model pending_verifications {
   solicitado DateTime  @default(now()) @db.Timestamptz(6)
   resuelto   DateTime? @db.Timestamptz(6)
   tipo       String    @default("invitacion") @db.VarChar(20)
+  rol        String?   @db.VarChar(50)
 
   @@index([id_usuario], map: "idx_pending_verifications_id_usuario")
   @@index([pending], map: "idx_pending_verifications_pending")
@@ -252,8 +253,8 @@ model portafolio_proyectos {
   fecha               DateTime?           @db.Date
   repo_url            String?
   demo_url            String?
-  es_publico          Boolean             @default(true)
   creado              DateTime            @default(now()) @db.Timestamptz(6)
+  es_publico          Boolean             @default(true)
   perfiles_estudiante perfiles_estudiante @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade, onUpdate: NoAction, map: "fk_portafolio_estudiante")
 
   @@index([id_usuario], map: "idx_portafolio_id_usuario")
@@ -290,6 +291,7 @@ model proyectos {
   estado_previo         String?                 @db.VarChar(50)
   motivo_estado         String?
   embedding             Unsupported("vector")?
+  imagenes              String[]                @default([])
   chats                 chats[]
   conversaciones_ia     conversaciones_ia[]
   cv_accesos            cv_accesos[]

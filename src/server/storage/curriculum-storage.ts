@@ -44,3 +44,12 @@ export async function urlFirmadaCv(
 export async function borrarArchivoCv(path: string): Promise<void> {
   await admin().storage.from(BUCKET).remove([path]);
 }
+
+export async function descargarArchivoCv(path: string): Promise<Buffer | null> {
+  const { data, error } = await admin().storage.from(BUCKET).download(path);
+  if (error || !data) {
+    console.error('[CV download]', error?.message);
+    return null;
+  }
+  return Buffer.from(await data.arrayBuffer());
+}
