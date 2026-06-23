@@ -110,6 +110,55 @@ Aplica a **todo** lo que llega a la UI o queda en el código:
 
 ---
 
+## REGLA #7 — Scroll en modales: siempre bloquear el body
+
+Cada vez que se abre un modal (o cualquier overlay/drawer/sheet que cubra la pantalla), se **debe bloquear el scroll del body** para que solo se pueda hacer scroll dentro del modal.
+
+**Implementación DEFINITIVA (copiar exactamente en cada modal):**
+
+```tsx
+useEffect(() => {
+  const html = document.documentElement;
+  const body = document.body;
+  const scrollY = window.scrollY;
+  const scrollX = window.scrollX;
+
+  const prevHtmlOverflow = html.style.overflow;
+  const prevBodyOverflow = body.style.overflow;
+  const prevBodyPosition = body.style.position;
+  const prevBodyTop = body.style.top;
+  const prevBodyLeft = body.style.left;
+  const prevBodyRight = body.style.right;
+
+  html.style.overflow = 'hidden';
+  body.style.overflow = 'hidden';
+  body.style.position = 'fixed';
+  body.style.top = `-${scrollY}px`;
+  body.style.left = '0';
+  body.style.right = '0';
+
+  return () => {
+    html.style.overflow = prevHtmlOverflow;
+    body.style.overflow = prevBodyOverflow;
+    body.style.position = prevBodyPosition;
+    body.style.top = prevBodyTop;
+    body.style.left = prevBodyLeft;
+    body.style.right = prevBodyRight;
+    window.scrollTo(scrollX, scrollY);
+  };
+}, []);
+```
+
+Reglas adicionales:
+- El `useEffect` va **dentro del componente del modal**, no en quien lo renderiza.
+- El backdrop (`fixed inset-0`) debe tener `onWheel={(e) => e.stopPropagation()}` como segunda línea de defensa.
+- El div scrollable interno necesita `min-h-0 flex-1 overflow-y-auto overscroll-contain` — sin `min-h-0` el flex no encoge y sin `overscroll-contain` el scroll se propaga al salir del límite.
+- El contenedor del modal (inner div) debe tener `overflow-hidden` para que `max-h-[90vh]` recorte correctamente.
+
+**Por qué `overflow: hidden` en body solo NO alcanza:** en Next.js el elemento scrollable raíz es `<html>`, no `<body>`. Bloquear solo body deja `html` libre para scrollear. La técnica `position: fixed + top: -scrollY` es la usada por radix-ui, react-modal y todas las librerías profesionales.
+
+---
+
 ## Referencia rápida
 
 | Si querés... | Mirá |
