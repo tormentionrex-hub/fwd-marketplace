@@ -23,6 +23,7 @@ export function buscarUsuarioPorId(id: string) {
       estado: true,
       id_rol: true,
       ultima_sesion: true,
+      tipo_staff: true,
       roles: { select: { nombre: true } },
     },
   });

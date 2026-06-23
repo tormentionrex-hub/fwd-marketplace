@@ -41,13 +41,14 @@ const colorRol: Record<string, string> = {
   estudiante: "bg-fwd-blue/15 text-fwd-blue",
   empresario: "bg-fwd-purple/20 text-fwd-purple",
   admin: "bg-fwd-magenta/15 text-fwd-magenta",
+  staff: "bg-fwd-magenta/15 text-fwd-magenta",
 };
 
 const TABS = [
   { key: "todos", label: "Todos" },
   { key: "estudiante", label: "Estudiantes" },
   { key: "empresario", label: "Empresarios" },
-  { key: "admin", label: "Admins" },
+  { key: "staff", label: "Staff" },
 ] as const;
 
 type SortKey = "nombre" | "correo" | "rol" | "estado" | "creado";
@@ -81,6 +82,51 @@ export function UsuariosTabla({
   const [cargandoCv, setCargandoCv] = useState<"ver" | "descargar" | null>(null);
   const [cvError, setCvError] = useState("");
 
+  // Estados para suspension/reactivacion
+  const [suspensionModal, setSuspensionModal] = useState<{ usuario: UsuarioFila; accion: "suspender" | "reactivar" } | null>(null);
+  const [motivoSuspension, setMotivoSuspension] = useState("");
+  const [procesandoSuspension, setProcesandoSuspension] = useState(false);
+  const [suspensionError, setSuspensionError] = useState("");
+
+  async function ejecutarSuspensionReactivacion() {
+    if (!suspensionModal) return;
+    const { usuario, accion } = suspensionModal;
+
+    if (!motivoSuspension.trim()) {
+      setSuspensionError("El motivo es obligatorio.");
+      return;
+    }
+
+    setProcesandoSuspension(true);
+    setSuspensionError("");
+
+    try {
+      const url = `/api/admin/usuarios/${usuario.id}/suspension`;
+      const method = accion === "suspender" ? "POST" : "PATCH";
+
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ motivo: motivoSuspension.trim() }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        setSuspensionError(data?.error ?? "Ocurrió un error.");
+        return;
+      }
+
+      setSuspensionModal(null);
+      setMotivoSuspension("");
+      setDetalleModal(null); // Cerrar el detalle
+      router.refresh();      // Recargar datos
+    } catch {
+      setSuspensionError("Error de red. Intentá de nuevo.");
+    } finally {
+      setProcesandoSuspension(false);
+    }
+  }
+
   async function abrirCv(idUsuario: string, accion: "ver" | "descargar") {
     setCvError("");
     setCargandoCv(accion);
@@ -106,7 +152,9 @@ export function UsuariosTabla({
   const visibles = useMemo(() => {
     const f = q.trim().toLowerCase();
     let lista = usuarios;
-    if (rolFiltro !== "todos") lista = lista.filter((u) => u.rol === rolFiltro);
+    if (rolFiltro !== "todos") {
+      lista = lista.filter((u) => u.rol === rolFiltro || (rolFiltro === "staff" && u.rol === "admin"));
+    }
     if (f) {
       lista = lista.filter(
         (u) =>
@@ -507,13 +555,96 @@ export function UsuariosTabla({
               )}
             </div>
 
-            <div className="mt-6 flex justify-end border-t border-white/10 pt-4">
+            <div className="mt-6 flex justify-between items-center border-t border-white/10 pt-4">
+              <div>
+                {detalleModal.id !== currentUserId && (
+                  detalleModal.estado === "suspendido" ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSuspensionModal({ usuario: detalleModal, accion: "reactivar" });
+                        setSuspensionError("");
+                        setMotivoSuspension("");
+                      }}
+                      className="rounded-xl bg-[#10b981]/20 px-5 py-2 text-sm font-semibold text-[#10b981] hover:bg-[#10b981]/30 transition"
+                    >
+                      Reactivar cuenta
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSuspensionModal({ usuario: detalleModal, accion: "suspender" });
+                        setSuspensionError("");
+                        setMotivoSuspension("");
+                      }}
+                      className="rounded-xl bg-red-500/20 px-5 py-2 text-sm font-semibold text-red-400 hover:bg-red-500/30 transition"
+                    >
+                      Suspender cuenta
+                    </button>
+                  )
+                )}
+              </div>
               <button
                 type="button"
                 onClick={() => setDetalleModal(null)}
                 className="rounded-xl bg-white/10 px-5 py-2 text-sm font-semibold text-white transition hover:bg-white/15"
               >
                 Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de confirmación de suspensión/reactivación */}
+      {suspensionModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#1f2937] p-6 shadow-2xl">
+            <h3 className="text-lg font-bold text-white mb-2 capitalize">
+              {suspensionModal.accion === "suspender" ? "Suspender" : "Reactivar"} Cuenta
+            </h3>
+            <p className="text-sm text-white/70 mb-4">
+              ¿Estás seguro de que deseas {suspensionModal.accion === "suspender" ? "suspender" : "reactivar"} la cuenta de <strong>{suspensionModal.usuario.nombre}</strong>?
+            </p>
+            
+            <div className="flex flex-col gap-2">
+              <label htmlFor="motivo-suspension" className="text-xs font-semibold uppercase tracking-wider text-white/50">
+                Motivo / Justificación (Obligatorio)
+              </label>
+              <textarea
+                id="motivo-suspension"
+                value={motivoSuspension}
+                onChange={(e) => setMotivoSuspension(e.target.value)}
+                placeholder="Escribe el motivo detallado de esta acción..."
+                rows={3}
+                className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-white outline-none focus:border-fwd-blue transition resize-none"
+              />
+            </div>
+
+            {suspensionError && (
+              <p role="alert" className="mt-3 text-xs text-red-400 font-semibold">{suspensionError}</p>
+            )}
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setSuspensionModal(null)}
+                className="rounded-xl bg-white/10 px-4 py-2 text-sm font-semibold text-white hover:bg-white/15 transition"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={ejecutarSuspensionReactivacion}
+                disabled={procesandoSuspension}
+                className={`rounded-xl px-4 py-2 text-sm font-semibold text-white transition ${
+                  suspensionModal.accion === "suspender"
+                    ? "bg-red-600 hover:bg-red-700"
+                    : "bg-[#10b981] hover:bg-[#059669]"
+                }`}
+              >
+                {procesandoSuspension ? "Procesando..." : "Confirmar"}
               </button>
             </div>
           </div>

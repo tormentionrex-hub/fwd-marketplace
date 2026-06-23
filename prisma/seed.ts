@@ -16,11 +16,11 @@ function hashPassword(plain: string): string {
 }
 
 async function main() {
-  const correo = 'admin@fwd.cr';
+  const correo = 'staff@fwdcr.com';
 
-  const rolAdmin = await db.roles.findUnique({ where: { nombre: 'admin' } });
-  if (!rolAdmin) {
-    throw new Error("No existe el rol 'admin' en la tabla roles.");
+  const rolStaff = await db.roles.findUnique({ where: { nombre: 'staff' } });
+  if (!rolStaff) {
+    throw new Error("No existe el rol 'staff' en la tabla roles.");
   }
 
   const admin = await db.usuarios.upsert({
@@ -30,7 +30,8 @@ async function main() {
       nombre: 'Administrador FWD',
       correo,
       hash_contrasena: hashPassword('FwdAdmin2026!'),
-      id_rol: rolAdmin.id,
+      id_rol: rolStaff.id,
+      tipo_staff: 'admin_general',
     },
     select: { id: true, correo: true },
   });

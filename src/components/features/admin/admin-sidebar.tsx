@@ -42,17 +42,10 @@ const ICON = {
   logout:  { d: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4", extra: "M16 17l5-5-5-5M21 12H9" },
   sun:     { d: "M12 3v1M12 20v1M4.22 4.22l.7.7M18.36 18.36l.7.7M3 12h1M20 12h1M4.22 19.78l.7-.7M18.36 5.64l.7-.7M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0z" },
   moon:    { d: "M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" },
+  catalogos: { d: "M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" },
+  reportes: { d: "M12 20V10M18 20V4M6 20v-4" },
+  equipo: { d: "M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2", extra: "M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8" },
 } as const;
-
-const NAV = [
-  { href: "/admin",              label: "Dashboard",      icon: ICON.dashboard },
-  { href: "/admin/usuarios",     label: "Usuarios",       icon: ICON.usuarios },
-  { href: "/admin/proyectos",    label: "Proyectos",      icon: ICON.proyectos },
-  { href: "/admin/ofertas",      label: "Ofertas",        icon: ICON.ofertas },
-  { href: "/admin/validaciones", label: "Validaciones",   icon: ICON.validaciones },
-  { href: "/admin/gestion-cuentas", label: "Gestión cuentas", icon: ICON.gestionCuentas },
-  { href: "/admin/configuracion", label: "Configuración", icon: ICON.configuracion },
-] as const;
 
 /* Botón de toggle de tema — siempre usa los colores del sidebar (nav vars). */
 function SidebarThemeToggle() {
@@ -88,9 +81,21 @@ function SidebarThemeToggle() {
   );
 }
 
-export function AdminSidebar() {
+export function AdminSidebar({ tipoStaff }: { tipoStaff?: string }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+
+  const navItems: { href: string; label: string; icon: { readonly d: string; readonly extra?: string } }[] = [
+    { href: "/admin",              label: "Dashboard",      icon: ICON.dashboard },
+    { href: "/admin/usuarios",     label: "Usuarios",       icon: ICON.usuarios },
+    { href: "/admin/validaciones", label: "Validaciones",   icon: ICON.validaciones },
+    { href: "/admin/catalogos",    label: "Catálogos",      icon: ICON.catalogos },
+    { href: "/admin/reportes",      label: "Reportes",        icon: ICON.reportes },
+  ];
+
+  if (tipoStaff !== "moderador") {
+    navItems.push({ href: "/admin/invitaciones", label: "Equipo", icon: ICON.equipo });
+  }
 
   return (
     <>
@@ -154,7 +159,7 @@ export function AdminSidebar() {
 
         {/* Navegación */}
         <nav className="flex flex-1 flex-col gap-1">
-          {NAV.map((item) => {
+          {navItems.map((item) => {
             const activo = pathname === item.href;
             return (
               <Link

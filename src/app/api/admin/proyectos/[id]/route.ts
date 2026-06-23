@@ -22,7 +22,7 @@ export async function DELETE(
   if (!user) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
   }
-  if (user.roles.nombre !== 'admin') {
+  if (user.roles.nombre !== 'admin' && user.roles.nombre !== 'staff') {
     return NextResponse.json({ error: 'Sin permiso' }, { status: 403 });
   }
 
@@ -80,7 +80,7 @@ export async function PATCH(
   if (!user) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
   }
-  if (user.roles.nombre !== 'admin') {
+  if (user.roles.nombre !== 'admin' && user.roles.nombre !== 'staff') {
     return NextResponse.json({ error: 'Sin permiso' }, { status: 403 });
   }
 

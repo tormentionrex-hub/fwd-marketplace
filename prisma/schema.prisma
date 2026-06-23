@@ -90,6 +90,7 @@ model habilidades {
   id                      BigInt                    @id @default(autoincrement())
   nombre                  String                    @db.VarChar(150)
   categoria               String?                   @db.VarChar(100)
+  activa                  Boolean                   @default(true)
   estudiantes_habilidades estudiantes_habilidades[]
 }
 
@@ -326,6 +327,7 @@ model roles {
 model tecnologias {
   id                    BigInt                  @id @default(autoincrement())
   nombre                String                  @unique @db.VarChar(150)
+  activa                Boolean                 @default(true)
   proyectos_tecnologias proyectos_tecnologias[]
 }
 
@@ -354,6 +356,7 @@ model usuarios {
   image_url           String?
   estado              String               @default("activo") @db.VarChar(50)
   id_rol              BigInt
+  tipo_staff          String?              @db.VarChar(50)
   fecha_nacimiento    DateTime?            @db.Date
   creado              DateTime             @default(now()) @db.Timestamptz(6)
   segundo_apellido    String?              @db.VarChar(150)
@@ -366,6 +369,10 @@ model usuarios {
   perfiles_empresario perfiles_empresario?
   perfiles_estudiante perfiles_estudiante?
   suspensiones        suspensiones[]
+  registro_auditoria  registro_auditoria[]
+  reportes_creados    reportes[]           @relation("reportes_creados")
+  reportes_moderados  reportes[]           @relation("reportes_moderados")
+  invitaciones_staff  invitaciones_staff[]
   roles               roles                @relation(fields: [id_rol], references: [id], map: "fk_usuarios_roles")
 
   @@index([estado], map: "idx_usuarios_estado")
@@ -429,5 +436,56 @@ model suspensiones {
   nombre_admin String   @db.VarChar(150)
   creado       DateTime @default(now()) @db.Timestamptz(6)
   usuarios     usuarios @relation(fields: [id_usuario], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model invitaciones_staff {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email      String    @unique @db.VarChar(255)
+  tipo_staff String    @db.VarChar(50)
+  pending    Boolean   @default(true)
+  solicitado DateTime  @default(now()) @db.Timestamptz(6)
+  resuelto   DateTime? @db.Timestamptz(6)
+  id_usuario String?   @db.Uuid
+  usuarios   usuarios? @relation(fields: [id_usuario], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "fk_invitaciones_staff_usuario")
+
+  @@index([pending], map: "idx_invitaciones_staff_pending")
+}
+
+model registro_auditoria {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id_staff      String   @db.Uuid
+  nombre_staff  String   @db.VarChar(150)
+  accion        String   @db.VarChar(100)
+  detalles      Json?
+  justificacion String?
+  creado        DateTime @default(now()) @db.Timestamptz(6)
+  usuarios      usuarios @relation(fields: [id_staff], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_auditoria_staff")
+
+  @@index([id_staff], map: "idx_auditoria_staff")
+  @@index([creado], map: "idx_auditoria_creado")
+}
+
+model reportes {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id_reportante       String    @db.Uuid
+  tipo_contenido      String    @db.VarChar(50)
+  id_contenido        String    @db.Uuid
+  motivo              String
+  estado              String    @default("pendiente") @db.VarChar(50)
+  id_moderador        String?   @db.Uuid
+  resolucion          String?
+  creado              DateTime  @default(now()) @db.Timestamptz(6)
+  actualizado         DateTime  @default(now()) @db.Timestamptz(6)
+  usuarios_reportante usuarios  @relation("reportes_creados", fields: [id_reportante], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_reportes_reportante")
+  usuarios_moderador  usuarios? @relation("reportes_moderados", fields: [id_moderador], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "fk_reportes_moderador")
+
+  @@index([estado], map: "idx_reportes_estado")
+  @@index([tipo_contenido, id_contenido], map: "idx_reportes_contenido")
+}
+
+model categorias_negocio {
+  id     BigInt  @id @default(autoincrement())
+  nombre String  @unique @db.VarChar(150)
+  activa Boolean @default(true)
 }
 
