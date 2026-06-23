@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 
 const ETIQUETA_ROL: Record<string, string> = {
   admin: "administrador",
-  editor: "editor",
+  staff: "staff",
   moderator: "moderador",
   empresario: "empresario",
   estudiante: "estudiante",

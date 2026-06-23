@@ -176,7 +176,7 @@ export async function registrarEstudiante(
   const existente = await buscarUsuarioPorCorreo(correo);
   if (existente) return null;
 
-  // 2.b. Si la invitación trae un rol de STAFF (owner/admin/editor/moderator),
+  // 2.b. Si la invitación trae un rol de STAFF (owner/admin/staff/moderator),
   // se crea una cuenta de staff con ese rol (sin perfil estudiante/empresario).
   const rolInvitado = invitacion.rol;
   if (esRolStaff(rolInvitado)) {
