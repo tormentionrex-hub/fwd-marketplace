@@ -88,7 +88,7 @@ export default async function MarketplaceItemPage({
             : { background: `linear-gradient(135deg, #0e1628 0%, #0a2a4e 45%, ${color}cc 100%)` }
         }
       >
-        {/* Imagen de portada como fondo (si existe) */}
+        {/* Imagen de portada: ocupa el 100% del hero cuando existe */}
         {portada && (
           <>
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -97,19 +97,23 @@ export default async function MarketplaceItemPage({
               alt=""
               aria-hidden="true"
               className="pointer-events-none absolute inset-0 w-full h-full object-cover"
-              style={{ opacity: 0.5 }}
             />
-            {/* Overlay oscuro para legibilidad */}
+            {/* Overlay mínimo solo para que el texto sea legible */}
             <div
               className="pointer-events-none absolute inset-0"
               style={{
-                background: `linear-gradient(135deg, rgba(14,22,40,0.92) 0%, rgba(10,42,78,0.78) 45%, ${color}88 100%)`,
+                background: "linear-gradient(to right, rgba(0,0,0,0.68) 0%, rgba(0,0,0,0.35) 55%, rgba(0,0,0,0.1) 100%)",
               }}
+            />
+            {/* Degradado inferior para fusionar suavemente con la sección de contenido */}
+            <div
+              className="pointer-events-none absolute bottom-0 left-0 right-0 h-24"
+              style={{ background: "linear-gradient(to top, var(--surface), transparent)" }}
             />
           </>
         )}
 
-        {/* Glows (solo sin portada o como refuerzo) */}
+        {/* Glows y FWD isotipo solo cuando NO hay imagen de portada */}
         {!portada && (
           <>
             <div
@@ -120,16 +124,12 @@ export default async function MarketplaceItemPage({
               className="pointer-events-none absolute inset-0"
               style={{ background: "radial-gradient(ellipse at 20% 80%, rgba(102,45,145,0.25) 0%, transparent 55%)" }}
             />
+            <div className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 opacity-[0.07] overflow-hidden">
+              <FwdIsotipo style={{ width: "380px", height: "auto" }} />
+            </div>
+            <ParticleBackground />
           </>
         )}
-
-        {/* FWD Isotipo decorativo */}
-        <div className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 opacity-[0.07] overflow-hidden">
-          <FwdIsotipo style={{ width: "380px", height: "auto" }} />
-        </div>
-
-        {/* Particles solo cuando no hay portada */}
-        {!portada && <ParticleBackground />}
 
         <div className="relative z-10 mx-auto max-w-5xl px-6 sm:px-8">
           {/* Volver */}
