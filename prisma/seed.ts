@@ -16,6 +16,17 @@ function hashPassword(plain: string): string {
 }
 
 async function main() {
+  // Roles de staff del equipo FWD. Idempotente (upsert por nombre único).
+  // owner/admin acceden al panel; editor/moderator se crean para uso futuro.
+  for (const nombre of ['owner', 'editor', 'moderator']) {
+    await db.roles.upsert({
+      where: { nombre },
+      update: {},
+      create: { nombre },
+    });
+  }
+  console.log('Roles de staff verificados: owner, editor, moderator');
+
   const correo = 'admin@fwd.cr';
 
   const rolAdmin = await db.roles.findUnique({ where: { nombre: 'admin' } });

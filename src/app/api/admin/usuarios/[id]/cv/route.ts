@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server';
 import { getUser } from '@/server/auth/get-user';
+import { puedeAccederPanelAdmin } from '@/server/auth/roles';
 import { obtenerCvDeUsuario } from '@/server/repositories/curriculum.repository';
 import { urlFirmadaCv } from '@/server/storage/curriculum-storage';
 import { mismoOrigen } from '@/server/http/request';
+
+// Ruta admin protegida por cookie: siempre dinámica (sin optimización estática).
+export const dynamic = 'force-dynamic';
 
 // GET /api/admin/usuarios/:id/cv
 // Devuelve las URLs firmadas de ver y descargar el CV de un estudiante por su ID de usuario.
@@ -19,7 +23,7 @@ export async function GET(
   if (!user) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
   }
-  if (user.roles.nombre !== 'admin') {
+  if (!puedeAccederPanelAdmin(user.roles.nombre)) {
     return NextResponse.json({ error: 'Sin permiso' }, { status: 403 });
   }
 

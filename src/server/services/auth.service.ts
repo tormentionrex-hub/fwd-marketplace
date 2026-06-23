@@ -4,11 +4,13 @@ import {
   crearEmpresario,
   crearEstudiante,
   crearEstudiantePendiente,
+  crearUsuarioConRol,
   buscarRolIdPorNombre,
   registrarUltimaSesion,
 } from '@/server/repositories/usuario.repository';
 
 import { verifyPassword, hashPassword } from '@/server/auth/password';
+import { esRolStaff } from '@/server/auth/roles';
 import { generarToken } from '@/server/auth/token';
 import {
   buscarInvitacionPendientePorEmail,
@@ -171,6 +173,36 @@ export async function registrarEstudiante(
   // 2. ¿Ya tiene cuenta?
   const existente = await buscarUsuarioPorCorreo(correo);
   if (existente) return null;
+
+  // 2.b. Si la invitación trae un rol de STAFF (owner/admin/editor/moderator),
+  // se crea una cuenta de staff con ese rol (sin perfil estudiante/empresario).
+  const rolInvitado = invitacion.rol;
+  if (esRolStaff(rolInvitado)) {
+    const idRolStaff = await buscarRolIdPorNombre(rolInvitado as string);
+    if (!idRolStaff) throw new Error(`No existe el rol '${rolInvitado}' en la BD`);
+
+    const staff = await crearUsuarioConRol({
+      nombre,
+      segundoApellido: extra.segundoApellido,
+      correo,
+      hash: hashPassword(password),
+      idRol: idRolStaff,
+    });
+
+    await marcarRegistrado(correo, staff.id);
+    await enviarEmailCuentaAprobada(correo, nombre);
+
+    return {
+      token: generarToken(),
+      usuario: {
+        id: staff.id,
+        nombre: staff.nombre,
+        correo: staff.correo,
+        image_url: staff.image_url,
+        rol: rolInvitado as string,
+      },
+    };
+  }
 
   const idRol = await buscarRolIdPorNombre('estudiante');
   if (!idRol) throw new Error("No existe el rol 'estudiante' en la BD");

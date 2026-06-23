@@ -4,6 +4,7 @@
 // le antepone el locale (/es, /en) automáticamente.
 export function rutaPorRol(rol: string): string {
   switch (rol) {
+    case 'owner':
     case 'admin':
       return '/admin';
     case 'empresario':

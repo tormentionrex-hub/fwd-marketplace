@@ -7,8 +7,21 @@ import {
 import { UsuariosTabla } from "@/components/features/admin/usuarios-tabla";
 
 // URL: /es/admin/usuarios — gestión de usuarios registrados.
-export default async function AdminUsuariosPage() {
-  const [data, me] = await Promise.all([listarUsuarios(), getUser()]);
+// Acepta ?rol=estudiante|empresario|admin para abrir directamente filtrado por
+// rol (lo usan los accesos del sidebar). Cualquier otro valor → "todos".
+export default async function AdminUsuariosPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ rol?: string }>;
+}) {
+  const [{ rol }, data, me] = await Promise.all([
+    searchParams,
+    listarUsuarios(),
+    getUser(),
+  ]);
+
+  const rolesValidos = ["estudiante", "empresario", "admin"];
+  const rolInicial = rol && rolesValidos.includes(rol) ? rol : "todos";
 
   const usuarios = data.map((u) => ({
     id: u.id,
@@ -48,7 +61,11 @@ export default async function AdminUsuariosPage() {
         title="Usuarios"
         subtitle="Buscá, filtrá y gestioná las cuentas registradas."
       />
-      <UsuariosTabla usuarios={usuarios} currentUserId={me?.id ?? ""} />
+      <UsuariosTabla
+        usuarios={usuarios}
+        currentUserId={me?.id ?? ""}
+        rolInicial={rolInicial}
+      />
     </AdminPageShell>
   );
 }

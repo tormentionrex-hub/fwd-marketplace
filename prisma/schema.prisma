@@ -190,6 +190,7 @@ model pending_verifications {
   solicitado DateTime  @default(now()) @db.Timestamptz(6)
   resuelto   DateTime? @db.Timestamptz(6)
   tipo       String    @default("invitacion") @db.VarChar(20)
+  rol        String?   @db.VarChar(50)
 
   @@index([id_usuario], map: "idx_pending_verifications_id_usuario")
   @@index([pending], map: "idx_pending_verifications_pending")

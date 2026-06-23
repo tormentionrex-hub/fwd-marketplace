@@ -1,10 +1,14 @@
 import { NextResponse } from 'next/server';
 import { getUser } from '@/server/auth/get-user';
+import { puedeAccederPanelAdmin } from '@/server/auth/roles';
 import {
   activarUsuario,
   rechazarUsuario,
 } from '@/server/repositories/usuario.repository';
 import { enviarEmailCuentaAprobada, enviarEmailCuentaRechazada } from '@/lib/email';
+
+// Ruta admin protegida por cookie: siempre dinámica (sin optimización estática).
+export const dynamic = 'force-dynamic';
 
 // PATCH /api/admin/usuarios/:id/estado — aprobar o rechazar una cuenta pendiente.
 // Protegido: solo un admin autenticado, y nunca sobre su propia cuenta.
@@ -17,7 +21,7 @@ export async function PATCH(
   if (!user) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
   }
-  if (user.roles.nombre !== 'admin') {
+  if (!puedeAccederPanelAdmin(user.roles.nombre)) {
     return NextResponse.json({ error: 'Sin permiso' }, { status: 403 });
   }
 

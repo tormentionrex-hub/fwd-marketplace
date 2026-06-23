@@ -9,12 +9,16 @@ import { enviarEmailInvitacion, enviarEmailInvitacionRechazada } from '@/lib/ema
 import { mismoOrigen } from '@/server/http/request';
 import { error, errorInterno, parsearBody } from '@/server/http/responder';
 import { aprobarVerificacionSchema } from '@/server/validation/admin.schema';
+import { puedeAccederPanelAdmin } from '@/server/auth/roles';
+
+// Ruta admin protegida por cookie: siempre dinámica (sin optimización estática).
+export const dynamic = 'force-dynamic';
 
 // GET /api/admin/verificaciones
 // Lista todas las invitaciones/solicitudes pendientes. Solo admin.
 export async function GET() {
   const user = await getUser();
-  if (!user || user.roles.nombre !== 'admin') return error('No autorizado', 401);
+  if (!user || !puedeAccederPanelAdmin(user.roles.nombre)) return error('No autorizado', 401);
 
   try {
     const pendientes = await listarPendingVerifications();
@@ -32,7 +36,7 @@ export async function PATCH(request: Request) {
   if (!mismoOrigen(request)) return error('Origen no permitido', 403);
 
   const user = await getUser();
-  if (!user || user.roles.nombre !== 'admin') return error('No autorizado', 401);
+  if (!user || !puedeAccederPanelAdmin(user.roles.nombre)) return error('No autorizado', 401);
 
   const parseo = await parsearBody(request, aprobarVerificacionSchema);
   if (!parseo.ok) return parseo.respuesta;
@@ -60,7 +64,7 @@ export async function DELETE(request: Request) {
   if (!mismoOrigen(request)) return error('Origen no permitido', 403);
 
   const user = await getUser();
-  if (!user || user.roles.nombre !== 'admin') return error('No autorizado', 401);
+  if (!user || !puedeAccederPanelAdmin(user.roles.nombre)) return error('No autorizado', 401);
 
   const parseo = await parsearBody(request, aprobarVerificacionSchema);
   if (!parseo.ok) return parseo.respuesta;
