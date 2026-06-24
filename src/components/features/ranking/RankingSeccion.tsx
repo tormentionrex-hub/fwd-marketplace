@@ -4,201 +4,305 @@ import { useState, useRef, useEffect } from "react";
 import { Link } from "@/i18n/navigation";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { Trophy, ChevronRight } from "lucide-react";
 import type { EstudianteRanking } from "@/server/services/ranking.service";
 
-/* ── Medalla SVG ─────────────────────────────────── */
-const MEDALLA_CONFIG = {
-  1: { circulo: "#FFD700", borde: "#D4A000", cinta: "#F59E0B" },
-  2: { circulo: "#D1D5DB", borde: "#9CA3AF", cinta: "#9CA3AF" },
-  3: { circulo: "#CD7F32", borde: "#92400E", cinta: "#B45309" },
-} as const;
+// ── Colores de medalla ──────────────────────────────────────────────────────
+const MEDALLA: Record<1 | 2 | 3, { primary: string; glow: string; badge: string; gradA: string; gradB: string }> = {
+  1: {
+    primary: "#FFD700",
+    glow: "rgba(255,215,0,0.45)",
+    badge: "#B8860B",
+    gradA: "rgba(255,215,0,0.18)",
+    gradB: "rgba(255,215,0,0.04)",
+  },
+  2: {
+    primary: "#C0C0C0",
+    glow: "rgba(192,192,192,0.35)",
+    badge: "#808080",
+    gradA: "rgba(192,192,192,0.15)",
+    gradB: "rgba(192,192,192,0.03)",
+  },
+  3: {
+    primary: "#CD7F32",
+    glow: "rgba(205,127,50,0.40)",
+    badge: "#8B4513",
+    gradA: "rgba(205,127,50,0.18)",
+    gradB: "rgba(205,127,50,0.04)",
+  },
+};
 
-function IconoMedalla({ posicion }: { posicion: 1 | 2 | 3 }) {
-  const c = MEDALLA_CONFIG[posicion];
-  return (
-    <svg viewBox="0 0 44 56" width="44" height="56" aria-hidden="true" role="img">
-      <rect x="15" y="0" width="6" height="20" rx="3" fill={c.cinta}
-        transform="rotate(-12 18 10)" />
-      <rect x="23" y="0" width="6" height="20" rx="3" fill={c.cinta}
-        transform="rotate(12 26 10)" />
-      <circle cx="22" cy="40" r="15" fill={c.borde} />
-      <circle cx="22" cy="40" r="13" fill={c.circulo} />
-      <circle cx="22" cy="40" r="10" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" />
-      <text x="22" y="46" textAnchor="middle" fill="white"
-        fontSize="13" fontWeight="900" fontFamily="'Arial Black',sans-serif">
-        {posicion}
-      </text>
-    </svg>
-  );
-}
+// ── Colores de lenguajes ────────────────────────────────────────────────────
+const LANG: Record<string, { bg: string; text: string }> = {
+  javascript:    { bg: "#F7DF1E", text: "#1a1a00" },
+  typescript:    { bg: "#3178C6", text: "#fff" },
+  python:        { bg: "#3776AB", text: "#fff" },
+  "node.js":     { bg: "#339933", text: "#fff" },
+  nodejs:        { bg: "#339933", text: "#fff" },
+  react:         { bg: "#0ea5e9", text: "#fff" },
+  "next.js":     { bg: "#1a1a1a", text: "#fff" },
+  nextjs:        { bg: "#1a1a1a", text: "#fff" },
+  angular:       { bg: "#DD0031", text: "#fff" },
+  vue:           { bg: "#42B883", text: "#fff" },
+  "vue.js":      { bg: "#42B883", text: "#fff" },
+  php:           { bg: "#777BB3", text: "#fff" },
+  java:          { bg: "#ED8B00", text: "#fff" },
+  "c#":          { bg: "#239120", text: "#fff" },
+  go:            { bg: "#00ADD8", text: "#fff" },
+  ruby:          { bg: "#CC342D", text: "#fff" },
+  swift:         { bg: "#FF6B35", text: "#fff" },
+  kotlin:        { bg: "#A97BFF", text: "#fff" },
+  flutter:       { bg: "#027DFD", text: "#fff" },
+  dart:          { bg: "#0175C2", text: "#fff" },
+  tensorflow:    { bg: "#FF6F00", text: "#fff" },
+  fastapi:       { bg: "#009688", text: "#fff" },
+  figma:         { bg: "#F24E1E", text: "#fff" },
+  mongodb:       { bg: "#47A248", text: "#fff" },
+  postgresql:    { bg: "#336791", text: "#fff" },
+  docker:        { bg: "#2496ED", text: "#fff" },
+  graphql:       { bg: "#E10098", text: "#fff" },
+};
 
-/* ── Avatar ──────────────────────────────────────── */
-const AVATAR_COLORES = ["#008FD5", "#ED008C", "#662E91", "#20BEC7", "#F7901E"];
+// ── Avatar ──────────────────────────────────────────────────────────────────
+const AVATAR_BG = ["#008FD5", "#ED008C", "#662E91", "#20BEC7", "#F7901E"];
 
-function AvatarEstudiante({ nombre, imagen, size }: { nombre: string; imagen: string | null; size: number }) {
-  const [error, setError] = useState(false);
+function Avatar({ nombre, imagen, size }: { nombre: string; imagen: string | null; size: number }) {
+  const [err, setErr] = useState(false);
+  const bg = AVATAR_BG[nombre.charCodeAt(0) % AVATAR_BG.length] ?? "#008FD5";
   const inicial = nombre.trim()[0]?.toUpperCase() ?? "U";
-  const bg = AVATAR_COLORES[nombre.charCodeAt(0) % AVATAR_COLORES.length] ?? "#008FD5";
 
-  if (!imagen || error) {
+  if (!imagen || err) {
     return (
-      <div className="rounded-full flex items-center justify-center font-bold text-white flex-shrink-0"
-        style={{ width: size, height: size, backgroundColor: bg, fontSize: Math.round(size * 0.38) }}>
+      <div
+        className="rounded-full flex items-center justify-center font-black text-white flex-shrink-0 select-none"
+        style={{ width: size, height: size, backgroundColor: bg, fontSize: Math.round(size * 0.4) }}
+      >
         {inicial}
       </div>
     );
   }
   return (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={imagen} alt={nombre} className="rounded-full object-cover flex-shrink-0"
-      style={{ width: size, height: size }} onError={() => setError(true)} />
+    <img
+      src={imagen}
+      alt={nombre}
+      className="rounded-full object-cover flex-shrink-0"
+      style={{ width: size, height: size }}
+      onError={() => setErr(true)}
+    />
   );
 }
 
-/* ── Badge de lenguaje ───────────────────────────── */
-const LANG_COLORES: Record<string, { bg: string; text: string }> = {
-  javascript:  { bg: "#F7DF1E", text: "#000" },
-  typescript:  { bg: "#3178C6", text: "#fff" },
-  python:      { bg: "#3776AB", text: "#fff" },
-  "node.js":   { bg: "#68A063", text: "#fff" },
-  nodejs:      { bg: "#68A063", text: "#fff" },
-  react:       { bg: "#0ea5e9", text: "#fff" },
-  angular:     { bg: "#DD0031", text: "#fff" },
-  vue:         { bg: "#42B883", text: "#fff" },
-  php:         { bg: "#777BB3", text: "#fff" },
-  java:        { bg: "#ED8B00", text: "#fff" },
-  "c#":        { bg: "#239120", text: "#fff" },
-  ruby:        { bg: "#CC342D", text: "#fff" },
-  swift:       { bg: "#FF6B35", text: "#fff" },
-  kotlin:      { bg: "#A97BFF", text: "#fff" },
-  go:          { bg: "#00ADD8", text: "#fff" },
-  rust:        { bg: "#B7410E", text: "#fff" },
-};
-
-function BadgeLenguaje({ nombre }: { nombre: string }) {
-  const key = nombre.toLowerCase();
-  const estilo = LANG_COLORES[key] ?? { bg: "#374151", text: "#fff" };
+// ── Badge de lenguaje ───────────────────────────────────────────────────────
+function BadgeLang({ nombre }: { nombre: string }) {
+  const estilo = LANG[nombre.toLowerCase()] ?? { bg: "#374151", text: "#e5e7eb" };
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold"
-      style={{ backgroundColor: estilo.bg, color: estilo.text }}>
+    <span
+      className="inline-flex items-center rounded-md px-2.5 py-1 text-[11px] font-bold tracking-wide"
+      style={{ backgroundColor: estilo.bg, color: estilo.text }}
+    >
       {nombre}
     </span>
   );
 }
 
-/* ── Podio ───────────────────────────────────────── */
+// ── Medalla SVG ─────────────────────────────────────────────────────────────
+function Medalla({ pos }: { pos: 1 | 2 | 3 }) {
+  const m = MEDALLA[pos];
+  return (
+    <svg viewBox="0 0 48 60" width={pos === 1 ? 52 : 44} height={pos === 1 ? 62 : 52} aria-hidden>
+      <rect x="16" y="0" width="7" height="22" rx="3.5" fill={m.primary} opacity="0.7"
+        transform="rotate(-13 19 11)" />
+      <rect x="25" y="0" width="7" height="22" rx="3.5" fill={m.primary} opacity="0.7"
+        transform="rotate(13 29 11)" />
+      <circle cx="24" cy="44" r="16" fill={m.badge} />
+      <circle cx="24" cy="44" r="14" fill={m.primary} />
+      <circle cx="24" cy="44" r="11" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" />
+      <text x="24" y="50" textAnchor="middle" fill="white"
+        fontSize={pos === 1 ? 13 : 12} fontWeight="900" fontFamily="'Arial Black',sans-serif">
+        {pos}
+      </text>
+    </svg>
+  );
+}
+
+// ── Barra de puntuación mini (en tabla) ─────────────────────────────────────
+function BarraPts({ puntuacion, color }: { puntuacion: number; color: string }) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="font-black text-sm w-12 text-right" style={{ color }}>
+        {puntuacion.toFixed(1)}
+      </span>
+      <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: "rgba(255,255,255,0.07)", minWidth: 60 }}>
+        <div
+          className="h-full rounded-full transition-all duration-700"
+          style={{ width: `${puntuacion}%`, background: `linear-gradient(90deg, ${color}99, ${color})` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+// ── Card de Podio ───────────────────────────────────────────────────────────
 function PodioCard({
-  estudiante,
-  posicion,
-  escentro,
+  est,
+  pos,
+  centro,
 }: {
-  estudiante: EstudianteRanking;
-  posicion: 1 | 2 | 3;
-  escentro: boolean;
+  est: EstudianteRanking;
+  pos: 1 | 2 | 3;
+  centro: boolean;
 }) {
-  const cardRef = useRef<HTMLDivElement>(null);
-  const borde = MEDALLA_CONFIG[posicion].circulo;
+  const m = MEDALLA[pos];
+  const ref = useRef<HTMLDivElement>(null);
+
+  const plateHeight = pos === 1 ? 64 : pos === 2 ? 44 : 28;
+  const avatarSize = centro ? 80 : 64;
 
   return (
-    <Link href={`/estudiantes/${estudiante.id}`}
-      className="flex flex-col items-center gap-3 group"
-      style={{ textDecoration: "none" }}>
+    <Link
+      href={`/estudiantes/${est.id}`}
+      className="flex flex-col items-center group"
+      style={{ textDecoration: "none" }}
+    >
+      {/* Card */}
       <div
-        ref={cardRef}
-        className="flex flex-col items-center gap-3 rounded-2xl px-6 py-6 border-2 transition-transform duration-300 group-hover:scale-105"
+        ref={ref}
+        className="flex flex-col items-center gap-3 rounded-2xl px-5 py-5 border transition-all duration-300 group-hover:-translate-y-1.5"
         style={{
-          borderColor: borde,
-          backgroundColor: `${borde}14`,
-          minWidth: escentro ? 220 : 180,
+          borderColor: `${m.primary}55`,
+          background: `linear-gradient(160deg, ${m.gradA}, ${m.gradB})`,
+          boxShadow: `0 0 28px ${m.glow}, inset 0 1px 0 rgba(255,255,255,0.08)`,
+          minWidth: centro ? 210 : 172,
+          backdropFilter: "blur(8px)",
         }}
       >
-        <IconoMedalla posicion={posicion} />
-        <AvatarEstudiante nombre={estudiante.nombre} imagen={estudiante.imagen}
-          size={escentro ? 72 : 60} />
+        <Medalla pos={pos} />
+
+        {/* Ring + Avatar */}
+        <div
+          className="rounded-full p-[3px]"
+          style={{ background: `linear-gradient(135deg, ${m.primary}, ${m.badge})` }}
+        >
+          <Avatar nombre={est.nombre} imagen={est.imagen} size={avatarSize} />
+        </div>
+
+        {/* Info */}
         <div className="text-center">
-          <p className="font-heading font-black text-text leading-tight text-base">
-            {estudiante.nombre}
+          <p className="font-heading font-black text-white leading-tight" style={{ fontSize: centro ? 15 : 13 }}>
+            {est.nombre}
           </p>
-          {estudiante.especialidad && (
-            <p className="text-xs text-text-muted mt-0.5">{estudiante.especialidad}</p>
+          {est.especialidad && (
+            <p className="text-[11px] mt-0.5" style={{ color: `${m.primary}bb` }}>
+              {est.especialidad}
+            </p>
           )}
         </div>
-        <div className="flex flex-col items-center">
-          <span className="font-black text-2xl" style={{ color: borde }}>
-            {estudiante.puntuacion.toFixed(1)}
+
+        {/* Score */}
+        <div className="flex flex-col items-center gap-0.5">
+          <span
+            className="font-black leading-none"
+            style={{ fontSize: centro ? 34 : 26, color: m.primary, textShadow: `0 0 20px ${m.glow}` }}
+          >
+            {est.puntuacion.toFixed(1)}
           </span>
-          <span className="text-[10px] text-text-muted uppercase tracking-wider">pts</span>
+          <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/30">pts</span>
+        </div>
+
+        {/* Calificaciones */}
+        <div className="flex items-center gap-1">
+          {Array.from({ length: Math.min(est.totalCalificaciones, 5) }).map((_, i) => (
+            <div key={i} className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: m.primary }} />
+          ))}
+          {est.totalCalificaciones > 5 && (
+            <span className="text-[10px] font-bold" style={{ color: m.primary }}>+{est.totalCalificaciones - 5}</span>
+          )}
+          <span className="text-[10px] text-white/30 ml-1">
+            {est.totalCalificaciones} {est.totalCalificaciones === 1 ? "proyecto" : "proyectos"}
+          </span>
         </div>
       </div>
-      {/* Base del podio */}
-      <div className="rounded-t-lg w-full flex items-end justify-center pb-1 font-black text-white text-sm"
+
+      {/* Plataforma del podio */}
+      <div
+        className="w-full rounded-t-xl flex items-center justify-center font-black text-white/80 text-sm transition-all duration-300 group-hover:opacity-90"
         style={{
-          backgroundColor: borde,
-          height: escentro ? 56 : posicion === 2 ? 40 : 28,
-        }}>
-        #{posicion}
+          height: plateHeight,
+          background: `linear-gradient(180deg, ${m.primary}55, ${m.primary}22)`,
+          borderTop: `2px solid ${m.primary}88`,
+        }}
+      >
+        #{pos}
       </div>
     </Link>
   );
 }
 
-/* ── Tabla de posiciones ─────────────────────────── */
-function FilaRanking({ estudiante, posicion }: { estudiante: EstudianteRanking; posicion: number }) {
-  const rowRef = useRef<HTMLTableRowElement>(null);
+// ── Fila de tabla ───────────────────────────────────────────────────────────
+const FILA_COLOR = [
+  "#FFD700", "#C0C0C0", "#CD7F32",
+  "#008FD5", "#20BEC7", "#662E91", "#ED008C", "#F7901E",
+];
 
-  const onEnter = () => {
-    gsap.to(rowRef.current, {
-      backgroundColor: "rgba(0,143,213,0.07)",
-      x: 4,
-      duration: 0.18,
-      ease: "power2.out",
-    });
-  };
-  const onLeave = () => {
-    gsap.to(rowRef.current, {
-      backgroundColor: "rgba(0,0,0,0)",
-      x: 0,
-      duration: 0.22,
-      ease: "power2.out",
-    });
-  };
+function FilaRanking({ est, pos }: { est: EstudianteRanking; pos: number }) {
+  const ref = useRef<HTMLTableRowElement>(null);
+  const color = FILA_COLOR[Math.min(pos - 1, FILA_COLOR.length - 1)] ?? "#008FD5";
 
   return (
-    <tr ref={rowRef} onMouseEnter={onEnter} onMouseLeave={onLeave}
-      className="border-b border-border cursor-default transition-colors">
-      <td className="py-3 px-4">
-        <span className="font-black text-sm text-text-muted w-8 inline-block text-center">
-          {posicion}
+    <tr
+      ref={ref}
+      className="border-b border-white/5 cursor-default group transition-colors hover:bg-white/[0.03]"
+    >
+      {/* # */}
+      <td className="py-3.5 pl-5 pr-2 w-12">
+        <span
+          className="inline-flex items-center justify-center w-7 h-7 rounded-lg font-black text-xs"
+          style={{ backgroundColor: `${color}22`, color }}
+        >
+          {pos}
         </span>
       </td>
-      <td className="py-3 px-4">
+
+      {/* Nombre + avatar */}
+      <td className="py-3.5 px-3">
         <div className="flex items-center gap-3">
-          <AvatarEstudiante nombre={estudiante.nombre} imagen={estudiante.imagen} size={36} />
-          <span className="font-semibold text-text text-sm">{estudiante.nombre}</span>
+          <Avatar nombre={est.nombre} imagen={est.imagen} size={38} />
+          <div>
+            <p className="font-semibold text-white text-sm leading-tight">{est.nombre}</p>
+            {est.especialidad && (
+              <p className="text-white/40 text-[11px] mt-0.5 leading-tight">{est.especialidad}</p>
+            )}
+          </div>
         </div>
       </td>
-      <td className="py-3 px-4 text-sm text-text-muted">
-        {estudiante.edad != null ? `${estudiante.edad} años` : "—"}
+
+      {/* Edad */}
+      <td className="py-3.5 px-3 text-sm text-white/40 hidden sm:table-cell">
+        {est.edad != null ? `${est.edad} a.` : "—"}
       </td>
-      <td className="py-3 px-4 text-sm text-text-muted">
-        {estudiante.especialidad ?? "—"}
+
+      {/* Lenguaje */}
+      <td className="py-3.5 px-3 hidden md:table-cell">
+        {est.lenguajePrincipal
+          ? <BadgeLang nombre={est.lenguajePrincipal} />
+          : <span className="text-white/25 text-sm">—</span>}
       </td>
-      <td className="py-3 px-4">
-        {estudiante.lenguajePrincipal
-          ? <BadgeLenguaje nombre={estudiante.lenguajePrincipal} />
-          : <span className="text-text-muted text-sm">—</span>
-        }
+
+      {/* Proyectos */}
+      <td className="py-3.5 px-3 text-sm text-white/40 hidden lg:table-cell text-center">
+        {est.totalCalificaciones}
       </td>
-      <td className="py-3 px-4 text-right">
-        <span className="font-black text-[#FFD700] text-sm">
-          {estudiante.puntuacion.toFixed(1)}
-        </span>
+
+      {/* Puntuación + barra */}
+      <td className="py-3.5 px-3 pr-5">
+        <BarraPts puntuacion={est.puntuacion} color={color} />
       </td>
     </tr>
   );
 }
 
-/* ── Componente principal ────────────────────────── */
+// ── Componente principal ─────────────────────────────────────────────────────
 type Props = {
   estudiantes: EstudianteRanking[];
   showVerMas?: boolean;
@@ -211,26 +315,26 @@ export function RankingSeccion({ estudiantes, showVerMas = false }: Props) {
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
 
-    if (podioRef.current && estudiantes.length >= 3) {
+    if (podioRef.current) {
       const cards = Array.from(podioRef.current.children);
       gsap.from(cards, {
-        y: 48,
+        y: 60,
         opacity: 0,
-        duration: 0.55,
-        stagger: 0.12,
-        ease: "back.out(1.4)",
-        scrollTrigger: { trigger: podioRef.current, start: "top 85%" },
+        duration: 0.65,
+        stagger: 0.14,
+        ease: "back.out(1.3)",
+        scrollTrigger: { trigger: podioRef.current, start: "top 88%" },
       });
     }
 
     if (tablaRef.current) {
       const filas = Array.from(tablaRef.current.querySelectorAll("tr"));
       gsap.from(filas, {
-        x: -20,
+        x: -24,
         opacity: 0,
-        duration: 0.35,
-        stagger: 0.04,
-        ease: "power2.out",
+        duration: 0.4,
+        stagger: 0.045,
+        ease: "power3.out",
         scrollTrigger: { trigger: tablaRef.current, start: "top 92%" },
       });
     }
@@ -238,49 +342,63 @@ export function RankingSeccion({ estudiantes, showVerMas = false }: Props) {
 
   if (estudiantes.length === 0) {
     return (
-      <div className="text-center py-16">
-        <p className="text-text-muted text-base">
-          El ranking se actualizará cuando los primeros proyectos sean calificados.
+      <div className="text-center py-24 flex flex-col items-center gap-4">
+        <Trophy size={48} className="text-white/10" />
+        <p className="text-white/30 text-sm max-w-xs">
+          El ranking se actualiza cuando los primeros proyectos son calificados por empresarios.
         </p>
       </div>
     );
   }
 
-  const top3 = estudiantes.slice(0, 3) as [EstudianteRanking, EstudianteRanking, EstudianteRanking];
+  const top3 = estudiantes.slice(0, 3);
   const resto = estudiantes.slice(3);
-  const hayPodio = estudiantes.length >= 3;
+  const hayPodio = top3.length === 3;
+
+  // Si hay menos de 3, los del podio también van a la tabla
+  const enTabla = hayPodio ? resto : estudiantes;
 
   return (
-    <div>
-      {/* Podio — orden visual: #2 izquierda, #1 centro, #3 derecha */}
+    <div className="space-y-12">
+      {/* ── Podio ── */}
       {hayPodio && (
-        <div ref={podioRef} className="flex items-end justify-center gap-6 mb-14">
-          <PodioCard estudiante={top3[1]!} posicion={2} escentro={false} />
-          <PodioCard estudiante={top3[0]!} posicion={1} escentro={true} />
-          <PodioCard estudiante={top3[2]!} posicion={3} escentro={false} />
+        <div ref={podioRef} className="flex items-end justify-center gap-4 sm:gap-8">
+          {/* #2 */}
+          <PodioCard est={top3[1]!} pos={2} centro={false} />
+          {/* #1 */}
+          <PodioCard est={top3[0]!} pos={1} centro={true} />
+          {/* #3 */}
+          <PodioCard est={top3[2]!} pos={3} centro={false} />
         </div>
       )}
 
-      {/* Tabla de posiciones */}
-      {(hayPodio ? resto : estudiantes).length > 0 && (
-        <div className="rounded-2xl overflow-hidden border border-border">
+      {/* ── Tabla ── */}
+      {enTabla.length > 0 && (
+        <div
+          className="rounded-2xl overflow-hidden"
+          style={{
+            border: "1px solid rgba(255,255,255,0.08)",
+            background: "rgba(255,255,255,0.02)",
+            backdropFilter: "blur(12px)",
+          }}
+        >
           <table className="w-full text-left">
             <thead>
-              <tr className="border-b border-border bg-surface-2">
-                <th className="py-3 px-4 text-xs font-bold uppercase tracking-widest text-text-muted">Rank</th>
-                <th className="py-3 px-4 text-xs font-bold uppercase tracking-widest text-text-muted">Nombre</th>
-                <th className="py-3 px-4 text-xs font-bold uppercase tracking-widest text-text-muted">Edad</th>
-                <th className="py-3 px-4 text-xs font-bold uppercase tracking-widest text-text-muted">Especialidad</th>
-                <th className="py-3 px-4 text-xs font-bold uppercase tracking-widest text-text-muted">Lenguaje Principal</th>
-                <th className="py-3 px-4 text-xs font-bold uppercase tracking-widest text-text-muted text-right">Pts</th>
+              <tr style={{ background: "rgba(255,255,255,0.04)", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+                <th className="py-3 pl-5 pr-2 text-[10px] font-black uppercase tracking-[0.15em] text-white/30">Rank</th>
+                <th className="py-3 px-3 text-[10px] font-black uppercase tracking-[0.15em] text-white/30">Estudiante</th>
+                <th className="py-3 px-3 text-[10px] font-black uppercase tracking-[0.15em] text-white/30 hidden sm:table-cell">Edad</th>
+                <th className="py-3 px-3 text-[10px] font-black uppercase tracking-[0.15em] text-white/30 hidden md:table-cell">Lenguaje</th>
+                <th className="py-3 px-3 text-[10px] font-black uppercase tracking-[0.15em] text-white/30 hidden lg:table-cell text-center">Proyectos</th>
+                <th className="py-3 px-3 pr-5 text-[10px] font-black uppercase tracking-[0.15em] text-white/30">Puntuacion</th>
               </tr>
             </thead>
             <tbody ref={tablaRef}>
-              {(hayPodio ? resto : estudiantes).map((est, i) => (
+              {enTabla.map((est, i) => (
                 <FilaRanking
                   key={est.id}
-                  estudiante={est}
-                  posicion={hayPodio ? i + 4 : i + 1}
+                  est={est}
+                  pos={hayPodio ? i + 4 : i + 1}
                 />
               ))}
             </tbody>
@@ -288,39 +406,16 @@ export function RankingSeccion({ estudiantes, showVerMas = false }: Props) {
         </div>
       )}
 
-      {/* Tabla compacta cuando no hay suficientes para podio */}
-      {!hayPodio && estudiantes.length > 0 && (
-        <div className="rounded-2xl overflow-hidden border border-border">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="border-b border-border bg-surface-2">
-                <th className="py-3 px-4 text-xs font-bold uppercase tracking-widest text-text-muted">Rank</th>
-                <th className="py-3 px-4 text-xs font-bold uppercase tracking-widest text-text-muted">Nombre</th>
-                <th className="py-3 px-4 text-xs font-bold uppercase tracking-widest text-text-muted">Edad</th>
-                <th className="py-3 px-4 text-xs font-bold uppercase tracking-widest text-text-muted">Especialidad</th>
-                <th className="py-3 px-4 text-xs font-bold uppercase tracking-widest text-text-muted">Lenguaje Principal</th>
-                <th className="py-3 px-4 text-xs font-bold uppercase tracking-widest text-text-muted text-right">Pts</th>
-              </tr>
-            </thead>
-            <tbody ref={tablaRef}>
-              {estudiantes.map((est, i) => (
-                <FilaRanking key={est.id} estudiante={est} posicion={i + 1} />
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* Ver más */}
+      {/* ── Ver más ── */}
       {showVerMas && (
-        <div className="flex justify-center mt-10">
+        <div className="flex justify-center">
           <Link
             href="/ranking"
-            className="group relative overflow-hidden inline-flex items-center font-black text-sm uppercase tracking-widest px-10 py-4 rounded-full transition-all duration-300 hover:scale-105 hover:shadow-[0_8px_30px_rgba(102,46,145,0.4)] active:scale-95"
+            className="group inline-flex items-center gap-2 font-black text-sm uppercase tracking-widest px-10 py-4 rounded-full transition-all duration-300 hover:scale-105 hover:shadow-[0_8px_40px_rgba(237,0,140,0.35)] active:scale-95"
             style={{ background: "linear-gradient(90deg, #662E91, #ED008C)", color: "white" }}
           >
-            <span className="relative z-10">Ver ranking completo</span>
-            <span className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] bg-white/20 skew-x-[-20deg] transition-transform duration-700" />
+            Ver ranking completo
+            <ChevronRight size={16} className="transition-transform group-hover:translate-x-1" />
           </Link>
         </div>
       )}
