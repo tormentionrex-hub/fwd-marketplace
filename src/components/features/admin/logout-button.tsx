@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "@/i18n/navigation";
+import { cerrarSesionCliente } from "@/lib/logout-client";
 
 export function LogoutButton() {
   const router = useRouter();
@@ -10,8 +11,7 @@ export function LogoutButton() {
   async function salir() {
     setLoading(true);
     try {
-      await fetch("/api/auth/logout", { method: "POST" });
-      localStorage.removeItem("fwd_perfil");
+      await cerrarSesionCliente();
       router.push("/login");
       router.refresh();
     } catch {

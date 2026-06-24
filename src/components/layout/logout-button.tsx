@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "@/i18n/navigation";
+import { cerrarSesionCliente } from "@/lib/logout-client";
 
 // Botón de cierre de sesión reutilizable. Borra la cookie (vía /api/auth/logout),
-// limpia el perfil público de localStorage y manda a /login.
+// limpia el storage local, notifica a otras pestañas y manda a /login.
 export function LogoutButton({
   className,
   style,
@@ -22,9 +23,7 @@ export function LogoutButton({
   async function handleLogout() {
     setLoading(true);
     try {
-      await fetch("/api/auth/logout", { method: "POST" });
-      localStorage.removeItem("fwd_perfil");
-      localStorage.removeItem("fwd_dashboard");
+      await cerrarSesionCliente();
       router.push("/login");
       router.refresh();
     } catch {
