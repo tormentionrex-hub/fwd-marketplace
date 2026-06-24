@@ -3,6 +3,12 @@
 import { useState, useCallback } from 'react';
 import { IconChevR } from '@/components/ui/fwd-icons';
 
+function cdnCalidad(url: string, ancho = 1200): string {
+  if (!url.includes('res.cloudinary.com')) return url;
+  if (url.includes('/upload/q_') || url.includes('/upload/f_')) return url;
+  return url.replace('/upload/', `/upload/q_auto,f_auto,c_limit,w_${ancho}/`);
+}
+
 interface Props {
   imagenes: string[];
   titulo: string;
@@ -41,7 +47,7 @@ export default function CarruselImagenes({ imagenes, titulo }: Props) {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           key={idx}
-          src={imagenes[idx]}
+          src={cdnCalidad(imagenes[idx] ?? '', 1200)}
           alt={`${titulo} — imagen ${idx + 1}`}
           style={{
             width: '100%',
@@ -126,7 +132,7 @@ export default function CarruselImagenes({ imagenes, titulo }: Props) {
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={url}
+                src={cdnCalidad(url, 160)}
                 alt=""
                 style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
               />

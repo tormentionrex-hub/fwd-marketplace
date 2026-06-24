@@ -112,6 +112,12 @@ export function EditarPerfilPanel({
         return;
       }
       setImageUrlNueva(undefined); // marcar como sin cambios pendientes
+      // Actualizar el Navbar sin recargar la página
+      try {
+        const perfilNavbar = { nombre: nombre.trim(), image_url: imageUrlNueva ?? imageUrl };
+        localStorage.setItem("fwd_perfil", JSON.stringify(perfilNavbar));
+        window.dispatchEvent(new CustomEvent("fwd:perfil:update", { detail: perfilNavbar }));
+      } catch { /* sin storage */ }
       toastExito("Perfil actualizado.");
       router.refresh();
     } catch {

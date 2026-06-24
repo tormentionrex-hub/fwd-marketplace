@@ -338,6 +338,7 @@ export async function crearProyecto(data: {
       area_negocio: data.areaNegocio,
       plazo_dias: data.plazoDias,
       estado: 'borrador',
+      imagenes: data.imagenes ?? [],
       proyectos_tecnologias: {
         create: techIds.map((t) => ({ id_tecnologia: t.id })),
       },
@@ -389,6 +390,7 @@ export async function actualizarProyecto(
       ...(campos.descripcion !== undefined && { descripcion: campos.descripcion }),
       ...(campos.areaNegocio !== undefined && { area_negocio: campos.areaNegocio }),
       ...(campos.plazoDias !== undefined && { plazo_dias: campos.plazoDias }),
+      ...(campos.imagenes !== undefined && { imagenes: campos.imagenes }),
     },
     select: { id: true },
   });

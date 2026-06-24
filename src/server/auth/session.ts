@@ -87,7 +87,7 @@ export function leerCookieSesionDeRequest(request: Request): PayloadSesion | nul
   const header = request.headers.get('cookie') ?? '';
   const match = header.match(new RegExp(`(?:^|;\\s*)${COOKIE}=([^;]+)`));
   if (!match) return null;
-  const cookieValue = decodeURIComponent(match[1]);
+  const cookieValue = decodeURIComponent(match[1] ?? '');
   return verificarCookieSesion(cookieValue);
 }
 

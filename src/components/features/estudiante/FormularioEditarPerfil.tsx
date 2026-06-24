@@ -282,6 +282,12 @@ export default function FormularioEditarPerfil({ locale }: FormularioEditarPerfi
         return;
       }
       setGuardado("saved");
+      // Actualizar el Navbar sin recargar la página
+      try {
+        const perfilNavbar = { nombre, image_url: fotoUrl || null };
+        localStorage.setItem("fwd_perfil", JSON.stringify(perfilNavbar));
+        window.dispatchEvent(new CustomEvent("fwd:perfil:update", { detail: perfilNavbar }));
+      } catch { /* sin storage */ }
       router.refresh();
     } catch {
       setErrorGuardar("Error de red. Intentá de nuevo.");

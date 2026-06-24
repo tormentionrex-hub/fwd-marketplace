@@ -66,9 +66,8 @@ export default function SidebarEstudiante({
   }
 
   async function cerrarSesion() {
-    await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
-    localStorage.removeItem("fwd_perfil");
-    localStorage.removeItem("fwd_dashboard");
+    const { cerrarSesionCliente } = await import("@/lib/logout-client");
+    await cerrarSesionCliente();
     router.push(`/${locale}/login`);
     router.refresh();
   }

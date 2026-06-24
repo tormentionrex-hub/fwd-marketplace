@@ -412,7 +412,7 @@ export async function obtenerDetalleProyecto(id: string): Promise<ProyectoDetall
     descripcion: p.descripcion,
     area: p.area_negocio ?? 'General',
     tecnologias: p.proyectos_tecnologias.map((t) => t.tecnologias.nombre),
-    imagenes: [],
+    imagenes: p.imagenes ?? [],
     diasRestantes,
     fechaLimite: p.cierre ? p.cierre.toISOString() : null,
     empresario: {
