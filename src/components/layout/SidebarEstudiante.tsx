@@ -186,23 +186,6 @@ export default function SidebarEstudiante({
             );
           })}
 
-          {/* Cerrar sesión */}
-          <button
-            type="button"
-            onClick={cerrarSesion}
-            title={isCollapsed ? "Cerrar sesión" : undefined}
-            className={cn(
-              "group relative inline-flex shrink-0 items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 hover:translate-x-1 text-[#EC008C] dark:text-pink-400 hover:bg-[#FCE3F1] dark:hover:bg-pink-900/20 hover:text-[#B40A6B] dark:hover:text-pink-300",
-              isCollapsed && "lg:justify-center lg:px-2"
-            )}
-          >
-            <span className={cn("grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-[#FCE3F1] dark:bg-pink-900/20 text-[#EC008C] dark:text-pink-400 transition-all duration-200 group-hover:scale-110 group-hover:-rotate-6 group-hover:bg-[#f9c9e5] dark:group-hover:bg-pink-900/30")}>
-              <IconLogout width={16} height={16} />
-            </span>
-            <span className={cn("whitespace-nowrap transition-all duration-300 overflow-hidden", isCollapsed ? "lg:w-0 lg:opacity-0" : "lg:opacity-100")}>
-              Cerrar sesión
-            </span>
-          </button>
         </nav>
 
         {/* Bottom section: profile, reputation, logout */}

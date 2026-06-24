@@ -34,6 +34,7 @@ import MatchEmpleabilidad from "./MatchEmpleabilidad";
 import { QUIZ_ETAPAS } from "@/lib/quizzes-data";
 import type { MiOfertaDTO } from "@/types/oferta";
 import type { EventoCard } from "@/types/marketplace";
+import { ESTADO_OFERTA_META } from "@/lib/oferta-estado";
 
 interface ResumenDashboard {
   totalOfertas: number;
@@ -120,7 +121,7 @@ export default function DashboardEstudianteCliente({
   ultimaSesion,
   perfilCompletado,
   resumen,
-  misOfertas: _misOfertas,
+  misOfertas,
   perfil,
   cv,
   habilidadesVerificadas,
@@ -1017,7 +1018,66 @@ export default function DashboardEstudianteCliente({
           {/* TAB 2: PORTAFOLIO Y VISIBILIDAD */}
           {activeTab === "proyectos" && (
             <div className="flex flex-col gap-8">
-              
+
+              {/* MIS POSTULACIONES */}
+              <div>
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="h-2 w-2 rounded-full bg-[#008FD4]" />
+                  <h3 className="font-display text-base font-bold text-slate-900 dark:text-white">
+                    Mis Postulaciones ({misOfertas.length})
+                  </h3>
+                </div>
+                {misOfertas.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-slate-300 dark:border-white/15 py-8 text-center bg-slate-50/50 dark:bg-white/[0.01]">
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Aún no te has postulado a ningún proyecto.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-3">
+                    {misOfertas.map((oferta) => {
+                      const fallback = { label: "Proyecto cerrado", badge: "bg-slate-500/10 text-slate-500 dark:text-slate-400" };
+                      const meta = oferta.badge === "proyecto_cerrado"
+                        ? fallback
+                        : ESTADO_OFERTA_META[oferta.badge];
+                      return (
+                        <div
+                          key={oferta.id}
+                          className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 shadow-sm hover:shadow-md transition-all duration-300"
+                        >
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-2 mb-1.5">
+                                <h4 className="font-display font-bold text-slate-900 dark:text-white truncate">
+                                  {oferta.proyecto.titulo}
+                                </h4>
+                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider shrink-0 ${meta.badge}`}>
+                                  {meta.label}
+                                </span>
+                              </div>
+                              <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-2">
+                                {oferta.propuesta}
+                              </p>
+                              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-slate-400 dark:text-slate-500">
+                                <span>{oferta.proyecto.area}</span>
+                                <span>{oferta.proyecto.empresario}</span>
+                                <span>{new Date(oferta.fechaEnvio).toLocaleDateString("es-CR", { day: "numeric", month: "long", year: "numeric" })}</span>
+                              </div>
+                            </div>
+                            <Link
+                              href={`/${locale}/proyectos/${oferta.proyecto.id}`}
+                              className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl bg-[#008FD4]/10 px-3.5 text-[11px] font-bold text-[#008FD4] hover:bg-[#008FD4]/20 transition-colors"
+                            >
+                              Ver proyecto
+                            </Link>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
               {/* Formulario Agregar Proyecto */}
               <div className="rounded-[24px] border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.02] p-6 shadow-sm">
                 <h3 className="font-display text-lg font-bold text-slate-900 dark:text-white mb-1.5">

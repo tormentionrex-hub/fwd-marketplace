@@ -30,6 +30,8 @@ const colorRol: Record<string, string> = {
   estudiante: "bg-fwd-blue/15 text-fwd-blue",
   empresario: "bg-fwd-purple/20 text-fwd-purple",
   admin: "bg-fwd-magenta/15 text-fwd-magenta",
+  staff: "bg-fwd-staff/15 text-fwd-staff",
+  moderator: "bg-fwd-yellow/15 text-fwd-yellow",
 };
 
 const colorEstado: Record<string, string> = {

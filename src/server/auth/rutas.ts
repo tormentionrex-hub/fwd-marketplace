@@ -6,8 +6,10 @@ export function rutaPorRol(rol: string): string {
   switch (rol) {
     case 'owner':
     case 'admin':
-    case 'staff':
       return '/admin';
+    case 'staff':
+    case 'moderator':
+      return '/staff';
     case 'empresario':
       return '/empresario';
     case 'estudiante':

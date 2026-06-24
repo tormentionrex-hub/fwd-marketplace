@@ -374,7 +374,7 @@ export default async function MarketplaceItemPage({
               {/* CTA postularse */}
               {estaAbierto && (
                 <a
-                  href={`/${locale}/dashboard/estudiante`}
+                  href={`/${locale}/proyectos/${id}/ofertar`}
                   className="group relative flex items-center justify-center gap-2.5 overflow-hidden rounded-2xl px-6 py-4 text-base font-black text-white transition-all duration-300 hover:scale-[1.02] hover:brightness-110 active:scale-95"
                   style={{
                     background: `linear-gradient(135deg, ${color}, ${color}bb)`,

@@ -128,7 +128,7 @@ function SidebarThemeToggle() {
   );
 }
 
-export function AdminSidebar({ role, staffSubRole }: { role: string; staffSubRole?: string }) {
+export function AdminSidebar({ tipoStaff }: { tipoStaff?: string }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const rolActivo = searchParams.get("rol");

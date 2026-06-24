@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getUser } from '@/server/auth/get-user';
-import { puedeAccederPanelAdmin } from '@/server/auth/roles';
+import { puedeAccederPanelAdmin, esRolStaff } from '@/server/auth/roles';
 import { mismoOrigen } from '@/server/http/request';
 import { actualizarUsuario } from '@/server/repositories/usuario.repository';
 
@@ -15,7 +15,7 @@ export async function PATCH(request: Request) {
 
   const user = await getUser();
   if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-  if (!puedeAccederPanelAdmin(user.roles.nombre)) {
+  if (!esRolStaff(user.roles.nombre)) {
     return NextResponse.json({ error: 'Sin permiso' }, { status: 403 });
   }
 
