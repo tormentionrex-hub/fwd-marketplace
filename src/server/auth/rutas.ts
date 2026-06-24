@@ -7,6 +7,9 @@ export function rutaPorRol(rol: string): string {
     case 'owner':
     case 'admin':
       return '/admin';
+    case 'staff':
+    case 'moderator':
+      return '/staff';
     case 'empresario':
       return '/empresario';
     case 'estudiante':

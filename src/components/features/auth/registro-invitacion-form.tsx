@@ -42,6 +42,7 @@ export function RegistroInvitacionForm({
       const res = await fetch("/api/auth/registro-invitacion", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: 'same-origin',
         body: JSON.stringify({ token, nombre, edad: edad || undefined, password }),
       });
       const data = await res.json().catch(() => null);
@@ -60,8 +61,10 @@ export function RegistroInvitacionForm({
         localStorage.setItem("fwd_redirect", data.redirectTo);
       }
 
-      router.push(data?.redirectTo ?? "/");
-      router.refresh();
+      // Forzar navegación completa para que el navegador incluya las cookies
+      // `fwd_session`/`fwd_new_session` en la siguiente petición al servidor.
+      const destino = data?.redirectTo ?? "/";
+      window.location.assign(destino);
     } catch {
       setError("Error de red. Intentá de nuevo.");
     } finally {

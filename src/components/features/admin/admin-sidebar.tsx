@@ -120,7 +120,7 @@ function SidebarThemeToggle() {
   );
 }
 
-export function AdminSidebar() {
+export function AdminSidebar({ tipoStaff }: { tipoStaff?: string }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const rolActivo = searchParams.get("rol");

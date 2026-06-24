@@ -307,7 +307,7 @@ export function FormularioOferta({ proyecto, ofertaExistente }: Props) {
           </div>
 
           {modoPrototipo === "archivo" ? (
-            <div className="flex flex-col gap-1">
+            <div key="archivo-input" className="flex flex-col gap-1">
               <input
                 type="file"
                 accept=".zip,.pdf,.jpg,.jpeg,.png,.gif,.webp"
@@ -319,7 +319,7 @@ export function FormularioOferta({ proyecto, ofertaExistente }: Props) {
               </p>
             </div>
           ) : (
-            <div className="flex flex-col gap-1">
+            <div key="url-input" className="flex flex-col gap-1">
               <input
                 type="url"
                 value={urlPrototipo}

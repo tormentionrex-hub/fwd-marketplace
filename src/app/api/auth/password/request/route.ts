@@ -47,6 +47,14 @@ export async function POST(request: Request) {
       );
     }
 
+    // Cuenta rechazada o suspendida: no se permite recuperación.
+    if (resultado.bloqueado) {
+      return NextResponse.json(
+        { error: "No puedes recuperar el acceso porque tu cuenta fue rechazada o suspendida." },
+        { status: 403 },
+      );
+    }
+
     // El código fue enviado. Devolvemos la última sesión para mostrarla en la
     // pantalla de verificación (ISO 8601 o null si nunca inició sesión).
     return NextResponse.json({

@@ -43,12 +43,15 @@ const colorRol: Record<string, string> = {
   estudiante: "bg-fwd-blue/15 text-fwd-blue",
   empresario: "bg-fwd-purple/20 text-fwd-purple",
   admin: "bg-fwd-magenta/15 text-fwd-magenta",
+  staff: "bg-fwd-staff/15 text-fwd-staff",
+  moderator: "bg-fwd-yellow/15 text-fwd-yellow",
 };
 
 const TABS = [
   { key: "todos", label: "Todos" },
   { key: "estudiante", label: "Estudiantes" },
   { key: "empresario", label: "Empresarios" },
+  { key: "staff", label: "Staff" },
   { key: "admin", label: "Admins" },
 ] as const;
 
@@ -67,10 +70,12 @@ export function UsuariosTabla({
   usuarios,
   currentUserId,
   rolInicial = "todos",
+  readOnly,
 }: {
   usuarios: UsuarioFila[];
   currentUserId: string;
   rolInicial?: string;
+  readOnly?: boolean;
 }) {
   const router = useRouter();
   const [q, setQ] = useState("");
@@ -199,7 +204,11 @@ export function UsuariosTabla({
   const visibles = useMemo(() => {
     const f = q.trim().toLowerCase();
     let lista = usuarios;
-    if (rolFiltro !== "todos") lista = lista.filter((u) => u.rol === rolFiltro);
+    if (rolFiltro === "staff") {
+      lista = lista.filter((u) => u.rol === "staff" || u.rol === "moderator");
+    } else if (rolFiltro !== "todos") {
+      lista = lista.filter((u) => u.rol === rolFiltro);
+    }
     if (f) {
       lista = lista.filter(
         (u) =>
@@ -356,7 +365,7 @@ export function UsuariosTabla({
                       {new Date(u.creado).toLocaleDateString("es-CR")}
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-2">
                         <button
                           type="button"
                           onClick={() => setDetalleModal(u)}
@@ -364,15 +373,17 @@ export function UsuariosTabla({
                         >
                           Ver Detalle
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => eliminar(u)}
-                          disabled={esYo || deletingId === u.id}
-                          title={esYo ? "No puedes eliminar tu propia cuenta" : "Eliminar usuario"}
-                          className="inline-flex items-center gap-1 rounded-lg bg-red-500/10 px-2.5 py-1 text-xs font-semibold text-red-500 transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:bg-transparent disabled:text-white/25 disabled:hover:bg-transparent"
-                        >
-                          {deletingId === u.id ? "Eliminando…" : "Eliminar"}
-                        </button>
+                        {!readOnly && (
+                          <button
+                            type="button"
+                            onClick={() => eliminar(u)}
+                            disabled={esYo || deletingId === u.id}
+                            title={esYo ? "No puedes eliminar tu propia cuenta" : "Eliminar usuario"}
+                            className="inline-flex items-center gap-1 rounded-lg bg-red-500/10 px-2.5 py-1 text-xs font-semibold text-red-500 transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:bg-transparent disabled:text-white/25 disabled:hover:bg-transparent"
+                          >
+                            {deletingId === u.id ? "Eliminando…" : "Eliminar"}
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -417,7 +428,7 @@ export function UsuariosTabla({
                 </div>
               </div>
               <div className="flex items-center gap-1">
-                {!editando && (
+                {!readOnly && !editando && (
                   <button
                     type="button"
                     onClick={() => iniciarEdicion(detalleModal)}
@@ -428,20 +439,22 @@ export function UsuariosTabla({
                     <Pencil className="h-[18px] w-[18px]" />
                   </button>
                 )}
-                <button
-                  type="button"
-                  onClick={() => eliminarDesdeModal(detalleModal)}
-                  disabled={detalleModal.id === currentUserId || deletingId === detalleModal.id}
-                  title={
-                    detalleModal.id === currentUserId
-                      ? "No puedes eliminar tu propia cuenta"
-                      : "Eliminar usuario"
-                  }
-                  aria-label="Eliminar usuario"
-                  className="rounded-lg bg-red-500/15 p-2 text-red-500 transition hover:bg-red-500/25 disabled:cursor-not-allowed disabled:bg-transparent disabled:text-white/25"
-                >
-                  <Trash2 className="h-5 w-5" strokeWidth={2.4} />
-                </button>
+                {!readOnly && (
+                  <button
+                    type="button"
+                    onClick={() => eliminarDesdeModal(detalleModal)}
+                    disabled={detalleModal.id === currentUserId || deletingId === detalleModal.id}
+                    title={
+                      detalleModal.id === currentUserId
+                        ? "No puedes eliminar tu propia cuenta"
+                        : "Eliminar usuario"
+                    }
+                    aria-label="Eliminar usuario"
+                    className="rounded-lg bg-red-500/15 p-2 text-red-500 transition hover:bg-red-500/25 disabled:cursor-not-allowed disabled:bg-transparent disabled:text-white/25"
+                  >
+                    <Trash2 className="h-5 w-5" strokeWidth={2.4} />
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => setDetalleModal(null)}
