@@ -13,45 +13,19 @@ import AnimatedHeroTitle from "@/components/AnimatedHeroTitle";
 import TiltCard from "@/components/TiltCard";
 import AnimatedSubtitle from "@/components/AnimatedSubtitle";
 import WhatsAppButton from "@/components/WhatsAppButton";
-
-/* ─── Hardcoded data ─────────────────────────────── */
-
-const proyectos = [
-  {
-    id: 1,
-    titulo: "Sistema de gestión de inventario con IA",
-    area: "Retail & Logística",
-    tecnologias: ["React", "Node.js", "PostgreSQL"],
-    empresario: "Carlos Mora",
-    diasRestantes: 12,
-    color: "#008FD5",
-  },
-  {
-    id: 2,
-    titulo: "Plataforma de pagos digitales para PYMES",
-    area: "Fintech",
-    tecnologias: ["Next.js", "Stripe", "Supabase"],
-    empresario: "Ana Jiménez",
-    diasRestantes: 5,
-    color: "#ED008C",
-  },
-  {
-    id: 3,
-    titulo: "App móvil de telemedicina",
-    area: "Salud & Bienestar",
-    tecnologias: ["React Native", "Firebase", "Python"],
-    empresario: "Dr. Luis Solano",
-    diasRestantes: 20,
-    color: "#662E91",
-  },
-];
+import ExplorarMarketplaceBtn from "@/components/ExplorarMarketplaceBtn";
+import { EmpresarioCard } from "@/components/features/home/EmpresarioCard";
+import { EstudianteCard } from "@/components/features/home/EstudianteCard";
+import { ProyectosRecientes } from "@/components/features/home/ProyectosRecientes";
+import { listarProyectosParaMarketplace } from "@/server/services/proyecto.service";
+import { RankingSeccion } from "@/components/features/ranking/RankingSeccion";
+import { listarRankingEstudiantes } from "@/server/services/ranking.service";
 
 /* ─── Page ───────────────────────────────────────── */
 
 export default async function Home() {
   const h  = await getTranslations("Hero");
   const hw = await getTranslations("HowItWorks");
-  const p  = await getTranslations("Projects");
   const f  = await getTranslations("Features");
 
   const user = await getUser();
@@ -59,6 +33,12 @@ export default async function Home() {
 
   const pasosEmpresario = [hw("paso1Emp"), hw("paso2Emp"), hw("paso3Emp"), hw("paso4Emp")];
   const pasosEstudiante = [hw("paso1Est"), hw("paso2Est"), hw("paso3Est"), hw("paso4Est")];
+
+  const proyectosRecientes = await listarProyectosParaMarketplace();
+
+  const rankingData = await listarRankingEstudiantes(16);
+  const hayMasRanking = rankingData.length > 15;
+  const rankingEstudiantes = rankingData.slice(0, 15);
 
   return (
     <div className="flex flex-col min-h-screen relative overflow-x-hidden">
@@ -86,29 +66,7 @@ export default async function Home() {
             </p>
 
             <div data-hero="cta" className="flex flex-col sm:flex-row gap-4">
-              {dashboardHref ? (
-                <Link
-                  href={dashboardHref}
-                  className="inline-flex items-center justify-center gap-2 bg-[#FFCB05] text-fwd-navy font-bold px-8 py-4 rounded-xl transition-all duration-300 text-base hover:scale-105 hover:brightness-110 active:scale-95"
-                  style={{ boxShadow: "0 4px 25px #FFCB0566, 0 10px 40px #FFCB0533" }}
-                >
-                  Ir al dashboard <span aria-hidden="true">▶</span>
-                </Link>
-              ) : (
-                <Link
-                  href="/register"
-                  className="inline-flex items-center justify-center gap-2 bg-[#FFCB05] text-fwd-navy font-bold px-8 py-4 rounded-xl transition-all duration-300 text-base hover:scale-105 hover:brightness-110 active:scale-95"
-                  style={{ boxShadow: "0 4px 25px #FFCB0566, 0 10px 40px #FFCB0533" }}
-                >
-                  {h("ctaPublicar")} <span aria-hidden="true">▶</span>
-                </Link>
-              )}
-              <Link
-                href="/marketplace"
-                className="inline-flex items-center justify-center gap-2 border-2 border-[#FFCB05] text-[#FFCB05] font-bold px-8 py-4 rounded-xl transition-all duration-300 text-base hover:scale-105 hover:bg-[#FFCB05] hover:text-fwd-navy active:scale-95"
-              >
-                {h("ctaExplorar")}
-              </Link>
+              <ExplorarMarketplaceBtn />
             </div>
           </div>
         </div>
@@ -130,78 +88,18 @@ export default async function Home() {
           </div>
 
           <div data-reveal="stagger" className="grid md:grid-cols-2 gap-6">
-
-            {/* ── Empresario */}
-            <div className="bg-surface rounded-2xl p-8 shadow-sm border border-border flex flex-col">
-              <div className="flex items-center gap-3 mb-8">
-                <div className="w-12 h-12 rounded-xl bg-[#008FD5] flex items-center justify-center shadow-sm flex-shrink-0">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-                    <rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
-                    <line x1="12" y1="12" x2="12" y2="16" /><line x1="10" y1="14" x2="14" y2="14" />
-                  </svg>
-                </div>
-                <span className="font-heading font-black text-2xl text-[#008FD5]">{hw("empresario")}</span>
-              </div>
-
-              <ol className="flex flex-col gap-5 flex-1">
-                {pasosEmpresario.map((texto, i) => (
-                  <li key={i} className="flex items-center gap-4">
-                    <span className="flex-shrink-0 w-8 h-8 rounded-full border-2 border-[#008FD5] text-[#008FD5] text-sm font-bold flex items-center justify-center">
-                      {i + 1}
-                    </span>
-                    <p className="text-text-muted text-base font-normal leading-snug">{texto}</p>
-                  </li>
-                ))}
-              </ol>
-
-              <div className="mt-8">
-                <Link
-                  href={dashboardHref ?? "/register"}
-                  className="btn-empresa group relative flex items-center justify-center gap-3 w-full text-white font-bold py-4 rounded-xl overflow-hidden uppercase tracking-widest text-sm transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_8px_30px_#008FD566] active:scale-95"
-                  style={{ background: "linear-gradient(90deg,#008FD5,#20BEC6)" }}
-                >
-                  <span className="relative z-10">{dashboardHref ? "Continuar" : hw("ctaEmpresa")}</span>
-                  <span className="relative z-10 text-base transition-transform duration-300 group-hover:translate-x-1">→</span>
-                  <span className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] bg-white/20 skew-x-[-20deg] transition-transform duration-700" />
-                </Link>
-              </div>
-            </div>
-
-            {/* ── Estudiante */}
-            <div className="bg-surface rounded-2xl p-8 shadow-sm border border-border flex flex-col">
-              <div className="flex items-center gap-3 mb-8">
-                <div className="w-12 h-12 rounded-xl bg-[#662E91] flex items-center justify-center shadow-sm flex-shrink-0">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-                    <path d="M22 10v6M2 10l10-5 10 5-10 5z" /><path d="M6 12v5c3 3 9 3 12 0v-5" />
-                  </svg>
-                </div>
-                <span className="font-heading font-black text-2xl text-[#662E91]">{hw("estudiante")}</span>
-              </div>
-
-              <ol className="flex flex-col gap-5 flex-1">
-                {pasosEstudiante.map((texto, i) => (
-                  <li key={i} className="flex items-center gap-4">
-                    <span className="flex-shrink-0 w-8 h-8 rounded-full border-2 border-[#662E91] text-[#662E91] text-sm font-bold flex items-center justify-center">
-                      {i + 1}
-                    </span>
-                    <p className="text-text-muted text-base font-normal leading-snug">{texto}</p>
-                  </li>
-                ))}
-              </ol>
-
-              <div className="mt-8">
-                <Link
-                  href={dashboardHref ?? "/register-estudiante"}
-                  className="group relative flex items-center justify-center gap-3 w-full text-white font-bold py-4 rounded-xl overflow-hidden uppercase tracking-widest text-sm transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_8px_30px_#662E9166] active:scale-95"
-                  style={{ background: "linear-gradient(90deg,#662E91,#ED008C)" }}
-                >
-                  <span className="relative z-10">{dashboardHref ? "Continuar" : hw("ctaEstudiante")}</span>
-                  <span className="relative z-10 text-base transition-transform duration-300 group-hover:translate-x-1">→</span>
-                  <span className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] bg-white/20 skew-x-[-20deg] transition-transform duration-700" />
-                </Link>
-              </div>
-            </div>
-
+            <EmpresarioCard
+              pasos={pasosEmpresario}
+              titulo={hw("empresario")}
+              ctaLabel={dashboardHref ? "Continuar" : hw("ctaEmpresa")}
+              ctaHref={dashboardHref ?? "/register"}
+            />
+            <EstudianteCard
+              pasos={pasosEstudiante}
+              titulo={hw("estudiante")}
+              ctaLabel={dashboardHref ? "Continuar" : hw("ctaEstudiante")}
+              ctaHref={dashboardHref ?? "/register-estudiante"}
+            />
           </div>
         </div>
       </section>
@@ -211,42 +109,22 @@ export default async function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
           <div className="mb-14">
-            <p data-reveal="fade-left" className="text-[#20BEC7] text-xs font-semibold uppercase tracking-widest mb-2">{p("badge")}</p>
-            <AnimatedProjectsTitle text={p("title")} />
+            <p className="text-[#20BEC7] text-xs font-semibold uppercase tracking-widest mb-2">
+              Proyectos en el marketplace
+            </p>
+            <AnimatedProjectsTitle text="Proyectos más recientes en el marketplace" />
           </div>
 
-          <div data-reveal="stagger" className="grid md:grid-cols-3 gap-6">
-            {proyectos.map((proj) => (
-              <Link key={proj.id} href="/proyectos" className="block">
-                <article
-                  className="rounded-3xl p-7 flex flex-col hover:scale-105 transition-transform duration-300 shadow-lg"
-                  style={{ backgroundColor: proj.color }}
-                >
-                  <span className="text-xs font-bold text-white/70 uppercase tracking-widest mb-3">{proj.area}</span>
-                  <h3 className="font-heading font-black text-white text-xl leading-snug mb-5 flex-1">{proj.titulo}</h3>
-                  <div className="flex flex-wrap gap-2 mb-6">
-                    {proj.tecnologias.map((tech) => (
-                      <span key={tech} className="bg-white/20 text-white text-xs font-semibold px-3 py-1 rounded-full">{tech}</span>
-                    ))}
-                  </div>
-                  <div className="flex items-center justify-between pt-4 border-t border-white/20">
-                    <span className="text-white/80 text-sm">por <span className="font-bold text-white">{proj.empresario}</span></span>
-                    <span className="bg-[#FFCB05] text-[#0e1628] text-xs font-black px-3 py-1 rounded-full">{proj.diasRestantes}{p("restantes")}</span>
-                  </div>
-                </article>
-              </Link>
-            ))}
-          </div>
+          <ProyectosRecientes proyectos={proyectosRecientes} />
 
-          {/* Botón Ver todos — centrado debajo de las cards */}
+          {/* Botón Ver todos */}
           <div className="flex justify-center mt-14">
             <Link
               href="/marketplace"
-              className="group relative overflow-hidden inline-flex items-center gap-3 font-black text-base uppercase tracking-widest px-12 py-5 rounded-full transition-all duration-300 hover:scale-105 hover:shadow-[0_8px_30px_rgba(0,143,213,0.45)] active:scale-95"
+              className="group relative overflow-hidden inline-flex items-center font-black text-base uppercase tracking-widest px-12 py-5 rounded-full transition-all duration-300 hover:scale-105 hover:shadow-[0_8px_30px_rgba(0,143,213,0.45)] active:scale-95"
               style={{ background: "linear-gradient(90deg, #008FD5, #20BEC6)", color: "white" }}
             >
-              <span className="relative z-10">{p("verTodos")}</span>
-              <span className="relative z-10 text-lg transition-transform duration-300 group-hover:translate-x-1">→</span>
+              <span className="relative z-10">Ver todos</span>
               <span className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] bg-white/25 skew-x-[-20deg] transition-transform duration-700" />
             </Link>
           </div>
@@ -305,8 +183,26 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* ── CAROUSEL ESTUDIANTES ─────────────────── */}
+      {/* ── VIDEO ESTUDIANTES ────────────────────── */}
       <StudentCarousel />
+
+      {/* ── RANKING ESTUDIANTES ──────────────────── */}
+      <section className="bg-[#0e1628] py-24">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-14">
+            <p className="text-[#FFD700] text-xs font-semibold uppercase tracking-widest mb-2">
+              Talento FWD
+            </p>
+            <h2 className="font-heading font-black text-white text-4xl md:text-5xl leading-tight">
+              Ranking de Estudiantes FWD
+            </h2>
+            <p className="text-white/50 text-base mt-4 max-w-lg mx-auto">
+              Los estudiantes mejor calificados por empresarios reales, en proyectos reales.
+            </p>
+          </div>
+          <RankingSeccion estudiantes={rankingEstudiantes} showVerMas={hayMasRanking} />
+        </div>
+      </section>
 
       <Footer />
       <WhatsAppButton />

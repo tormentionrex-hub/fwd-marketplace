@@ -2,10 +2,11 @@
 
 import { Link, useRouter } from "@/i18n/navigation";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { useTranslations } from "next-intl";
 import Swal from "sweetalert2";
 import SettingsPanel from "@/components/SettingsPanel";
+import gsap from "gsap";
 
 // Copia client-side de rutaPorRol para no importar código server-only en el cliente.
 function rutaDesdeRol(rol: string): string {
@@ -13,6 +14,84 @@ function rutaDesdeRol(rol: string): string {
   if (rol === "empresario") return "/empresario";
   if (rol === "estudiante") return "/dashboard/estudiante";
   return "/";
+}
+
+// Colores arcoiris que contrastan con el degradado del navbar (navy → púrpura → magenta).
+const MKTP_COLORES = ["#FFCB05", "#ED008C", "#20BEC7", "#C084FC", "#60CFFF"];
+const MKTP_LETRAS = "Marketplace".split("");
+
+// Al hacer hover: cada letra lanza un flash blanco brillante que la "pinta" en su
+// color arcoiris con un glow persistente. Al salir el cursor, reversa suave a blanco.
+function MarketplaceAnimado() {
+  const refs = useRef<(HTMLSpanElement | null)[]>([]);
+
+  const targets = useCallback(
+    () => refs.current.filter((el): el is HTMLSpanElement => el !== null),
+    [],
+  );
+
+  const onEnter = useCallback(() => {
+    const els = targets();
+    gsap.killTweensOf(els);
+
+    els.forEach((el, i) => {
+      const color = MKTP_COLORES[i % MKTP_COLORES.length] ?? "#FFCB05";
+      const baseDelay = i * 0.038;
+
+      // Flash blanco brillante que barre la letra
+      gsap.to(el, {
+        color: "#ffffff",
+        textShadow: `0 0 18px #fff, 0 0 36px ${color}, 0 0 70px ${color}`,
+        scaleX: 1.12,
+        scaleY: 1.18,
+        duration: 0.07,
+        delay: baseDelay,
+        ease: "power3.out",
+        overwrite: "auto",
+      });
+      // Settle: queda en su color arcoiris con glow suave
+      gsap.to(el, {
+        color,
+        textShadow: `0 0 8px ${color}90`,
+        scaleX: 1,
+        scaleY: 1,
+        duration: 0.22,
+        delay: baseDelay + 0.07,
+        ease: "power2.inOut",
+        overwrite: "auto",
+      });
+    });
+  }, [targets]);
+
+  const onLeave = useCallback(() => {
+    const els = targets();
+    gsap.killTweensOf(els);
+    gsap.to(els, {
+      color: "rgba(255,255,255,0.8)",
+      textShadow: "none",
+      scaleX: 1,
+      scaleY: 1,
+      duration: 0.28,
+      stagger: 0.02,
+      ease: "power1.inOut",
+      overwrite: "auto",
+    });
+  }, [targets]);
+
+  return (
+    <span className="inline-flex" onMouseEnter={onEnter} onMouseLeave={onLeave}>
+      {MKTP_LETRAS.map((letra, i) => (
+        <span
+          key={i}
+          ref={(el) => { refs.current[i] = el; }}
+          className="inline-block"
+          style={{ color: "rgba(255,255,255,0.8)", willChange: "color, text-shadow, transform" }}
+        >
+          {letra}
+        </span>
+      ))}
+    </span>
+  );
 }
 
 export default function Navbar({ dashboardHref: dashboardProp }: { dashboardHref?: string | null }) {
@@ -54,12 +133,42 @@ export default function Navbar({ dashboardHref: dashboardProp }: { dashboardHref
     } catch { /* modo privado / sin storage */ }
   }, [dashboardProp]);
 
+  // Cuando el servidor confirma sesión pero localStorage no tiene perfil, lo pedimos al API.
+  useEffect(() => {
+    if (!logueado || perfil) return;
+    fetch("/api/auth/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: { nombre?: string; image_url?: string | null } | null) => {
+        if (!data?.nombre) return;
+        const p = { nombre: data.nombre, image_url: data.image_url ?? null };
+        setPerfil(p);
+        try { localStorage.setItem("fwd_perfil", JSON.stringify(p)); } catch { /* sin storage */ }
+      })
+      .catch(() => {});
+  }, [logueado, perfil]);
+
+  // Sincronización cross-tab (storage) y same-tab (custom event) para foto/nombre.
+  useEffect(() => {
+    function onStorage(e: StorageEvent) {
+      if (e.key !== "fwd_perfil") return;
+      if (!e.newValue) { setPerfil(null); return; }
+      try { setPerfil(JSON.parse(e.newValue)); } catch { /* ignorar */ }
+    }
+    function onPerfilUpdate(e: Event) {
+      const detail = (e as CustomEvent<{ nombre: string; image_url: string | null }>).detail;
+      if (detail) setPerfil(detail);
+    }
+    window.addEventListener("storage", onStorage);
+    window.addEventListener("fwd:perfil:update", onPerfilUpdate);
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("fwd:perfil:update", onPerfilUpdate);
+    };
+  }, []);
+
   async function cerrarSesion() {
-    try {
-      await fetch("/api/auth/logout", { method: "POST" });
-    } catch { /* ignorar */ }
-    localStorage.removeItem("fwd_perfil");
-    localStorage.removeItem("fwd_dashboard");
+    const { cerrarSesionCliente } = await import("@/lib/logout-client");
+    await cerrarSesionCliente();
     localStorage.removeItem("fwd_redirect");
     router.push("/login");
     router.refresh();
@@ -88,10 +197,11 @@ export default function Navbar({ dashboardHref: dashboardProp }: { dashboardHref
   const iniciales =
     perfil?.nombre
       ?.split(" ")
+      .filter(Boolean)
       .map((p) => p[0])
       .join("")
       .toUpperCase()
-      .slice(0, 2) ?? "?";
+      .slice(0, 2) ?? "U";
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 px-6 py-4">
@@ -132,8 +242,8 @@ export default function Navbar({ dashboardHref: dashboardProp }: { dashboardHref
           <Link href="/" className="text-white/80 hover:text-[#20BEC7] text-base font-semibold transition-colors duration-200">
             {t("inicio")}
           </Link>
-          <Link href="/proyectos" className="text-white/80 hover:text-[#20BEC7] text-base font-semibold transition-colors duration-200">
-            {t("proyectos")}
+          <Link href="/marketplace" className="text-base font-bold">
+            <MarketplaceAnimado />
           </Link>
           <Link
             href="/noticias"
@@ -165,7 +275,19 @@ export default function Navbar({ dashboardHref: dashboardProp }: { dashboardHref
                     <img src={perfil.image_url} alt="" className="h-full w-full object-cover" />
                   ) : iniciales}
                 </span>
-                <span className="text-sm font-semibold">{perfil?.nombre ?? "Mi cuenta"}</span>
+                <span className="text-sm font-semibold">{perfil?.nombre ?? "Mi perfil"}</span>
+              </Link>
+
+              {/* Ir al dashboard */}
+              <Link
+                href={redirectTo}
+                className="inline-flex items-center gap-1.5 rounded-full bg-[#20BEC7] px-4 py-2 text-sm font-bold text-[#0e1628] shadow transition hover:scale-105 hover:brightness-105 active:scale-95"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" />
+                  <rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" />
+                </svg>
+                Ir al dashboard
               </Link>
 
               {/* Cerrar sesión (rojo) con confirmación SweetAlert */}
@@ -214,8 +336,8 @@ export default function Navbar({ dashboardHref: dashboardProp }: { dashboardHref
           <Link href="/" className="text-white/80 text-base font-semibold py-1 hover:text-[#20BEC7] transition-colors" onClick={() => setMenuOpen(false)}>
             {t("inicio")}
           </Link>
-          <Link href="/proyectos" className="text-white/80 text-base font-semibold py-1 hover:text-[#20BEC7] transition-colors" onClick={() => setMenuOpen(false)}>
-            {t("proyectos")}
+          <Link href="/marketplace" className="text-base font-bold py-1" onClick={() => setMenuOpen(false)}>
+            <MarketplaceAnimado />
           </Link>
           <Link href="/noticias" className="text-white/80 text-base font-semibold py-1 hover:text-[#20BEC7] transition-colors" onClick={() => setMenuOpen(false)}>
             {t("noticias")}
@@ -233,10 +355,14 @@ export default function Navbar({ dashboardHref: dashboardProp }: { dashboardHref
               </div>
               <Link
                 href={redirectTo}
-                className="text-white/80 text-base font-semibold py-1 hover:text-[#20BEC7] transition-colors"
+                className="inline-flex items-center gap-2 text-[#0e1628] text-base font-bold py-2 px-4 rounded-full bg-[#20BEC7] transition hover:brightness-105"
                 onClick={() => setMenuOpen(false)}
               >
-                Mi dashboard
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" />
+                  <rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" />
+                </svg>
+                Ir al dashboard
               </Link>
               <button
                 onClick={() => { setMenuOpen(false); confirmarCerrarSesion(); }}
