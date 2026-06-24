@@ -76,10 +76,11 @@ export interface PortafolioPersistencia {
 
 // Guarda datos personales + reemplaza los sets de habilidades y portafolio,
 // todo en una sola transacción atómica.
-export function actualizarReputacion(idEstudiante: string, reputacion: number) {
+export async function actualizarReputacion(idEstudiante: string, reputacion: number) {
+  const total = await db.evaluaciones.count({ where: { id_estudiante: idEstudiante } });
   return db.perfiles_estudiante.update({
     where: { id_usuario: idEstudiante },
-    data: { reputacion },
+    data: { reputacion, total_calificaciones: total },
   });
 }
 

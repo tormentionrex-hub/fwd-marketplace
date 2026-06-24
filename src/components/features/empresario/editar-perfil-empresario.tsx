@@ -140,6 +140,12 @@ export default function EditarPerfilEmpresario({
         return;
       }
       setAbierto(false);
+      // Actualizar el Navbar sin recargar la página
+      try {
+        const perfilNavbar = { nombre: nombre.trim(), image_url: fotoUrl };
+        localStorage.setItem('fwd_perfil', JSON.stringify(perfilNavbar));
+        window.dispatchEvent(new CustomEvent('fwd:perfil:update', { detail: perfilNavbar }));
+      } catch { /* sin storage */ }
       router.refresh();
     } catch {
       setError('Error de red. Intentá de nuevo.');

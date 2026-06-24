@@ -1,9 +1,8 @@
 import 'server-only';
+import { llamarIA } from '@/lib/ia-fallback';
 
-// Cliente OpenRouter para el agente conversacional de FWD.
-// Primario: anthropic/claude-3.5-haiku  (rapido, excelente en español y JSON)
-// Respaldo:  openai/gpt-4o-mini         (muy confiable, buen JSON)
-// OpenRouter gestiona el fallback automaticamente con { models: [...], route: 'fallback' }.
+// Agente conversacional de FWD.
+// Usa llamarIA: prueba claude-3.5-haiku → gpt-4o-mini de forma transparente.
 
 export interface MensajeChat {
   role: 'user' | 'assistant';
@@ -24,44 +23,26 @@ export interface RespuestaAgente {
   proyecto?: ProyectoGeneradoOR;
 }
 
-const MODELOS = ['anthropic/claude-3.5-haiku', 'openai/gpt-4o-mini'] as const;
-
 function buildSystemPrompt(turnoUsuario: number): string {
-  const puedeTerminar = turnoUsuario >= 7;
-  const debeTerminar = turnoUsuario >= 10;
+  const instruccion = turnoUsuario >= 10
+    ? 'Ya tenes suficiente informacion. DEBES terminar con listo: true y el proyecto completo.'
+    : turnoUsuario >= 7
+    ? 'Podes cerrar si ya tenes suficiente, o hacer UNA pregunta mas si falta algo clave.'
+    : `Hace UNA pregunta de seguimiento. Necesitas ${7 - turnoUsuario} respuesta${7 - turnoUsuario === 1 ? '' : 's'} mas.`;
 
-  const instruccionTurno = debeTerminar
-    ? 'Ya tenés suficiente informacion. DEBES responder con listo: true y el proyecto estructurado.'
-    : puedeTerminar
-    ? 'Podes cerrar la conversacion si ya tenes suficiente informacion, o hacer UNA pregunta mas si falta algo clave.'
-    : `Hace UNA pregunta de seguimiento. Necesitas al menos ${7 - turnoUsuario} respuesta${7 - turnoUsuario === 1 ? '' : 's'} mas antes de poder estructurar el proyecto.`;
+  return `Sos el asistente de FWD Marketplace (Costa Rica), que conecta empresas con equipos universitarios para proyectos de software.
 
-  return `Sos el asistente de FWD Marketplace, una plataforma que conecta empresas costarricenses con talento universitario para proyectos reales de software.
+Tu mision: entender el proyecto del empresario haciendo UNA pregunta por turno.
 
-Tu mision es entender el proyecto que necesita el empresario mediante preguntas de a UNA por vez, de forma conversacional y profesional.
+Info a recolectar: problema a resolver, usuarios finales, funcionalidades principales, area de negocio, tecnologias preferidas, plazo en dias (5-15).
 
-Aspectos clave que debes entender antes de generar el proyecto:
-1. Que problema concreto quieren resolver
-2. Quienes usaran la solucion y que deberan poder hacer
-3. Funcionalidades o modulos principales
-4. Area de negocio (Logistica, Marketing, Finanzas, Salud, Educacion, Operaciones, Recursos Humanos, Tecnologia, etc.)
-5. Tecnologias preferidas o con las que ya trabajan (si tienen preferencia)
-6. Cuantos dias quieren dejar abierta la recepcion de propuestas (entre 5 y 15 dias)
-7. Cualquier restriccion, integracion o detalle tecnico importante
+Turno del usuario: ${turnoUsuario}. ${instruccion}
 
-Estado actual: turno ${turnoUsuario} del usuario.
-${instruccionTurno}
+Responde SIEMPRE con JSON valido, sin texto antes ni despues:
+- En curso: {"mensaje":"tu pregunta concreta","listo":false}
+- Final: {"mensaje":"Perfecto, ya tengo todo lo que necesito.","listo":true,"proyecto":{"titulo":"titulo claro max 150 chars","descripcion":"descripcion para estudiantes universitarios, min 80 chars","areaNegocio":"Logistica|Marketing|Finanzas|Salud|Educacion|Operaciones|Recursos Humanos|Tecnologia|Comunicacion|Comercio","plazoDias":10,"tecnologias":["tech1","tech2"]}}
 
-IMPORTANTE — Responde SIEMPRE con un JSON valido, sin texto antes ni despues:
-- Conversacion en curso: {"mensaje": "tu pregunta o comentario", "listo": false}
-- Cuando tengas toda la informacion: {"mensaje": "Perfecto, ya tengo todo lo necesario para estructurar tu proyecto.", "listo": true, "proyecto": {"titulo": "titulo claro del proyecto (min 5, max 150 chars)", "descripcion": "descripcion detallada y atractiva para estudiantes universitarios (min 80 chars, max 1000)", "areaNegocio": "area de negocio o null", "plazoDias": numero entre 5 y 15 o null, "tecnologias": ["tech1", "tech2"]}}
-
-Reglas de estilo:
-- Sin emojis en ningun campo.
-- Tuteo (vos, tenes, podes).
-- Tono profesional y cercano.
-- Las preguntas deben ser especificas y concretas para el contexto de desarrollo de software.
-- El proyecto debe ser claro, profesional y motivador para que estudiantes universitarios quieran postularse.`;
+Estilo: tuteo (vos/tenes/podes), profesional y directo, sin emojis.`;
 }
 
 function sanearProyecto(raw: unknown): ProyectoGeneradoOR {
@@ -100,53 +81,22 @@ function sanearProyecto(raw: unknown): ProyectoGeneradoOR {
   return { titulo, descripcion, areaNegocio, plazoDias, tecnologias };
 }
 
-/**
- * Llama al agente conversacional via OpenRouter.
- * Devuelve el siguiente mensaje del agente y, cuando tiene suficiente info,
- * tambien el proyecto estructurado listo para crearProyectoService.
- */
 export async function chatAgente(
   historial: MensajeChat[],
   turnoUsuario: number,
 ): Promise<RespuestaAgente> {
-  const key = process.env.OPENROUTER_API_KEY;
-  if (!key) throw new Error('OPENROUTER_API_KEY no configurada');
-
   const systemMsg = { role: 'system', content: buildSystemPrompt(turnoUsuario) };
   const mensajes = [systemMsg, ...historial];
 
   let respuestaTexto: string;
   try {
-    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${key}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': process.env.NEXT_PUBLIC_URL ?? 'https://fwd.cr',
-        'X-Title': 'FWD Marketplace',
-      },
-      body: JSON.stringify({
-        models: MODELOS,
-        route: 'fallback',
-        messages: mensajes,
-        response_format: { type: 'json_object' },
-        temperature: 0.5,
-        max_tokens: 1024,
-      }),
+    respuestaTexto = await llamarIA(mensajes, {
+      temperature: 0.3,
+      max_tokens: 600,
+      response_format: { type: 'json_object' },
     });
-
-    if (!res.ok) {
-      const txt = await res.text().catch(() => '');
-      throw new Error(`OpenRouter ${res.status}: ${txt.slice(0, 200)}`);
-    }
-
-    const data = (await res.json()) as {
-      choices?: { message?: { content?: string } }[];
-    };
-    respuestaTexto = data.choices?.[0]?.message?.content ?? '';
-    if (!respuestaTexto) throw new Error('Respuesta vacia de OpenRouter');
   } catch (err) {
-    console.error('[openrouter] Error en fetch:', err);
+    console.error('[openrouter] Todos los modelos fallaron:', err);
     throw new Error('Error al comunicarse con el agente de IA');
   }
 
@@ -171,7 +121,6 @@ export async function chatAgente(
       return { mensaje, listo: true, proyecto };
     } catch (e) {
       console.error('[openrouter] Error saneando proyecto:', e);
-      // Si el saneamiento falla, continuar la conversacion en lugar de romper
       return {
         mensaje: 'Podes darme un poco mas de detalle sobre el proyecto para terminarlo bien?',
         listo: false,
