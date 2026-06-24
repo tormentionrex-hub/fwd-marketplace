@@ -1,15 +1,11 @@
 import { getUser } from "@/server/auth/get-user";
-import { listarReportes } from "@/server/repositories/report.repository";
-import { listarAuditorias } from "@/server/repositories/audit-log.repository";
 import {
   AdminPageShell,
   AdminPageHeader,
 } from "@/components/features/admin/admin-page-header";
-import { ReportesPanel } from "@/components/features/admin/reportes-panel";
 import { redirect } from "next/navigation";
+import { FileWarning } from "lucide-react";
 
-// URL: /es/staff/reportes — revisar y moderar reportes de conducta/spam.
-// Protegido por (staff)/layout.tsx (solo staff y moderator).
 export default async function StaffReportesPage({
   params,
 }: {
@@ -22,33 +18,18 @@ export default async function StaffReportesPage({
     redirect(`/${locale}/login`);
   }
 
-  const [reportesRaw, auditoriasRaw] = await Promise.all([
-    listarReportes(),
-    listarAuditorias(),
-  ]);
-
-  const reportes = reportesRaw.map((r) => ({
-    ...r,
-    creado: r.creado.toISOString(),
-    actualizado: r.actualizado.toISOString(),
-  }));
-
-  const auditorias = auditoriasRaw.map((a) => ({
-    ...a,
-    creado: a.creado.toISOString(),
-  }));
-
   return (
     <AdminPageShell>
       <AdminPageHeader
         title="Reportes de Moderacion"
         subtitle="Revisa y gestiona reportes de conducta o spam enviados por los usuarios."
       />
-      <ReportesPanel
-        initialReportes={reportes}
-        initialAuditorias={auditorias}
-        currentUserId={user.id}
-      />
+      <div className="flex flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] p-16 text-center">
+        <FileWarning className="mb-4 h-10 w-10 text-white/20" />
+        <p className="text-sm font-semibold text-white/50">
+          El sistema de reportes estara disponible proximamente.
+        </p>
+      </div>
     </AdminPageShell>
   );
 }

@@ -1,6 +1,5 @@
 import { getUser } from "@/server/auth/get-user";
 import { listarUsuariosPendientes } from "@/server/repositories/usuario.repository";
-import { listarReportes } from "@/server/repositories/report.repository";
 import {
   AdminPageShell,
   AdminPageHeader,
@@ -14,18 +13,14 @@ const ROL_LABEL: Record<string, string> = {
 };
 
 export default async function StaffPage() {
-  const [user, pendientes, reportes] = await Promise.all([
+  const [user, pendientes] = await Promise.all([
     getUser(),
     listarUsuariosPendientes(),
-    listarReportes(),
   ]);
 
   const nombre = user?.nombre ?? "Staff";
   const rolLabel = ROL_LABEL[user?.roles.nombre ?? ""] ?? "Staff";
   const totalPendientes = pendientes.length;
-  const totalReportes = reportes.filter(
-    (r) => r.estado === "pendiente" || r.estado === "en_revision"
-  ).length;
 
   const kpis = [
     {
@@ -37,7 +32,7 @@ export default async function StaffPage() {
     },
     {
       titulo: "Reportes activos",
-      valor: totalReportes,
+      valor: 0,
       icon: FileWarning,
       color: "#ec008c",
       href: "/staff/reportes",
