@@ -144,6 +144,7 @@ html:not(.dark) .admin-main input::placeholder {
   --color-fwd-yellow: #ffcb05;
   --color-fwd-orange: #f7901e;
   --color-fwd-magenta: #ec008c;
+  --color-fwd-staff: #6acbcf;
 
   /* Neutrales de soporte */
   --color-fwd-navy: #0b1437;
@@ -184,6 +185,7 @@ html:not(.dark) .admin-main input::placeholder {
   --color-fwd-amarillo: #ffcb05;
   --color-fwd-naranja: #f7901e;
   --color-fwd-magenta: #ec008c;
+  --color-fwd-staff: #6acbcf;
 }
 
 body {

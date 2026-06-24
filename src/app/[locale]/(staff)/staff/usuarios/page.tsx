@@ -6,10 +6,9 @@ import {
 } from "@/components/features/admin/admin-page-header";
 import { UsuariosTabla } from "@/components/features/admin/usuarios-tabla";
 
-// URL: /es/admin/usuarios — gestión de usuarios registrados.
-// Acepta ?rol=estudiante|empresario|staff|admin para abrir directamente filtrado por
-// rol (lo usan los accesos del sidebar). Cualquier otro valor → "todos".
-export default async function AdminUsuariosPage({
+export const dynamic = "force-dynamic";
+
+export default async function StaffUsuariosPage({
   searchParams,
 }: {
   searchParams: Promise<{ rol?: string }>;
@@ -59,12 +58,13 @@ export default async function AdminUsuariosPage({
     <AdminPageShell>
       <AdminPageHeader
         title="Usuarios"
-        subtitle="Buscá, filtrá y gestioná las cuentas registradas."
+        subtitle="Consulta de cuentas registradas — solo lectura."
       />
       <UsuariosTabla
         usuarios={usuarios}
         currentUserId={me?.id ?? ""}
         rolInicial={rolInicial}
+        readOnly
       />
     </AdminPageShell>
   );

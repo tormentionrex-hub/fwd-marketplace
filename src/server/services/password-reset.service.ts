@@ -28,11 +28,13 @@ export function esPasswordValida(p: string): boolean {
 // Resultado de la solicitud de recuperación.
 //   existe       → si hay una cuenta con ese correo (si es false, no se envió nada).
 //   ultimaSesion → fecha del último login de esa cuenta (null si nunca inició sesión).
+//   bloqueado    → si la cuenta está rechazada o suspendida.
 // Nota: revelar la existencia del correo es por requerimiento explícito del
 // producto; tiene el trade-off de permitir enumeración de correos registrados.
 export interface ResultadoSolicitud {
   existe: boolean;
   ultimaSesion: Date | null;
+  bloqueado?: boolean;
 }
 
 export async function solicitarRecuperacion(correo: string): Promise<ResultadoSolicitud> {
@@ -40,6 +42,11 @@ export async function solicitarRecuperacion(correo: string): Promise<ResultadoSo
   if (!usuario) {
     console.warn("[seguridad] solicitud de recuperación para correo no registrado");
     return { existe: false, ultimaSesion: null };
+  }
+
+  if (usuario.estado === "rechazado" || usuario.estado === "suspendido") {
+    console.warn(`[seguridad] recuperación bloqueada para cuenta ${usuario.estado}: ${correo}`);
+    return { existe: true, ultimaSesion: null, bloqueado: true };
   }
 
   await repo.invalidarResetsDeUsuario(usuario.id);
@@ -66,6 +73,10 @@ export async function verificarCodigo(
 ): Promise<ResultadoVerificacion> {
   const usuario = await buscarUsuarioPorCorreo(correo);
   if (!usuario) return { ok: false, error: "Código inválido o expirado." };
+
+  if (usuario.estado === "rechazado" || usuario.estado === "suspendido") {
+    return { ok: false, error: "Tu cuenta fue rechazada o suspendida. No puedes recuperar el acceso." };
+  }
 
   const reset = await repo.buscarResetVigentePorUsuario(usuario.id);
   if (!reset) return { ok: false, error: "Código inválido o expirado." };

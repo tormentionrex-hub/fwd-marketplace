@@ -29,14 +29,6 @@ function fromSmtp(): string {
   return `${NOMBRE_REMITENTE} <no-reply@fwd.cr>`;
 }
 
-// Remitente válido para Resend: usa EMAIL_FROM si es real; si no, el remitente
-// de pruebas de Resend (onboarding@resend.dev), que envía a tu propio correo.
-function fromResend(): string {
-  const f = (process.env.EMAIL_FROM || "").trim();
-  if (esReal(f) && /@/.test(f)) return f;
-  return "FWD Marketplace <onboarding@resend.dev>";
-}
-
 let transporter: Transporter | null = null;
 
 function getTransporter(): Transporter | null {
@@ -92,6 +84,18 @@ async function getLogoBuffer(): Promise<Buffer | null> {
   return logoBufCache;
 }
 
+// Cabeceras anti-spam estándar para correo transaccional.
+function cabecerasTransaccionales(to: string): Record<string, string | string[]> {
+  const appUrl = process.env.NEXT_PUBLIC_URL ?? "http://localhost:3000";
+  return {
+    "Precedence": "bulk",
+    "X-Auto-Response-Suppress": "All",
+    "X-Mailer": "FWD Marketplace",
+    "List-Unsubscribe": `<${appUrl}/es/unsubscribe?email=${encodeURIComponent(to)}>`,
+    "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+  };
+}
+
 async function enviar({ to, subject, html, text, replyTo }: OpcionesCorreo) {
   // Logo embebido (CID). Si no se pudo descargar, se sustituye la imagen por el
   // wordmark de texto para no dejar una imagen rota en el correo.
@@ -100,49 +104,7 @@ async function enviar({ to, subject, html, text, replyTo }: OpcionesCorreo) {
     ? html
     : html.replace(/<img[^>]*data-fwd-logo="1"[^>]*>/g, WORDMARK);
 
-  // 1) Resend (API HTTP, sin dependencias): la opción más simple.
-  const resendKey = process.env.RESEND_API_KEY;
-  if (esReal(resendKey)) {
-    try {
-      const res = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${resendKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          from: fromResend(),
-          to,
-          subject,
-          html: htmlFinal,
-          text,
-          ...(logo
-            ? {
-                attachments: [
-                  {
-                    filename: LOGO_FILENAME,
-                    content: logo.toString("base64"),
-                    content_id: LOGO_CID,
-                    content_type: "image/png",
-                  },
-                ],
-              }
-            : {}),
-          ...(replyTo ? { reply_to: replyTo } : {}),
-        }),
-      });
-      if (!res.ok) {
-        console.error("[email] Resend error:", res.status, await res.text().catch(() => ""));
-      } else {
-        console.info("[email] enviado vía Resend");
-      }
-    } catch (err) {
-      console.error("[email] Resend falló:", err);
-    }
-    return;
-  }
-
-  // 2) SMTP (nodemailer) — p. ej. Gmail con contraseña de aplicación.
+  // SMTP (nodemailer) — p. ej. Gmail con contraseña de aplicación.
   const t = getTransporter();
   if (!t) {
     console.warn(
@@ -157,6 +119,7 @@ async function enviar({ to, subject, html, text, replyTo }: OpcionesCorreo) {
       subject,
       html: htmlFinal,
       text,
+      headers: cabecerasTransaccionales(to),
       ...(logo
         ? {
             attachments: [

@@ -24,10 +24,17 @@ export async function POST(request: Request) {
     return error('Demasiadas solicitudes. Intentá de nuevo más tarde.', 429);
   }
 
+  // Leer y loggear el body raw y headers para depuración temporal
   let body: { token?: string; nombre?: string; edad?: number | string | null; password?: string };
   try {
-    body = await request.json();
-  } catch {
+    const contentType = request.headers.get('content-type');
+    console.log('[registro-invitacion] content-type:', contentType);
+    console.log('[registro-invitacion] headers:', Object.fromEntries(request.headers));
+    const raw = await request.text();
+    console.log('[registro-invitacion] raw body:', raw);
+    body = raw ? JSON.parse(raw) : {};
+  } catch (e) {
+    console.error('[registro-invitacion] error parsing body', e);
     return error('Cuerpo inválido', 400);
   }
 
