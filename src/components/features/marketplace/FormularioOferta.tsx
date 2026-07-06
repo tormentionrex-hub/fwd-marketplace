@@ -224,7 +224,7 @@ export function FormularioOferta({ proyecto, ofertaExistente }: Props) {
             <h2 className="font-semibold text-fwd-blue">Ya enviaste una oferta</h2>
             <EstadoBadge estado={ofertaExistente.estado} />
           </div>
-          <p className="text-sm text-fwd-ink/70 whitespace-pre-wrap">
+          <p className="text-sm text-fwd-ink/70 dark:text-white/70 whitespace-pre-wrap">
             {ofertaExistente.propuesta}
           </p>
         </div>
@@ -239,7 +239,7 @@ export function FormularioOferta({ proyecto, ofertaExistente }: Props) {
           <button
             onClick={handleRetirar}
             disabled={retirando}
-            className="self-start rounded-full border border-red-300 bg-white px-6 py-2.5 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:opacity-50"
+            className="self-start rounded-full border border-red-300 dark:border-red-400/30 bg-white dark:bg-white/5 px-6 py-2.5 text-sm font-semibold text-red-600 dark:text-red-400 transition hover:bg-red-50 dark:hover:bg-red-500/10 disabled:opacity-50"
           >
             {retirando ? "Retirando…" : "Retirar oferta"}
           </button>
@@ -262,7 +262,7 @@ export function FormularioOferta({ proyecto, ofertaExistente }: Props) {
 
         {/* Propuesta de solución */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-fwd-ink/80">
+          <label className="text-sm font-medium text-fwd-ink/80 dark:text-white/80">
             Propuesta de solución <span className="text-red-500">*</span>
           </label>
           <textarea
@@ -271,9 +271,9 @@ export function FormularioOferta({ proyecto, ofertaExistente }: Props) {
             rows={6}
             placeholder="Describí tu enfoque, tecnologías que usarías, experiencia relevante..."
             required
-            className="w-full rounded-xl border border-fwd-ink/12 bg-fwd-mist/40 px-4 py-3 text-[0.95rem] text-fwd-ink outline-none transition placeholder:text-fwd-ink/35 focus:border-fwd-blue focus:bg-white focus:ring-4 focus:ring-fwd-blue/15 resize-none"
+            className="w-full rounded-xl border border-fwd-ink/12 dark:border-white/15 bg-fwd-mist/40 dark:bg-white/5 px-4 py-3 text-[0.95rem] text-fwd-ink dark:text-white outline-none transition placeholder:text-fwd-ink/35 dark:placeholder:text-white/35 focus:border-fwd-blue focus:bg-white dark:focus:bg-white/10 focus:ring-4 focus:ring-fwd-blue/15 resize-none"
           />
-          <span className="text-right text-xs text-fwd-ink/40">
+          <span className="text-right text-xs text-fwd-ink/40 dark:text-white/40">
             {propuesta.length} caracteres
           </span>
         </div>
@@ -281,14 +281,14 @@ export function FormularioOferta({ proyecto, ofertaExistente }: Props) {
         {/* Prototipo */}
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
-            <label className="text-sm font-medium text-fwd-ink/80">
+            <label className="text-sm font-medium text-fwd-ink/80 dark:text-white/80">
               Prototipo <span className="text-red-500">*</span>
-              <span className="ml-1 text-xs font-normal text-fwd-ink/50">
+              <span className="ml-1 text-xs font-normal text-fwd-ink/50 dark:text-white/50">
                 (al menos uno es obligatorio)
               </span>
             </label>
             {/* Toggle archivo / URL */}
-            <div className="flex rounded-lg border border-fwd-ink/12 overflow-hidden text-xs font-medium">
+            <div className="flex rounded-lg border border-fwd-ink/12 dark:border-white/15 overflow-hidden text-xs font-medium">
               {(["archivo", "url"] as ModoPrototipo[]).map((m) => (
                 <button
                   key={m}
@@ -297,7 +297,7 @@ export function FormularioOferta({ proyecto, ofertaExistente }: Props) {
                   className={`px-3 py-1.5 transition ${
                     modoPrototipo === m
                       ? "bg-fwd-blue text-white"
-                      : "bg-white text-fwd-ink/60 hover:bg-fwd-mist/60"
+                      : "bg-white dark:bg-white/5 text-fwd-ink/60 dark:text-white/60 hover:bg-fwd-mist/60 dark:hover:bg-white/10"
                   }`}
                 >
                   {m === "archivo" ? "Subir archivo" : "Ingresar URL"}
@@ -312,9 +312,9 @@ export function FormularioOferta({ proyecto, ofertaExistente }: Props) {
                 type="file"
                 accept=".zip,.pdf,.jpg,.jpeg,.png,.gif,.webp"
                 onChange={(e) => setArchivoPrototipo(e.target.files?.[0] ?? null)}
-                className="block w-full rounded-xl border border-fwd-ink/12 bg-fwd-mist/40 px-4 py-2.5 text-sm text-fwd-ink file:mr-4 file:rounded-full file:border-0 file:bg-fwd-blue/10 file:px-3 file:py-1 file:text-xs file:font-medium file:text-fwd-blue"
+                className="block w-full rounded-xl border border-fwd-ink/12 dark:border-white/15 bg-fwd-mist/40 dark:bg-white/5 px-4 py-2.5 text-sm text-fwd-ink dark:text-white file:mr-4 file:rounded-full file:border-0 file:bg-fwd-blue/10 file:px-3 file:py-1 file:text-xs file:font-medium file:text-fwd-blue"
               />
-              <p className="text-xs text-fwd-ink/40">
+              <p className="text-xs text-fwd-ink/40 dark:text-white/40">
                 Formatos: ZIP, PDF, JPG, PNG, GIF, WEBP — máx. 10 MB
               </p>
             </div>
@@ -325,9 +325,9 @@ export function FormularioOferta({ proyecto, ofertaExistente }: Props) {
                 value={urlPrototipo}
                 onChange={(e) => setUrlPrototipo(e.target.value)}
                 placeholder="https://github.com/usuario/repo"
-                className="w-full rounded-xl border border-fwd-ink/12 bg-fwd-mist/40 px-4 py-3 text-[0.95rem] text-fwd-ink outline-none transition placeholder:text-fwd-ink/35 focus:border-fwd-blue focus:bg-white focus:ring-4 focus:ring-fwd-blue/15"
+                className="w-full rounded-xl border border-fwd-ink/12 dark:border-white/15 bg-fwd-mist/40 dark:bg-white/5 px-4 py-3 text-[0.95rem] text-fwd-ink dark:text-white outline-none transition placeholder:text-fwd-ink/35 dark:placeholder:text-white/35 focus:border-fwd-blue focus:bg-white dark:focus:bg-white/10 focus:ring-4 focus:ring-fwd-blue/15"
               />
-              <p className="text-xs text-fwd-ink/40">
+              <p className="text-xs text-fwd-ink/40 dark:text-white/40">
                 GitHub, Figma, Drive, Vercel — cualquier URL válida
               </p>
             </div>
@@ -336,17 +336,17 @@ export function FormularioOferta({ proyecto, ofertaExistente }: Props) {
 
         {/* Documentación técnica (opcional) */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-fwd-ink/80">
+          <label className="text-sm font-medium text-fwd-ink/80 dark:text-white/80">
             Documentación técnica{" "}
-            <span className="text-xs font-normal text-fwd-ink/50">(opcional)</span>
+            <span className="text-xs font-normal text-fwd-ink/50 dark:text-white/50">(opcional)</span>
           </label>
           <input
             type="file"
             accept=".pdf"
             onChange={(e) => setArchivoDoc(e.target.files?.[0] ?? null)}
-            className="block w-full rounded-xl border border-fwd-ink/12 bg-fwd-mist/40 px-4 py-2.5 text-sm text-fwd-ink file:mr-4 file:rounded-full file:border-0 file:bg-fwd-blue/10 file:px-3 file:py-1 file:text-xs file:font-medium file:text-fwd-blue"
+            className="block w-full rounded-xl border border-fwd-ink/12 dark:border-white/15 bg-fwd-mist/40 dark:bg-white/5 px-4 py-2.5 text-sm text-fwd-ink dark:text-white file:mr-4 file:rounded-full file:border-0 file:bg-fwd-blue/10 file:px-3 file:py-1 file:text-xs file:font-medium file:text-fwd-blue"
           />
-          <p className="text-xs text-fwd-ink/40">
+          <p className="text-xs text-fwd-ink/40 dark:text-white/40">
             Solo PDF — máx. 5 MB
           </p>
         </div>
@@ -376,12 +376,12 @@ function Encabezado({
   diasRestantes: number | null;
 }) {
   return (
-    <div className="flex flex-col gap-2 border-b border-fwd-ink/8 pb-5">
+    <div className="flex flex-col gap-2 border-b border-fwd-ink/8 dark:border-white/10 pb-5">
       <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-2xl font-bold text-fwd-ink">{titulo}</h1>
+        <h1 className="text-2xl font-bold text-fwd-ink dark:text-white">{titulo}</h1>
         <BadgeDias dias={diasRestantes} />
       </div>
-      <p className="text-sm text-fwd-ink/60">
+      <p className="text-sm text-fwd-ink/60 dark:text-white/60">
         Completá el formulario para enviar tu oferta a este proyecto.
       </p>
     </div>

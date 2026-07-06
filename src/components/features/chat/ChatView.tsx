@@ -65,9 +65,6 @@ const IconPaperclip = ({ width = 20, height = 20, className }: IconProps) => (
 const IconSmile = ({ width = 20, height = 20, className }: IconProps) => (
   <svg width={width} height={height} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10" /><path d="M8 14s1.5 2 4 2 4-2 4-2" /><line x1="9" x2="9.01" y1="9" y2="9" /><line x1="15" x2="15.01" y1="9" y2="9" /></svg>
 );
-const IconSend = ({ width = 20, height = 20, className }: IconProps) => (
-  <svg width={width} height={height} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="22" x2="11" y1="2" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></svg>
-);
 
 function Avatar({ nombre, fotoUrl, size = 44, estado, className }: { nombre: string; fotoUrl: string | null; size?: number, estado?: string | undefined, className?: string }) {
   const estadoColor = estado === "online" ? "bg-fwd-turquesa" : estado === "busy" ? "bg-fwd-naranja" : "bg-gray-400";
@@ -736,11 +733,11 @@ export default function ChatView() {
   );
 
   return (
-    <div className="glass flex h-[calc(100vh-6rem)] w-full overflow-hidden rounded-[24px] shadow-xl md:flex-row flex-col bg-white/80">
+    <div className="glass flex h-[calc(100vh-6rem)] w-full overflow-hidden rounded-[24px] shadow-xl md:flex-row flex-col bg-white/80 dark:bg-slate-900/80">
       
       {/* Panel izquierdo: lista */}
       <div
-        className={`flex w-full flex-col border-r border-border/50 bg-white/60 backdrop-blur-md md:w-[340px] md:min-w-[340px] ${activoId ? "hidden md:flex" : "flex"}`}
+        className={`flex w-full flex-col border-r border-border/50 dark:border-white/10 bg-white/60 dark:bg-slate-900/60 backdrop-blur-md md:w-[340px] md:min-w-[340px] ${activoId ? "hidden md:flex" : "flex"}`}
       >
         <div className="bg-gradient-to-r from-fwd-azul to-fwd-morado p-5 text-white shadow-md">
           <div className="flex justify-between items-center">
@@ -769,10 +766,10 @@ export default function ChatView() {
             <div className="flex flex-col gap-3 p-3">
               {[0, 1, 2, 3].map((i) => (
                 <div key={i} className="flex items-center gap-3">
-                  <div className="h-12 w-12 shrink-0 animate-pulse rounded-full bg-slate-200" />
+                  <div className="h-12 w-12 shrink-0 animate-pulse rounded-full bg-slate-200 dark:bg-slate-700" />
                   <div className="flex-1 space-y-2">
-                    <div className="h-4 w-24 animate-pulse rounded bg-slate-200" />
-                    <div className="h-3 w-40 animate-pulse rounded bg-slate-200" />
+                    <div className="h-4 w-24 animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
+                    <div className="h-3 w-40 animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
                   </div>
                 </div>
               ))}
@@ -787,8 +784,8 @@ export default function ChatView() {
                 <span className="absolute -bottom-1 -right-1 block h-5 w-5 rounded-full border-2 border-white bg-fwd-turquesa"></span>
               </div>
               <div>
-                <p className="font-display text-lg font-bold text-slate-800">No tienes conversaciones activas.</p>
-                <p className="mt-1 text-sm text-slate-500">
+                <p className="font-display text-lg font-bold text-slate-800 dark:text-slate-100">No tienes conversaciones activas.</p>
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                   Las solicitudes de contacto aparecerán aquí.<br/>Empieza a conectar con nuevos talentos.
                 </p>
               </div>
@@ -799,20 +796,20 @@ export default function ChatView() {
               key={c.id}
               type="button"
               onClick={() => seleccionar(c.id)}
-              className={`group relative mb-1 flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left transition-all duration-300 hover:bg-[#EAF6FF] ${
-                activoId === c.id ? "bg-[#EAF6FF] shadow-sm" : ""
+              className={`group relative mb-1 flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left transition-all duration-300 hover:bg-[#EAF6FF] dark:hover:bg-slate-800 ${
+                activoId === c.id ? "bg-[#EAF6FF] dark:bg-slate-800 shadow-sm" : ""
               }`}
             >
               <Avatar nombre={c.otro.nombre} fotoUrl={c.otro.fotoUrl} estado={c.estadoVirtual} />
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2">
-                  <p className="truncate font-bold text-slate-800 group-hover:text-fwd-azul transition-colors">{c.otro.nombre}</p>
+                  <p className="truncate font-bold text-slate-800 dark:text-slate-100 group-hover:text-fwd-azul transition-colors">{c.otro.nombre}</p>
                   {c.ultimoMensaje && (
-                    <span className={`shrink-0 text-[11px] ${c.noLeidos > 0 ? "font-bold text-fwd-azul" : "text-slate-400"}`}>{hora(c.ultimoMensaje.creado)}</span>
+                    <span className={`shrink-0 text-[11px] ${c.noLeidos > 0 ? "font-bold text-fwd-azul" : "text-slate-400 dark:text-slate-500"}`}>{hora(c.ultimoMensaje.creado)}</span>
                   )}
                 </div>
                 <div className="flex items-center justify-between gap-2">
-                  <p className={`truncate text-sm ${c.noLeidos > 0 ? "font-semibold text-slate-700" : "text-slate-500"}`}>
+                  <p className={`truncate text-sm ${c.noLeidos > 0 ? "font-semibold text-slate-700 dark:text-slate-200" : "text-slate-500 dark:text-slate-400"}`}>
                     {c.esSolicitud ? `Solicitud: ${c.ultimoMensaje?.texto}` : (c.ultimoMensaje?.texto || "Conversación iniciada")}
                   </p>
                   {c.noLeidos > 0 && (
@@ -828,7 +825,7 @@ export default function ChatView() {
       </div>
 
       {/* Panel derecho: conversación activa */}
-      <div className={`flex min-h-0 flex-1 flex-col bg-slate-50/50 ${activoId ? "flex" : "hidden md:flex"}`}>
+      <div className={`flex min-h-0 flex-1 flex-col bg-slate-50/50 dark:bg-slate-800/50 ${activoId ? "flex" : "hidden md:flex"}`}>
         {!activoId || !detalle ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-5 p-8 text-center animate-in fade-in zoom-in duration-500">
             <div className="relative">
@@ -838,7 +835,7 @@ export default function ChatView() {
             </div>
             <div className="space-y-2">
               <p className="font-display text-2xl font-bold bg-gradient-to-r from-fwd-azul to-fwd-morado bg-clip-text text-transparent">Centro de Mensajes</p>
-              <p className="max-w-xs text-slate-500">
+              <p className="max-w-xs text-slate-500 dark:text-slate-400">
                 Selecciona una conversación para empezar a chatear o busca a cualquier usuario para conectar.
               </p>
             </div>
@@ -846,11 +843,11 @@ export default function ChatView() {
         ) : (
           <>
             {/* Header Conversacion — estilo Instagram */}
-            <div className="flex items-center gap-3 border-b border-slate-100 bg-white px-4 py-3 shadow-sm z-10 shrink-0">
+            <div className="flex items-center gap-3 border-b border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3 shadow-sm z-10 shrink-0">
               <button
                 type="button"
                 onClick={() => setActivoId(null)}
-                className="mr-1 grid h-9 w-9 place-items-center rounded-full text-slate-500 transition-colors hover:bg-slate-100 md:hidden"
+                className="mr-1 grid h-9 w-9 place-items-center rounded-full text-slate-500 transition-colors hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 md:hidden"
                 aria-label="Volver"
               >
                 <IconArrowLeft width={20} height={20} />
@@ -862,13 +859,13 @@ export default function ChatView() {
                 )}
               </div>
               <div className="flex flex-col leading-tight">
-                <p className="font-bold text-slate-900" style={{ fontSize: 15 }}>{detalle.otro.nombre}</p>
-                <p className="text-xs text-slate-400">
+                <p className="font-bold text-slate-900 dark:text-slate-100" style={{ fontSize: 15 }}>{detalle.otro.nombre}</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500">
                   {detalle.estadoVirtual === "online" ? "Activo ahora" : detalle.estadoVirtual === "busy" ? "Ocupado" : "Desconectado"}
                 </p>
               </div>
               <div className="ml-auto flex items-center gap-1">
-                <button className="grid h-9 w-9 place-items-center rounded-full text-slate-500 transition-colors hover:bg-slate-100">
+                <button className="grid h-9 w-9 place-items-center rounded-full text-slate-500 transition-colors hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
                 </button>
               </div>
@@ -876,35 +873,34 @@ export default function ChatView() {
 
             {/* Mensajes Area — estilo Instagram */}
             <div
-              className="min-h-0 flex-1 overflow-y-auto px-4 py-5"
-              style={{ background: "#fff" }}
+              className="min-h-0 flex-1 overflow-y-auto px-4 py-5 bg-white dark:bg-slate-900"
             >
               {/* Solicitud Recibida */}
               {detalle.esSolicitud && (
                 <div className="mx-auto max-w-sm animate-in slide-in-from-bottom-4 fade-in duration-500">
-                  <div className="rounded-3xl bg-white p-6 shadow-xl shadow-fwd-morado/5 ring-1 ring-border/50">
+                  <div className="rounded-3xl bg-white dark:bg-slate-800 p-6 shadow-xl shadow-fwd-morado/5 ring-1 ring-border/50 dark:ring-white/10">
                     <div className="mb-4 flex items-center gap-4">
                       <Avatar nombre={detalle.otro.nombre} fotoUrl={detalle.otro.fotoUrl} size={56} />
                       <div>
-                        <h3 className="font-display font-bold text-slate-800">{detalle.otro.nombre}</h3>
+                        <h3 className="font-display font-bold text-slate-800 dark:text-slate-100">{detalle.otro.nombre}</h3>
                         <p className="text-sm text-fwd-azul">{detalle.otro.empresa || "Usuario"}</p>
-                        <p className="text-xs text-slate-500 mt-0.5">Te ha enviado una solicitud</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Te ha enviado una solicitud</p>
                       </div>
                     </div>
                     {detalle.proyectoTitulo && (
-                      <div className="mb-4 rounded-xl bg-slate-50 p-3 text-sm text-slate-700">
+                      <div className="mb-4 rounded-xl bg-slate-50 dark:bg-white/5 p-3 text-sm text-slate-700 dark:text-slate-200">
                         <span className="font-bold">Interesado en: </span>{detalle.proyectoTitulo}
                       </div>
                     )}
-                    <div className="mb-2 text-xs font-bold text-slate-500 uppercase tracking-wide">Mensaje</div>
-                    <p className="text-sm text-slate-600 mb-6 italic p-3 bg-slate-50 rounded-xl">
+                    <div className="mb-2 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Mensaje</div>
+                    <p className="text-sm text-slate-600 dark:text-slate-300 mb-6 italic p-3 bg-slate-50 dark:bg-white/5 rounded-xl">
                       &quot;{detalle.mensajeSolicitud || "Hola, me gustaría conectar contigo."}&quot;
                     </p>
                     <div className="flex gap-3">
                       <button
                         onClick={() => responderSoli(detalle.solicitudId!, 'rechazar')}
                         disabled={respondiendo}
-                        className="flex-1 rounded-xl border border-slate-200 py-2.5 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-50"
+                        className="flex-1 rounded-xl border border-slate-200 dark:border-slate-600 py-2.5 text-sm font-semibold text-slate-600 dark:text-slate-300 transition-colors hover:bg-slate-50 dark:hover:bg-white/5 disabled:opacity-50"
                       >
                         Rechazar
                       </button>
@@ -923,17 +919,17 @@ export default function ChatView() {
               {/* Solicitud Enviada Pendiente */}
               {activoId?.startsWith("pending_request_") && (
                 <div className="mx-auto max-w-sm animate-in slide-in-from-bottom-4 fade-in duration-500">
-                  <div className="rounded-3xl bg-white p-6 shadow-xl ring-1 ring-border/50 text-center">
+                  <div className="rounded-3xl bg-white dark:bg-slate-800 p-6 shadow-xl ring-1 ring-border/50 dark:ring-white/10 text-center">
                     <Avatar nombre={detalle.otro.nombre} fotoUrl={detalle.otro.fotoUrl} size={64} className="mx-auto mb-3" />
-                    <h3 className="font-display font-bold text-slate-800 text-lg">{detalle.otro.nombre}</h3>
-                    <span className="inline-block rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500 mt-1 mb-4">Solicitud Pendiente</span>
-                    <p className="text-sm text-slate-500 mb-6 leading-relaxed">
+                    <h3 className="font-display font-bold text-slate-800 dark:text-slate-100 text-lg">{detalle.otro.nombre}</h3>
+                    <span className="inline-block rounded-full bg-slate-100 dark:bg-white/10 px-3 py-1 text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1 mb-4">Solicitud Pendiente</span>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
                       Has enviado una solicitud. Podrán escribirse una vez que {detalle.otro.nombre} acepte tu invitación.
                     </p>
                     {detalle.mensajeSolicitud && (
-                      <div className="text-left bg-slate-50 p-4 rounded-2xl mb-4">
-                        <span className="block text-[11px] uppercase tracking-wider text-slate-400 font-bold mb-1">Mensaje enviado</span>
-                        <p className="text-sm text-slate-600 italic">&quot;{detalle.mensajeSolicitud}&quot;</p>
+                      <div className="text-left bg-slate-50 dark:bg-white/5 p-4 rounded-2xl mb-4">
+                        <span className="block text-[11px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-bold mb-1">Mensaje enviado</span>
+                        <p className="text-sm text-slate-600 dark:text-slate-300 italic">&quot;{detalle.mensajeSolicitud}&quot;</p>
                       </div>
                     )}
                   </div>
@@ -943,31 +939,31 @@ export default function ChatView() {
               {/* Formulario Nueva Solicitud */}
               {activoId?.startsWith("new_request_") && (
                 <div className="mx-auto max-w-sm animate-in slide-in-from-bottom-4 fade-in duration-500">
-                  <div className="rounded-3xl bg-white p-6 shadow-xl ring-1 ring-border/50">
+                  <div className="rounded-3xl bg-white dark:bg-slate-800 p-6 shadow-xl ring-1 ring-border/50 dark:ring-white/10">
                     <div className="mb-5 text-center">
                       <Avatar nombre={detalle.otro.nombre} fotoUrl={detalle.otro.fotoUrl} size={64} className="mx-auto mb-2" />
-                      <h3 className="font-display font-bold text-slate-800 text-lg">{detalle.otro.nombre}</h3>
-                      <p className="text-xs text-slate-500 mt-1">Para iniciar una conversación debes enviar una solicitud de chat.</p>
+                      <h3 className="font-display font-bold text-slate-800 dark:text-slate-100 text-lg">{detalle.otro.nombre}</h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Para iniciar una conversación debes enviar una solicitud de chat.</p>
                     </div>
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Asunto</label>
+                        <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Asunto</label>
                         <input
                           type="text"
                           value={nuevoAsunto}
                           onChange={(e) => setNuevoAsunto(e.target.value)}
                           placeholder="Ej. Colaboracion en Proyecto..."
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-fwd-azul focus:ring-1 focus:ring-fwd-azul transition-all"
+                          className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 dark:text-slate-100 dark:placeholder:text-slate-400 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-fwd-azul focus:ring-1 focus:ring-fwd-azul transition-all"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Mensaje Inicial</label>
+                        <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Mensaje Inicial</label>
                         <textarea
                           rows={4}
                           value={nuevoMensaje}
                           onChange={(e) => setNuevoMensaje(e.target.value)}
                           placeholder="Escribe un mensaje de presentacion..."
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-fwd-azul focus:ring-1 focus:ring-fwd-azul transition-all resize-none"
+                          className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 dark:text-slate-100 dark:placeholder:text-slate-400 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-fwd-azul focus:ring-1 focus:ring-fwd-azul transition-all resize-none"
                         />
                       </div>
                       <button
@@ -999,7 +995,7 @@ export default function ChatView() {
                       <div key={m.id} className="animate-in fade-in slide-in-from-bottom-1 duration-200" style={{ animationFillMode: "both", animationDelay: `${Math.min(i * 30, 300)}ms` }}>
                         {showTime && (
                           <div className="my-3 flex justify-center">
-                            <span className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-medium text-slate-400">{hora(m.creado)}</span>
+                            <span className="rounded-full bg-slate-100 dark:bg-slate-800 px-3 py-1 text-[11px] font-medium text-slate-400 dark:text-slate-500">{hora(m.creado)}</span>
                           </div>
                         )}
                         <div className={`flex items-end gap-2 ${m.mio ? "justify-end" : "justify-start"} ${sameSender && !showTime ? "mt-0.5" : "mt-2"}`}>
@@ -1016,7 +1012,7 @@ export default function ChatView() {
                             className={`relative max-w-[75%] px-4 py-2.5 text-[15px] leading-relaxed shadow-sm ${
                               m.mio
                                 ? "rounded-[22px] rounded-br-[6px] bg-gradient-to-br from-fwd-azul to-fwd-morado text-white"
-                                : "rounded-[22px] rounded-bl-[6px] bg-slate-100 text-slate-800"
+                                : "rounded-[22px] rounded-bl-[6px] bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100"
                             } ${sameSender && !showTime && m.mio ? "rounded-tr-[8px]" : ""} ${sameSender && !showTime && !m.mio ? "rounded-tl-[8px]" : ""}`}
                           >
                             {m.contenido && renderContenidoMensaje(m.contenido)}
@@ -1041,7 +1037,7 @@ export default function ChatView() {
 
                           {/* Tick de leido solo en el ultimo mensaje mio */}
                           {m.mio && isLastInGroup && (
-                            <span className={`mb-1 shrink-0 text-[10px] ${m.leido ? "text-fwd-turquesa" : "text-slate-300"}`}>
+                            <span className={`mb-1 shrink-0 text-[10px] ${m.leido ? "text-fwd-turquesa" : "text-slate-300 dark:text-slate-600"}`}>
                               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M18 6 7 17l-5-5"/><path d="m22 10-7.5 7.5L13 16"/>
                               </svg>
@@ -1056,7 +1052,7 @@ export default function ChatView() {
                   {escribiendo && (
                     <div className="mt-2 flex items-end gap-2 justify-start">
                       <Avatar nombre={detalle.otro.nombre} fotoUrl={detalle.otro.fotoUrl} size={28} className="mb-0.5 shrink-0" />
-                      <div className="flex items-center gap-1 rounded-[22px] rounded-bl-[6px] bg-slate-100 px-4 py-3">
+                      <div className="flex items-center gap-1 rounded-[22px] rounded-bl-[6px] bg-slate-100 dark:bg-slate-800 px-4 py-3">
                         <span className="h-2 w-2 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: "0ms" }} />
                         <span className="h-2 w-2 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: "150ms" }} />
                         <span className="h-2 w-2 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: "300ms" }} />
@@ -1071,30 +1067,30 @@ export default function ChatView() {
 
             {/* Input Area — estilo Instagram */}
             {!detalle.esSolicitud && !activoId?.startsWith("new_request_") && !activoId?.startsWith("pending_request_") && (
-              <div className="relative shrink-0 border-t border-slate-100 bg-white px-4 py-3 z-10">
+              <div className="relative shrink-0 border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3 z-10">
                 
                 {/* Popover Emoji & Sticker Picker */}
                 {mostrarEmojiPicker && (
-                  <div className="absolute bottom-16 right-4 z-20 w-72 rounded-3xl border border-slate-100 bg-white p-3 shadow-xl ring-1 ring-black/5 animate-in fade-in slide-in-from-bottom-2">
-                    <div className="flex border-b border-slate-100 mb-2">
+                  <div className="absolute bottom-16 right-4 z-20 w-72 rounded-3xl border border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 shadow-xl ring-1 ring-black/5 dark:ring-white/10 animate-in fade-in slide-in-from-bottom-2">
+                    <div className="flex border-b border-slate-100 dark:border-slate-700 mb-2">
                       <button
                         type="button"
                         onClick={() => setActiveTab("emojis")}
-                        className={`flex-1 pb-1.5 text-xs font-bold uppercase tracking-wider transition-colors ${activeTab === "emojis" ? "text-fwd-azul border-b-2 border-fwd-azul" : "text-slate-400 hover:text-slate-600"}`}
+                        className={`flex-1 pb-1.5 text-xs font-bold uppercase tracking-wider transition-colors ${activeTab === "emojis" ? "text-fwd-azul border-b-2 border-fwd-azul" : "text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"}`}
                       >
                         Emojis
                       </button>
                       <button
                         type="button"
                         onClick={() => setActiveTab("stickers")}
-                        className={`flex-1 pb-1.5 text-xs font-bold uppercase tracking-wider transition-colors ${activeTab === "stickers" ? "text-fwd-azul border-b-2 border-fwd-azul" : "text-slate-400 hover:text-slate-600"}`}
+                        className={`flex-1 pb-1.5 text-xs font-bold uppercase tracking-wider transition-colors ${activeTab === "stickers" ? "text-fwd-azul border-b-2 border-fwd-azul" : "text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"}`}
                       >
                         Stickers
                       </button>
                       <button
                         type="button"
                         onClick={() => setMostrarEmojiPicker(false)}
-                        className="text-slate-400 hover:text-slate-600 text-xs font-bold pb-1.5 px-2"
+                        className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 text-xs font-bold pb-1.5 px-2"
                       >
                         Cerrar
                       </button>
@@ -1109,7 +1105,7 @@ export default function ChatView() {
                             onClick={() => {
                               setTexto(t => t + emoji);
                             }}
-                            className="text-xl p-1 hover:bg-slate-50 rounded-xl transition-colors duration-150 active:scale-95"
+                            className="text-xl p-1 hover:bg-slate-50 dark:hover:bg-white/5 rounded-xl transition-colors duration-150 active:scale-95"
                           >
                             {emoji}
                           </button>
@@ -1120,42 +1116,42 @@ export default function ChatView() {
                         <button
                           type="button"
                           onClick={() => enviarSticker("cohete")}
-                          className="flex flex-col items-center justify-center p-2 hover:bg-slate-50 rounded-xl border border-slate-100 transition-colors"
+                          className="flex flex-col items-center justify-center p-2 hover:bg-slate-50 dark:hover:bg-white/5 rounded-xl border border-slate-100 dark:border-slate-700 transition-colors"
                         >
                           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-amber-500"><path d="M4.5 16.5c-1.5 1.25-2.5 3.5-2.5 3.5s2.25-1 3.5-2.5" /><path d="M12 2C6.5 2 2 6.5 2 12c0 1.2.2 2.4.6 3.4L6 12l6 6 3.4 3.4c1-.4 2.2-.6 3.4-.6 5.5 0 10-4.5 10-10S17.5 2 12 2Z" /><path d="M9 15 5 19" /><path d="M15 9 19 5" /><circle cx="14" cy="10" r="2" fill="currentColor" /></svg>
-                          <span className="text-[10px] text-slate-400 mt-1 font-bold">Cohete</span>
+                          <span className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 font-bold">Cohete</span>
                         </button>
                         <button
                           type="button"
                           onClick={() => enviarSticker("estrella")}
-                          className="flex flex-col items-center justify-center p-2 hover:bg-slate-50 rounded-xl border border-slate-100 transition-colors"
+                          className="flex flex-col items-center justify-center p-2 hover:bg-slate-50 dark:hover:bg-white/5 rounded-xl border border-slate-100 dark:border-slate-700 transition-colors"
                         >
                           <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" className="text-yellow-400"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
-                          <span className="text-[10px] text-slate-400 mt-1 font-bold">Estrella</span>
+                          <span className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 font-bold">Estrella</span>
                         </button>
                         <button
                           type="button"
                           onClick={() => enviarSticker("fuego")}
-                          className="flex flex-col items-center justify-center p-2 hover:bg-slate-50 rounded-xl border border-slate-100 transition-colors"
+                          className="flex flex-col items-center justify-center p-2 hover:bg-slate-50 dark:hover:bg-white/5 rounded-xl border border-slate-100 dark:border-slate-700 transition-colors"
                         >
                           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-orange-500"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" /></svg>
-                          <span className="text-[10px] text-slate-400 mt-1 font-bold">Fuego</span>
+                          <span className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 font-bold">Fuego</span>
                         </button>
                         <button
                           type="button"
                           onClick={() => enviarSticker("corazon")}
-                          className="flex flex-col items-center justify-center p-2 hover:bg-slate-50 rounded-xl border border-slate-100 transition-colors"
+                          className="flex flex-col items-center justify-center p-2 hover:bg-slate-50 dark:hover:bg-white/5 rounded-xl border border-slate-100 dark:border-slate-700 transition-colors"
                         >
                           <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" className="text-red-500"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" /></svg>
-                          <span className="text-[10px] text-slate-400 mt-1 font-bold">Amor</span>
+                          <span className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 font-bold">Amor</span>
                         </button>
                         <button
                           type="button"
                           onClick={() => enviarSticker("fiesta")}
-                          className="flex flex-col items-center justify-center p-2 hover:bg-slate-50 rounded-xl border border-slate-100 transition-colors"
+                          className="flex flex-col items-center justify-center p-2 hover:bg-slate-50 dark:hover:bg-white/5 rounded-xl border border-slate-100 dark:border-slate-700 transition-colors"
                         >
                           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-pink-500"><path d="M4 22V4c0-.5.2-1 .6-1.4C5 2.2 5.5 2 6 2h12c.5 0 1 .2 1.4.6.4.4.6.9.6 1.4v18l-10-4-10 4Z" /><path d="M12 18V2" /></svg>
-                          <span className="text-[10px] text-slate-400 mt-1 font-bold">Fiesta</span>
+                          <span className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 font-bold">Fiesta</span>
                         </button>
                       </div>
                     )}
@@ -1164,18 +1160,18 @@ export default function ChatView() {
 
                 {/* Preview de archivo adjunto */}
                 {archivoAdjunto && (
-                  <div className="mb-2 flex items-center gap-3 bg-slate-50 border border-slate-100 rounded-2xl p-2 animate-in fade-in slide-in-from-bottom-2">
+                  <div className="mb-2 flex items-center gap-3 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-slate-700 rounded-2xl p-2 animate-in fade-in slide-in-from-bottom-2">
                     {previewUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={previewUrl} alt="Vista previa" className="h-14 w-14 rounded-xl object-cover border border-slate-200" />
+                      <img src={previewUrl} alt="Vista previa" className="h-14 w-14 rounded-xl object-cover border border-slate-200 dark:border-slate-600" />
                     ) : (
                       <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-fwd-azul/10 text-fwd-azul shrink-0">
                         <IconPaperclip width={24} height={24} />
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-slate-700 truncate">{archivoAdjunto.name}</p>
-                      <p className="text-xs text-slate-400">{(archivoAdjunto.size / 1024).toFixed(1)} KB</p>
+                      <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate">{archivoAdjunto.name}</p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500">{(archivoAdjunto.size / 1024).toFixed(1)} KB</p>
                     </div>
                     {subiendoArchivo ? (
                       <span className="text-xs font-semibold text-fwd-azul animate-pulse">Subiendo...</span>
@@ -1183,7 +1179,7 @@ export default function ChatView() {
                       <button 
                         type="button" 
                         onClick={cancelarAdjunto}
-                        className="grid h-7 w-7 place-items-center rounded-full bg-slate-200 text-slate-500 hover:bg-slate-300 transition-colors"
+                        className="grid h-7 w-7 place-items-center rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
                       >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                       </button>
@@ -1196,14 +1192,14 @@ export default function ChatView() {
                   <button 
                     type="button"
                     onClick={() => imageInputRef.current?.click()}
-                    className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-slate-500 transition-colors hover:bg-slate-100"
+                    className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-slate-500 transition-colors hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
                   >
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
                   </button>
 
                   {/* Campo de texto / Grabadora */}
                   {grabando ? (
-                    <div className="flex flex-1 items-center justify-between rounded-full border border-red-200 bg-red-50/50 px-4 py-2 text-red-600 animate-pulse">
+                    <div className="flex flex-1 items-center justify-between rounded-full border border-red-200 dark:border-red-900/50 bg-red-50/50 dark:bg-red-950/30 px-4 py-2 text-red-600 dark:text-red-400 animate-pulse">
                       <div className="flex items-center gap-2">
                         <span className="h-2.5 w-2.5 rounded-full bg-red-500 shrink-0" />
                         <span className="text-sm font-medium">Grabando audio... {duracionGrabacion}s</span>
@@ -1212,21 +1208,21 @@ export default function ChatView() {
                         <button
                           type="button"
                           onClick={cancelarGrabacion}
-                          className="text-xs font-bold text-slate-500 hover:text-slate-700 transition-colors px-2 py-1 rounded"
+                          className="text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors px-2 py-1 rounded"
                         >
                           Cancelar
                         </button>
                         <button
                           type="button"
                           onClick={detenerYEnviarGrabacion}
-                          className="text-xs font-bold text-red-600 hover:text-red-800 transition-colors bg-red-100 hover:bg-red-200 px-3 py-1.5 rounded-full"
+                          className="text-xs font-bold text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 transition-colors bg-red-100 dark:bg-red-950/40 hover:bg-red-200 dark:hover:bg-red-900/50 px-3 py-1.5 rounded-full"
                         >
                           Enviar
                         </button>
                       </div>
                     </div>
                   ) : (
-                    <div className="relative flex flex-1 items-center rounded-full border border-slate-200 bg-slate-50 px-4 py-2 focus-within:border-slate-300 transition-colors">
+                    <div className="relative flex flex-1 items-center rounded-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2 focus-within:border-slate-300 dark:focus-within:border-slate-600 transition-colors">
                       <textarea
                         rows={1}
                         value={texto}
@@ -1244,7 +1240,7 @@ export default function ChatView() {
                           }
                         }}
                         placeholder="Mensaje..."
-                        className="max-h-28 min-h-[24px] w-full resize-none bg-transparent text-[15px] text-slate-700 outline-none placeholder:text-slate-400 leading-normal"
+                        className="max-h-28 min-h-[24px] w-full resize-none bg-transparent text-[15px] text-slate-700 dark:text-slate-100 outline-none placeholder:text-slate-400 dark:placeholder:text-slate-400 leading-normal"
                       />
                       {/* Emoji */}
                       <button 
@@ -1253,7 +1249,7 @@ export default function ChatView() {
                           setActiveTab("emojis");
                           setMostrarEmojiPicker(!mostrarEmojiPicker);
                         }}
-                        className="ml-2 shrink-0 text-slate-400 hover:text-slate-600 transition-colors"
+                        className="ml-2 shrink-0 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 transition-colors"
                       >
                         <IconSmile width={22} height={22} />
                       </button>
@@ -1277,14 +1273,14 @@ export default function ChatView() {
                         <button 
                           type="button"
                           onClick={iniciarGrabacion}
-                          className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-slate-500 transition-colors hover:bg-slate-100"
+                          className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-slate-500 transition-colors hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
                         >
                           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
                         </button>
                         <button 
                           type="button"
                           onClick={() => imageInputRef.current?.click()}
-                          className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-slate-500 transition-colors hover:bg-slate-100"
+                          className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-slate-500 transition-colors hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
                         >
                           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
                         </button>
@@ -1294,14 +1290,14 @@ export default function ChatView() {
                             setActiveTab("stickers");
                             setMostrarEmojiPicker(!mostrarEmojiPicker);
                           }}
-                          className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-slate-500 transition-colors hover:bg-slate-100"
+                          className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-slate-500 transition-colors hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
                         >
                           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" x2="9.01" y1="9" y2="9"/><line x1="15" x2="15.01" y1="9" y2="9"/></svg>
                         </button>
                         <button 
                           type="button"
                           onClick={() => docInputRef.current?.click()}
-                          className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-slate-500 transition-colors hover:bg-slate-100"
+                          className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-slate-500 transition-colors hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
                         >
                           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                         </button>
@@ -1318,8 +1314,8 @@ export default function ChatView() {
       {/* Modal Búsqueda de Usuarios */}
       {mostrarModalBusqueda && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95">
-            <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-fwd-azul to-fwd-morado text-white">
+          <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95">
+            <div className="p-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-gradient-to-r from-fwd-azul to-fwd-morado text-white">
               <h2 className="font-display font-bold text-lg">Buscar contactos</h2>
               <button onClick={() => setMostrarModalBusqueda(false)} className="hover:bg-white/20 p-1 rounded-full transition-colors">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -1327,32 +1323,32 @@ export default function ChatView() {
             </div>
             <div className="p-5">
               <div className="relative mb-4">
-                <IconSearch width={18} height={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <IconSearch width={18} height={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
                 <input
                   autoFocus
                   value={queryBusqueda}
                   onChange={(e) => setQueryBusqueda(e.target.value)}
                   placeholder="Escribe el nombre de un contacto..."
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 pl-10 pr-4 text-sm outline-none focus:border-fwd-turquesa focus:ring-1 focus:ring-fwd-turquesa transition-all"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-slate-100 dark:placeholder:text-slate-400 rounded-xl py-2.5 pl-10 pr-4 text-sm outline-none focus:border-fwd-turquesa focus:ring-1 focus:ring-fwd-turquesa transition-all"
                 />
               </div>
               
               <div className="max-h-64 overflow-y-auto space-y-1">
-                {buscandoUsuarios && <p className="text-center text-sm text-slate-500 py-4">Buscando...</p>}
+                {buscandoUsuarios && <p className="text-center text-sm text-slate-500 dark:text-slate-400 py-4">Buscando...</p>}
                 {!buscandoUsuarios && queryBusqueda.length >= 2 && resultadosUsuarios.length === 0 && (
-                  <p className="text-center text-sm text-slate-500 py-4">No se encontraron contactos.</p>
+                  <p className="text-center text-sm text-slate-500 dark:text-slate-400 py-4">No se encontraron contactos.</p>
                 )}
                 {!buscandoUsuarios && resultadosUsuarios.map(userResult => (
                   <button
                     key={userResult.id}
                     onClick={() => seleccionarUsuarioBuscado(userResult)}
-                    className="flex items-center justify-between w-full p-2.5 hover:bg-slate-50 rounded-xl transition-colors text-left"
+                    className="flex items-center justify-between w-full p-2.5 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors text-left"
                   >
                     <div className="flex items-center gap-3">
                       <Avatar nombre={userResult.nombre} fotoUrl={userResult.fotoUrl} size={40} />
                       <div>
-                        <span className="font-medium text-slate-700 block leading-tight">{userResult.nombre}</span>
-                        <span className="text-[10px] text-slate-400 font-semibold uppercase">
+                        <span className="font-medium text-slate-700 dark:text-slate-200 block leading-tight">{userResult.nombre}</span>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase">
                           {userResult.rol === "empresario" ? "Empresario" : "Estudiante"}
                         </span>
                       </div>
