@@ -3,18 +3,13 @@
 import React, { useMemo } from "react";
 import Link from "next/link";
 import {
-  IconCheck,
   IconSparkles,
-  IconTrendingUp,
-  IconStar,
   IconBriefcase,
   IconArrowRight,
   IconAward,
   IconCpu,
   IconEye,
   IconMail,
-  IconAlertTriangle,
-  IconRocket,
   IconFile,
   IconPalette,
   IconPartyPopper
@@ -47,18 +42,15 @@ export default function MatchEmpleabilidad({
   const compatibilidadGeneral = Math.min(100, Math.max(0, Math.round(compatibilidadCruda)));
 
   // Determinar color de compatibilidad general según la escala nueva
-  let compatColorText = "text-[#F7901E]";
   let compatGradStart = "#F7901E";
   let compatGradEnd = "#EC008C";
   let compatStatus = "Perfil en desarrollo";
   
   if (compatibilidadGeneral > 70) {
-    compatColorText = "text-[#20BEC6]";
     compatGradStart = "#20BEC6";
     compatGradEnd = "#008FD4";
     compatStatus = "Alta empleabilidad";
   } else if (compatibilidadGeneral > 40) {
-    compatColorText = "text-[#FFCB05]";
     compatGradStart = "#FFCB05";
     compatGradEnd = "#20BEC6";
     compatStatus = "Buen potencial";

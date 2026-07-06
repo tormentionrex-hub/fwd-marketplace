@@ -1,9 +1,4 @@
-import SectionHeading from "@/components/ui/SectionHeading";
 import MarketplaceExplorer from "@/components/features/marketplace/MarketplaceExplorer";
-import { Reveal } from "@/components/ui/motion";
-
-import CategoriesSection from "@/components/features/marketplace/CategoriesSection";
-import ProductCard from "@/components/features/cards/ProductCard";
 import Footer from "@/components/Footer";
 import HomeButton from "@/components/HomeButton";
 import SettingsPanel from "@/components/SettingsPanel";

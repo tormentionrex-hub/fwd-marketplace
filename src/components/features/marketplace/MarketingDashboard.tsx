@@ -14,17 +14,11 @@ import {
   Cell,
 } from "recharts";
 import {
-  AlertCircle,
-  BarChart3,
   Bot,
   BriefcaseBusiness,
-  CalendarDays,
-  ExternalLink,
   RefreshCw,
   TrendingUp,
   Users,
-  Download,
-  Filter,
   FileText,
   FileImage,
   FileSpreadsheet,
@@ -32,21 +26,13 @@ import {
   Clock,
   Globe2,
   Activity,
-  ArrowUpRight,
-  ArrowDownRight,
-  Share2,
   Target,
-  ChevronDown,
 } from "lucide-react";
 import PlatformSummaryCard from "@/components/ui/PlatformSummaryCard";
 import TrendCard from "@/components/ui/TrendCard";
 import KpiCard from "@/components/ui/KpiCard";
 import FilterBar from "@/components/ui/FilterBar";
-import {
-  MarketingInsightsPayload,
-  MarketingPlatformReach,
-  MarketingTrend,
-} from "@/types/marketing";
+import { MarketingInsightsPayload } from "@/types/marketing";
 
 // Colores FWD
 const FWD = {
@@ -67,13 +53,6 @@ const platformColors: Record<string, string> = {
 
 // --- Hooks & Utilities ---
 
-function formatSourceDate(value: string) {
-  return new Intl.DateTimeFormat("es-CR", {
-    month: "short",
-    year: "numeric",
-  }).format(new Date(`${value}T00:00:00`));
-}
-
 function useAutoRefresh(fetchData: () => Promise<void>) {
   const [countdown, setCountdown] = useState(180);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
@@ -89,7 +68,7 @@ function useAutoRefresh(fetchData: () => Promise<void>) {
       setCountdown(180);
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
-    } catch (error) {
+    } catch {
       setSyncStatus("error");
     }
   }, [fetchData]);
