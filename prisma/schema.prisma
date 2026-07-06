@@ -227,6 +227,13 @@ model perfiles_estudiante {
   descripcion                                            String?
   document_url                                           String?
   generacion_fwd                                         Int?
+  telefono                                               String?                   @db.VarChar(30)
+  modulo_completado                                      String?                   @db.VarChar(50)
+  sede                                                   String?                   @db.VarChar(100)
+  provincia                                              String?                   @db.VarChar(100)
+  canton                                                 String?                   @db.VarChar(100)
+  distrito                                               String?                   @db.VarChar(100)
+  preferencias                                           Json?
   chats_iniciados                                        chats[]                   @relation("chats_origen")
   chats_chats_id_estudiante_destinoToperfiles_estudiante chats[]                   @relation("chats_id_estudiante_destinoToperfiles_estudiante")
   curriculums                                            curriculums?
