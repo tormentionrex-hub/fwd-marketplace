@@ -122,6 +122,7 @@ export function obtenerProyectoConDetalle(id: string) {
       area_negocio: true,
       estado: true,
       plazo_dias: true,
+      usa_ia: true,
       publicado: true,
       cierre: true,
       imagenes: true,
@@ -205,6 +206,38 @@ export function buscarEstudianteAdjudicado(idProyecto: string) {
   return db.ofertas.findFirst({
     where: { id_proyecto: idProyecto, estado: 'adjudicada' },
     select: { id_estudiante: true },
+  });
+}
+
+// Cuenta las postulaciones (ofertas) recibidas en un proyecto.
+export function contarPostulacionesProyecto(idProyecto: string) {
+  return db.ofertas.count({ where: { id_proyecto: idProyecto } });
+}
+
+// Proyectos publicados del mismo area, excluyendo el actual. Limite configurable.
+export function listarProyectosSimilares(idProyecto: string, area: string, limite = 3) {
+  return db.proyectos.findMany({
+    where: {
+      estado: 'publicado',
+      id: { not: idProyecto },
+      area_negocio: area,
+    },
+    select: {
+      id: true,
+      titulo: true,
+      area_negocio: true,
+      plazo_dias: true,
+      cierre: true,
+      perfiles_empresario: {
+        select: { usuarios: { select: { nombre: true } } },
+      },
+      proyectos_tecnologias: {
+        select: { tecnologias: { select: { nombre: true } } },
+        take: 3,
+      },
+    },
+    orderBy: { publicado: 'desc' },
+    take: limite,
   });
 }
 
@@ -316,6 +349,7 @@ export async function crearProyecto(data: {
   descripcion: string;
   areaNegocio: string | null;
   plazoDias: number | null;
+  usaIA: boolean;
   tecnologias: string[];
   imagenes: string[];
 }) {
@@ -337,6 +371,7 @@ export async function crearProyecto(data: {
       descripcion: data.descripcion,
       area_negocio: data.areaNegocio,
       plazo_dias: data.plazoDias,
+      usa_ia: data.usaIA,
       estado: 'borrador',
       imagenes: data.imagenes ?? [],
       proyectos_tecnologias: {
@@ -357,6 +392,7 @@ export async function actualizarProyecto(
     descripcion?: string | undefined;
     areaNegocio?: string | null | undefined;
     plazoDias?: number | null | undefined;
+    usaIA?: boolean | undefined;
     tecnologias?: string[] | undefined;
     imagenes?: string[] | undefined;
   },
@@ -390,6 +426,7 @@ export async function actualizarProyecto(
       ...(campos.descripcion !== undefined && { descripcion: campos.descripcion }),
       ...(campos.areaNegocio !== undefined && { area_negocio: campos.areaNegocio }),
       ...(campos.plazoDias !== undefined && { plazo_dias: campos.plazoDias }),
+      ...(campos.usaIA !== undefined && { usa_ia: campos.usaIA }),
       ...(campos.imagenes !== undefined && { imagenes: campos.imagenes }),
     },
     select: { id: true },
