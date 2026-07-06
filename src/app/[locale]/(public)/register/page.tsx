@@ -2,12 +2,19 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { AuthShell } from "@/components/features/auth/auth-shell";
 import { RegisterForm } from "@/components/features/auth/register-form";
+import SelectorRolRegistro from "@/components/features/auth/selector-rol-registro";
 
 export const metadata: Metadata = {
   title: "Crea tu cuenta · FWD Costa Rica",
 };
 
-export default function RegisterPage() {
+export default async function RegisterPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+
   return (
     <AuthShell
       highlight="el futuro"
@@ -22,6 +29,7 @@ export default function RegisterPage() {
         />
       }
     >
+      <SelectorRolRegistro locale={locale} />
       <RegisterForm />
     </AuthShell>
   );

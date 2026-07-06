@@ -15,6 +15,7 @@ interface ProyectoInicial {
   descripcion: string;
   areaNegocio: string | null;
   plazoDias: number | null;
+  usaIA: boolean;
   tecnologias: string[];
   imagenes: string[];
 }
@@ -34,6 +35,7 @@ export default function FormularioProyecto({ tecnologiasDisponibles, modo, proye
   const [descripcion, setDescripcion] = useState(proyecto?.descripcion ?? '');
   const [areaNegocio, setAreaNegocio] = useState(proyecto?.areaNegocio ?? '');
   const [plazoDias, setPlazoDias] = useState(proyecto?.plazoDias?.toString() ?? '');
+  const [usaIA, setUsaIA] = useState(proyecto?.usaIA ?? false);
   const [tecnosSeleccionadas, setTecnosSeleccionadas] = useState<string[]>(
     proyecto?.tecnologias ?? [],
   );
@@ -108,6 +110,7 @@ export default function FormularioProyecto({ tecnologiasDisponibles, modo, proye
       descripcion: descripcion.trim(),
       areaNegocio: areaNegocio.trim() || null,
       plazoDias: plazoDias ? parseInt(plazoDias, 10) : null,
+      usaIA,
       tecnologias: tecnosSeleccionadas,
       imagenes,
     };
@@ -261,6 +264,62 @@ export default function FormularioProyecto({ tecnologiasDisponibles, modo, proye
             onBlur={(e) => { e.currentTarget.style.borderColor = 'var(--line)'; }}
           />
         </div>
+      </div>
+
+      {/* Toggle: Usa IA */}
+      <div>
+        <label style={labelStyle}>Modalidad del proyecto</label>
+        <button
+          type="button"
+          onClick={() => setUsaIA((v) => !v)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            padding: '10px 16px',
+            borderRadius: 10,
+            border: `1px solid ${usaIA ? 'var(--azul)' : 'var(--line)'}`,
+            background: usaIA ? 'rgba(0,143,212,0.08)' : 'var(--surface)',
+            cursor: 'pointer',
+            width: '100%',
+            textAlign: 'left',
+            transition: 'all 0.15s',
+          }}
+        >
+          {/* Track del toggle */}
+          <span style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            width: 40,
+            height: 22,
+            borderRadius: 11,
+            background: usaIA ? 'var(--azul)' : 'var(--line)',
+            transition: 'background 0.2s',
+            flexShrink: 0,
+            position: 'relative',
+          }}>
+            <span style={{
+              position: 'absolute',
+              left: usaIA ? 20 : 2,
+              width: 18,
+              height: 18,
+              borderRadius: '50%',
+              background: '#fff',
+              transition: 'left 0.2s',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+            }} />
+          </span>
+          <span>
+            <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--ink-900)', display: 'block' }}>
+              {usaIA ? 'El proyecto utiliza inteligencia artificial' : 'Desarrollo clasico (sin IA)'}
+            </span>
+            <span style={{ fontSize: 12, color: 'var(--ink-400)' }}>
+              {usaIA
+                ? 'Se mostrara la etiqueta "Incluye IA" en el marketplace'
+                : 'Activa esta opcion si el proyecto involucra IA, LLMs o automatizacion inteligente'}
+            </span>
+          </span>
+        </button>
       </div>
 
       {/* Imagenes del proyecto */}

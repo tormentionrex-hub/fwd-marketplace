@@ -6,7 +6,10 @@ import {
   crearMensaje,
   marcarMensajesLeidos,
   tocarUltimoMensaje,
+  buscarChatEntre,
+  crearChat,
 } from '@/server/repositories/chat.repository';
+import { buscarProyectoGestion } from '@/server/repositories/proyecto.repository';
 
 export interface ConversacionDTO {
   id: string;
@@ -161,4 +164,37 @@ export async function enviarMensaje(
       creado: m.creado.toISOString(),
     },
   };
+}
+
+export type ResultadoIniciarChat =
+  | { ok: true; chatId: string | null }
+  | 'proyecto_no_encontrado'
+  | 'es_dueno'
+  | 'solo_estudiantes';
+
+// Un estudiante inicia (o recupera) la conversación con el empresario dueño del
+// proyecto (consulta pre-postulación). La autorización vive en esta capa: valida
+// el proyecto, evita el auto-chat y restringe a estudiantes.
+//
+// crear=false → devuelve el chat existente o { chatId: null } si aún no existe
+//   (para cargar historial al abrir el modal SIN crear un chat vacío).
+// crear=true  → create-or-get idempotente apoyado en el índice único
+//   (id_proyecto, id_estudiante, id_empresario). Se usa al enviar el 1er mensaje.
+export async function iniciarChatConEmpresario(
+  idProyecto: string,
+  idUsuario: string,
+  rol: string,
+  crear: boolean,
+): Promise<ResultadoIniciarChat> {
+  const proyecto = await buscarProyectoGestion(idProyecto);
+  if (!proyecto) return 'proyecto_no_encontrado';
+  if (proyecto.id_empresario === idUsuario) return 'es_dueno';
+  if (rol !== 'estudiante') return 'solo_estudiantes';
+
+  const existente = await buscarChatEntre(idProyecto, idUsuario, proyecto.id_empresario);
+  if (existente) return { ok: true, chatId: existente.id };
+  if (!crear) return { ok: true, chatId: null };
+
+  const nuevo = await crearChat(idProyecto, idUsuario, proyecto.id_empresario);
+  return { ok: true, chatId: nuevo.id };
 }

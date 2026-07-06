@@ -9,11 +9,10 @@ const ROL_NOMBRE: Record<string, string> = {
 };
 
 export function SinPermiso({
-  locale,
   rolActual,
   rolRequerido,
 }: {
-  locale: string;
+  locale?: string;
   rolActual: string;
   rolRequerido?: string;
 }) {

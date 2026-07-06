@@ -33,6 +33,15 @@ export function listarHabilidadesEstudiante(idUsuario: string) {
   });
 }
 
+// Nombres de las habilidades del estudiante (para el recomendador de proyectos
+// "Para ti"). Devuelve solo el nombre de cada habilidad, vía la relación.
+export function listarNombresHabilidadesEstudiante(idUsuario: string) {
+  return db.estudiantes_habilidades.findMany({
+    where: { id_usuario: idUsuario },
+    select: { habilidades: { select: { nombre: true } } },
+  });
+}
+
 // Proyectos completados = proyectos en los que el estudiante recibió evaluación.
 export function listarProyectosCompletados(idUsuario: string) {
   return db.evaluaciones.findMany({
@@ -43,6 +52,24 @@ export function listarProyectosCompletados(idUsuario: string) {
       comentario: true,
       creado: true,
       proyectos: { select: { id: true, titulo: true } },
+    },
+  });
+}
+
+// Evaluaciones recibidas por el estudiante (para el apartado de Reputación).
+export function listarEvaluacionesRecibidas(idUsuario: string) {
+  return db.evaluaciones.findMany({
+    where: { id_estudiante: idUsuario },
+    orderBy: { creado: 'desc' },
+    select: {
+      id: true,
+      puntuacion: true,
+      comentario: true,
+      creado: true,
+      proyectos: { select: { titulo: true } },
+      perfiles_empresario: {
+        select: { nombre_empresa: true, usuarios: { select: { nombre: true } } },
+      },
     },
   });
 }

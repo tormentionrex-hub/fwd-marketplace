@@ -26,8 +26,12 @@ export default function AuthHomeButton({
   const onStudentRegisterPage =
     pathname?.includes("/register-estudiante") ||
     pathname?.includes("/registro/estudiante");
+  const onLoginPage = pathname?.includes("/login");
   const shouldShowStudentRegister =
-    showStudentRegister && userRole !== "estudiante" && !onStudentRegisterPage;
+    showStudentRegister &&
+    userRole !== "estudiante" &&
+    !onStudentRegisterPage &&
+    !onLoginPage;
 
   return (
     <div className="fixed right-3 top-3 z-[1000] flex max-w-[calc(100vw-1.5rem)] flex-col items-end gap-2 sm:right-5 sm:top-5 sm:gap-3 lg:right-6 lg:top-6">

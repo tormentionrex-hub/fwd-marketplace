@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "@/i18n/navigation";
 import { TextField } from "@/components/ui/text-field";
 import { IconArrowRight, IconCheck } from "@/components/ui/icons";
 
@@ -17,7 +16,6 @@ export function RegistroInvitacionForm({
   email: string;
   rolLabel: string;
 }) {
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

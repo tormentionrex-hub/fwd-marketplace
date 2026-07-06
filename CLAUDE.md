@@ -159,6 +159,88 @@ Reglas adicionales:
 
 ---
 
+## REGLA #8 — Después de cambiar componentes compartidos: avisar hard refresh obligatorio
+
+### El patrón de fallo (ocurrió DOS veces en este proyecto)
+
+Cuando se modifica un **componente compartido** — cualquier archivo importado desde layouts, el Navbar global, providers globales, o cualquier componente que está en el árbol de compilación de múltiples rutas — el webpack dev server recompila y genera **nuevos hashes de chunk**. Pero el browser sigue teniendo en su caché el HTML viejo con referencias a los hashes anteriores. Al intentar cargar el chunk con la URL antigua, aparecen dos errores:
+
+| Error visible | Causa real |
+|---|---|
+| `ChunkLoadError: Loading chunk app/[locale]/(empresario)/layout failed` | El browser pide un chunk con hash viejo que ya no existe |
+| `Jest worker encountered 2 child process exceptions, exceeding retry limit` | La caché `.next` del dev server tiene entradas en conflicto con el código nuevo |
+
+Ambos errores parecen bugs de código pero **NO lo son**. Son artefactos de caché desincronizada. No hay que tocar el código.
+
+---
+
+### Componentes de alto riesgo (siempre disparan este problema si se modifican)
+
+- `src/components/Navbar.tsx` — global, importado en el layout raíz
+- `src/app/[locale]/layout.tsx` — layout raíz, todos los chunks dependen de él
+- Cualquier componente importado directamente en un archivo `layout.tsx`
+- Providers globales (`NextIntlClientProvider`, `ThemeProvider`, etc.)
+- Componentes que se reescriben o revierten a una versión anterior (el cambio de hash es grande)
+
+---
+
+### Protocolo obligatorio al terminar cambios en componentes compartidos
+
+**Claude DEBE hacer esto al finalizar cualquier cambio a los archivos de alto riesgo:**
+
+1. **Advertir al usuario** con este mensaje exacto (adaptando el nombre del componente):
+   > "Modifiqué un componente compartido (`Navbar.tsx`). Para evitar `ChunkLoadError` en el browser, hacé **`Ctrl+Shift+R`** (hard refresh). Si el error persiste, pará el dev server, borrá la carpeta `.next` y reiniciá con `npm run dev`."
+
+2. **Si el error YA apareció**, la secuencia de corrección es:
+   ```powershell
+   # En la terminal donde corre el dev server: Ctrl+C para pararlo
+   Remove-Item -Recurse -Force ".next"   # borra la caché de webpack
+   npm run dev                            # reinicia limpio
+   ```
+   Y en el browser: **`Ctrl+Shift+R`** (hard refresh / forzar recarga sin caché).
+
+3. **NUNCA diagnosticar el código** cuando el error es `ChunkLoadError` o `Jest worker exceeded retry limit` — esos errores son de caché, no de lógica. La primera respuesta siempre es limpiar caché y hard refresh.
+
+---
+
+### Por qué `Ctrl+R` normal no alcanza
+
+El refresh normal recarga la página pero usa el HTML cacheado, que sigue teniendo las referencias a los chunk URLs viejos. Solo `Ctrl+Shift+R` (o Cmd+Shift+R en Mac) fuerza al browser a pedir el HTML fresco al servidor y recalcular todos los chunks.
+
+---
+
+## Flujo Git + Vercel (deploy automático)
+
+El proyecto usa deploy continuo. **Nunca hay que subir nada manualmente a Vercel.**
+
+```
+Local (rama chris u otra personal)
+      |
+      | git push origin chris
+      v
+GitHub (rama personal)  →  Vercel genera una Preview URL automática
+      |
+      | Pull Request  →  merge a dev
+      v
+GitHub (rama dev)       →  Vercel despliega PRODUCCIÓN automáticamente
+      |
+      v
+https://fwd-marketplace.vercel.app  ← sitio en vivo actualizado
+```
+
+**Reglas del flujo:**
+- La rama de producción en Vercel es **`dev`**. Cualquier merge a `dev` dispara un deploy automático al sitio público.
+- Cada push a una rama personal genera una Preview URL temporal (útil para revisar antes de mergear).
+- **NUNCA** ejecutar `vercel --prod` manualmente salvo que el usuario lo pida explícito y sepa por qué.
+- El repo está en `tormentionrex-hub/fwd-marketplace` (privado), equipo Vercel: `marketplace-fwd`.
+
+**Conexión ya configurada:**
+- Git local vinculado al repo remoto: `https://github.com/tormentionrex-hub/fwd-marketplace.git`
+- Vercel vinculado localmente vía `.vercel/project.json` (projectId: `prj_OWN63QUFoatu5C0KCCpgvES8zmVo`)
+- GitHub conectado a Vercel: los webhooks ya están activos, no hay nada que configurar.
+
+---
+
 ## Referencia rápida
 
 | Si querés... | Mirá |
@@ -169,3 +251,5 @@ Reglas adicionales:
 | Setup local, variables de entorno, troubleshooting Supabase | [README.md](README.md) |
 | Reglas de commitlint | [commitlint.config.js](commitlint.config.js) |
 | Poner un símbolo/ícono en la UI (NUNCA emojis) | REGLA #6 — usar [`lucide-react`](https://lucide.dev/icons) |
+| Flujo de deploy | Sección "Flujo Git + Vercel" arriba |
+| `ChunkLoadError` o `Jest worker` en dev | REGLA #8 — no es código, es caché: borrar `.next` + `Ctrl+Shift+R` |

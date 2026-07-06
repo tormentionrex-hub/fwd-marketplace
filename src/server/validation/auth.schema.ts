@@ -68,6 +68,40 @@ export const registerSchema = z.object({
     .min(18, "Mínimo 18")
     .max(99, "Máximo 99")
     .optional(),
+  // ── Datos del estudiante (opcionales a nivel server: el empresario comparte
+  // este schema y no los envía; el formulario de estudiante sí los exige). ──
+  phone: z
+    .string()
+    .trim()
+    .regex(/^[0-9()+\-\s]{8,20}$/, "Teléfono inválido")
+    .optional()
+    .or(z.literal("").transform(() => undefined)),
+  moduloCompletado: z
+    .enum(["Backend", "Frontend", "Full Stack"])
+    .optional()
+    .or(z.literal("").transform(() => undefined)),
+  sede: z
+    .enum(["Puntarenas", "San José"])
+    .optional()
+    .or(z.literal("").transform(() => undefined)),
+  provincia: z
+    .string()
+    .trim()
+    .max(100, "Máximo 100 caracteres")
+    .optional()
+    .or(z.literal("").transform(() => undefined)),
+  canton: z
+    .string()
+    .trim()
+    .max(100, "Máximo 100 caracteres")
+    .optional()
+    .or(z.literal("").transform(() => undefined)),
+  distrito: z
+    .string()
+    .trim()
+    .max(100, "Máximo 100 caracteres")
+    .optional()
+    .or(z.literal("").transform(() => undefined)),
   email: z
     .string()
     .min(5, "Ingresá un correo electrónico válido")

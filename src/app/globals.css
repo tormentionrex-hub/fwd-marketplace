@@ -6,6 +6,10 @@
 
 /* ---- Tokens de superficie dependientes del tema ---- */
 :root {
+  /* Hace que los controles NATIVOS (select y sus opciones, inputs, date pickers,
+     scrollbars) se rendericen con el esquema correcto. Sin esto, en modo oscuro
+     los <select> abren con fondo blanco y texto casi invisible. */
+  color-scheme: light;
   --bg: #ffffff;
   --surface: #ffffff;
   --surface-2: #f8fafc; /* slate-50 */
@@ -19,6 +23,7 @@
 }
 
 .dark {
+  color-scheme: dark; /* controles nativos oscuros en modo oscuro (ver nota arriba) */
   --bg: #0b1120; /* slate-950-ish, identidad FWD oscura */
   --surface: #0f172a; /* slate-900 */
   --surface-2: #1e293b; /* slate-800 */
@@ -26,6 +31,60 @@
   --text: #f1f5f9; /* slate-100 */
   --text-muted: #94a3b8; /* slate-400 */
   --ring: #20bec6;
+}
+
+/* Desplegables nativos (<select>) en modo oscuro. Además de color-scheme, se
+   fuerza el fondo/color de las OPCIONES: en Chrome (Windows) el popup de
+   <option> se renderiza BLANCO cuando el <select> tiene fondo translúcido claro
+   (p. ej. dark:bg-white/5), dejando el texto blanco invisible. Chrome sí respeta
+   background-color/color en <option>, así que esto lo corrige para TODOS los
+   <select> del proyecto de una sola vez. */
+.dark select option,
+.dark select optgroup {
+  background-color: #1e293b; /* slate-800 (--surface-2) */
+  color: #f1f5f9;            /* slate-100 (--text) */
+}
+
+/* ====================================================
+   Scrollbar del sidebar del estudiante
+   - Delgado y temático (morado FWD), acorde al dashboard.
+   - SIEMPRE visible cuando hay overflow (no depende del hover);
+     si el contenido cabe, con overflow:auto no se muestra ninguno.
+   - overscroll-behavior: contain → al hacer scroll con el cursor sobre
+     el sidebar, se mueve el sidebar y NO arrastra el scroll de la página.
+   ==================================================== */
+.sidebar-scroll {
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: color-mix(in srgb, #662d91 45%, transparent) transparent;
+  overscroll-behavior: contain;
+}
+.sidebar-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px; /* para el overflow-x del modo móvil */
+}
+.sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, #662d91 40%, transparent);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+.sidebar-scroll::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, #662d91 65%, transparent);
+  background-clip: padding-box;
+}
+.dark .sidebar-scroll {
+  scrollbar-color: color-mix(in srgb, #a855f7 45%, transparent) transparent; /* purple-400 */
+}
+.dark .sidebar-scroll::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, #a855f7 38%, transparent);
+  background-clip: padding-box;
+}
+.dark .sidebar-scroll::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, #a855f7 62%, transparent);
+  background-clip: padding-box;
 }
 
 /* ====================================================
@@ -306,9 +365,34 @@ body {
   animation: fwd-aurora 14s ease-in-out infinite;
 }
 
+/* Burbujas y estrellitas del fondo del dashboard de estudiante */
+.animate-float {
+  animation: fwd-float 7s ease-in-out infinite;
+}
+.animate-drift {
+  animation: fwd-drift 9s ease-in-out infinite;
+}
+@keyframes fwd-twinkle {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+.animate-twinkle {
+  animation: fwd-twinkle 4s ease-in-out infinite;
+}
+
 /* Respeto a quienes prefieren menos movimiento */
 @media (prefers-reduced-motion: reduce) {
   .animate-aurora,
+  .animate-float,
+  .animate-drift,
+  .animate-twinkle,
   .fwd-spin,
   .footer-wave,
   .footer-wave-2 {

@@ -71,11 +71,11 @@ export function SocialAuthButtons() {
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-3">
-        <span className="h-px flex-1 bg-fwd-ink/10" />
-        <span className="text-xs font-medium uppercase tracking-wider text-fwd-ink/35">
+        <span className="h-px flex-1 bg-fwd-ink/10 dark:bg-white/10" />
+        <span className="text-xs font-medium uppercase tracking-wider text-fwd-ink/35 dark:text-white/40">
           o continúa con
         </span>
-        <span className="h-px flex-1 bg-fwd-ink/10" />
+        <span className="h-px flex-1 bg-fwd-ink/10 dark:bg-white/10" />
       </div>
 
       {error && (
@@ -89,7 +89,7 @@ export function SocialAuthButtons() {
           type="button"
           onClick={() => handleOAuth("google")}
           disabled={loading !== null}
-          className="group relative flex h-12 items-center justify-center gap-2.5 overflow-hidden rounded-full border border-fwd-ink/12 bg-white px-4 text-sm font-semibold text-fwd-ink transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+          className="group relative flex h-12 items-center justify-center gap-2.5 overflow-hidden rounded-full border border-fwd-ink/12 dark:border-white/15 bg-white dark:bg-white/5 px-4 text-sm font-semibold text-fwd-ink dark:text-white transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
           onMouseEnter={(e) => {
             e.currentTarget.style.borderColor = "#4285F4";
             e.currentTarget.style.boxShadow = "0 4px 16px rgba(66,133,244,0.2)";
@@ -106,7 +106,7 @@ export function SocialAuthButtons() {
           type="button"
           onClick={() => handleOAuth("github")}
           disabled={loading !== null}
-          className="group relative flex h-12 items-center justify-center gap-2.5 overflow-hidden rounded-full border border-fwd-ink/12 bg-white px-4 text-sm font-semibold text-fwd-ink transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+          className="group relative flex h-12 items-center justify-center gap-2.5 overflow-hidden rounded-full border border-fwd-ink/12 dark:border-white/15 bg-white dark:bg-white/5 px-4 text-sm font-semibold text-fwd-ink dark:text-white transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
           onMouseEnter={(e) => {
             e.currentTarget.style.borderColor = "#24292e";
             e.currentTarget.style.boxShadow = "0 4px 16px rgba(36,41,46,0.15)";
