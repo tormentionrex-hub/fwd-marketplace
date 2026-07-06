@@ -184,7 +184,7 @@ export function RegisterForm() {
           accentFrom="#ED008C"
           accentTo="#662D91"
         />
-        <p className="mt-1 text-fwd-ink/60 pl-4 border-l-2 border-fwd-ink/8">
+        <p className="mt-1 text-fwd-ink/60 dark:text-white/60 pl-4 border-l-2 border-fwd-ink/8">
           Forma parte de la comunidad que avanza hacia el futuro.
         </p>
       </header>
@@ -298,7 +298,7 @@ export function RegisterForm() {
 
           <div className="flex flex-col gap-2">
             {/* Upload profile picture */}
-            <label className="text-sm font-medium text-fwd-ink/80" htmlFor="profilePicture">
+            <label className="text-sm font-medium text-fwd-ink/80 dark:text-white/80" htmlFor="profilePicture">
               Foto de Perfil
             </label>
             <input
@@ -321,7 +321,7 @@ export function RegisterForm() {
             )}
           </div>
           <div className="flex flex-col gap-1.5">
-          <label htmlFor="password" className="text-sm font-medium text-fwd-ink/80">
+          <label htmlFor="password" className="text-sm font-medium text-fwd-ink/80 dark:text-white/80">
             Contraseña
           </label>
           <div className="relative">
@@ -337,10 +337,10 @@ export function RegisterForm() {
               maxLength={128}
               required
               aria-invalid={password.length > 0 && !passwordValid}
-              className={`w-full rounded-xl border bg-fwd-mist/40 px-4 py-3 pr-20 text-[0.95rem] text-fwd-ink outline-none transition placeholder:text-fwd-ink/35 focus:bg-white focus:ring-4 ${
+              className={`w-full rounded-xl border bg-fwd-mist/40 dark:bg-white/5 px-4 py-3 pr-20 text-[0.95rem] text-fwd-ink dark:text-white outline-none transition placeholder:text-fwd-ink/35 dark:placeholder:text-white/35 focus:bg-white dark:focus:bg-white/10 focus:ring-4 ${
                 passwordValid
                   ? "border-green-500 focus:border-green-500 focus:ring-green-500/15"
-                  : "border-fwd-ink/12 focus:border-fwd-blue focus:ring-fwd-blue/15"
+                  : "border-fwd-ink/12 dark:border-white/15 focus:border-fwd-blue focus:ring-fwd-blue/15"
               }`}
             />
             {passwordValid ? (
@@ -364,7 +364,7 @@ export function RegisterForm() {
                 <li
                   key={rule.id}
                   className={`flex items-center gap-1.5 text-xs transition-colors ${
-                    ok ? "text-green-600" : "text-fwd-ink/45"
+                    ok ? "text-green-600" : "text-fwd-ink/45 dark:text-white/45"
                   }`}
                 >
                   <span
@@ -381,7 +381,7 @@ export function RegisterForm() {
           </ul>
         </div>
 
-        <label className="flex items-start gap-2.5 text-sm text-fwd-ink/70">
+        <label className="flex items-start gap-2.5 text-sm text-fwd-ink/70 dark:text-white/70">
           <input
             type="checkbox"
             checked={terms}
@@ -428,7 +428,7 @@ export function RegisterForm() {
         <SocialAuthButtons />
       </div>
 
-      <p className="mt-8 text-center text-sm text-fwd-ink/60">
+      <p className="mt-8 text-center text-sm text-fwd-ink/60 dark:text-white/60">
         ¿Ya tienes cuenta?{" "}
         <Link
           href="/login"

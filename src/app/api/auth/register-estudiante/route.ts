@@ -22,7 +22,10 @@ export async function POST(request: Request) {
 
   const parseo = await parsearBody(request, registerSchema);
   if (!parseo.ok) return parseo.respuesta;
-  const { firstName, lastName, secondLastName, generationFwd, email, password } = parseo.data;
+  const {
+    firstName, lastName, secondLastName, generationFwd, email, password,
+    phone, moduloCompletado, sede, provincia, canton, distrito,
+  } = parseo.data;
 
   const nombre = `${firstName} ${lastName}`.trim();
 
@@ -30,6 +33,12 @@ export async function POST(request: Request) {
     const resultado = await registrarEstudiante(nombre, email, password, {
       segundoApellido: secondLastName,
       generacionFwd: generationFwd,
+      telefono: phone,
+      moduloCompletado,
+      sede,
+      provincia,
+      canton,
+      distrito,
     });
 
     if (resultado === 'no_invitado') {

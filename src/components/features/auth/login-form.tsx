@@ -5,7 +5,6 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { TextField } from "@/components/ui/text-field";
 import { IconArrowRight } from "@/components/ui/icons";
 import { SocialAuthButtons } from "@/components/features/auth/social-auth-buttons";
-import { PasswordToggle } from "@/components/ui/password-toggle";
 import AnimatedFormTitle from "@/components/features/auth/AnimatedFormTitle";
 
 export function LoginForm() {
@@ -65,7 +64,7 @@ export function LoginForm() {
           accentFrom="#20BEC6"
           accentTo="#662D91"
         />
-        <p className="mt-1 text-fwd-ink/60 pl-4 border-l-2 border-fwd-ink/8">
+        <p className="mt-1 text-fwd-ink/60 dark:text-white/60 pl-4 border-l-2 border-fwd-ink/8 dark:border-white/10">
           Bienvenido de vuelta. Sigamos avanzando.
         </p>
       </header>

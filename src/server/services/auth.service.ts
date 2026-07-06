@@ -166,7 +166,16 @@ export async function registrarEstudiante(
   nombre: string,
   correo: string,
   password: string,
-  extra: { segundoApellido?: string | undefined; generacionFwd?: number | undefined } = {}
+  extra: {
+    segundoApellido?: string | undefined;
+    generacionFwd?: number | undefined;
+    telefono?: string | undefined;
+    moduloCompletado?: string | undefined;
+    sede?: string | undefined;
+    provincia?: string | undefined;
+    canton?: string | undefined;
+    distrito?: string | undefined;
+  } = {}
 ): Promise<ResultadoAuth | 'no_invitado' | null> {
   // 1. ¿Fue invitado? (debe ser tipo 'invitacion' y estar pendiente)
   const invitacion = await buscarInvitacionPendientePorEmail(correo);
@@ -214,6 +223,12 @@ export async function registrarEstudiante(
     nombre,
     segundoApellido: extra.segundoApellido,
     generacionFwd: extra.generacionFwd,
+    telefono: extra.telefono,
+    moduloCompletado: extra.moduloCompletado,
+    sede: extra.sede,
+    provincia: extra.provincia,
+    canton: extra.canton,
+    distrito: extra.distrito,
     correo,
     hash: hashPassword(password),
     idRol,

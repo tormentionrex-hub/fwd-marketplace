@@ -50,7 +50,7 @@ export default function AnimatedFormTitle({
 
       {/* Título con letras individuales */}
       <h1
-        className="font-display text-3xl font-black text-fwd-ink"
+        className="font-display text-3xl font-black text-fwd-ink dark:text-white"
         style={{ perspective: "500px" }}
       >
         {text.split("").map((char, i) => (
@@ -70,10 +70,11 @@ export default function AnimatedFormTitle({
               });
             }}
             onMouseLeave={(e) => {
+              const base = document.documentElement.classList.contains("dark") ? "#f1f5f9" : "#1a1a2e";
               gsap.to(e.currentTarget, {
                 y: 0,
                 scale: 1,
-                color: "#1a1a2e",
+                color: base,
                 textShadow: "none",
                 duration: 0.35,
                 ease: "elastic.out(1,0.5)",

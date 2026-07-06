@@ -18,7 +18,7 @@ const PASSWORD_RULES = [
 ] as const;
 
 const inputClass =
-  "w-full rounded-xl border border-fwd-ink/12 bg-fwd-mist/40 px-4 py-3 text-[0.95rem] text-fwd-ink outline-none transition placeholder:text-fwd-ink/35 focus:border-fwd-blue focus:bg-white focus:ring-4 focus:ring-fwd-blue/15";
+  "w-full rounded-xl border border-fwd-ink/12 dark:border-white/15 bg-fwd-mist/40 dark:bg-white/5 px-4 py-3 text-[0.95rem] text-fwd-ink dark:text-white outline-none transition placeholder:text-fwd-ink/35 dark:placeholder:text-white/35 focus:border-fwd-blue focus:bg-white dark:focus:bg-white/10 focus:ring-4 focus:ring-fwd-blue/15";
 
 const botonClass =
   "group mt-1 flex h-12 items-center justify-center gap-2 rounded-full px-6 font-semibold text-white shadow-sm transition disabled:cursor-not-allowed disabled:opacity-60";
@@ -97,10 +97,10 @@ export function RecuperarFlow() {
           {paso === "solicitar" && (
             <div>
               <header className="mb-8">
-                <h1 className="font-display text-3xl font-black text-fwd-ink">
+                <h1 className="font-display text-3xl font-black text-fwd-ink dark:text-white">
                   ¿Olvidaste tu contraseña?
                 </h1>
-                <p className="mt-2 text-fwd-ink/60">
+                <p className="mt-2 text-fwd-ink/60 dark:text-white/60">
                   Ingresá tu correo y te enviaremos un código de recuperación.
                 </p>
               </header>
@@ -120,7 +120,7 @@ export function RecuperarFlow() {
                   <IconArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </button>
               </form>
-              <p className="mt-8 text-center text-sm text-fwd-ink/60">
+              <p className="mt-8 text-center text-sm text-fwd-ink/60 dark:text-white/60">
                 <Link href="/login" className="font-semibold text-fwd-blue hover:text-fwd-purple transition">
                   Volver a iniciar sesión
                 </Link>
@@ -161,10 +161,10 @@ export function RecuperarFlow() {
                   <path d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <h1 className="font-display text-3xl font-black text-fwd-ink">
+              <h1 className="font-display text-3xl font-black text-fwd-ink dark:text-white">
                 ¡Contraseña actualizada!
               </h1>
-              <p className="mt-2 text-fwd-ink/60">
+              <p className="mt-2 text-fwd-ink/60 dark:text-white/60">
                 Ya podés iniciar sesión con tu nueva contraseña.
               </p>
               <button
@@ -283,9 +283,9 @@ function PasoVerificar({
   return (
     <div>
       <header className="mb-8">
-        <h1 className="font-display text-3xl font-black text-fwd-ink">Verificá el código</h1>
-        <p className="mt-2 text-fwd-ink/60">
-          Enviamos un código de 6 dígitos a <strong className="text-fwd-ink">{email}</strong>.
+        <h1 className="font-display text-3xl font-black text-fwd-ink dark:text-white">Verificá el código</h1>
+        <p className="mt-2 text-fwd-ink/60 dark:text-white/60">
+          Enviamos un código de 6 dígitos a <strong className="text-fwd-ink dark:text-white">{email}</strong>.
         </p>
       </header>
 
@@ -296,9 +296,9 @@ function PasoVerificar({
         >
           Hemos enviado un código de verificación a tu correo electrónico.
         </p>
-        <p className="rounded-xl border border-fwd-ink/10 bg-fwd-mist/40 px-4 py-3 text-sm text-fwd-ink/70">
+        <p className="rounded-xl border border-fwd-ink/10 dark:border-white/10 bg-fwd-mist/40 dark:bg-white/5 px-4 py-3 text-sm text-fwd-ink/70 dark:text-white/70">
           {ultimaSesionTexto
-            ? <>Última sesión de esta cuenta: <strong className="text-fwd-ink">{ultimaSesionTexto}</strong>.</>
+            ? <>Última sesión de esta cuenta: <strong className="text-fwd-ink dark:text-white">{ultimaSesionTexto}</strong>.</>
             : "Esta cuenta todavía no ha iniciado sesión."}
         </p>
         {error && <ErrorBanner msg={error} />}
@@ -317,13 +317,13 @@ function PasoVerificar({
               onChange={(e) => setDigit(i, e.target.value)}
               onKeyDown={(e) => onKeyDown(i, e)}
               aria-label={`Dígito ${i + 1}`}
-              className="h-14 w-full rounded-xl border border-fwd-ink/12 bg-fwd-mist/40 text-center text-2xl font-bold text-fwd-ink outline-none transition focus:border-fwd-blue focus:bg-white focus:ring-4 focus:ring-fwd-blue/15"
+              className="h-14 w-full rounded-xl border border-fwd-ink/12 dark:border-white/15 bg-fwd-mist/40 dark:bg-white/5 text-center text-2xl font-bold text-fwd-ink dark:text-white outline-none transition focus:border-fwd-blue focus:bg-white dark:focus:bg-white/10 focus:ring-4 focus:ring-fwd-blue/15"
             />
           ))}
         </div>
 
         <div className="flex items-center justify-between text-sm" aria-live="polite">
-          <span className="text-fwd-ink/60">
+          <span className="text-fwd-ink/60 dark:text-white/60">
             {expira > 0 ? <>Expira en <strong>{mmss(expira)}</strong></> : "El código expiró"}
           </span>
           <button
@@ -403,15 +403,15 @@ function PasoNueva({
   return (
     <div>
       <header className="mb-8">
-        <h1 className="font-display text-3xl font-black text-fwd-ink">Nueva contraseña</h1>
-        <p className="mt-2 text-fwd-ink/60">Definí una contraseña segura para tu cuenta.</p>
+        <h1 className="font-display text-3xl font-black text-fwd-ink dark:text-white">Nueva contraseña</h1>
+        <p className="mt-2 text-fwd-ink/60 dark:text-white/60">Definí una contraseña segura para tu cuenta.</p>
       </header>
 
       <form onSubmit={enviar} className="flex flex-col gap-5">
         {error && <ErrorBanner msg={error} />}
 
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="password" className="text-sm font-medium text-fwd-ink/80">
+          <label htmlFor="password" className="text-sm font-medium text-fwd-ink/80 dark:text-white/80">
             Nueva contraseña
           </label>
           <div className="relative">
@@ -443,7 +443,7 @@ function PasoNueva({
                     style={{ width: `${(cumplidas / PASSWORD_RULES.length) * 100}%` }}
                   />
                 </div>
-                <span className="text-xs font-medium text-fwd-ink/60">{fuerzaTexto}</span>
+                <span className="text-xs font-medium text-fwd-ink/60 dark:text-white/60">{fuerzaTexto}</span>
               </div>
               <ul className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1">
                 {PASSWORD_RULES.map((rule) => {
@@ -451,7 +451,7 @@ function PasoNueva({
                   return (
                     <li
                       key={rule.id}
-                      className={`flex items-center gap-1.5 text-xs ${ok ? "text-green-600" : "text-fwd-ink/45"}`}
+                      className={`flex items-center gap-1.5 text-xs ${ok ? "text-green-600" : "text-fwd-ink/45 dark:text-white/45"}`}
                     >
                       {ok ? (
                         <IconCheck className="h-3.5 w-3.5 text-green-500" />
@@ -468,7 +468,7 @@ function PasoNueva({
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="confirmar" className="text-sm font-medium text-fwd-ink/80">
+          <label htmlFor="confirmar" className="text-sm font-medium text-fwd-ink/80 dark:text-white/80">
             Confirmar contraseña
           </label>
           <input

@@ -453,12 +453,12 @@ export function SolicitarAccesoCliente() {
                   type="text"
                   value={correoSolicitud}
                   onChange={(e) => setCorreoSolicitud(e.target.value)}
-                  maxLength={25}
+                  maxLength={254}
                   placeholder="tucorreo@fwd.cr"
                   className="w-full rounded-xl border border-fwd-ink/15 bg-fwd-ink/[0.03] px-4 py-3 font-body text-sm text-fwd-ink placeholder:text-fwd-ink/30 focus:border-fwd-blue/50 focus:outline-none focus:ring-2 focus:ring-fwd-blue/15 transition-all"
                 />
                 <p className="mt-1.5 text-right font-body text-[11px] text-fwd-ink/30">
-                  {correoSolicitud.length}/25
+                  {correoSolicitud.length}/254
                 </p>
               </div>
 
