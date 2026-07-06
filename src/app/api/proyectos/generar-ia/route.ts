@@ -42,6 +42,7 @@ export async function POST(request: Request) {
       descripcion: datos.descripcion,
       areaNegocio: datos.areaNegocio,
       plazoDias: datos.plazoDias,
+      usaIA: false,
       tecnologias: datos.tecnologias,
       imagenes: [],
     });

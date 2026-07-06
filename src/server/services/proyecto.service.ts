@@ -19,6 +19,8 @@ import {
   obtenerDatosParaEmbedding,
   buscarProyectosPorSimilitud,
   obtenerActividadSeisMeses,
+  contarPostulacionesProyecto,
+  listarProyectosSimilares,
 } from '@/server/repositories/proyecto.repository';
 import { generarEmbedding, textoParaEmbedding } from '@/lib/embeddings';
 import type { ProyectoMarketplace } from '@/types/marketplace';
@@ -62,6 +64,7 @@ export async function crearProyectoService(
     descripcion: string;
     areaNegocio: string | null;
     plazoDias: number | null;
+    usaIA: boolean;
     tecnologias: string[];
     imagenes: string[];
   },
@@ -78,6 +81,7 @@ export async function actualizarProyectoService(
     descripcion?: string | undefined;
     areaNegocio?: string | null | undefined;
     plazoDias?: number | null | undefined;
+    usaIA?: boolean | undefined;
     tecnologias?: string[] | undefined;
     imagenes?: string[] | undefined;
   },
@@ -366,6 +370,12 @@ export interface ProyectoDetalleDTO {
   diasRestantes: number;
   /** Fecha límite (ISO) o null si el proyecto no define cierre. */
   fechaLimite: string | null;
+  /** Duración estimada del proyecto en días (plazo_dias), o null si no se definió. */
+  plazoDias: number | null;
+  /** Si el proyecto requiere uso de IA. */
+  usaIA: boolean;
+  /** Fecha en que el proyecto fue publicado (ISO), o null si es borrador. */
+  publicado: string | null;
   empresario: { nombre: string; sector: string };
   estado: EstadoProyecto;
   vencido: boolean;
@@ -415,11 +425,50 @@ export async function obtenerDetalleProyecto(id: string): Promise<ProyectoDetall
     imagenes: p.imagenes ?? [],
     diasRestantes,
     fechaLimite: p.cierre ? p.cierre.toISOString() : null,
+    plazoDias: p.plazo_dias ?? null,
+    usaIA: p.usa_ia ?? false,
+    publicado: p.publicado ? p.publicado.toISOString() : null,
     empresario: {
       nombre: p.perfiles_empresario?.usuarios?.nombre ?? 'Empresa',
       sector: p.perfiles_empresario?.sector ?? '—',
     },
     estado,
     vencido,
+  };
+}
+
+export interface ProyectoSimilarDTO {
+  id: string;
+  titulo: string;
+  area: string;
+  empresa: string;
+  tecnologias: string[];
+  diasRestantes: number;
+  vencido: boolean;
+}
+
+export async function obtenerDatosSidebar(
+  idProyecto: string,
+  area: string,
+): Promise<{ postulaciones: number; similares: ProyectoSimilarDTO[] }> {
+  const [postulaciones, similares] = await Promise.all([
+    contarPostulacionesProyecto(idProyecto),
+    listarProyectosSimilares(idProyecto, area, 3),
+  ]);
+
+  return {
+    postulaciones,
+    similares: similares.map((p) => {
+      const { diasRestantes, vencido } = mapearEstadoProyecto('publicado', p.cierre);
+      return {
+        id: p.id,
+        titulo: p.titulo,
+        area: p.area_negocio ?? 'General',
+        empresa: p.perfiles_empresario?.usuarios?.nombre ?? 'Empresa',
+        tecnologias: p.proyectos_tecnologias.map((t) => t.tecnologias.nombre),
+        diasRestantes,
+        vencido,
+      };
+    }),
   };
 }

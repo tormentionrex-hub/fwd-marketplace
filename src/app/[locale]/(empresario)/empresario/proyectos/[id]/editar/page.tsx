@@ -55,6 +55,7 @@ export default async function EditarProyectoPage({
               descripcion: proyecto.descripcion,
               areaNegocio: proyecto.area_negocio ?? null,
               plazoDias: proyecto.plazo_dias ?? null,
+              usaIA: proyecto.usa_ia ?? false,
               tecnologias: proyecto.proyectos_tecnologias.map((pt) => pt.tecnologias.nombre),
               imagenes: proyecto.imagenes ?? [],
             }}

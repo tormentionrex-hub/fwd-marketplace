@@ -23,6 +23,7 @@ export const crearProyectoSchema = z.object({
     .max(365, "El plazo no puede superar 365 días")
     .optional()
     .nullable(),
+  usaIA: z.boolean().optional().default(false),
   tecnologias: z.array(z.string().trim().min(1).max(80)).max(20).optional().default([]),
   imagenes: z.array(z.string().url()).max(5).optional().default([]),
 });
@@ -35,6 +36,7 @@ export const actualizarProyectoSchema = z.object({
   descripcion: z.string().trim().min(20).max(5000).optional(),
   areaNegocio: z.string().trim().max(100).optional().nullable(),
   plazoDias: z.coerce.number().int().positive().max(365).optional().nullable(),
+  usaIA: z.boolean().optional(),
   tecnologias: z.array(z.string().trim().min(1).max(80)).max(20).optional(),
   imagenes: z.array(z.string().url()).max(5).optional(),
 });
