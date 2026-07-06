@@ -1,4 +1,5 @@
 import 'server-only';
+import { Prisma } from '@prisma/client';
 import { db } from '@/lib/db';
 
 // Capa de datos: queries Prisma sobre el modelo usuarios. No mete lógica de
@@ -94,6 +95,12 @@ export function crearEstudiante(datos: {
   nombre: string;
   segundoApellido?: string | undefined;
   generacionFwd?: number | undefined;
+  telefono?: string | undefined;
+  moduloCompletado?: string | undefined;
+  sede?: string | undefined;
+  provincia?: string | undefined;
+  canton?: string | undefined;
+  distrito?: string | undefined;
   correo: string;
   hash: string;
   idRol: bigint;
@@ -107,7 +114,15 @@ export function crearEstudiante(datos: {
       id_rol: datos.idRol,
       estado: 'activo', // ya fue pre-aprobado por el admin al enviarlo la invitación
       perfiles_estudiante: {
-        create: { generacion_fwd: datos.generacionFwd ?? null },
+        create: {
+          generacion_fwd: datos.generacionFwd ?? null,
+          telefono: datos.telefono ?? null,
+          modulo_completado: datos.moduloCompletado ?? null,
+          sede: datos.sede ?? null,
+          provincia: datos.provincia ?? null,
+          canton: datos.canton ?? null,
+          distrito: datos.distrito ?? null,
+        },
       },
     },
     select: {
@@ -210,6 +225,89 @@ export function rechazarUsuario(id: string) {
     where: { id },
     data: { estado: 'rechazado' },
     select: { id: true, nombre: true, correo: true },
+  });
+}
+
+// ── Configuración de cuenta del estudiante ──────────────────────────────────
+
+export function actualizarNombreUsuario(id: string, nombre: string) {
+  return db.usuarios.update({ where: { id }, data: { nombre }, select: { id: true } });
+}
+
+export function actualizarCorreoUsuario(id: string, correo: string) {
+  return db.usuarios.update({ where: { id }, data: { correo }, select: { id: true } });
+}
+
+export function actualizarTelefonoEstudiante(idUsuario: string, telefono: string | null) {
+  return db.perfiles_estudiante.update({
+    where: { id_usuario: idUsuario },
+    data: { telefono },
+    select: { id_usuario: true },
+  });
+}
+
+// Cambia el estado de la cuenta (p. ej. 'inactivo' al deshabilitarla).
+export function cambiarEstadoUsuario(id: string, estado: string) {
+  return db.usuarios.update({ where: { id }, data: { estado }, select: { id: true } });
+}
+
+// (El borrado permanente reutiliza `eliminarUsuario`, ya definido más abajo.)
+
+// Preferencias del estudiante (JSON en perfiles_estudiante.preferencias).
+export async function leerPreferenciasEstudiante(id: string): Promise<unknown> {
+  const row = await db.perfiles_estudiante.findUnique({
+    where: { id_usuario: id },
+    select: { preferencias: true },
+  });
+  return row?.preferencias ?? null;
+}
+
+export function escribirPreferenciasEstudiante(id: string, value: object) {
+  return db.perfiles_estudiante.update({
+    where: { id_usuario: id },
+    data: { preferencias: value as Prisma.InputJsonValue },
+    select: { id_usuario: true },
+  });
+}
+
+// Todos los datos del estudiante para el export "Descargar mis datos" (Ley 8968).
+export function cargarExportEstudiante(id: string) {
+  return db.usuarios.findUnique({
+    where: { id },
+    select: {
+      nombre: true,
+      segundo_apellido: true,
+      correo: true,
+      edad: true,
+      creado: true,
+      perfiles_estudiante: {
+        select: {
+          titulo_profesional: true,
+          descripcion: true,
+          generacion_fwd: true,
+          telefono: true,
+          modulo_completado: true,
+          sede: true,
+          provincia: true,
+          canton: true,
+          distrito: true,
+          reputacion: true,
+          preferencias: true,
+        },
+      },
+    },
+  });
+}
+
+// Datos para el apartado de Configuración > Cuenta del estudiante.
+export function cargarDatosCuentaEstudiante(id: string) {
+  return db.usuarios.findUnique({
+    where: { id },
+    select: {
+      nombre: true,
+      correo: true,
+      perfiles_estudiante: { select: { telefono: true, reputacion: true } },
+    },
   });
 }
 
