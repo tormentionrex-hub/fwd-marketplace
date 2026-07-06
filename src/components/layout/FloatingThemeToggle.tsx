@@ -20,7 +20,8 @@ export default function FloatingThemeToggle() {
     pathname.includes("/admin") ||
     pathname.includes("/mis-ofertas") ||
     pathname.includes("/mis-proyectos") ||
-    pathname.includes("/mensajes");
+    pathname.includes("/mensajes") ||
+    /\/marketplace\/[^/]+/.test(pathname);
 
   if (esDashboard) {
     return null;
