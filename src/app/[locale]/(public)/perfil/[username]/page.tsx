@@ -9,7 +9,7 @@ import SkillBars from "@/components/features/perfil/SkillBars";
 import ProjectShowcaseCard from "@/components/features/perfil/ProjectShowcaseCard";
 import Timeline from "@/components/features/perfil/Timeline";
 import Certifications from "@/components/features/perfil/Certifications";
-import Achievements from "@/components/features/perfil/Achievements";
+import InsigniasFwd from "@/components/features/perfil/InsigniasFwd";
 import ProfileLinks from "@/components/features/perfil/ProfileLinks";
 import CvPublicoSection from "@/components/features/perfil/CvPublicoSection";
 import ContactarEstudianteButton from "@/components/features/solicitudes/ContactarEstudianteButton";
@@ -23,6 +23,9 @@ import {
   IconStar,
 } from "@/components/ui/icons";
 import { getPerfilPublico } from "@/lib/perfil-data";
+import { cargarPreferencias } from "@/server/services/preferencias-estudiante.service";
+import GithubRepos from "@/components/features/estudiante/GithubRepos";
+import { urlConexion } from "@/lib/empleabilidad";
 
 interface PerfilPublicoPageProps {
   params: Promise<{ locale: string; username: string }>;
@@ -56,6 +59,12 @@ export async function generateMetadata({
 export default async function PerfilPublicoPage({ params }: PerfilPublicoPageProps) {
   const { locale, username } = await params;
   const perfil = await getPerfilPublico(username);
+
+  // Conexiones públicas del estudiante (GitHub, LinkedIn, etc.) desde sus preferencias.
+  const conexiones = perfil.id ? (await cargarPreferencias(perfil.id)).conexiones : null;
+  const tieneConexiones =
+    !!conexiones &&
+    (!!conexiones.github || !!conexiones.linkedin || !!conexiones.sitio || !!conexiones.discord);
 
   // Currículum público: lo ve un empresario o administrador, si el estudiante lo habilitó.
   const viewer = await getUser();
@@ -198,6 +207,51 @@ export default async function PerfilPublicoPage({ params }: PerfilPublicoPagePro
             </section>
           </Reveal>
 
+          {/* Conexiones: GitHub (repositorios públicos) y enlaces */}
+          {tieneConexiones && conexiones && (
+            <Reveal>
+              <section>
+                <SectionHeading
+                  eyebrow="Conexiones"
+                  title="GitHub y enlaces"
+                  description="Repositorios públicos y perfiles del estudiante."
+                />
+                <div className="mt-6 flex flex-col gap-5">
+                  {conexiones.github && <GithubRepos usuario={conexiones.github} />}
+                  {(conexiones.linkedin || conexiones.sitio || conexiones.discord) && (
+                    <div className="flex flex-wrap gap-2">
+                      {conexiones.linkedin && (
+                        <a
+                          href={urlConexion("linkedin", conexiones.linkedin) ?? "#"}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="rounded-xl border border-black/5 bg-surface-2 px-4 py-2 text-sm font-semibold text-text transition-colors hover:bg-fwd-morado/10 dark:border-white/10"
+                        >
+                          LinkedIn
+                        </a>
+                      )}
+                      {conexiones.sitio && (
+                        <a
+                          href={urlConexion("sitio", conexiones.sitio) ?? "#"}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="rounded-xl border border-black/5 bg-surface-2 px-4 py-2 text-sm font-semibold text-text transition-colors hover:bg-fwd-morado/10 dark:border-white/10"
+                        >
+                          Sitio web
+                        </a>
+                      )}
+                      {conexiones.discord && (
+                        <span className="rounded-xl border border-black/5 bg-surface-2 px-4 py-2 text-sm font-medium text-text-muted dark:border-white/10">
+                          Discord: {conexiones.discord}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </section>
+            </Reveal>
+          )}
+
           {/* Enlaces profesionales */}
           <Reveal>
             <ProfileLinks contacto={perfil.contacto} proyectos={perfil.proyectos} />
@@ -223,12 +277,12 @@ export default async function PerfilPublicoPage({ params }: PerfilPublicoPagePro
             </section>
           </Reveal>
 
-          {/* Logros */}
+          {/* Insignias de quizzes FWD */}
           <Reveal>
             <section>
-              <SectionHeading eyebrow="Reconocimientos" title="Logros y reconocimientos" />
+              <SectionHeading eyebrow="Logros FWD" title="Insignias de quizzes" />
               <div className="mt-6">
-                <Achievements items={perfil.logros} />
+                <InsigniasFwd insignias={perfil.insignias} total={perfil.totalInsignias} />
               </div>
             </section>
           </Reveal>

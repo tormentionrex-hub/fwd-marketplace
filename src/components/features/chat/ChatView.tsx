@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { IconArrowLeft, IconMail, IconSearch } from "@/components/ui/icons";
 
 interface Conversacion {
@@ -34,6 +35,7 @@ interface Detalle {
   solicitudId?: string | undefined;
   mensajeSolicitud?: string | undefined;
   proyectoTitulo?: string | null | undefined;
+  proyecto?: { id: string; titulo: string; area: string | null; imagen: string | null; esMio: boolean } | null | undefined;
 }
 
 interface SolicitudDTO {
@@ -156,6 +158,8 @@ const renderContenidoMensaje = (contenido: string) => {
 };
 
 export default function ChatView() {
+  const pathname = usePathname();
+  const locale = pathname?.split("/")[1] || "es";
   const [conversaciones, setConversaciones] = useState<Conversacion[]>([]);
   const [solicitudesRecibidas, setSolicitudesRecibidas] = useState<SolicitudDTO[]>([]);
   const [solicitudesEnviadas, setSolicitudesEnviadas] = useState<SolicitudDTO[]>([]);
@@ -982,6 +986,48 @@ export default function ChatView() {
               {/* Mensajes Chat Normal — burbujas estilo Instagram */}
               {!detalle.esSolicitud && !activoId?.startsWith("new_request_") && !activoId?.startsWith("pending_request_") && (
                 <div className="flex flex-col gap-1">
+                  {/* Recuadro del proyecto por el que escribió el estudiante */}
+                  {detalle.proyecto && (
+                    <div className="mb-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                      <p className="mb-2 text-center text-xs font-semibold text-slate-500 dark:text-slate-400">
+                        {detalle.proyecto.esMio
+                          ? `${detalle.otro.nombre} te escribió por tu proyecto`
+                          : "Conversación sobre este proyecto"}
+                      </p>
+                      <a
+                        href={`/${locale}/marketplace/${detalle.proyecto.id}`}
+                        className="group mx-auto flex max-w-md items-center gap-3 rounded-2xl border border-slate-200 bg-white p-2.5 shadow-sm transition-all hover:border-fwd-azul hover:shadow-md dark:border-slate-700 dark:bg-slate-800"
+                      >
+                        {detalle.proyecto.imagen ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={detalle.proyecto.imagen}
+                            alt=""
+                            className="h-14 w-16 shrink-0 rounded-xl object-cover"
+                          />
+                        ) : (
+                          <span className="grid h-14 w-16 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-fwd-azul to-fwd-morado text-white">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                              <rect x="2" y="7" width="20" height="14" rx="2" />
+                              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+                            </svg>
+                          </span>
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <span className="text-[10px] font-bold uppercase tracking-wide text-fwd-azul">
+                            {detalle.proyecto.area ?? "Proyecto"}
+                          </span>
+                          <p className="truncate font-bold text-slate-800 dark:text-slate-100">{detalle.proyecto.titulo}</p>
+                          <span className="text-xs text-slate-400 dark:text-slate-500 group-hover:text-fwd-azul">Ver publicación</span>
+                        </div>
+                        <span className="shrink-0 text-slate-300 transition-transform group-hover:translate-x-0.5 group-hover:text-fwd-azul dark:text-slate-600">
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M5 12h14" /><path d="m12 5 7 7-7 7" />
+                          </svg>
+                        </span>
+                      </a>
+                    </div>
+                  )}
                   {detalle.mensajes.map((m, i) => {
                     const prevM = detalle.mensajes[i - 1];
                     // Mostrar timestamp si es el primero o pasaron mas de 5 minutos

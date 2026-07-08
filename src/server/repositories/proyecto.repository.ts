@@ -123,13 +123,20 @@ export function obtenerProyectoConDetalle(id: string) {
       estado: true,
       plazo_dias: true,
       usa_ia: true,
+      modalidad: true,
       publicado: true,
       cierre: true,
       imagenes: true,
+      presupuesto_min: true,
+      presupuesto_max: true,
+      presupuesto_moneda: true,
+      negociable: true,
       perfiles_empresario: {
         select: {
+          id_usuario: true,
+          nombre_empresa: true,
           sector: true,
-          usuarios: { select: { nombre: true } },
+          usuarios: { select: { nombre: true, image_url: true } },
         },
       },
       proyectos_tecnologias: {
@@ -229,7 +236,11 @@ export function listarProyectosSimilares(idProyecto: string, area: string, limit
       plazo_dias: true,
       cierre: true,
       perfiles_empresario: {
-        select: { usuarios: { select: { nombre: true } } },
+        select: {
+          id_usuario: true,
+          nombre_empresa: true,
+          usuarios: { select: { nombre: true } },
+        },
       },
       proyectos_tecnologias: {
         select: { tecnologias: { select: { nombre: true } } },
@@ -255,11 +266,15 @@ export function listarProyectosPublicados() {
       publicado: true,
       usa_ia: true,
       imagenes: true,
+      presupuesto_min: true,
+      presupuesto_max: true,
+      presupuesto_moneda: true,
+      negociable: true,
       perfiles_empresario: {
         select: {
           nombre_empresa: true,
           sector: true,
-          usuarios: { select: { nombre: true } },
+          usuarios: { select: { nombre: true, image_url: true } },
         },
       },
       proyectos_tecnologias: {
@@ -350,6 +365,11 @@ export async function crearProyecto(data: {
   areaNegocio: string | null;
   plazoDias: number | null;
   usaIA: boolean;
+  modalidad?: string | null;
+  presupuestoMin?: number | null;
+  presupuestoMax?: number | null;
+  moneda?: string | null;
+  negociable?: boolean;
   tecnologias: string[];
   imagenes: string[];
 }) {
@@ -372,6 +392,11 @@ export async function crearProyecto(data: {
       area_negocio: data.areaNegocio,
       plazo_dias: data.plazoDias,
       usa_ia: data.usaIA,
+      modalidad: data.modalidad ?? null,
+      presupuesto_min: data.presupuestoMin ?? null,
+      presupuesto_max: data.presupuestoMax ?? null,
+      presupuesto_moneda: data.moneda ?? 'CRC',
+      negociable: data.negociable ?? true,
       estado: 'borrador',
       imagenes: data.imagenes ?? [],
       proyectos_tecnologias: {
@@ -393,6 +418,11 @@ export async function actualizarProyecto(
     areaNegocio?: string | null | undefined;
     plazoDias?: number | null | undefined;
     usaIA?: boolean | undefined;
+    modalidad?: string | null | undefined;
+    presupuestoMin?: number | null | undefined;
+    presupuestoMax?: number | null | undefined;
+    moneda?: string | null | undefined;
+    negociable?: boolean | undefined;
     tecnologias?: string[] | undefined;
     imagenes?: string[] | undefined;
   },
@@ -427,6 +457,11 @@ export async function actualizarProyecto(
       ...(campos.areaNegocio !== undefined && { area_negocio: campos.areaNegocio }),
       ...(campos.plazoDias !== undefined && { plazo_dias: campos.plazoDias }),
       ...(campos.usaIA !== undefined && { usa_ia: campos.usaIA }),
+      ...(campos.modalidad !== undefined && { modalidad: campos.modalidad }),
+      ...(campos.presupuestoMin !== undefined && { presupuesto_min: campos.presupuestoMin }),
+      ...(campos.presupuestoMax !== undefined && { presupuesto_max: campos.presupuestoMax }),
+      ...(campos.moneda !== undefined && campos.moneda != null && { presupuesto_moneda: campos.moneda }),
+      ...(campos.negociable !== undefined && { negociable: campos.negociable }),
       ...(campos.imagenes !== undefined && { imagenes: campos.imagenes }),
     },
     select: { id: true },

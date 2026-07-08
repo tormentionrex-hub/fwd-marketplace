@@ -53,6 +53,26 @@ function IconBell(props: SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
+function IconNoticias(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-4 0V7a1 1 0 0 1 1-1h1" />
+      <path d="M16 6h-6M16 10h-6M12 14h-2" />
+    </svg>
+  );
+}
+function IconTrophy(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+      <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+      <path d="M4 22h16" />
+      <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+      <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+      <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+    </svg>
+  );
+}
 
 const STORAGE_KEY = "fwd_sidebar_collapsed";
 
@@ -139,9 +159,13 @@ export default function SidebarEstudiante({
   const enlaces: EnlaceSidebar[] = [
     { href: base, label: "Inicio", Icon: IconHome, exact: true },
     { href: `/${locale}/marketplace`, label: "Explorar proyectos", Icon: IconCompass },
+    { href: `/${locale}/marketplace/vacantes`, label: "Explorar vacantes", Icon: IconBriefcase },
+    { href: `${base}/noticias`, label: "Noticias", Icon: IconNoticias },
     { href: `${base}/para-ti`, label: "Para ti", Icon: IconSparkles },
+    { href: `${base}/logros`, label: "Logros", Icon: IconTrophy },
     { href: `${base}/perfil`, label: "Mi perfil", Icon: IconUser },
     { href: `/${locale}/mis-ofertas`, label: "Mis ofertas", Icon: IconFile },
+    { href: `/${locale}/mis-postulaciones`, label: "Mis postulaciones", Icon: IconBriefcase },
     { href: `${base}/solicitudes`, label: "Solicitudes", Icon: IconUserPlus },
     { href: `/${locale}/mensajes`, label: "Mensajes", Icon: IconMail },
     { href: `${base}/notificaciones`, label: "Notificaciones", Icon: IconBell, badge: noLeidas },

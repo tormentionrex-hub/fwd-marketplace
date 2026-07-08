@@ -48,3 +48,12 @@ next-env.d.ts
 # playwright testing artifacts
 .playwright-mcp/
 *.playwright-mcp.*
+
+# scripts y seeds locales (contienen contraseñas de prueba y lógica de hasheo; no
+# deben versionarse ni exponerse en el repositorio público)
+/scripts/
+prisma/seed.ts
+prisma/seed-demo.ts
+prisma/seed-test-estudiante.ts
+check_user.js
+test-db.js

@@ -2,6 +2,11 @@ import "server-only";
 import { cache } from "react";
 import { db } from "@/lib/db";
 import { generarAvatar } from "@/lib/avatar";
+import {
+  parsearQuizzes,
+  contarFasesCompletadas,
+  insigniasDestacadas,
+} from "@/lib/quizzes/progreso";
 import type {
   PerfilPublico,
   ProyectoPublico,
@@ -75,6 +80,7 @@ export const getPerfilPublico = cache(async (username: string): Promise<PerfilPu
           titulo_profesional: true,
           estado_verificacion: true,
           reputacion: true,
+          preferencias: true,
           estudiantes_habilidades: {
             select: { nivel: true, habilidades: { select: { nombre: true, categoria: true } } },
           },
@@ -159,6 +165,20 @@ export const getPerfilPublico = cache(async (username: string): Promise<PerfilPu
 
   const verificado = !BLOQUEANTES.has((pe.estado_verificacion ?? "").toLowerCase().trim());
 
+  // Insignias ganadas en los quizzes (guardadas en preferencias.quizzes).
+  const rawPref = pe.preferencias as Record<string, unknown> | null;
+  const quizzes = parsearQuizzes(rawPref?.quizzes);
+  const insignias = insigniasDestacadas(quizzes.progreso).map((ins) => ({
+    id: ins.id,
+    titulo: ins.titulo,
+    temaNombre: ins.temaNombre,
+    categoriaNombre: ins.categoriaNombre,
+    color: ins.color,
+    fase: ins.fase,
+    dificultad: ins.dificultad,
+  }));
+  const totalInsignias = contarFasesCompletadas(quizzes.progreso);
+
   return {
     id: real.id,
     username,
@@ -187,6 +207,8 @@ export const getPerfilPublico = cache(async (username: string): Promise<PerfilPu
     timeline: [],
     certificaciones: [],
     logros: [],
+    insignias,
+    totalInsignias,
   };
 });
 
@@ -261,5 +283,7 @@ function perfilDemo(username: string): PerfilPublico {
     timeline: [],
     certificaciones: [],
     logros: [],
+    insignias: [],
+    totalInsignias: 0,
   };
 }

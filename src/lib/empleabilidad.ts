@@ -12,6 +12,11 @@ export const MODALIDAD_LABEL: Record<Modalidad, string> = {
   indistinto: 'Indistinto',
 };
 
+// Modalidad de trabajo de un PROYECTO (a diferencia de la del estudiante, no
+// incluye "indistinto"). Se usa en el formulario de crear proyecto y el detalle.
+export const MODALIDADES_PROYECTO = ['remoto', 'presencial', 'hibrido'] as const;
+export type ModalidadProyecto = (typeof MODALIDADES_PROYECTO)[number];
+
 export interface Empleabilidad {
   areas: string[];
   tecnologias: string[];
@@ -95,6 +100,48 @@ export const PRIV_ROWS: { key: keyof PrivPrefs; titulo: string; desc: string }[]
   { key: 'mostrarReputacion', titulo: 'Mostrar mi reputación', desc: 'Tu calificación promedio aparece en tu perfil.' },
   { key: 'contactoDirecto', titulo: 'Permitir contacto directo', desc: 'Las empresas pueden escribirte fuera de un proyecto.' },
 ];
+
+// ── Conexiones (perfil público del estudiante) ──
+// Enlaces/usuarios que el estudiante conecta y que se muestran en su perfil
+// (los ven las empresas). GitHub además muestra sus repositorios PÚBLICOS.
+export interface Conexiones {
+  github: string; // usuario de GitHub
+  discord: string; // usuario de Discord
+  linkedin: string; // URL del perfil de LinkedIn
+  sitio: string; // URL de sitio/portafolio
+}
+export const DEFAULT_CONEXIONES: Conexiones = { github: '', discord: '', linkedin: '', sitio: '' };
+export const CONEXIONES_ROWS: {
+  key: keyof Conexiones;
+  titulo: string;
+  tipo: 'usuario' | 'url';
+  placeholder: string;
+  ayuda: string;
+}[] = [
+  { key: 'github', titulo: 'GitHub', tipo: 'usuario', placeholder: 'tu-usuario', ayuda: 'Mostramos tus repositorios públicos en tu perfil.' },
+  { key: 'discord', titulo: 'Discord', tipo: 'usuario', placeholder: '@usuario', ayuda: 'Tu usuario de Discord.' },
+  { key: 'linkedin', titulo: 'LinkedIn', tipo: 'url', placeholder: 'https://linkedin.com/in/tu-perfil', ayuda: 'Enlace a tu perfil de LinkedIn.' },
+  { key: 'sitio', titulo: 'Sitio web', tipo: 'url', placeholder: 'https://tu-sitio.com', ayuda: 'Tu portafolio o sitio personal.' },
+];
+
+// Extrae el usuario de GitHub de lo que pegue el estudiante (tolera URL, @, etc.).
+export function normalizarUsuarioGithub(v: string): string {
+  return v
+    .trim()
+    .replace(/^https?:\/\/(www\.)?github\.com\//i, '')
+    .replace(/^@/, '')
+    .replace(/\/.*$/, '')
+    .trim();
+}
+
+// URL clickeable de una conexión (o null si no aplica / está vacía).
+export function urlConexion(key: keyof Conexiones, valor: string): string | null {
+  const v = valor.trim();
+  if (!v) return null;
+  if (key === 'github') return `https://github.com/${normalizarUsuarioGithub(v)}`;
+  if (key === 'discord') return null; // Discord no tiene URL de perfil pública
+  return /^https?:\/\//i.test(v) ? v : `https://${v}`;
+}
 
 // Porcentaje de completitud del perfil de empleabilidad (para el medidor).
 export function completitudEmpleabilidad(e: Empleabilidad): number {

@@ -7,6 +7,8 @@ import ChatModal from './ChatModal';
 interface Props {
   nombre: string;
   color: string;
+  /** Foto de perfil de la empresa (usuarios.image_url) o null → inicial. */
+  fotoUrl?: string | null | undefined;
   /** ID del proyecto (para crear/recuperar la conversación). */
   idProyecto: string;
   /** Locale activo (para enlaces como iniciar sesión). */
@@ -15,7 +17,7 @@ interface Props {
   pais?: string | undefined;
 }
 
-export default function ChatBurbuja({ nombre, color, idProyecto, locale, pais }: Props) {
+export default function ChatBurbuja({ nombre, color, fotoUrl, idProyecto, locale, pais }: Props) {
   const [abierto, setAbierto] = useState(false);
   const [estado, setEstado] = useState<EstadoContacto | null>(null);
 
@@ -75,7 +77,8 @@ export default function ChatBurbuja({ nombre, color, idProyecto, locale, pais }:
                 width: 46,
                 height: 46,
                 borderRadius: '50%',
-                background: `linear-gradient(135deg, ${color}, ${color}bb)`,
+                overflow: 'hidden',
+                background: fotoUrl ? 'var(--surface-2, #e2e8f0)' : `linear-gradient(135deg, ${color}, ${color}bb)`,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -84,7 +87,12 @@ export default function ChatBurbuja({ nombre, color, idProyecto, locale, pais }:
                 color: '#fff',
               }}
             >
-              {nombre.charAt(0).toUpperCase()}
+              {fotoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={fotoUrl} alt={nombre} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                nombre.charAt(0).toUpperCase()
+              )}
             </div>
 
             {/* Punto de estado — verde = activo, gris = desconectado */}
@@ -133,6 +141,7 @@ export default function ChatBurbuja({ nombre, color, idProyecto, locale, pais }:
         abierto={abierto}
         onCerrar={() => setAbierto(false)}
         nombre={nombre}
+        fotoUrl={fotoUrl}
         color={color}
         idProyecto={idProyecto}
         locale={locale}

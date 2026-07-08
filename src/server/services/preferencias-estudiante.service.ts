@@ -4,10 +4,12 @@ import {
   DEFAULT_EMPLEABILIDAD,
   DEFAULT_NOTIF,
   DEFAULT_PRIV,
+  DEFAULT_CONEXIONES,
   type Modalidad,
   type Empleabilidad,
   type NotifPrefs,
   type PrivPrefs,
+  type Conexiones,
 } from '@/lib/empleabilidad';
 import {
   leerPreferenciasEstudiante,
@@ -83,19 +85,45 @@ function seccionDesdeRaw<T extends object>(raw: unknown, clave: string, defaults
   return soloBooleanos(r[clave], defaults);
 }
 
+// Igual que soloBooleanos pero para strings (trim + límite de longitud).
+function soloStrings<T extends object>(entrada: unknown, defaults: T): T {
+  const out = { ...defaults };
+  if (entrada && typeof entrada === 'object' && !Array.isArray(entrada)) {
+    const e = entrada as Record<string, unknown>;
+    for (const k of Object.keys(defaults as object)) {
+      if (typeof e[k] === 'string') (out as Record<string, unknown>)[k] = (e[k] as string).trim().slice(0, 200);
+    }
+  }
+  return out;
+}
+
+function conexionesDesdeRaw(raw: unknown): Conexiones {
+  const r = raw && typeof raw === 'object' && !Array.isArray(raw) ? (raw as Record<string, unknown>) : {};
+  return soloStrings(r['conexiones'], DEFAULT_CONEXIONES);
+}
+
 export interface PreferenciasEstudiante {
   empleabilidad: Empleabilidad;
   notif: NotifPrefs;
   priv: PrivPrefs;
+  conexiones: Conexiones;
 }
 
-export async function cargarPreferencias(idUsuario: string): Promise<PreferenciasEstudiante> {
-  const raw = await leerPreferenciasEstudiante(idUsuario);
+// Parsea el JSON crudo de preferencias (SIN tocar la DB). Reutilizable para
+// procesar muchos estudiantes en lote (p. ej. matching al publicar un proyecto)
+// sin hacer una query por cada uno.
+export function parsearPreferencias(raw: unknown): PreferenciasEstudiante {
   return {
     empleabilidad: empleabilidadDesdeRaw(raw),
     notif: seccionDesdeRaw(raw, 'notif', DEFAULT_NOTIF),
     priv: seccionDesdeRaw(raw, 'priv', DEFAULT_PRIV),
+    conexiones: conexionesDesdeRaw(raw),
   };
+}
+
+export async function cargarPreferencias(idUsuario: string): Promise<PreferenciasEstudiante> {
+  const raw = await leerPreferenciasEstudiante(idUsuario);
+  return parsearPreferencias(raw);
 }
 
 export async function guardarNotif(idUsuario: string, entrada: unknown): Promise<NotifPrefs> {
@@ -112,4 +140,12 @@ export async function guardarPriv(idUsuario: string, entrada: unknown): Promise<
   const priv = soloBooleanos(entrada, DEFAULT_PRIV);
   await escribirPreferenciasEstudiante(idUsuario, { ...base, priv });
   return priv;
+}
+
+export async function guardarConexiones(idUsuario: string, entrada: unknown): Promise<Conexiones> {
+  const raw = await leerPreferenciasEstudiante(idUsuario);
+  const base = raw && typeof raw === 'object' && !Array.isArray(raw) ? (raw as Record<string, unknown>) : {};
+  const conexiones = soloStrings(entrada, DEFAULT_CONEXIONES);
+  await escribirPreferenciasEstudiante(idUsuario, { ...base, conexiones });
+  return conexiones;
 }

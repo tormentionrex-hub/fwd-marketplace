@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Pencil, Trash2 } from "lucide-react";
 import Badge from "@/components/ui/Badge";
 import Card from "@/components/ui/Card";
 import CvManager from "./CvManager";
 import CvIaManager from "./CvIaManager";
 import CvChatManager from "./CvChatManager";
-import { IconCheck, IconPlus, IconUpload, IconX, IconEye, IconEyeOff } from "@/components/ui/icons";
+import { IconCheck, IconPlus, IconUpload, IconX, IconEye, IconEyeOff, IconSearch } from "@/components/ui/icons";
 import type { NivelHabilidad } from "@/types/sefora";
 import type {
   HabilidadCatalogo,
@@ -94,6 +94,13 @@ export default function FormularioEditarPerfil({ locale }: FormularioEditarPerfi
   // Habilidades
   const [catalogo, setCatalogo] = useState<HabilidadCatalogo[]>([]);
   const [habilidades, setHabilidades] = useState<HabilidadSeleccionada[]>([]);
+  // Buscador de tecnologías (autocompletado local + sugerencias IA)
+  const [busquedaHab, setBusquedaHab] = useState("");
+  const [sugerenciasIA, setSugerenciasIA] = useState<string[]>([]);
+  const [buscandoIA, setBuscandoIA] = useState(false);
+  const [agregandoHab, setAgregandoHab] = useState(false);
+  const [errorHab, setErrorHab] = useState("");
+  const debounceHabRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Portafolio
   const [completados, setCompletados] = useState<ProyectoCompletado[]>([]);
@@ -180,6 +187,100 @@ export default function FormularioEditarPerfil({ locale }: FormularioEditarPerfi
 
   function cambiarNivel(id: string, nivel: NivelHabilidad) {
     setHabilidades((prev) => prev.map((h) => (h.id === id ? { ...h, nivel } : h)));
+  }
+
+  // Resultados del catálogo que coinciden con la búsqueda y aún no están seleccionados.
+  const q = busquedaHab.trim().toLowerCase();
+  const resultadosCatalogo =
+    q.length >= 1
+      ? catalogo
+          .filter(
+            (h) =>
+              h.nombre.toLowerCase().includes(q) &&
+              !habilidades.some((s) => s.id === h.id),
+          )
+          .slice(0, 8)
+      : [];
+
+  // Sugerencias de IA que no estén ya en el catálogo (por nombre).
+  const nombresCatalogo = new Set(catalogo.map((c) => c.nombre.toLowerCase()));
+  const sugerenciasNuevas = sugerenciasIA.filter((n) => !nombresCatalogo.has(n.toLowerCase()));
+
+  // Busca sugerencias de tecnologías vía IA (debounce). El filtro del catálogo es
+  // instantáneo; la IA complementa con tecnologías fuera del catálogo local.
+  useEffect(() => {
+    if (debounceHabRef.current) clearTimeout(debounceHabRef.current);
+    const termino = busquedaHab.trim();
+    if (termino.length < 2) {
+      setSugerenciasIA([]);
+      setBuscandoIA(false);
+      return;
+    }
+    setBuscandoIA(true);
+    debounceHabRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch("/api/estudiante/habilidades/buscar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ q: termino }),
+        });
+        if (res.ok) {
+          const data: { nuevas?: string[] } = await res.json();
+          setSugerenciasIA(Array.isArray(data.nuevas) ? data.nuevas : []);
+        } else {
+          setSugerenciasIA([]);
+        }
+      } catch {
+        setSugerenciasIA([]);
+      } finally {
+        setBuscandoIA(false);
+      }
+    }, 500);
+    return () => {
+      if (debounceHabRef.current) clearTimeout(debounceHabRef.current);
+    };
+  }, [busquedaHab]);
+
+  // Selecciona una habilidad del catálogo (ya tiene id) y limpia el buscador.
+  function seleccionarDelCatalogo(id: string) {
+    setHabilidades((prev) => (prev.some((h) => h.id === id) ? prev : [...prev, { id, nivel: "básico" }]));
+    setBusquedaHab("");
+    setSugerenciasIA([]);
+    setErrorHab("");
+  }
+
+  // Agrega una tecnología nueva: valida/da de alta en el catálogo global (server
+  // valida con IA que sea del dominio de programación) y la selecciona.
+  async function agregarTecnologiaNueva(nombre: string) {
+    const limpio = nombre.trim();
+    if (!limpio || agregandoHab) return;
+    setAgregandoHab(true);
+    setErrorHab("");
+    try {
+      const res = await fetch("/api/estudiante/habilidades", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nombre: limpio }),
+      });
+      const data: { id?: string; nombre?: string; error?: string } = await res.json().catch(() => ({}));
+      if (!res.ok || !data.id || !data.nombre) {
+        setErrorHab(data.error ?? "No se pudo agregar la tecnología.");
+        return;
+      }
+      const nueva: HabilidadCatalogo = { id: data.id, nombre: data.nombre };
+      setCatalogo((prev) =>
+        prev.some((c) => c.id === nueva.id)
+          ? prev
+          : [...prev, nueva].sort((a, b) => a.nombre.localeCompare(b.nombre)),
+      );
+      setHabilidades((prev) => (prev.some((h) => h.id === nueva.id) ? prev : [...prev, { id: nueva.id, nivel: "básico" }]));
+      setBusquedaHab("");
+      setSugerenciasIA([]);
+    } catch {
+      setErrorHab("Error de red. Intentá de nuevo.");
+    } finally {
+      setAgregandoHab(false);
+    }
   }
 
   // ── Portafolio (local; persistencia pendiente de tabla en BD) ──
@@ -413,6 +514,95 @@ export default function FormularioEditarPerfil({ locale }: FormularioEditarPerfi
 
       {seccion === "habilidades" && (
         <Card className="flex flex-col gap-6 p-6">
+          {/* Buscador de tecnologías con autocompletado + sugerencias de IA */}
+          <div className="flex flex-col gap-3">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-text-muted">
+              Buscar tecnología
+            </h2>
+            <div className="relative">
+              <IconSearch
+                width={18}
+                height={18}
+                className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted"
+              />
+              <input
+                type="text"
+                value={busquedaHab}
+                onChange={(e) => {
+                  setBusquedaHab(e.target.value);
+                  setErrorHab("");
+                }}
+                placeholder="Buscá un lenguaje, framework o tecnología (ej: Java, React, Docker)..."
+                className={`${inputClass} pl-11`}
+                autoComplete="off"
+              />
+
+              {/* Dropdown de resultados */}
+              {busquedaHab.trim().length >= 1 && (
+                <div className="absolute z-20 mt-2 max-h-72 w-full overflow-y-auto overscroll-contain rounded-xl border border-border bg-surface p-1.5 shadow-lg">
+                  {/* Coincidencias del catálogo (instantáneas) */}
+                  {resultadosCatalogo.map((h) => (
+                    <button
+                      key={h.id}
+                      type="button"
+                      onClick={() => seleccionarDelCatalogo(h.id)}
+                      className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-text transition-colors hover:bg-fwd-azul/10"
+                    >
+                      <IconPlus width={14} height={14} className="text-fwd-azul" />
+                      <span className="font-medium">{h.nombre}</span>
+                    </button>
+                  ))}
+
+                  {/* Sugerencias de IA (tecnologías fuera del catálogo) */}
+                  {sugerenciasNuevas.map((nombre) => (
+                    <button
+                      key={`ia-${nombre}`}
+                      type="button"
+                      disabled={agregandoHab}
+                      onClick={() => agregarTecnologiaNueva(nombre)}
+                      className="flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm text-text transition-colors hover:bg-fwd-azul/10 disabled:opacity-50"
+                    >
+                      <span className="flex items-center gap-2">
+                        <IconPlus width={14} height={14} className="text-fwd-morado" />
+                        <span className="font-medium">{nombre}</span>
+                      </span>
+                      <Badge variant="brand" className="shrink-0">Sugerida por IA</Badge>
+                    </button>
+                  ))}
+
+                  {/* Estado: buscando con IA */}
+                  {buscandoIA && (
+                    <div className="flex items-center gap-2 px-3 py-2 text-sm text-text-muted">
+                      <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                      </svg>
+                      Buscando tecnologías...
+                    </div>
+                  )}
+
+                  {/* Nada encontrado: ofrecer agregar el término tal cual (el server valida con IA) */}
+                  {!buscandoIA &&
+                    resultadosCatalogo.length === 0 &&
+                    sugerenciasNuevas.length === 0 &&
+                    busquedaHab.trim().length >= 2 && (
+                      <button
+                        type="button"
+                        disabled={agregandoHab}
+                        onClick={() => agregarTecnologiaNueva(busquedaHab)}
+                        className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-text transition-colors hover:bg-fwd-azul/10 disabled:opacity-50"
+                      >
+                        <IconPlus width={14} height={14} className="text-fwd-azul" />
+                        Agregar <span className="font-semibold">&ldquo;{busquedaHab.trim()}&rdquo;</span>
+                      </button>
+                    )}
+                </div>
+              )}
+            </div>
+            {agregandoHab && <p className="text-sm text-text-muted">Agregando tecnología...</p>}
+            {errorHab && <p className="text-sm text-red-600 dark:text-red-400">{errorHab}</p>}
+          </div>
+
           <div className="flex flex-col gap-3">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-text-muted">Catálogo</h2>
             {catalogo.length === 0 ? (

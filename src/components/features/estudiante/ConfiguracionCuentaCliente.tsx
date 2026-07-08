@@ -7,8 +7,9 @@ import { cerrarSesionCliente } from "@/lib/logout-client";
 import {
   AREAS_FWD, TECNOLOGIAS_FWD, TIPOS_PROYECTO, MODALIDADES, MODALIDAD_LABEL,
   completitudEmpleabilidad, NOTIF_ROWS, PRIV_ROWS,
-  type Empleabilidad, type NotifPrefs, type PrivPrefs,
+  type Empleabilidad, type NotifPrefs, type PrivPrefs, type Conexiones,
 } from "@/lib/empleabilidad";
+import ConexionesSection from "@/components/features/estudiante/ConexionesSection";
 
 // ── Helpers de SweetAlert (tematizados claro/oscuro, sin emojis: REGLA #6) ──
 function tema(): { background: string; color: string } {
@@ -49,6 +50,7 @@ interface Props {
   empleabilidad: Empleabilidad;
   notif: NotifPrefs;
   priv: PrivPrefs;
+  conexiones: Conexiones;
   evaluaciones: EvaluacionRecibida[];
 }
 
@@ -107,6 +109,7 @@ const GRUPOS: { grupo: string; items: { id: string; label: string }[] }[] = [
   { grupo: "Empleabilidad", items: [{ id: "empleabilidad", label: "Preferencias de empleabilidad" }] },
   { grupo: "Notificaciones", items: [{ id: "notificaciones", label: "Notificaciones" }] },
   { grupo: "Privacidad", items: [{ id: "privacidad", label: "Privacidad" }] },
+  { grupo: "Conexiones", items: [{ id: "conexiones", label: "Conexiones" }] },
   {
     grupo: "General",
     items: [
@@ -117,7 +120,7 @@ const GRUPOS: { grupo: string; items: { id: string; label: string }[] }[] = [
 ];
 const IDS = GRUPOS.flatMap((g) => g.items.map((i) => i.id));
 
-export default function ConfiguracionCuentaCliente({ locale, nombre: nombreInicial, correo: correoInicial, telefono: telInicial, reputacion, empleabilidad: empInicial, notif: notifInicial, priv: privInicial, evaluaciones }: Props) {
+export default function ConfiguracionCuentaCliente({ locale, nombre: nombreInicial, correo: correoInicial, telefono: telInicial, reputacion, empleabilidad: empInicial, notif: notifInicial, priv: privInicial, conexiones, evaluaciones }: Props) {
   const router = useRouter();
   const [nombre, setNombre] = useState(nombreInicial);
   const [correo, setCorreo] = useState(correoInicial);
@@ -706,8 +709,17 @@ export default function ConfiguracionCuentaCliente({ locale, nombre: nombreInici
             </div>
           </section>
 
+          {/* Conexiones */}
+          <section id="conexiones" className={cardCls} style={{ scrollMarginTop: 24, order: 7 }}>
+            <h2 className={tituloCls}>Conexiones</h2>
+            <p className={`${valorCls} -mt-3 mb-4`}>
+              Conectá tu GitHub y otras cuentas. Aparecen en tu perfil para las empresas; de GitHub mostramos tus repositorios públicos.
+            </p>
+            <ConexionesSection conexionesIniciales={conexiones} />
+          </section>
+
           {/* Datos y descargas */}
-          <section id="datos" className={cardCls} style={{ scrollMarginTop: 24, order: 7 }}>
+          <section id="datos" className={cardCls} style={{ scrollMarginTop: 24, order: 8 }}>
             <h2 className={tituloCls}>Datos y descargas</h2>
             <div className="divide-y divide-[#E4E9F1] dark:divide-white/10">
               <div className="flex items-center justify-between gap-4 py-4">
@@ -728,7 +740,7 @@ export default function ConfiguracionCuentaCliente({ locale, nombre: nombreInici
           </section>
 
           {/* Ayuda y soporte */}
-          <section id="ayuda" className={cardCls} style={{ scrollMarginTop: 24, order: 8 }}>
+          <section id="ayuda" className={cardCls} style={{ scrollMarginTop: 24, order: 9 }}>
             <h2 className={tituloCls}>Ayuda y soporte</h2>
             <div className="divide-y divide-[#E4E9F1] dark:divide-white/10">
               <div className="flex items-center justify-between gap-4 py-4">

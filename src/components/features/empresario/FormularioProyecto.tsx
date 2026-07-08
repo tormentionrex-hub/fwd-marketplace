@@ -3,6 +3,8 @@
 import { useState, useTransition, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { IconPlus, IconX } from '@/components/ui/fwd-icons';
+import { MODALIDADES_PROYECTO, MODALIDAD_LABEL } from '@/lib/empleabilidad';
+import { simboloMoneda } from '@/lib/presupuesto';
 
 interface Tecnologia {
   id: string;
@@ -15,7 +17,12 @@ interface ProyectoInicial {
   descripcion: string;
   areaNegocio: string | null;
   plazoDias: number | null;
+  modalidad: string | null;
   usaIA: boolean;
+  presupuestoMin: number | null;
+  presupuestoMax: number | null;
+  moneda: string;
+  negociable: boolean;
   tecnologias: string[];
   imagenes: string[];
 }
@@ -35,7 +42,14 @@ export default function FormularioProyecto({ tecnologiasDisponibles, modo, proye
   const [descripcion, setDescripcion] = useState(proyecto?.descripcion ?? '');
   const [areaNegocio, setAreaNegocio] = useState(proyecto?.areaNegocio ?? '');
   const [plazoDias, setPlazoDias] = useState(proyecto?.plazoDias?.toString() ?? '');
+  const [modalidad, setModalidad] = useState(proyecto?.modalidad ?? '');
   const [usaIA, setUsaIA] = useState(proyecto?.usaIA ?? false);
+  const [moneda, setMoneda] = useState<'CRC' | 'USD'>(
+    proyecto?.moneda === 'USD' ? 'USD' : 'CRC',
+  );
+  const [presupuestoMin, setPresupuestoMin] = useState(proyecto?.presupuestoMin?.toString() ?? '');
+  const [presupuestoMax, setPresupuestoMax] = useState(proyecto?.presupuestoMax?.toString() ?? '');
+  const [negociable, setNegociable] = useState(proyecto?.negociable ?? true);
   const [tecnosSeleccionadas, setTecnosSeleccionadas] = useState<string[]>(
     proyecto?.tecnologias ?? [],
   );
@@ -103,6 +117,22 @@ export default function FormularioProyecto({ tecnologiasDisponibles, modo, proye
 
   const guardar = async (publicar: boolean) => {
     setMensajeError(null);
+
+    const min = presupuestoMin ? Number(presupuestoMin) : null;
+    const max = presupuestoMax ? Number(presupuestoMax) : null;
+
+    // El presupuesto es OBLIGATORIO para publicar (se muestra en el marketplace).
+    if (publicar) {
+      if (min == null || max == null || min <= 0 || max <= 0) {
+        setMensajeError('Para publicar debés indicar el presupuesto: mínimo y máximo.');
+        return;
+      }
+    }
+    if (min != null && max != null && min > max) {
+      setMensajeError('El presupuesto mínimo no puede ser mayor al máximo.');
+      return;
+    }
+
     setPublicando(publicar);
 
     const body = {
@@ -110,7 +140,12 @@ export default function FormularioProyecto({ tecnologiasDisponibles, modo, proye
       descripcion: descripcion.trim(),
       areaNegocio: areaNegocio.trim() || null,
       plazoDias: plazoDias ? parseInt(plazoDias, 10) : null,
+      modalidad: modalidad || null,
       usaIA,
+      presupuestoMin: min,
+      presupuestoMax: max,
+      moneda,
+      negociable,
       tecnologias: tecnosSeleccionadas,
       imagenes,
     };
@@ -266,9 +301,112 @@ export default function FormularioProyecto({ tecnologiasDisponibles, modo, proye
         </div>
       </div>
 
+      {/* Modalidad del proyecto */}
+      <div>
+        <label style={labelStyle}>Modalidad</label>
+        <select
+          value={modalidad}
+          onChange={(e) => setModalidad(e.target.value)}
+          style={inputStyle}
+          onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--azul)'; }}
+          onBlur={(e) => { e.currentTarget.style.borderColor = 'var(--line)'; }}
+        >
+          <option value="">Sin especificar</option>
+          {MODALIDADES_PROYECTO.map((m) => (
+            <option key={m} value={m}>{MODALIDAD_LABEL[m]}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Presupuesto */}
+      <div>
+        <label style={labelStyle}>
+          Presupuesto
+          <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, marginLeft: 8, color: 'var(--azul)' }}>
+            (obligatorio para publicar)
+          </span>
+        </label>
+        <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr 1fr', gap: 12 }}>
+          <select
+            value={moneda}
+            onChange={(e) => setMoneda(e.target.value as 'CRC' | 'USD')}
+            style={inputStyle}
+            onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--azul)'; }}
+            onBlur={(e) => { e.currentTarget.style.borderColor = 'var(--line)'; }}
+          >
+            <option value="CRC">Colones (CRC)</option>
+            <option value="USD">Dólares (USD)</option>
+          </select>
+          <input
+            type="number"
+            value={presupuestoMin}
+            onChange={(e) => setPresupuestoMin(e.target.value)}
+            placeholder="Mínimo"
+            min={0}
+            style={inputStyle}
+            onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--azul)'; }}
+            onBlur={(e) => { e.currentTarget.style.borderColor = 'var(--line)'; }}
+          />
+          <input
+            type="number"
+            value={presupuestoMax}
+            onChange={(e) => setPresupuestoMax(e.target.value)}
+            placeholder="Máximo"
+            min={0}
+            style={inputStyle}
+            onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--azul)'; }}
+            onBlur={(e) => { e.currentTarget.style.borderColor = 'var(--line)'; }}
+          />
+        </div>
+        <div style={{ fontSize: 12, color: 'var(--ink-400)', marginTop: 6 }}>
+          Se mostrará en el marketplace como {simboloMoneda(moneda)}mínimo – {simboloMoneda(moneda)}máximo.
+        </div>
+      </div>
+
+      {/* Negociable */}
+      <div>
+        <label style={labelStyle}>¿El presupuesto es negociable?</label>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button
+            type="button"
+            onClick={() => setNegociable(true)}
+            style={{
+              padding: '10px 18px',
+              borderRadius: 10,
+              border: `1.5px solid ${negociable ? '#16a34a' : 'var(--line)'}`,
+              background: negociable ? 'rgba(22,163,74,0.1)' : 'var(--bg)',
+              color: negociable ? '#16a34a' : 'var(--ink-600)',
+              fontWeight: 700,
+              fontSize: 13.5,
+              cursor: 'pointer',
+              transition: 'all 0.15s',
+            }}
+          >
+            Negociable
+          </button>
+          <button
+            type="button"
+            onClick={() => setNegociable(false)}
+            style={{
+              padding: '10px 18px',
+              borderRadius: 10,
+              border: `1.5px solid ${!negociable ? '#dc2626' : 'var(--line)'}`,
+              background: !negociable ? 'rgba(220,38,38,0.1)' : 'var(--bg)',
+              color: !negociable ? '#dc2626' : 'var(--ink-600)',
+              fontWeight: 700,
+              fontSize: 13.5,
+              cursor: 'pointer',
+              transition: 'all 0.15s',
+            }}
+          >
+            No negociable
+          </button>
+        </div>
+      </div>
+
       {/* Toggle: Usa IA */}
       <div>
-        <label style={labelStyle}>Modalidad del proyecto</label>
+        <label style={labelStyle}>Uso de inteligencia artificial</label>
         <button
           type="button"
           onClick={() => setUsaIA((v) => !v)}

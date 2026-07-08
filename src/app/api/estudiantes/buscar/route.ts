@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getUser } from '@/server/auth/get-user';
+import { parsearPreferencias } from '@/server/services/preferencias-estudiante.service';
 
 export async function GET(request: Request) {
   const user = await getUser();
@@ -15,7 +16,8 @@ export async function GET(request: Request) {
     return NextResponse.json({ estudiantes: [] });
   }
 
-  // Buscar perfiles_estudiante por nombre de usuario.
+  // Buscar perfiles_estudiante por nombre de usuario. Traemos algunos de más
+  // porque luego filtramos por privacidad (perfilVisible).
   const estudiantes = await db.perfiles_estudiante.findMany({
     where: {
       id_usuario: { not: user.id }, // No buscarse a sí mismo
@@ -26,9 +28,10 @@ export async function GET(request: Request) {
         },
       },
     },
-    take: 10,
+    take: 30,
     select: {
       id_usuario: true,
+      preferencias: true,
       usuarios: {
         select: {
           nombre: true,
@@ -38,11 +41,16 @@ export async function GET(request: Request) {
     },
   });
 
-  const resultados = estudiantes.map((e) => ({
-    id: e.id_usuario,
-    nombre: e.usuarios?.nombre ?? 'Estudiante',
-    fotoUrl: e.usuarios?.image_url ?? null,
-  }));
+  // Respeta la privacidad del estudiante: oculta a quienes desactivaron
+  // "Perfil visible para empresas". Por defecto (perfilVisible true) sí aparecen.
+  const resultados = estudiantes
+    .filter((e) => parsearPreferencias(e.preferencias).priv.perfilVisible !== false)
+    .slice(0, 10)
+    .map((e) => ({
+      id: e.id_usuario,
+      nombre: e.usuarios?.nombre ?? 'Estudiante',
+      fotoUrl: e.usuarios?.image_url ?? null,
+    }));
 
   return NextResponse.json({ estudiantes: resultados });
 }

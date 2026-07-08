@@ -17,9 +17,23 @@ interface Props {
   locale: string;
   area?: string;
   areaColor?: string;
+  /** Pestaña activa a resaltar. Por defecto "marketplace" (vista de detalle). */
+  activo?: "inicio" | "marketplace" | "noticias";
+  /**
+   * Fondo del navbar. "auto" (default) usa la superficie del tema (blanco/oscuro).
+   * "oscuro" fuerza un navbar navy que combina con el hero del marketplace —
+   * pensado SOLO para la página de lista, donde el fondo claro desentona.
+   */
+  fondo?: "auto" | "oscuro";
 }
 
-export default function MarketplaceDetailNav({ locale, area, areaColor }: Props) {
+export default function MarketplaceDetailNav({
+  locale,
+  area,
+  areaColor,
+  activo = "marketplace",
+  fondo = "auto",
+}: Props) {
   const [logueado, setLogueado] = useState(false);
   const [perfil, setPerfil] = useState<{ nombre: string; image_url: string | null } | null>(null);
   const [redirectTo, setRedirectTo] = useState<string>("/");
@@ -65,12 +79,51 @@ export default function MarketplaceDetailNav({ locale, area, areaColor }: Props)
 
   const linkActivo = areaColor ?? "#008FD4";
 
+  // Paleta según el fondo. En "oscuro" el navbar es navy (combina con el hero del
+  // marketplace) con texto claro y pestaña activa turquesa; en "auto" usa el tema.
+  const esOscuro = fondo === "oscuro";
+  const colText = esOscuro ? "#FFFFFF" : "var(--text)";
+  const colMuted = esOscuro ? "rgba(255,255,255,0.72)" : "var(--text-muted)";
+  const colActivo = esOscuro ? "#20BEC6" : linkActivo;
+  const bgActivo = `${colActivo}${esOscuro ? "26" : "14"}`;
+  const bgNav = esOscuro ? "linear-gradient(90deg, #0e1628 0%, #0a2a4e 100%)" : "var(--surface)";
+  const bordeNav = esOscuro ? "1px solid rgba(255,255,255,0.10)" : "1px solid var(--border)";
+
+  // Enlace de navegación (desktop): resaltado si es la pestaña activa.
+  function NavLink({ href, label, act, extra }: { href: string; label: string; act: boolean; extra?: React.ReactNode }) {
+    if (act) {
+      return (
+        <Link
+          href={href}
+          className="px-4 py-2 rounded-full text-sm font-bold transition-colors"
+          style={{ color: colActivo, background: bgActivo }}
+        >
+          {label}
+          {extra}
+        </Link>
+      );
+    }
+    return (
+      <Link
+        href={href}
+        className="px-4 py-2 rounded-full text-sm font-semibold transition-colors"
+        style={{ color: colMuted }}
+        onMouseEnter={(e) => (e.currentTarget.style.color = colText)}
+        onMouseLeave={(e) => (e.currentTarget.style.color = colMuted)}
+      >
+        {label}
+        {extra}
+      </Link>
+    );
+  }
+
   return (
     <div
       className="sticky top-0 z-40"
       style={{
-        background: "var(--surface)",
-        borderBottom: "1px solid var(--border)",
+        background: bgNav,
+        borderBottom: bordeNav,
+        color: colText,
       }}
     >
       <div className="mx-auto max-w-5xl px-6 sm:px-8 h-[60px] flex items-center justify-between gap-6">
@@ -97,44 +150,16 @@ export default function MarketplaceDetailNav({ locale, area, areaColor }: Props)
 
         {/* Nav links — desktop */}
         <nav className="hidden md:flex items-center gap-1 flex-1 justify-center">
-          <Link
-            href={`/${locale}`}
-            className="px-4 py-2 rounded-full text-sm font-semibold transition-colors"
-            style={{ color: "var(--text-muted)" }}
-            onMouseEnter={e => (e.currentTarget.style.color = "var(--text)")}
-            onMouseLeave={e => (e.currentTarget.style.color = "var(--text-muted)")}
-          >
-            Inicio
-          </Link>
-          <Link
+          <NavLink href={`/${locale}`} label="Inicio" act={activo === "inicio"} />
+          <NavLink
             href={`/${locale}/marketplace`}
-            className="px-4 py-2 rounded-full text-sm font-bold transition-colors"
-            style={{ color: linkActivo, background: `${linkActivo}14` }}
-          >
-            Marketplace
-            {area && (
-              <span className="ml-1.5 text-xs font-medium opacity-70">/ {area}</span>
-            )}
-          </Link>
-          <Link
-            href={`/${locale}/noticias`}
-            className="px-4 py-2 rounded-full text-sm font-semibold transition-colors"
-            style={{ color: "var(--text-muted)" }}
-            onMouseEnter={e => (e.currentTarget.style.color = "var(--text)")}
-            onMouseLeave={e => (e.currentTarget.style.color = "var(--text-muted)")}
-          >
-            Noticias
-          </Link>
+            label="Marketplace"
+            act={activo === "marketplace"}
+            extra={area ? <span className="ml-1.5 text-xs font-medium opacity-70">/ {area}</span> : undefined}
+          />
+          <NavLink href={`/${locale}/noticias`} label="Noticias" act={activo === "noticias"} />
           {!logueado && (
-            <Link
-              href={`/${locale}/login`}
-              className="px-4 py-2 rounded-full text-sm font-semibold transition-colors"
-              style={{ color: "var(--text-muted)" }}
-              onMouseEnter={e => (e.currentTarget.style.color = "var(--text)")}
-              onMouseLeave={e => (e.currentTarget.style.color = "var(--text-muted)")}
-            >
-              Iniciar sesión
-            </Link>
+            <NavLink href={`/${locale}/login`} label="Iniciar sesión" act={false} />
           )}
         </nav>
 
@@ -179,21 +204,21 @@ export default function MarketplaceDetailNav({ locale, area, areaColor }: Props)
             <span
               className="block w-5 h-0.5 rounded-full transition-all duration-200"
               style={{
-                background: linkActivo,
+                background: colActivo,
                 transform: menuOpen ? "rotate(45deg) translate(0, 6px)" : undefined,
               }}
             />
             <span
               className="block w-5 h-0.5 rounded-full transition-all duration-200"
               style={{
-                background: linkActivo,
+                background: colActivo,
                 opacity: menuOpen ? 0 : 1,
               }}
             />
             <span
               className="block w-5 h-0.5 rounded-full transition-all duration-200"
               style={{
-                background: linkActivo,
+                background: colActivo,
                 transform: menuOpen ? "rotate(-45deg) translate(0, -6px)" : undefined,
               }}
             />
@@ -205,28 +230,28 @@ export default function MarketplaceDetailNav({ locale, area, areaColor }: Props)
       {menuOpen && (
         <div
           className="md:hidden px-6 pb-4 flex flex-col gap-1"
-          style={{ borderTop: "1px solid var(--border)" }}
+          style={{ borderTop: bordeNav, background: esOscuro ? "#0e1628" : undefined }}
         >
           <Link
             href={`/${locale}`}
-            className="px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors"
-            style={{ color: "var(--text-muted)" }}
+            className={`px-3 py-2.5 rounded-lg text-sm transition-colors ${activo === "inicio" ? "font-bold" : "font-semibold"}`}
+            style={activo === "inicio" ? { color: colActivo, background: bgActivo } : { color: colMuted }}
             onClick={() => setMenuOpen(false)}
           >
             Inicio
           </Link>
           <Link
             href={`/${locale}/marketplace`}
-            className="px-3 py-2.5 rounded-lg text-sm font-bold"
-            style={{ color: linkActivo, background: `${linkActivo}14` }}
+            className={`px-3 py-2.5 rounded-lg text-sm transition-colors ${activo === "marketplace" ? "font-bold" : "font-semibold"}`}
+            style={activo === "marketplace" ? { color: colActivo, background: bgActivo } : { color: colMuted }}
             onClick={() => setMenuOpen(false)}
           >
             Marketplace
           </Link>
           <Link
             href={`/${locale}/noticias`}
-            className="px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors"
-            style={{ color: "var(--text-muted)" }}
+            className={`px-3 py-2.5 rounded-lg text-sm transition-colors ${activo === "noticias" ? "font-bold" : "font-semibold"}`}
+            style={activo === "noticias" ? { color: colActivo, background: bgActivo } : { color: colMuted }}
             onClick={() => setMenuOpen(false)}
           >
             Noticias
@@ -235,7 +260,7 @@ export default function MarketplaceDetailNav({ locale, area, areaColor }: Props)
             <Link
               href={redirectTo}
               className="mt-1 flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-semibold"
-              style={{ color: "var(--text)" }}
+              style={{ color: colText }}
               onClick={() => setMenuOpen(false)}
             >
               <span
@@ -254,7 +279,7 @@ export default function MarketplaceDetailNav({ locale, area, areaColor }: Props)
               <Link
                 href={`/${locale}/login`}
                 className="px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors"
-                style={{ color: "var(--text-muted)" }}
+                style={{ color: colMuted }}
                 onClick={() => setMenuOpen(false)}
               >
                 Iniciar sesión

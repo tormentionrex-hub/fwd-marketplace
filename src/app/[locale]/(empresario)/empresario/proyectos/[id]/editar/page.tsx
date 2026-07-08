@@ -55,7 +55,12 @@ export default async function EditarProyectoPage({
               descripcion: proyecto.descripcion,
               areaNegocio: proyecto.area_negocio ?? null,
               plazoDias: proyecto.plazo_dias ?? null,
+              modalidad: proyecto.modalidad ?? null,
               usaIA: proyecto.usa_ia ?? false,
+              presupuestoMin: proyecto.presupuesto_min != null ? Number(proyecto.presupuesto_min) : null,
+              presupuestoMax: proyecto.presupuesto_max != null ? Number(proyecto.presupuesto_max) : null,
+              moneda: proyecto.presupuesto_moneda ?? 'CRC',
+              negociable: proyecto.negociable ?? true,
               tecnologias: proyecto.proyectos_tecnologias.map((pt) => pt.tecnologias.nombre),
               imagenes: proyecto.imagenes ?? [],
             }}

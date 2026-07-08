@@ -8,6 +8,7 @@ import AnimatedMarketplaceTitle from "@/components/AnimatedMarketplaceTitle";
 import SelectFWD from "@/components/SelectFWD";
 import TechFilterDropdown from "@/components/features/marketplace/TechFilterDropdown";
 import CategoriaFilterDropdown from "@/components/features/marketplace/CategoriaFilterDropdown";
+import MarketplaceTabs from "@/components/features/marketplace/MarketplaceTabs";
 import { FwdIsotipo } from "@/components/ui/fwd-logo";
 import ParticleBackground from "@/components/ParticleBackground";
 
@@ -296,6 +297,9 @@ export default function MarketplaceExplorer({ proyectos, locale }: Props) {
               </div>
             )}
           </div>
+
+          {/* ── Selector Proyectos / Vacantes ── */}
+          <MarketplaceTabs locale={locale} activo="proyectos" />
 
           {/* ── Filtros ── */}
           <div className="flex flex-wrap gap-3 justify-center">

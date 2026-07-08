@@ -174,7 +174,7 @@ export default function CvChatManager({ nombre, correo }: CvChatManagerProps) {
           </span>
           <div>
             <h2 className="text-sm font-bold text-text">Asistente de CV</h2>
-            <p className="text-xs text-text-muted">Powered by Gemini · Solo temas de curriculum y perfil</p>
+            <p className="text-xs text-text-muted">Powered by Fordy · Solo temas de curriculum y perfil</p>
           </div>
         </div>
         {mensajes.length > 0 && (

@@ -194,6 +194,30 @@ export default function Navbar({ dashboardHref: dashboardProp }: { dashboardHref
     if (r.isConfirmed) cerrarSesion();
   }
 
+  // Confirma antes de ir al dashboard (misma funcionalidad que el enlace directo,
+  // pero pidiendo confirmación). "No, volver a home" lleva al inicio.
+  async function confirmarIrDashboard() {
+    const dark = document.documentElement.classList.contains("dark");
+    const r = await Swal.fire({
+      background: dark ? "#111827" : "#ffffff",
+      color: dark ? "#f1f5f9" : "#0c1b33",
+      icon: "question",
+      title: "¿Ir al dashboard?",
+      text: "Esto te va a enviar a tu dashboard. ¿Estás seguro?",
+      showCancelButton: true,
+      confirmButtonText: "Sí, ir al dashboard",
+      cancelButtonText: "No, volver a home",
+      confirmButtonColor: "#20BEC7",
+      cancelButtonColor: "#6B7280",
+      reverseButtons: true,
+    });
+    if (r.isConfirmed) {
+      router.push(redirectTo);
+    } else if (r.dismiss === Swal.DismissReason.cancel) {
+      router.push("/");
+    }
+  }
+
   const iniciales =
     perfil?.nombre
       ?.split(" ")
@@ -278,17 +302,23 @@ export default function Navbar({ dashboardHref: dashboardProp }: { dashboardHref
                 <span className="text-sm font-semibold">{perfil?.nombre ?? "Mi perfil"}</span>
               </Link>
 
-              {/* Ir al dashboard */}
-              <Link
-                href={redirectTo}
-                className="inline-flex items-center gap-1.5 rounded-full bg-[#20BEC7] px-4 py-2 text-sm font-bold text-[#0e1628] shadow transition hover:scale-105 hover:brightness-105 active:scale-95"
+              {/* Ir al dashboard — Fordy sin contenedor (se funde con el navbar) */}
+              <button
+                type="button"
+                onClick={confirmarIrDashboard}
+                title="Ir al dashboard"
+                className="group/dash inline-flex flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-0.5 transition hover:scale-105 active:scale-95"
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" />
-                  <rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" />
-                </svg>
-                Ir al dashboard
-              </Link>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/imagenes/fordy/ir dashboard.png"
+                  alt="Ir al dashboard"
+                  className="h-14 w-14 object-contain drop-shadow-[0_2px_6px_rgba(0,0,0,0.35)] transition-transform duration-300 group-hover/dash:scale-110"
+                />
+                <span className="text-[10px] font-semibold leading-none text-white/85 transition-colors group-hover/dash:text-white">
+                  ¿Ir al dashboard?
+                </span>
+              </button>
 
               {/* Cerrar sesión (rojo) con confirmación SweetAlert */}
               <button
@@ -353,17 +383,15 @@ export default function Navbar({ dashboardHref: dashboardProp }: { dashboardHref
                 </span>
                 <span className="text-white font-semibold">{perfil?.nombre}</span>
               </div>
-              <Link
-                href={redirectTo}
+              <button
+                type="button"
+                onClick={() => { setMenuOpen(false); confirmarIrDashboard(); }}
                 className="inline-flex items-center gap-2 text-[#0e1628] text-base font-bold py-2 px-4 rounded-full bg-[#20BEC7] transition hover:brightness-105"
-                onClick={() => setMenuOpen(false)}
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" />
-                  <rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" />
-                </svg>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/imagenes/fordy/ir dashboard.png" alt="" className="h-7 w-7 object-contain" />
                 Ir al dashboard
-              </Link>
+              </button>
               <button
                 onClick={() => { setMenuOpen(false); confirmarCerrarSesion(); }}
                 className="text-left text-red-400 text-base font-bold py-1 hover:text-red-300 transition-colors"
