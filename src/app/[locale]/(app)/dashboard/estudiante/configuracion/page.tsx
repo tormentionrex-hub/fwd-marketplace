@@ -29,6 +29,7 @@ export default async function ConfiguracionPage({ params }: ConfiguracionPagePro
       empleabilidad={prefs.empleabilidad}
       notif={prefs.notif}
       priv={prefs.priv}
+      conexiones={prefs.conexiones}
       evaluaciones={evaluaciones}
     />
   );

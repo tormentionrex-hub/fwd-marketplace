@@ -269,7 +269,7 @@ export default function CvIaManager({}: CvIaManagerProps) {
           </div>
           <h3 className="mt-4 font-display text-base font-bold text-text">Analizando tu CV...</h3>
           <p className="mt-1 text-xs text-text-muted max-w-xs">
-            Gemini esta evaluando tu perfil en relacion al puesto. Puede tardar unos segundos.
+            Fordy esta evaluando tu perfil en relacion al puesto. Puede tardar unos segundos.
           </p>
         </Card>
       )}

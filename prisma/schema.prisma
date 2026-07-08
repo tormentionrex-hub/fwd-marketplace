@@ -215,6 +215,7 @@ model perfiles_empresario {
   usuarios              usuarios               @relation(fields: [id_usuario], references: [id], onDelete: Cascade, map: "fk_perfiles_empresario_usuario")
   proyectos             proyectos[]
   solicitudes_mensaje   solicitudes_mensaje[]
+  vacantes              vacantes[]
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -242,6 +243,7 @@ model perfiles_estudiante {
   evaluaciones                                           evaluaciones[]
   evaluaciones_empresa                                   evaluaciones_empresa[]
   ofertas                                                ofertas[]
+  postulaciones                                          postulaciones[]
   usuarios                                               usuarios                  @relation(fields: [id_usuario], references: [id], onDelete: Cascade, map: "fk_perfiles_estudiante_usuario")
   portafolio_proyectos                                   portafolio_proyectos[]
   solicitudes_mensaje                                    solicitudes_mensaje[]
@@ -291,12 +293,17 @@ model proyectos {
   descripcion           String
   area_negocio          String?                 @db.VarChar(150)
   usa_ia                Boolean                 @default(false)
+  modalidad             String?                 @db.VarChar(20)
   plazo_dias            Int?
   estado                String                  @default("borrador") @db.VarChar(50)
   publicado             DateTime?               @db.Timestamptz(6)
   cierre                DateTime?               @db.Timestamptz(6)
   estado_previo         String?                 @db.VarChar(50)
   motivo_estado         String?
+  presupuesto_min       Decimal?                @db.Decimal(12, 2)
+  presupuesto_max       Decimal?                @db.Decimal(12, 2)
+  presupuesto_moneda    String                  @default("CRC") @db.VarChar(10)
+  negociable            Boolean                 @default(true)
   embedding             Unsupported("vector(768)")?
   imagenes              String[]                    @default([])
   chats                 chats[]
@@ -338,6 +345,7 @@ model tecnologias {
   id                    BigInt                  @id @default(autoincrement())
   nombre                String                  @unique @db.VarChar(150)
   proyectos_tecnologias proyectos_tecnologias[]
+  vacantes_tecnologias  vacantes_tecnologias[]
 }
 
 /// Códigos OTP de recuperación de contraseña. El código se guarda hasheado (scrypt).
@@ -377,6 +385,9 @@ model usuarios {
   perfiles_empresario perfiles_empresario?
   perfiles_estudiante perfiles_estudiante?
   suspensiones        suspensiones[]
+  noticias             noticias[]
+  noticias_votos       noticias_votos[]
+  noticias_comentarios noticias_comentarios[]
   roles               roles                @relation(fields: [id_rol], references: [id], map: "fk_usuarios_roles")
 
   @@index([estado], map: "idx_usuarios_estado")
@@ -480,4 +491,128 @@ model marketing_tendencias {
   source      Json
   creado      DateTime @default(now()) @db.Timestamptz(6)
   actualizado DateTime @default(now()) @db.Timestamptz(6)
+}
+
+/// Foro de noticias/tecnología. Estudiantes y empresarios publican noticias con
+/// texto, enlace (con preview Open Graph), imagen o video. Migración SQL en
+/// prisma/sql/add_noticias.sql.
+model noticias {
+  id             String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id_autor       String                 @db.Uuid
+  titulo         String                 @db.VarChar(300)
+  texto          String?
+  enlace_url     String?
+  imagen_url     String?
+  video_url      String?
+  categoria      String?                @db.VarChar(80)
+  og_titulo      String?
+  og_descripcion String?
+  og_imagen      String?
+  og_sitio       String?                @db.VarChar(200)
+  estado         String                 @default("activa") @db.VarChar(20)
+  creado         DateTime               @default(now()) @db.Timestamptz(6)
+  actualizado    DateTime               @default(now()) @db.Timestamptz(6)
+  usuarios       usuarios               @relation(fields: [id_autor], references: [id], onDelete: Cascade, map: "fk_noticias_autor")
+  votos          noticias_votos[]
+  comentarios    noticias_comentarios[]
+
+  @@index([creado], map: "idx_noticias_creado")
+  @@index([id_autor], map: "idx_noticias_id_autor")
+  @@index([estado], map: "idx_noticias_estado")
+}
+
+/// Un voto (upvote) por usuario y noticia. El conteo de votos se deriva de aquí.
+model noticias_votos {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id_noticia String   @db.Uuid
+  id_usuario String   @db.Uuid
+  creado     DateTime @default(now()) @db.Timestamptz(6)
+  noticias   noticias @relation(fields: [id_noticia], references: [id], onDelete: Cascade, map: "fk_noticias_votos_noticia")
+  usuarios   usuarios @relation(fields: [id_usuario], references: [id], onDelete: Cascade, map: "fk_noticias_votos_usuario")
+
+  @@unique([id_noticia, id_usuario], map: "unique_noticia_voto")
+  @@index([id_noticia], map: "idx_noticias_votos_id_noticia")
+}
+
+/// Comentarios de una noticia. id_padre permite respuestas anidadas (un nivel).
+model noticias_comentarios {
+  id         String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id_noticia String                 @db.Uuid
+  id_autor   String                 @db.Uuid
+  id_padre   String?                @db.Uuid
+  texto      String
+  creado     DateTime               @default(now()) @db.Timestamptz(6)
+  noticias   noticias               @relation(fields: [id_noticia], references: [id], onDelete: Cascade, map: "fk_noticias_comentarios_noticia")
+  usuarios   usuarios               @relation(fields: [id_autor], references: [id], onDelete: Cascade, map: "fk_noticias_comentarios_autor")
+  padre      noticias_comentarios?  @relation("comentario_respuestas", fields: [id_padre], references: [id], onDelete: Cascade, map: "fk_noticias_comentarios_padre")
+  respuestas noticias_comentarios[] @relation("comentario_respuestas")
+
+  @@index([id_noticia], map: "idx_noticias_comentarios_id_noticia")
+}
+
+/// Vacantes de empleo publicadas por empresas. Solo estado 'abierta' se muestra en
+/// el marketplace. Migración SQL en prisma/sql/add_vacantes.sql.
+model vacantes {
+  id                   String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id_empresario        String                 @db.Uuid
+  titulo               String                 @db.VarChar(200)
+  descripcion          String
+  area                 String?                @db.VarChar(150)
+  modalidad            String?                @db.VarChar(20)
+  tipo_empleo          String?                @db.VarChar(30)
+  nivel_experiencia    String?                @db.VarChar(30)
+  ubicacion            String?                @db.VarChar(200)
+  salario_min          Decimal?               @db.Decimal(12, 2)
+  salario_max          Decimal?               @db.Decimal(12, 2)
+  salario_moneda       String                 @default("CRC") @db.VarChar(10)
+  salario_periodo      String?                @db.VarChar(20)
+  salario_visible      Boolean                @default(true)
+  responsabilidades    String?
+  requisitos           String?
+  beneficios           String?
+  plazas               Int                    @default(1)
+  fecha_cierre         DateTime?              @db.Timestamptz(6)
+  estado               String                 @default("borrador") @db.VarChar(50)
+  publicado            DateTime?              @db.Timestamptz(6)
+  imagenes             String[]               @default([])
+  documentos           Json                   @default("[]")
+  creado               DateTime               @default(now()) @db.Timestamptz(6)
+  actualizado          DateTime               @default(now()) @db.Timestamptz(6)
+  perfiles_empresario  perfiles_empresario    @relation(fields: [id_empresario], references: [id_usuario], onDelete: Cascade, map: "fk_vacantes_empresario")
+  vacantes_tecnologias vacantes_tecnologias[]
+  postulaciones        postulaciones[]
+
+  @@index([estado], map: "idx_vacantes_estado")
+  @@index([id_empresario], map: "idx_vacantes_id_empresario")
+  @@index([publicado], map: "idx_vacantes_publicado")
+}
+
+/// Pivote de tecnologías/habilidades requeridas por una vacante.
+model vacantes_tecnologias {
+  id_vacante    String      @db.Uuid
+  id_tecnologia BigInt
+  vacantes      vacantes    @relation(fields: [id_vacante], references: [id], onDelete: Cascade, map: "fk_vacantes_tecnologias_vacante")
+  tecnologias   tecnologias @relation(fields: [id_tecnologia], references: [id], onDelete: Cascade, map: "fk_vacantes_tecnologias_tecnologia")
+
+  @@id([id_vacante, id_tecnologia])
+}
+
+/// Postulación de un estudiante a una vacante. Estados: pendiente, en_revision,
+/// aceptado, rechazado, retirada. Única por (vacante, estudiante).
+model postulaciones {
+  id                  String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id_vacante          String              @db.Uuid
+  id_estudiante       String              @db.Uuid
+  mensaje             String
+  cv_url              String?
+  estado              String              @default("pendiente") @db.VarChar(50)
+  creado              DateTime            @default(now()) @db.Timestamptz(6)
+  actualizado         DateTime            @default(now()) @db.Timestamptz(6)
+  vacantes            vacantes            @relation(fields: [id_vacante], references: [id], onDelete: Cascade, map: "fk_postulaciones_vacante")
+  perfiles_estudiante perfiles_estudiante @relation(fields: [id_estudiante], references: [id_usuario], onDelete: Cascade, map: "fk_postulaciones_estudiante")
+
+  @@unique([id_vacante, id_estudiante], map: "unique_postulacion_vacante_estudiante")
+  @@index([id_vacante], map: "idx_postulaciones_id_vacante")
+  @@index([id_estudiante], map: "idx_postulaciones_id_estudiante")
+  @@index([estado], map: "idx_postulaciones_estado")
 }

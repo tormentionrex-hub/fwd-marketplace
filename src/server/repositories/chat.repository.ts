@@ -97,6 +97,10 @@ export function buscarChatPorId(id: string) {
       id_estudiante: true,
       id_empresario: true,
       id_estudiante_destino: true,
+      id_proyecto: true,
+      proyectos: {
+        select: { id: true, titulo: true, area_negocio: true, imagenes: true, id_empresario: true, estado: true },
+      },
       perfiles_estudiante: { select: { usuarios: { select: { nombre: true, image_url: true } } } },
       perfiles_empresario: { select: { usuarios: { select: { nombre: true, image_url: true } } } },
       perfiles_estudiante_chats_id_estudiante_destinoToperfiles_estudiante: { select: { usuarios: { select: { nombre: true, image_url: true } } } },

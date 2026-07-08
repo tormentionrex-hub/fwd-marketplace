@@ -374,7 +374,7 @@ export default function ConfiguracionEmpresario({ nombre, empresa, correo, verif
                       <img
                         src={fotoUrl}
                         alt={nombre}
-                        style={{ width: 60, height: 60, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+                        style={{ width: 60, height: 60, borderRadius: 14, objectFit: 'cover', flexShrink: 0 }}
                       />
                     ) : (
                       <div

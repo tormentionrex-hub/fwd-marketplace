@@ -13,7 +13,7 @@ export const ESTADO_BADGE: Record<string, { cls: string; label: string }> = {
   cancelado: { cls: 'cancelado', label: 'Cancelado' },
 };
 
-export function textoPlazo(p: FilaProyectoEmpresario): string {
+function textoPlazo(p: FilaProyectoEmpresario): string {
   if (p.estado === 'cerrado') return 'Finalizado';
   if (!p.fechaLimite) return 'Sin plazo';
   const dias = Math.ceil((new Date(p.fechaLimite).getTime() - Date.now()) / 86400000);

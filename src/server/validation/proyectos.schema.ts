@@ -3,6 +3,16 @@ import { z } from "zod";
 // Validación de entrada para los endpoints de proyectos.
 // Vive bajo src/server/ para que el cliente nunca importe zod.
 
+// Moneda del presupuesto: colones o dólares.
+export const monedaProyecto = z.enum(["CRC", "USD"]);
+
+const presupuestoMonto = z.coerce
+  .number()
+  .nonnegative("El presupuesto no puede ser negativo")
+  .max(1_000_000_000, "El presupuesto es demasiado alto")
+  .optional()
+  .nullable();
+
 // POST /api/proyectos — Body para crear un proyecto nuevo (queda en borrador).
 export const crearProyectoSchema = z.object({
   titulo: z
@@ -24,9 +34,17 @@ export const crearProyectoSchema = z.object({
     .optional()
     .nullable(),
   usaIA: z.boolean().optional().default(false),
+  modalidad: z.enum(["remoto", "presencial", "hibrido"]).optional().nullable(),
+  presupuestoMin: presupuestoMonto,
+  presupuestoMax: presupuestoMonto,
+  moneda: monedaProyecto.optional().default("CRC"),
+  negociable: z.boolean().optional().default(true),
   tecnologias: z.array(z.string().trim().min(1).max(80)).max(20).optional().default([]),
   imagenes: z.array(z.string().url()).max(5).optional().default([]),
-});
+}).refine(
+  (d) => d.presupuestoMin == null || d.presupuestoMax == null || d.presupuestoMin <= d.presupuestoMax,
+  { message: "El presupuesto mínimo no puede ser mayor al máximo", path: ["presupuestoMax"] },
+);
 
 export type CrearProyectoInput = z.infer<typeof crearProyectoSchema>;
 
@@ -37,9 +55,17 @@ export const actualizarProyectoSchema = z.object({
   areaNegocio: z.string().trim().max(100).optional().nullable(),
   plazoDias: z.coerce.number().int().positive().max(365).optional().nullable(),
   usaIA: z.boolean().optional(),
+  modalidad: z.enum(["remoto", "presencial", "hibrido"]).optional().nullable(),
+  presupuestoMin: presupuestoMonto,
+  presupuestoMax: presupuestoMonto,
+  moneda: monedaProyecto.optional(),
+  negociable: z.boolean().optional(),
   tecnologias: z.array(z.string().trim().min(1).max(80)).max(20).optional(),
   imagenes: z.array(z.string().url()).max(5).optional(),
-});
+}).refine(
+  (d) => d.presupuestoMin == null || d.presupuestoMax == null || d.presupuestoMin <= d.presupuestoMax,
+  { message: "El presupuesto mínimo no puede ser mayor al máximo", path: ["presupuestoMax"] },
+);
 
 export type ActualizarProyectoInput = z.infer<typeof actualizarProyectoSchema>;
 

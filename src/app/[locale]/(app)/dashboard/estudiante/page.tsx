@@ -10,6 +10,8 @@ import { resumenDashboardEstudiante } from "@/server/services/dashboard.service"
 import { listarMisOfertas } from "@/server/services/oferta.service";
 import { cargarPerfilEditable } from "@/server/services/perfil-estudiante.service";
 import { obtenerMiCv } from "@/server/services/curriculum.service";
+import { cargarQuizzes } from "@/server/services/quizzes.service";
+import { contarFasesCompletadas, porcentajeGlobal } from "@/lib/quizzes/progreso";
 import DashboardEstudianteCliente from "@/components/features/dashboard/DashboardEstudianteCliente";
 
 export default async function DashboardEstudiantePage({
@@ -65,12 +67,17 @@ export default async function DashboardEstudiantePage({
     );
   }
 
-  const [resumen, misOfertas, perfil, cv] = await Promise.all([
+  const [resumen, misOfertas, perfil, cv, quizzes] = await Promise.all([
     resumenDashboardEstudiante(user.id),
     listarMisOfertas(user.id),
     cargarPerfilEditable(user.id),
     obtenerMiCv(user.id),
+    cargarQuizzes(user.id),
   ]);
+
+  const quizPuntos = quizzes.puntos;
+  const quizInsignias = contarFasesCompletadas(quizzes.progreso);
+  const quizPorcentaje = porcentajeGlobal(quizzes.progreso);
 
   const señales = [
     Boolean(perfil.correo),
@@ -82,31 +89,21 @@ export default async function DashboardEstudiantePage({
   const perfilCompletado = Math.round((señales.filter(Boolean).length / señales.length) * 100);
   const habilidadesVerificadas = perfil.habilidades.length;
 
-  // Remoción de emojis en las etiquetas según la regla del repositorio (REGLA #6)
-  let nivelEstudiante = "Talento Emergente";
-  if (resumen.proyectosCompletados >= 10 || resumen.reputacion >= 4.5) {
-    nivelEstudiante = "Talento Elite FWD";
-  } else if (resumen.proyectosCompletados >= 5 || resumen.reputacion >= 4.0) {
-    nivelEstudiante = "Profesional Avanzado";
-  } else if (resumen.proyectosCompletados >= 3 || resumen.reputacion >= 3.0) {
-    nivelEstudiante = "Profesional Intermedio";
-  } else if (resumen.proyectosCompletados >= 1 || resumen.reputacion >= 1.0) {
-    nivelEstudiante = "Profesional Junior";
-  }
-
   return (
     <DashboardEstudianteCliente
       locale={locale}
       nombre={nombre}
       ultimaSesion={ultimaSesion}
       perfilCompletado={perfilCompletado}
-      nivelEstudiante={nivelEstudiante}
       resumen={resumen}
       misOfertas={misOfertas}
       perfil={perfil}
       cv={cv}
       habilidadesVerificadas={habilidadesVerificadas}
       eventos={EVENTOS}
+      quizPuntos={quizPuntos}
+      quizInsignias={quizInsignias}
+      quizPorcentaje={quizPorcentaje}
     />
   );
 }

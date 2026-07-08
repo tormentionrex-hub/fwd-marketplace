@@ -10,6 +10,8 @@ interface Props {
   abierto: boolean;
   onCerrar: () => void;
   nombre: string;
+  /** Foto de perfil de la empresa (usuarios.image_url) o null → inicial. */
+  fotoUrl?: string | null | undefined;
   color: string;
   /** ID del proyecto (para crear/recuperar la conversación). */
   idProyecto: string;
@@ -75,7 +77,7 @@ const IcoAlerta = () => (
   </svg>
 );
 
-export default function ChatModal({ abierto, onCerrar, nombre, color, idProyecto, locale, pais }: Props) {
+export default function ChatModal({ abierto, onCerrar, nombre, fotoUrl, color, idProyecto, locale, pais }: Props) {
   const [texto, setTexto] = useState('');
   const [emojiOpen, setEmojiOpen] = useState(false);
   const [grupoEmoji, setGrupoEmoji] = useState(0);
@@ -88,6 +90,9 @@ export default function ChatModal({ abierto, onCerrar, nombre, color, idProyecto
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
+  // Proyecto cuyo chat ya resolvimos: evita re-resetear (y vaciar) la conversación
+  // al reabrir la MISMA burbuja. Solo re-consultamos si cambia el proyecto.
+  const proyectoResueltoRef = useRef<string | null>(null);
 
   const ofensivo = detectarLenguajeOfensivo(texto).ofensivo;
 
@@ -110,8 +115,13 @@ export default function ChatModal({ abierto, onCerrar, nombre, color, idProyecto
   }, [abierto, onCerrar]);
 
   // Al abrir: crear/recuperar la conversación con el empresario.
+  // Solo reseteamos y re-consultamos en la 1ª apertura (o si cambia el proyecto).
+  // Al reabrir la MISMA burbuja conservamos chatId y mensajes para que la
+  // conversación aparezca de una; el polling de abajo los mantiene al día.
   useEffect(() => {
     if (!abierto) return;
+    if (proyectoResueltoRef.current === idProyecto) return;
+
     let cancelado = false;
     setAcceso('cargando');
     setChatId(null);
@@ -132,6 +142,7 @@ export default function ChatModal({ abierto, onCerrar, nombre, color, idProyecto
         if (cancelado) return;
         setChatId(data.chatId);
         setAcceso('ok');
+        proyectoResueltoRef.current = idProyecto; // marca este proyecto como resuelto
       } catch {
         if (!cancelado) setAcceso('error');
       }
@@ -163,8 +174,18 @@ export default function ChatModal({ abierto, onCerrar, nombre, color, idProyecto
 
   if (!abierto) return null;
 
+  // El chat aparece de inmediato al abrir: mostramos el composer y las sugerencias
+  // sin esperar. La verificación de acceso corre en segundo plano y solo estos
+  // estados reemplazan la conversación (no logueado, rol inválido, dueño, error).
+  const bloqueado =
+    acceso === 'login' ||
+    acceso === 'solo_estudiantes' ||
+    acceso === 'es_dueno' ||
+    acceso === 'error';
+  const conversacionVisible = !bloqueado; // cubre 'cargando' y 'ok'
+
   const puedeEnviar =
-    acceso === 'ok' && texto.trim().length > 0 && !ofensivo && !enviando;
+    conversacionVisible && texto.trim().length > 0 && !ofensivo && !enviando;
 
   function insertarEmoji(cps: number[]) {
     const emoji = emojiDeCodepoints(cps);
@@ -172,14 +193,18 @@ export default function ChatModal({ abierto, onCerrar, nombre, color, idProyecto
     textareaRef.current?.focus();
   }
 
+  // Clic en una sugerencia = enviar esa sugerencia directamente (no rellena el
+  // textarea, así nunca se envía "de más" al escribir tu propio mensaje).
   function usarSugerencia(s: string) {
-    setTexto(s.slice(0, LIMITE));
-    textareaRef.current?.focus();
+    void enviarContenido(s);
   }
 
-  async function enviar() {
-    const contenido = texto.trim();
-    if (!contenido || ofensivo || enviando || acceso !== 'ok') return;
+  // Envía un contenido cualquiera (tu texto o una sugerencia). Devuelve si se envió.
+  async function enviarContenido(raw: string): Promise<boolean> {
+    const contenido = raw.trim();
+    if (!contenido || detectarLenguajeOfensivo(contenido).ofensivo || enviando || bloqueado) {
+      return false;
+    }
     setEnviando(true);
     try {
       // La conversación se crea recién al enviar el primer mensaje (sin chats fantasma).
@@ -190,12 +215,12 @@ export default function ChatModal({ abierto, onCerrar, nombre, color, idProyecto
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ idProyecto, crear: true }),
         });
-        if (!resInit.ok) return;
+        if (!resInit.ok) return false;
         const dataInit = await resInit.json();
         id = (dataInit.chatId as string | null) ?? null;
         if (id) setChatId(id);
       }
-      if (!id) return;
+      if (!id) return false;
 
       const res = await fetch(`/api/chats/${id}/mensajes`, {
         method: 'POST',
@@ -204,12 +229,23 @@ export default function ChatModal({ abierto, onCerrar, nombre, color, idProyecto
       });
       if (res.ok) {
         const data = await res.json();
-        if (data.mensaje) setMensajes((m) => [...m, data.mensaje as MensajeServidor]);
-        setTexto('');
-        setEmojiOpen(false);
+        if (data.mensaje) {
+          const nuevo = data.mensaje as MensajeServidor;
+          // Evita clave duplicada: un poll pudo traer ya este mensaje del servidor
+          // antes de que resolviera el POST. Solo lo agregamos si aún no está.
+          setMensajes((m) => (m.some((x) => x.id === nuevo.id) ? m : [...m, nuevo]));
+        }
+        return true;
       }
-    } catch { /* el próximo poll reconciliará */ }
+      return false;
+    } catch { return false; /* el próximo poll reconciliará */ }
     finally { setEnviando(false); }
+  }
+
+  // Enviar lo escrito en el textarea.
+  async function enviar() {
+    const ok = await enviarContenido(texto);
+    if (ok) { setTexto(''); setEmojiOpen(false); }
   }
 
   const inicial = nombre.charAt(0).toUpperCase();
@@ -268,13 +304,18 @@ export default function ChatModal({ abierto, onCerrar, nombre, color, idProyecto
         <div style={{ position: 'relative', flexShrink: 0 }}>
           <div
             style={{
-              width: 44, height: 44, borderRadius: '50%',
-              background: `linear-gradient(135deg, ${color}, ${color}bb)`,
+              width: 44, height: 44, borderRadius: '50%', overflow: 'hidden',
+              background: fotoUrl ? 'var(--surface-2, #e2e8f0)' : `linear-gradient(135deg, ${color}, ${color}bb)`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontWeight: 900, fontSize: 18, color: '#fff',
             }}
           >
-            {inicial}
+            {fotoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={fotoUrl} alt={nombre} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              inicial
+            )}
           </div>
           <span
             title={activo ? 'Activo ahora' : 'Desconectado'}
@@ -320,12 +361,6 @@ export default function ChatModal({ abierto, onCerrar, nombre, color, idProyecto
           padding: '16px 16px 8px',
         }}
       >
-        {acceso === 'cargando' && (
-          <p style={{ fontSize: 13.5, color: 'var(--text-muted)', textAlign: 'center', marginTop: 24 }}>
-            Conectando con {nombre}...
-          </p>
-        )}
-
         {acceso === 'login' && (
           <div style={{ textAlign: 'center', marginTop: 24 }}>
             <p style={{ fontSize: 14, color: 'var(--text)', fontWeight: 600, marginBottom: 6 }}>
@@ -365,7 +400,7 @@ export default function ChatModal({ abierto, onCerrar, nombre, color, idProyecto
           </p>
         )}
 
-        {acceso === 'ok' && mensajes.length === 0 && (
+        {conversacionVisible && mensajes.length === 0 && (
           <>
             <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.55, marginBottom: 16 }}>
               Hazle una pregunta a {nombre} o comparte los detalles de tu proyecto
@@ -395,7 +430,7 @@ export default function ChatModal({ abierto, onCerrar, nombre, color, idProyecto
           </>
         )}
 
-        {acceso === 'ok' && mensajes.length > 0 && (
+        {conversacionVisible && mensajes.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {mensajes.map((m) => (
               <div key={m.id} style={{ display: 'flex', justifyContent: m.mio ? 'flex-end' : 'flex-start' }}>
@@ -431,8 +466,8 @@ export default function ChatModal({ abierto, onCerrar, nombre, color, idProyecto
         )}
       </div>
 
-      {/* Composer — solo cuando el chat está habilitado */}
-      {acceso === 'ok' && (
+      {/* Composer — visible apenas se abre el chat (la verificación va en segundo plano) */}
+      {conversacionVisible && (
         <div style={{ borderTop: '1px solid var(--border)', padding: '10px 12px 12px', position: 'relative' }}>
 
           {/* Aviso de lenguaje ofensivo */}

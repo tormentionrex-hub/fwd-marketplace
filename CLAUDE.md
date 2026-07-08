@@ -209,6 +209,48 @@ El refresh normal recarga la página pero usa el HTML cacheado, que sigue tenien
 
 ---
 
+## REGLA #9 — SweetAlert SIEMPRE, nunca `alert()`/`confirm()`/`prompt()` nativos
+
+**PROHIBIDO** usar los diálogos nativos del navegador — `alert()`, `confirm()`, `prompt()`, `window.alert/confirm/prompt`. Se ven poco profesionales, no respetan la paleta ni el modo oscuro, y bloquean el hilo.
+
+**Qué usar en su lugar:** el helper compartido [`src/lib/sweetalert-admin.ts`](src/lib/sweetalert-admin.ts) (basado en `sweetalert2`, ya instalado). Es genérico y sirve para todo el producto, no solo el panel admin:
+
+- `confirmarEliminacion({ titulo, texto })` → confirmación destructiva (devuelve `boolean`).
+- `confirmarAccion({ titulo, texto, peligro? })` → confirmación genérica.
+- `pedirMotivo({ titulo, label })` → input obligatorio (devuelve `string | null`).
+- `toastExito(mensaje)` → toast de éxito autocerrable.
+- `alertaError(mensaje, titulo?)` → modal de error.
+
+Reglas:
+- Toda confirmación de borrado/acción destructiva pasa por `confirmarEliminacion`/`confirmarAccion` — nunca por `confirm()`.
+- Todo aviso de éxito/error al usuario usa `toastExito`/`alertaError` — nunca por `alert()`.
+- Solo se usan en componentes de cliente (`"use client"`), dentro de event handlers.
+- El helper ya está tematizado (claro/oscuro) y **sin emojis** (usa los íconos SVG de SweetAlert). Respetá la REGLA #6.
+- Si necesitás un tipo de diálogo que el helper no cubre, **agregá una función nueva a `sweetalert-admin.ts`** en vez de llamar a `Swal.fire` suelto por ahí o —peor— a un `confirm()` nativo.
+
+**Auto-revisión:** antes de terminar un cambio que toque la UI, buscá `alert(`, `confirm(`, `prompt(` en tu diff. Si aparece alguno (que no sea un comentario o `confirmButtonText`), reemplazalo por el helper.
+
+---
+
+## REGLA #10 — Foto de perfil OBLIGATORIA en toda la UI
+
+**Si un usuario subió una foto de perfil (`usuarios.image_url`), esa foto DEBE mostrarse en CUALQUIER lugar donde ese usuario aparezca, sin excepción.** No importa si es estudiante o empresa/empresario, ni en qué pantalla esté.
+
+Aplica a **todo** avatar/representación visual del usuario:
+- Encabezados y fichas de detalle (perfil, detalle de proyecto, etc.).
+- Tarjetas y listados (marketplace, proyectos, similares, home, ranking).
+- Chat y mensajes: la **burbuja** del marketplace, el **modal** de chat, la lista de conversaciones y el header de la conversación.
+- Sidebars, cards laterales, navbar, comentarios, notificaciones, postulantes, evaluaciones — donde sea.
+
+**Regla dura:**
+- La inicial sobre color de marca es **solo un fallback** para usuarios que NO tienen foto. Si hay `image_url`, **jamás** se muestra solo la inicial.
+- Para lograrlo, cualquier DTO/consulta que alimente un lugar donde se ve un usuario debe **exponer su `image_url`** (normalmente como `fotoUrl`). Si estás mostrando un usuario y no tenés su foto en el DTO, **agregala** al `select` de Prisma y al mapeo del servicio.
+- Render estándar: `fotoUrl ? <img src={fotoUrl} className="... object-cover" /> : <span>{inicial}</span>`.
+
+**Auto-revisión OBLIGATORIA:** antes de dar por terminado cualquier cambio que muestre un usuario (avatar, nombre, tarjeta, chat), verificá que si tiene foto, se vea la foto. Si encontrás un avatar que solo muestra la inicial teniendo la foto disponible, corregilo.
+
+---
+
 ## Flujo Git + Vercel (deploy automático)
 
 El proyecto usa deploy continuo. **Nunca hay que subir nada manualmente a Vercel.**
@@ -251,5 +293,7 @@ https://fwd-marketplace.vercel.app  ← sitio en vivo actualizado
 | Setup local, variables de entorno, troubleshooting Supabase | [README.md](README.md) |
 | Reglas de commitlint | [commitlint.config.js](commitlint.config.js) |
 | Poner un símbolo/ícono en la UI (NUNCA emojis) | REGLA #6 — usar [`lucide-react`](https://lucide.dev/icons) |
+| Confirmaciones/avisos al usuario (NUNCA `alert`/`confirm`) | REGLA #9 — usar [`src/lib/sweetalert-admin.ts`](src/lib/sweetalert-admin.ts) |
+| Mostrar un usuario (avatar/tarjeta/chat) | REGLA #10 — si tiene foto de perfil, mostrarla SIEMPRE (inicial solo como fallback) |
 | Flujo de deploy | Sección "Flujo Git + Vercel" arriba |
 | `ChunkLoadError` o `Jest worker` en dev | REGLA #8 — no es código, es caché: borrar `.next` + `Ctrl+Shift+R` |

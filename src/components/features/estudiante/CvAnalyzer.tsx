@@ -129,7 +129,7 @@ export default function CvAnalyzer({ initialAnalisis, fechaAnalisis }: Props) {
             </span>
           </div>
           <p className="text-xs text-text-muted">
-            Gemini analiza tu CV y te da recomendaciones concretas para mejorar tus chances de ser contratado
+            Fordy analiza tu CV y te da recomendaciones concretas para mejorar tus chances de ser contratado
           </p>
         </div>
 
@@ -153,7 +153,7 @@ export default function CvAnalyzer({ initialAnalisis, fechaAnalisis }: Props) {
           </div>
           <div className="flex flex-col gap-0.5">
             <span className="text-sm font-medium text-text">Analizando tu curriculum...</span>
-            <span className="text-xs text-text-muted">Gemini esta leyendo tu PDF. Puede tardar unos segundos.</span>
+            <span className="text-xs text-text-muted">Fordy esta leyendo tu PDF. Puede tardar unos segundos.</span>
           </div>
         </div>
       )}
@@ -169,7 +169,7 @@ export default function CvAnalyzer({ initialAnalisis, fechaAnalisis }: Props) {
           {/* Score + mensaje */}
           <div className="flex items-start gap-4">
             <ScoreCircle score={analisis.score} />
-            <div className="flex flex-col gap-2 pt-1">
+            <div className="flex flex-1 flex-col gap-2 pt-1">
               {analisis.requiereCambiosUrgentes && (
                 <span className="inline-flex w-fit items-center gap-1.5 rounded-md bg-red-100 px-2.5 py-1 text-xs font-semibold text-red-700 dark:bg-red-500/15 dark:text-red-400">
                   <IconBolt width={12} height={12} />
@@ -184,6 +184,12 @@ export default function CvAnalyzer({ initialAnalisis, fechaAnalisis }: Props) {
               )}
               <p className="text-sm leading-relaxed text-text-muted">{analisis.mensajeGeneral}</p>
             </div>
+            <img
+              src="/imagenes/fordy CV.png"
+              alt="Fordy revisando tu CV"
+              className="hidden h-auto w-24 shrink-0 self-center select-none sm:block lg:w-32"
+              draggable={false}
+            />
           </div>
 
           {/* Toggle expandir */}

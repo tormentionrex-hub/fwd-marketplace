@@ -7,9 +7,9 @@ import 'server-only';
 const OR_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
 // Tiempo maximo de espera por modelo antes de probar el siguiente (ms).
-// Suficientemente generoso para trafico normal, suficientemente corto para
-// que el fallback sea transparente al usuario.
-const TIMEOUT_MODELO_MS = 8000;
+// Los modelos gratuitos (:free) suelen tardar mas y a veces se saturan, por eso
+// damos un margen generoso antes de pasar al siguiente de la cadena.
+const TIMEOUT_MODELO_MS = 14000;
 
 export interface OpcionesLlamadaIA {
   temperature?: number;
@@ -17,12 +17,18 @@ export interface OpcionesLlamadaIA {
   response_format?: { type: 'json_object' | 'text' };
 }
 
-// Modelos en orden de prioridad. El primero es el mas rapido/barato;
-// si falla, se intenta el siguiente de forma transparente.
+// IMPORTANTE: la cuenta de OpenRouter NO tiene créditos. SOLO se usan modelos
+// GRATUITOS (`:free`). Nunca poner modelos de pago aquí (fallan con 402).
+// Orden por prioridad: el primero es el más rápido; si falla (error/timeout/
+// respuesta vacía/429) se pasa al siguiente de forma transparente.
+// Verificados en vivo (generan JSON): gpt-oss-20b ~4s, laguna ~7s. nemotron es
+// gratis pero muy lento (>30s), va último como red de seguridad.
 export const MODELOS_RAPIDOS = [
-  'anthropic/claude-3.5-haiku',
-  'openai/gpt-4o-mini',
-  'poolside/laguna-m.1:free',
+  'openai/gpt-oss-20b:free', // principal — rápido y estable (OpenAI)
+  'poolside/laguna-m.1:free', // respaldo confiable
+  'google/gemma-4-26b-a4b-it:free', // respaldo (Google)
+  'meta-llama/llama-3.3-70b-instruct:free', // respaldo (Meta)
+  'nvidia/nemotron-3-ultra-550b-a55b:free', // último recurso (lento)
 ] as const;
 
 // Modelos GRATUITOS de OpenRouter para el recomendador "Para ti".

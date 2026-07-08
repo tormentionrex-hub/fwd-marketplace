@@ -7,8 +7,6 @@ import {
   IconFile,
   IconStar,
   IconAward,
-  IconCpu,
-  IconCheck,
   IconTrendingUp,
   IconSparkles,
   IconSearch,
@@ -17,21 +15,17 @@ import {
 import {
   MessageSquare,
   Send,
-  ShieldCheck,
   Calendar,
-  AlertCircle,
   Clock,
   LayoutDashboard,
   Briefcase,
-  Award,
+  Trophy,
   Lock,
   Eye,
   Trash,
-  Trophy,
   Pencil,
 } from "lucide-react";
 import MatchEmpleabilidad from "./MatchEmpleabilidad";
-import { QUIZ_ETAPAS } from "@/lib/quizzes-data";
 import type { MiOfertaDTO } from "@/types/oferta";
 import type { EventoCard } from "@/types/marketplace";
 import { ESTADO_OFERTA_META } from "@/lib/oferta-estado";
@@ -88,13 +82,18 @@ interface DashboardEstudianteClienteProps {
   nombre: string;
   ultimaSesion: string | null;
   perfilCompletado: number;
-  nivelEstudiante: string;
   resumen: ResumenDashboard;
   misOfertas: MiOfertaDTO[];
   perfil: PerfilEditable;
   cv: CvDTO | null;
   habilidadesVerificadas: number;
   eventos: EventoCard[];
+  /** Puntos acumulados en los quizzes de Logros (desde la DB). */
+  quizPuntos: number;
+  /** Cantidad de insignias (fases completadas) en los quizzes. */
+  quizInsignias: number;
+  /** Porcentaje global de avance en los quizzes (0-100). */
+  quizPorcentaje: number;
 }
 
 interface ChatMessage {
@@ -126,31 +125,15 @@ export default function DashboardEstudianteCliente({
   cv,
   habilidadesVerificadas,
   eventos,
+  quizPuntos,
+  quizInsignias,
+  quizPorcentaje,
 }: DashboardEstudianteClienteProps) {
   // --- NAVEGACIÓN Y TABS ---
-  const [activeTab, setActiveTab] = useState<"dashboard" | "proyectos" | "mensajes" | "academia">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "proyectos" | "mensajes">("dashboard");
 
-  // --- ESTADOS DE GAMIFICACIÓN & PORTAFOLIO CON PERSISTENCIA ---
-  const [score, setScore] = useState<number>(0);
-  const [etapaActual, setEtapaActual] = useState<number>(1);
-  const [intentosHoy, setIntentosHoy] = useState<number>(0);
-  const [_ultimoIntentoFecha, setUltimoIntentoFecha] = useState<string | null>(null);
-  const [insignias, setInsignias] = useState<string[]>([]);
+  // --- ESTADO DEL PORTAFOLIO CON PERSISTENCIA ---
   const [proyectosPortafolio, setProyectosPortafolio] = useState<ProyectoPortafolioItem[]>([]);
-  const [etapaProgress, setEtapaProgress] = useState<Record<string, number>>({
-    "etapa-1": 0,
-    "etapa-2": 0,
-    "etapa-3": 0,
-  });
-
-  // Estado para el resolutor de quizzes
-  const [quizActivo, setQuizActivo] = useState<{
-    etapaId: string;
-    preguntaActualIndex: number;
-    opcionSeleccionada: number | null;
-    respondido: boolean;
-    esCorrecto: boolean;
-  } | null>(null);
 
   // Formulario para añadir proyecto
   const [nuevoProyecto, setNuevoProyecto] = useState({
@@ -165,48 +148,9 @@ export default function DashboardEstudianteCliente({
   const [exitoProyecto, setExitoProyecto] = useState(false);
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
 
-  // --- CARGAR DATOS DESDE LOCALSTORAGE AL MONTAR ---
+  // --- CARGAR PORTAFOLIO DESDE LOCALSTORAGE AL MONTAR ---
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const savedScore = localStorage.getItem("fwd_quiz_score");
-      if (savedScore) setScore(Number(savedScore));
-
-      const savedEtapa = localStorage.getItem("fwd_quiz_etapa");
-      if (savedEtapa) setEtapaActual(Number(savedEtapa));
-
-      const savedFecha = localStorage.getItem("fwd_quiz_fecha");
-      const hoy = new Date().toDateString();
-
-      const savedIntentos = localStorage.getItem("fwd_quiz_intentos");
-      if (savedIntentos) {
-        if (savedFecha === hoy) {
-          setIntentosHoy(Number(savedIntentos));
-          setUltimoIntentoFecha(savedFecha);
-        } else {
-          setIntentosHoy(0);
-          setUltimoIntentoFecha(hoy);
-          localStorage.setItem("fwd_quiz_intentos", "0");
-          localStorage.setItem("fwd_quiz_fecha", hoy);
-        }
-      } else {
-        setUltimoIntentoFecha(hoy);
-        localStorage.setItem("fwd_quiz_fecha", hoy);
-      }
-
-      const savedInsignias = localStorage.getItem("fwd_quiz_insignias");
-      if (savedInsignias) {
-        setInsignias(JSON.parse(savedInsignias));
-      } else {
-        const inicial = ["Iniciador FWD"];
-        setInsignias(inicial);
-        localStorage.setItem("fwd_quiz_insignias", JSON.stringify(inicial));
-      }
-
-      const savedProgress = localStorage.getItem("fwd_quiz_progress");
-      if (savedProgress) {
-        setEtapaProgress(JSON.parse(savedProgress));
-      }
-
       const savedProyectos = localStorage.getItem("fwd_portafolio_proyectos");
       if (savedProyectos) {
         setProyectosPortafolio(JSON.parse(savedProyectos));
@@ -333,153 +277,6 @@ export default function DashboardEstudianteCliente({
       esPublico: true,
     });
     setTimeout(() => setExitoProyecto(false), 3000);
-  };
-
-  // --- FUNCIONES DE QUIZZES ---
-  const startQuiz = (etapaId: string) => {
-    if (intentosHoy >= 3) {
-      alert("Has alcanzado tu límite diario de 3 quizzes. ¡Vuelve mañana para seguir aprendiendo!");
-      return;
-    }
-
-    const progresoActual = etapaProgress[etapaId] || 0;
-    const startIndex = progresoActual < 20 ? progresoActual : 0;
-
-    setQuizActivo({
-      etapaId,
-      preguntaActualIndex: startIndex,
-      opcionSeleccionada: null,
-      respondido: false,
-      esCorrecto: false,
-    });
-  };
-
-  const handleAnswerSelection = (opcionIndex: number) => {
-    if (!quizActivo || quizActivo.respondido) return;
-    setQuizActivo({
-      ...quizActivo,
-      opcionSeleccionada: opcionIndex,
-    });
-  };
-
-  const handleVerifyAnswer = () => {
-    if (!quizActivo || quizActivo.opcionSeleccionada === null || quizActivo.respondido) return;
-
-    const etapa = QUIZ_ETAPAS.find((e) => e.id === quizActivo.etapaId);
-    const pregunta = etapa?.preguntas[quizActivo.preguntaActualIndex];
-    if (!pregunta) return;
-
-    const esCorrecto = quizActivo.opcionSeleccionada === pregunta.respuestaCorrecta;
-    const nuevoScore = score + (esCorrecto ? 100 : 0);
-    const nuevosIntentos = intentosHoy + 1;
-    const hoy = new Date().toDateString();
-
-    setScore(nuevoScore);
-    localStorage.setItem("fwd_quiz_score", String(nuevoScore));
-
-    setIntentosHoy(nuevosIntentos);
-    localStorage.setItem("fwd_quiz_intentos", String(nuevosIntentos));
-    setUltimoIntentoFecha(hoy);
-    localStorage.setItem("fwd_quiz_fecha", hoy);
-
-    setQuizActivo({
-      ...quizActivo,
-      respondido: true,
-      esCorrecto,
-    });
-
-    if (esCorrecto) {
-      const currentProg = etapaProgress[quizActivo.etapaId] || 0;
-      const nuevoProg = Math.min(20, currentProg + 1);
-      const nuevosProgs = {
-        ...etapaProgress,
-        [quizActivo.etapaId]: nuevoProg,
-      };
-      setEtapaProgress(nuevosProgs);
-      localStorage.setItem("fwd_quiz_progress", JSON.stringify(nuevosProgs));
-    }
-  };
-
-  const handleNextQuiz = () => {
-    if (!quizActivo) return;
-
-    const etapa = QUIZ_ETAPAS.find((e) => e.id === quizActivo.etapaId);
-    if (!etapa) return;
-
-    const currentProg = etapaProgress[quizActivo.etapaId] || 0;
-
-    if (currentProg >= 20) {
-      const nuevasInsignias = [...insignias];
-      let nuevaEtapa = etapaActual;
-
-      const insigniaEtapaMap: Record<string, string> = {
-        "etapa-1": "Especialista UI",
-        "etapa-2": "Mago de JS",
-        "etapa-3": "Arquitecto Full-Stack",
-      };
-
-      const nuevaInsignia = insigniaEtapaMap[etapa.id];
-      if (nuevaInsignia && !nuevasInsignias.includes(nuevaInsignia)) {
-        nuevasInsignias.push(nuevaInsignia);
-        setInsignias(nuevasInsignias);
-        localStorage.setItem("fwd_quiz_insignias", JSON.stringify(nuevasInsignias));
-      }
-
-      if (etapa.orden === etapaActual) {
-        nuevaEtapa = etapaActual + 1;
-        setEtapaActual(nuevaEtapa);
-        localStorage.setItem("fwd_quiz_etapa", String(nuevaEtapa));
-      }
-
-      setQuizActivo(null);
-      alert(`¡Felicitaciones! Has completado la etapa "${etapa.titulo}" y ganado la insignia "${nuevaInsignia || ""}".`);
-    } else {
-      const nextIndex = (quizActivo.preguntaActualIndex + 1) % etapa.preguntas.length;
-      setQuizActivo({
-        etapaId: quizActivo.etapaId,
-        preguntaActualIndex: nextIndex,
-        opcionSeleccionada: null,
-        respondido: false,
-        esCorrecto: false,
-      });
-    }
-  };
-
-  const handleSkipOrForceComplete = (etapaId: string) => {
-    const confirmacion = window.confirm("¿Deseas simular la completación de esta etapa para pruebas?");
-    if (!confirmacion) return;
-
-    const nuevosProgs = {
-      ...etapaProgress,
-      [etapaId]: 20,
-    };
-    setEtapaProgress(nuevosProgs);
-    localStorage.setItem("fwd_quiz_progress", JSON.stringify(nuevosProgs));
-
-    const nuevasInsignias = [...insignias];
-    let nuevaEtapa = etapaActual;
-
-    const insigniaEtapaMap: Record<string, string> = {
-      "etapa-1": "Especialista UI",
-      "etapa-2": "Mago de JS",
-      "etapa-3": "Arquitecto Full-Stack",
-    };
-
-    const nuevaInsignia = insigniaEtapaMap[etapaId];
-    if (nuevaInsignia && !nuevasInsignias.includes(nuevaInsignia)) {
-      nuevasInsignias.push(nuevaInsignia);
-      setInsignias(nuevasInsignias);
-      localStorage.setItem("fwd_quiz_insignias", JSON.stringify(nuevasInsignias));
-    }
-
-    const etapa = QUIZ_ETAPAS.find((e) => e.id === etapaId);
-    if (etapa && etapa.orden === etapaActual) {
-      nuevaEtapa = etapaActual + 1;
-      setEtapaActual(nuevaEtapa);
-      localStorage.setItem("fwd_quiz_etapa", String(nuevaEtapa));
-    }
-
-    setQuizActivo(null);
   };
 
   // --- CHAT INTERACTIVO STATE ---
@@ -691,14 +488,24 @@ export default function DashboardEstudianteCliente({
                 style={{ width: `${perfilCompletado}%` }}
               />
             </div>
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-xs uppercase tracking-wider text-white/60 font-semibold">Habilidades (quizzes)</span>
+              <span className="text-sm font-bold text-[#20BEC6]">{quizPorcentaje}%</span>
+            </div>
+            <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden mb-4">
+              <div
+                className="h-full bg-gradient-to-r from-[#008FD4] to-[#20BEC6] rounded-full transition-all duration-1000"
+                style={{ width: `${quizPorcentaje}%` }}
+              />
+            </div>
             <div className="text-xs text-white/70 space-y-2">
               <div className="flex justify-between">
                 <span>Nivel actual:</span>
-                <span className="font-semibold text-white">{getNivelRank(score)}</span>
+                <span className="font-semibold text-white">{getNivelRank(quizPuntos)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Puntos acumulados:</span>
-                <span className="font-semibold text-[#FFCB05]">{score} pts</span>
+                <span className="font-semibold text-[#FFCB05]">{quizPuntos} pts</span>
               </div>
               <div className="flex justify-between">
                 <span>Habilidades verificadas:</span>
@@ -763,17 +570,13 @@ export default function DashboardEstudianteCliente({
                 <span>Mensajes</span>
               </button>
               
-              <button
-                onClick={() => setActiveTab("academia")}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs uppercase tracking-wider font-extrabold transition-all duration-200 ${
-                  activeTab === "academia"
-                    ? "bg-white text-[#662D91] shadow-lg scale-[1.02]"
-                    : "text-white/80 hover:bg-white/10 hover:text-white"
-                }`}
+              <Link
+                href={`/${locale}/dashboard/estudiante/logros`}
+                className="flex items-center gap-3 px-4 py-3 rounded-xl text-xs uppercase tracking-wider font-extrabold transition-all duration-200 text-white/80 hover:bg-white/10 hover:text-white"
               >
-                <Award className="w-4.5 h-4.5" />
-                <span>Academia FWD</span>
-              </button>
+                <Trophy className="w-4.5 h-4.5" />
+                <span>Logros FWD</span>
+              </Link>
             </nav>
           </div>
           
@@ -783,8 +586,8 @@ export default function DashboardEstudianteCliente({
               <span className="text-[10px] text-white/70 font-semibold uppercase">Insignias</span>
             </div>
             <div className="flex items-baseline justify-between mt-1">
-              <span className="text-xl font-black text-[#FFCB05]">{score} <span className="text-[10px] font-normal text-white">pts</span></span>
-              <span className="text-sm font-bold text-[#20BEC6]">{insignias.length}</span>
+              <span className="text-xl font-black text-[#FFCB05]">{quizPuntos} <span className="text-[10px] font-normal text-white">pts</span></span>
+              <span className="text-sm font-bold text-[#20BEC6]">{quizInsignias}</span>
             </div>
           </div>
         </div>
@@ -949,7 +752,7 @@ export default function DashboardEstudianteCliente({
               <MatchEmpleabilidad
                 locale={locale}
                 perfilCompletado={perfilCompletado}
-                nivel={getNivelRank(score)}
+                nivel={getNivelRank(quizPuntos)}
                 habilidades={perfil.habilidades.map((h) => perfil.catalogo.find((c) => c.id === h.id)?.nombre || "")}
                 tieneCV={Boolean(cv)}
                 tienePortafolio={proyectosPortafolio.length > 0}
@@ -1510,328 +1313,6 @@ export default function DashboardEstudianteCliente({
                   </div>
                 )}
               </div>
-
-            </div>
-          )}
-
-          {/* TAB 4: ACADEMIA (Gamificación / Quizzes) */}
-          {activeTab === "academia" && (
-            <div className="flex flex-col gap-8">
-              
-              {/* HEADER DE LA ACADEMIA: SCORE Y MEDALLAS */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                
-                {/* Score Card */}
-                <div className="rounded-[24px] border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.02] p-5 shadow-sm flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0">
-                    <Trophy className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Puntaje Total</span>
-                    <span className="text-2xl font-black text-slate-900 dark:text-white leading-tight">{score} pts</span>
-                  </div>
-                </div>
-
-                {/* Level Card */}
-                <div className="rounded-[24px] border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.02] p-5 shadow-sm flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-2xl bg-purple-500/10 text-purple-500 flex items-center justify-center shrink-0">
-                    <Award className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Nivel de Rango</span>
-                    <span className="text-base font-black text-slate-900 dark:text-white leading-tight">{getNivelRank(score)}</span>
-                  </div>
-                </div>
-
-                {/* Daily limit check */}
-                <div className="rounded-[24px] border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.02] p-5 shadow-sm flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-2xl bg-teal-500/10 text-teal-500 flex items-center justify-center shrink-0">
-                    <Clock className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Quizzes Completados Hoy</span>
-                    <span className="text-base font-black text-slate-900 dark:text-white leading-tight">
-                      {intentosHoy} de 3
-                    </span>
-                    {intentosHoy >= 3 && <span className="text-[9px] text-amber-500 font-semibold block">Límite alcanzado</span>}
-                  </div>
-                </div>
-              </div>
-
-              {/* CONTENEDOR INSIGNIAS */}
-              <div className="rounded-[24px] border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.02] p-5 shadow-sm">
-                <span className="text-[10px] font-black text-[#20BEC6] uppercase tracking-widest block mb-1">Logros & Progresión</span>
-                <h3 className="font-display text-base font-bold text-slate-900 dark:text-white mb-4">Tus Insignias Ganadas</h3>
-                
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  {/* Insignia 1: Iniciador */}
-                  <div className={`p-4 rounded-2xl border text-center transition-all duration-300 ${
-                    insignias.includes("Iniciador FWD")
-                      ? "border-purple-200 dark:border-purple-500/20 bg-purple-50/50 dark:bg-purple-500/5 text-purple-600 dark:text-purple-400 font-bold"
-                      : "border-slate-200 dark:border-white/5 opacity-40 bg-slate-50/30 text-slate-400"
-                  }`}>
-                    <Trophy className="w-8 h-8 mx-auto mb-2" />
-                    <p className="text-xs font-bold leading-tight">Iniciador FWD</p>
-                    <span className="text-[9px] font-normal block mt-1">Registrado en FWD</span>
-                  </div>
-
-                  {/* Insignia 2: Especialista UI */}
-                  <div className={`p-4 rounded-2xl border text-center transition-all duration-300 ${
-                    insignias.includes("Especialista UI")
-                      ? "border-blue-200 dark:border-blue-500/20 bg-blue-50/50 dark:bg-blue-500/5 text-blue-600 dark:text-blue-400 font-bold"
-                      : "border-slate-200 dark:border-white/5 opacity-40 bg-slate-50/30 text-slate-400"
-                  }`}>
-                    <Award className="w-8 h-8 mx-auto mb-2" />
-                    <p className="text-xs font-bold leading-tight">Especialista UI</p>
-                    <span className="text-[9px] font-normal block mt-1">Completar Etapa 1</span>
-                  </div>
-
-                  {/* Insignia 3: Mago JS */}
-                  <div className={`p-4 rounded-2xl border text-center transition-all duration-300 ${
-                    insignias.includes("Mago de JS")
-                      ? "border-teal-200 dark:border-teal-500/20 bg-teal-50/50 dark:bg-teal-500/5 text-teal-600 dark:text-teal-400 font-bold"
-                      : "border-slate-200 dark:border-white/5 opacity-40 bg-slate-50/30 text-slate-400"
-                  }`}>
-                    <IconCpu className="w-8 h-8 mx-auto mb-2" />
-                    <p className="text-xs font-bold leading-tight">Mago de JS</p>
-                    <span className="text-[9px] font-normal block mt-1">Completar Etapa 2</span>
-                  </div>
-
-                  {/* Insignia 4: Arquitecto Full Stack */}
-                  <div className={`p-4 rounded-2xl border text-center transition-all duration-300 ${
-                    insignias.includes("Arquitecto Full-Stack")
-                      ? "border-pink-200 dark:border-pink-500/20 bg-pink-50/50 dark:bg-pink-500/5 text-pink-600 dark:text-pink-400 font-bold"
-                      : "border-slate-200 dark:border-white/5 opacity-40 bg-slate-50/30 text-slate-400"
-                  }`}>
-                    <Trophy className="w-8 h-8 mx-auto mb-2" />
-                    <p className="text-xs font-bold leading-tight">Arquitecto FS</p>
-                    <span className="text-[9px] font-normal block mt-1">Completar Etapa 3</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* RENDERIZADOR DE QUIZ ACTIVO O MAPA DE ETAPAS */}
-              {quizActivo ? (
-                /* RESOLUTOR DE QUIZ INTERACTIVO */
-                <div className="rounded-[24px] border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.02] p-6 shadow-md">
-                  {(() => {
-                    const etapa = QUIZ_ETAPAS.find((e) => e.id === quizActivo.etapaId);
-                    const pregunta = etapa?.preguntas[quizActivo.preguntaActualIndex];
-                    if (!pregunta) return null;
-
-                    const letrasOpciones = ["A", "B", "C", "D"];
-
-                    return (
-                      <div className="space-y-6">
-                        <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-4">
-                          <div>
-                            <span className="text-[10px] font-bold text-[#008FD4] uppercase tracking-widest block">{etapa?.titulo}</span>
-                            <h4 className="font-display text-sm font-bold text-slate-900 dark:text-white mt-0.5">
-                              Pregunta {quizActivo.preguntaActualIndex + 1} de {etapa?.preguntas.length}
-                            </h4>
-                          </div>
-                          <button
-                            onClick={() => setQuizActivo(null)}
-                            className="h-8 px-3 rounded-lg border border-slate-200 hover:bg-slate-50 dark:border-white/10 dark:hover:bg-white/5 text-xs font-semibold text-slate-600 dark:text-slate-300 transition-colors"
-                          >
-                            Salir del Quiz
-                          </button>
-                        </div>
-
-                        <div className="space-y-4">
-                          <p className="text-sm font-bold text-slate-800 dark:text-slate-100 leading-relaxed">
-                            {pregunta.pregunta}
-                          </p>
-
-                          <div className="grid grid-cols-1 gap-3">
-                            {pregunta.opciones.map((opc, idx) => {
-                              const isSelected = quizActivo.opcionSeleccionada === idx;
-                              const isCorrect = idx === pregunta.respuestaCorrecta;
-                              
-                              let buttonStyles = "border-slate-200 dark:border-white/10 bg-slate-50 hover:bg-slate-100 dark:bg-white/[0.01] dark:hover:bg-white/[0.04]";
-                              if (isSelected) {
-                                buttonStyles = "border-[#008FD4] bg-[#008FD4]/5 text-[#008FD4]";
-                              }
-                              if (quizActivo.respondido) {
-                                if (isCorrect) {
-                                  buttonStyles = "border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400";
-                                } else if (isSelected) {
-                                  buttonStyles = "border-red-500 bg-red-500/10 text-red-600 dark:text-red-400";
-                                } else {
-                                  buttonStyles = "border-slate-200 dark:border-white/5 opacity-55";
-                                }
-                              }
-
-                              return (
-                                <button
-                                  key={idx}
-                                  type="button"
-                                  disabled={quizActivo.respondido}
-                                  onClick={() => handleAnswerSelection(idx)}
-                                  className={`w-full text-left p-4 rounded-xl border text-xs font-semibold flex items-center gap-3.5 transition-all ${buttonStyles}`}
-                                >
-                                  <span className={`h-6 w-6 rounded-lg font-black flex items-center justify-center shrink-0 text-[10px] ${
-                                    isSelected
-                                      ? "bg-[#008FD4] text-white"
-                                      : quizActivo.respondido && isCorrect
-                                      ? "bg-emerald-500 text-white"
-                                      : quizActivo.respondido && isSelected
-                                      ? "bg-red-500 text-white"
-                                      : "bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-slate-300"
-                                  }`}>
-                                    {letrasOpciones[idx]}
-                                  </span>
-                                  <span>{opc}</span>
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-
-                        {/* Banner Retroalimentación */}
-                        {quizActivo.respondido && (
-                          <div className={`p-4 rounded-xl border ${
-                            quizActivo.esCorrecto
-                              ? "border-emerald-200 bg-emerald-50/50 dark:border-emerald-500/10 dark:bg-emerald-500/[0.02]"
-                              : "border-red-200 bg-red-50/50 dark:border-red-500/10 dark:bg-red-500/[0.02]"
-                          }`}>
-                            <div className="flex items-start gap-2.5">
-                              {quizActivo.esCorrecto ? (
-                                <ShieldCheck className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
-                              ) : (
-                                <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
-                              )}
-                              <div>
-                                <h5 className={`text-xs font-bold ${quizActivo.esCorrecto ? "text-emerald-700 dark:text-emerald-400" : "text-red-700 dark:text-red-400"}`}>
-                                  {quizActivo.esCorrecto ? "¡Excelente! Respuesta correcta (+100 pts)" : "Incorrecto"}
-                                </h5>
-                                <p className="text-xs text-slate-500 dark:text-slate-400/90 mt-1 leading-relaxed">
-                                  {pregunta.explicacion}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        <div className="flex justify-end gap-3 pt-2">
-                          {!quizActivo.respondido ? (
-                            <button
-                              type="button"
-                              onClick={handleVerifyAnswer}
-                              disabled={quizActivo.opcionSeleccionada === null}
-                              className="h-11 px-6 rounded-xl bg-[#008FD4] text-xs font-bold text-white uppercase tracking-wider shadow-md hover:bg-[#008FD4]/90 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-                            >
-                              Verificar Respuesta
-                            </button>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={handleNextQuiz}
-                              className="h-11 px-6 rounded-xl bg-gradient-to-r from-[#008FD4] to-[#20BEC6] text-xs font-bold text-white uppercase tracking-wider shadow-md hover:scale-[1.01] transition-transform"
-                            >
-                              Siguiente
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })()}
-                </div>
-              ) : (
-                /* MAPA GENERAL DE ETAPAS DE APRENDIZAJE */
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="h-1.5 w-8 rounded-full bg-[#662D91]" />
-                    <h3 className="font-display text-base font-bold text-slate-900 dark:text-white">Progresión de Etapas</h3>
-                  </div>
-
-                  <div className="flex flex-col gap-4">
-                    {QUIZ_ETAPAS.map((etapa) => {
-                      const isLocked = etapa.orden > etapaActual;
-                      const progressVal = etapaProgress[etapa.id] || 0;
-                      const percent = Math.min(100, Math.round((progressVal / 20) * 100));
-                      const isCompleted = progressVal >= 20;
-
-                      return (
-                        <div
-                          key={etapa.id}
-                          className={`rounded-[24px] border p-6 transition-all duration-300 relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6 ${
-                            isLocked
-                              ? "border-slate-200 dark:border-white/5 bg-slate-100/20 dark:bg-white/[0.01] opacity-60"
-                              : "border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] shadow-sm hover:shadow-md"
-                          }`}
-                        >
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-3">
-                              <span className={`grid h-8 w-8 place-items-center rounded-xl text-xs font-black shrink-0 ${
-                                isLocked
-                                  ? "bg-slate-200 dark:bg-white/5 text-slate-400"
-                                  : isCompleted
-                                  ? "bg-emerald-500/10 text-emerald-500"
-                                  : "bg-[#008FD4]/10 text-[#008FD4]"
-                              }`}>
-                                {isLocked ? <Lock className="w-4 h-4" /> : isCompleted ? <IconCheck width={14} height={14} /> : etapa.orden}
-                              </span>
-                              <div>
-                                <h4 className="font-display text-sm font-bold text-slate-900 dark:text-white">{etapa.titulo}</h4>
-                                <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold block">
-                                  {isLocked ? "Bloqueado" : isCompleted ? "Etapa Completada" : "En curso"}
-                                </span>
-                              </div>
-                            </div>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-3 max-w-xl leading-relaxed">{etapa.descripcion}</p>
-                            
-                            {/* Progreso bar */}
-                            {!isLocked && (
-                              <div className="mt-4 max-w-sm">
-                                <div className="flex justify-between items-center text-[10px] text-slate-400 dark:text-slate-500 mb-1.5 font-bold">
-                                  <span>Progreso</span>
-                                  <span>{progressVal} / 20 Quizzes correctos ({percent}%)</span>
-                                </div>
-                                <div className="h-1.5 w-full bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden">
-                                  <div className="h-full bg-[#008FD4] rounded-full transition-all duration-500" style={{ width: `${percent}%` }} />
-                                </div>
-                              </div>
-                            )}
-                          </div>
-
-                          <div className="shrink-0 flex items-center gap-2">
-                            {/* Force Complete simulation button for testing */}
-                            {!isLocked && !isCompleted && (
-                              <button
-                                type="button"
-                                onClick={() => handleSkipOrForceComplete(etapa.id)}
-                                className="h-9 px-3 rounded-xl border border-slate-200 hover:bg-slate-50 dark:border-white/10 dark:hover:bg-white/5 text-[10px] font-bold text-slate-500 dark:text-slate-400 transition-colors uppercase tracking-wider"
-                              >
-                                Simular
-                              </button>
-                            )}
-
-                            {isLocked ? (
-                              <div className="h-11 px-6 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-400 text-xs font-bold flex items-center justify-center gap-2 select-none">
-                                <Lock className="w-3.5 h-3.5" />
-                                <span>Bloqueado</span>
-                              </div>
-                            ) : isCompleted ? (
-                              <div className="h-11 px-6 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold flex items-center justify-center gap-1.5 select-none">
-                                <IconCheck width={14} height={14} />
-                                <span>Completado</span>
-                              </div>
-                            ) : (
-                              <button
-                                onClick={() => startQuiz(etapa.id)}
-                                className="inline-flex h-11 items-center justify-center px-6 rounded-xl bg-gradient-to-r from-[#008FD4] to-[#20BEC6] text-xs font-bold text-white uppercase tracking-wider shadow-md hover:scale-[1.01] transition-transform"
-                              >
-                                Resolver Quiz
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
 
             </div>
           )}

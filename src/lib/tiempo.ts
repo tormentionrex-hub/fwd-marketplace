@@ -31,15 +31,3 @@ export function tiempoRelativo(fecha: Date | string | null | undefined): string 
   }
   return null;
 }
-
-// Fecha y hora absolutas en zona horaria de Costa Rica (para tooltips/detalle).
-export function fechaHoraCostaRica(fecha: Date | string | null | undefined): string | null {
-  if (!fecha) return null;
-  const d = typeof fecha === "string" ? new Date(fecha) : fecha;
-  if (Number.isNaN(d.getTime())) return null;
-  return d.toLocaleString("es-CR", {
-    timeZone: "America/Costa_Rica",
-    dateStyle: "long",
-    timeStyle: "short",
-  });
-}

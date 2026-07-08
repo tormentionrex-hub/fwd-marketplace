@@ -22,7 +22,7 @@ export function obtenerPerfilEmpresario(idUsuario: string) {
         },
       },
       proyectos: {
-        select: { id: true, titulo: true, area_negocio: true, estado: true },
+        select: { id: true, titulo: true, area_negocio: true, estado: true, imagenes: true },
         orderBy: { publicado: 'desc' },
       },
       evaluaciones_empresa: {
