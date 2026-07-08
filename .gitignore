@@ -45,6 +45,11 @@ next-env.d.ts
 # claude code
 .claude/
 
+# iOS build artifacts
+/build_output/
+/ios/
+build_ipa.sh
+
 # playwright testing artifacts
 .playwright-mcp/
 *.playwright-mcp.*

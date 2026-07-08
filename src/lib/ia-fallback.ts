@@ -59,74 +59,122 @@ export const MODELOS_RECOMENDADOR = [
  * @param timeoutMs Timeout por modelo antes de pasar al siguiente (default: 8s).
  *                  Los modelos gratuitos grandes (20B+) suelen necesitar más.
  */
+import { GoogleGenAI } from '@google/genai';
+
+export async function llamarGeminiDirecto(
+  messages: { role: string; content: string }[],
+  opciones: OpcionesLlamadaIA
+): Promise<string> {
+  const key = process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY_2;
+  if (!key) throw new Error('No hay API keys de Gemini configuradas');
+
+  const ai = new GoogleGenAI({ apiKey: key });
+  
+  const contents = messages.map((m) => ({
+    role: m.role === 'assistant' ? 'model' : 'user',
+    parts: [{ text: m.content }]
+  }));
+
+  const response = await ai.models.generateContent({
+    model: 'gemini-2.5-flash',
+    contents,
+    config: {
+      temperature: opciones.temperature ?? 0.3,
+      maxOutputTokens: opciones.max_tokens,
+      ...(opciones.response_format?.type === 'json_object' && {
+        responseMimeType: 'application/json'
+      })
+    }
+  });
+
+  const text = response.text;
+  if (!text) throw new Error('Gemini devolvió una respuesta vacía');
+  return text;
+}
+
 export async function llamarIA(
   messages: { role: string; content: string }[],
   opciones: OpcionesLlamadaIA,
   modelos: readonly string[] = MODELOS_RAPIDOS,
   timeoutMs: number = TIMEOUT_MODELO_MS,
+  apiKeyPersonalizada?: string,
 ): Promise<string> {
-  const key = process.env.OPENROUTER_API_KEY;
-  if (!key) throw new Error('OPENROUTER_API_KEY no configurada');
+  try {
+    const key = apiKeyPersonalizada || process.env.OPENROUTER_API_KEY;
+    if (!key) throw new Error('OPENROUTER_API_KEY no configurada');
 
-  const headers = {
-    Authorization: `Bearer ${key}`,
-    'Content-Type': 'application/json',
-    'HTTP-Referer': process.env.NEXT_PUBLIC_URL ?? 'https://fwd.cr',
-    'X-Title': 'FWD Marketplace',
-  };
+    const headers = {
+      Authorization: `Bearer ${key}`,
+      'Content-Type': 'application/json',
+      'HTTP-Referer': process.env.NEXT_PUBLIC_URL ?? 'https://fwd.cr',
+      'X-Title': 'FWD Marketplace',
+    };
 
-  let ultimoError: unknown;
+    let ultimoError: unknown;
 
-  for (const modelo of modelos) {
-    try {
-      const res = await fetch(OR_URL, {
-        method: 'POST',
-        headers,
-        signal: AbortSignal.timeout(timeoutMs),
-        body: JSON.stringify({
-          model: modelo,
-          messages,
-          temperature: opciones.temperature ?? 0.3,
-          max_tokens: opciones.max_tokens,
-          ...(opciones.response_format && { response_format: opciones.response_format }),
-        }),
-      });
+    for (const modelo of modelos) {
+      try {
+        const res = await fetch(OR_URL, {
+          method: 'POST',
+          headers,
+          signal: AbortSignal.timeout(timeoutMs),
+          body: JSON.stringify({
+            model: modelo,
+            messages,
+            temperature: opciones.temperature ?? 0.3,
+            max_tokens: opciones.max_tokens,
+            ...(opciones.response_format && { response_format: opciones.response_format }),
+          }),
+        });
 
-      if (!res.ok) {
-        const txt = await res.text().catch(() => '');
-        console.warn(`[ia] ${modelo} HTTP ${res.status} — probando siguiente modelo`);
-        ultimoError = new Error(`${modelo}: HTTP ${res.status} ${txt.slice(0, 100)}`);
-        continue; // probar siguiente modelo
+        if (!res.ok) {
+          const txt = await res.text().catch(() => '');
+          console.warn(`[ia] ${modelo} HTTP ${res.status} — probando siguiente modelo`);
+          ultimoError = new Error(`${modelo}: HTTP ${res.status} ${txt.slice(0, 100)}`);
+          continue; // probar siguiente modelo
+        }
+
+        const data = (await res.json()) as {
+          choices?: { message?: { content?: string } }[];
+        };
+        const texto = data.choices?.[0]?.message?.content ?? '';
+        if (!texto) {
+          console.warn(`[ia] ${modelo} devolvio respuesta vacia — probando siguiente modelo`);
+          ultimoError = new Error(`${modelo}: respuesta vacia`);
+          continue; // probar siguiente modelo
+        }
+
+        // Exito: retornar el texto sin exponer que se uso un fallback
+        return texto;
+      } catch (err) {
+        const esTimeout = err instanceof DOMException && err.name === 'TimeoutError';
+        const razon = esTimeout ? `timeout ${timeoutMs}ms` : (err instanceof Error ? err.message : String(err));
+        const esUltimo = modelo === modelos[modelos.length - 1];
+
+        if (esUltimo) {
+          // Se agotaron los modelos; ahora si hay que lanzar el error
+          throw ultimoError ?? err;
+        }
+
+        console.warn(`[ia] ${modelo} fallo (${razon}) — probando siguiente modelo`);
+        ultimoError = err;
       }
-
-      const data = (await res.json()) as {
-        choices?: { message?: { content?: string } }[];
-      };
-      const texto = data.choices?.[0]?.message?.content ?? '';
-      if (!texto) {
-        console.warn(`[ia] ${modelo} devolvio respuesta vacia — probando siguiente modelo`);
-        ultimoError = new Error(`${modelo}: respuesta vacia`);
-        continue; // probar siguiente modelo
-      }
-
-      // Exito: retornar el texto sin exponer que se uso un fallback
-      return texto;
-    } catch (err) {
-      const esTimeout = err instanceof DOMException && err.name === 'TimeoutError';
-      const razon = esTimeout ? `timeout ${timeoutMs}ms` : (err instanceof Error ? err.message : String(err));
-      const esUltimo = modelo === modelos[modelos.length - 1];
-
-      if (esUltimo) {
-        // Se agotaron los modelos; ahora si hay que lanzar el error
-        throw ultimoError ?? err;
-      }
-
-      console.warn(`[ia] ${modelo} fallo (${razon}) — probando siguiente modelo`);
-      ultimoError = err;
     }
-  }
 
-  throw ultimoError ?? new Error('Todos los modelos de IA fallaron');
+    throw ultimoError ?? new Error('Todos los modelos de IA fallaron');
+  } catch (err) {
+    const geminiKey = process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY_2;
+    if (geminiKey) {
+      console.warn(`[ia-fallback] OpenRouter falló o está saturado (${err instanceof Error ? err.message : String(err)}). Relevando a Gemini directo...`);
+      try {
+        return await llamarGeminiDirecto(messages, opciones);
+      } catch (geminiErr) {
+        console.error(`[ia-fallback] Falló también Gemini directo:`, geminiErr);
+        throw geminiErr;
+      }
+    }
+    throw err;
+  }
 }
 
 // Ejecuta un array de thunks en orden; devuelve el resultado del primero que
