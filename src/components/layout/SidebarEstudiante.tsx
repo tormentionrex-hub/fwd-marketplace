@@ -74,6 +74,23 @@ function IconTrophy(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+function IconCalculator(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <rect x="4" y="2" width="16" height="20" rx="2" />
+      <line x1="8" y1="6" x2="16" y2="6" />
+      <line x1="16" y1="14" x2="16" y2="18" />
+      <path d="M16 10h.01" />
+      <path d="M12 10h.01" />
+      <path d="M8 10h.01" />
+      <path d="M12 14h.01" />
+      <path d="M8 14h.01" />
+      <path d="M12 18h.01" />
+      <path d="M8 18h.01" />
+    </svg>
+  );
+}
+
 const STORAGE_KEY = "fwd_sidebar_collapsed";
 
 interface SidebarEstudianteProps {
@@ -166,6 +183,7 @@ export default function SidebarEstudiante({
     { href: `${base}/perfil`, label: "Mi perfil", Icon: IconUser },
     { href: `/${locale}/mis-ofertas`, label: "Mis ofertas", Icon: IconFile },
     { href: `/${locale}/mis-postulaciones`, label: "Mis postulaciones", Icon: IconBriefcase },
+    { href: `${base}/calculadora`, label: "Calculadora", Icon: IconCalculator },
     { href: `${base}/solicitudes`, label: "Solicitudes", Icon: IconUserPlus },
     { href: `/${locale}/mensajes`, label: "Mensajes", Icon: IconMail },
     { href: `${base}/notificaciones`, label: "Notificaciones", Icon: IconBell, badge: noLeidas },
