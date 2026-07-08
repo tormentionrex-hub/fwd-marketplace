@@ -6,8 +6,12 @@ import { mismoOrigen } from '@/server/http/request';
 import { error, errorInterno, parsearBody } from '@/server/http/responder';
 import { generarProyectoIaSchema } from '@/server/validation/proyectos.schema';
 
+// Los modelos gratuitos de OpenRouter pueden tardar; damos margen a la función
+// serverless para recorrer la cadena de fallback sin cortarse.
+export const maxDuration = 60;
+
 // POST /api/proyectos/generar-ia
-// Recibe un brief libre, lo estructura con IA (Gemini) y crea el proyecto como borrador.
+// Recibe un brief libre, lo estructura con IA (OpenRouter, modelos gratuitos) y crea el proyecto como borrador.
 // Devuelve { ok: true, id } para que el cliente redirija al formulario de edicion pre-llenado.
 // Solo empresarios autenticados.
 export async function POST(request: Request) {

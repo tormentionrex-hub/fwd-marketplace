@@ -2,7 +2,9 @@ import 'server-only';
 import { llamarIA } from '@/lib/ia-fallback';
 
 // Generacion de proyectos estructurados desde un brief libre.
-// Usa llamarIA: prueba claude-3.5-haiku → gpt-4o-mini de forma transparente.
+// Usa llamarIA con MODELOS_RAPIDOS (solo modelos GRATUITOS de OpenRouter, ya que
+// la cuenta no tiene creditos): prueba gpt-oss-20b -> laguna -> gemma -> ... en
+// cadena de forma transparente.
 
 export interface ProyectoGenerado {
   titulo: string;
