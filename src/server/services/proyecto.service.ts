@@ -23,6 +23,7 @@ import {
   listarProyectosSimilares,
 } from '@/server/repositories/proyecto.repository';
 import { generarEmbedding, textoParaEmbedding } from '@/lib/embeddings';
+import { notificarProyectoConMatch } from '@/server/services/notificacion.service';
 import type { ProyectoMarketplace } from '@/types/marketplace';
 import type { EstadoProyecto } from '@/types/sefora';
 
@@ -40,12 +41,17 @@ export async function listarProyectosParaMarketplace(): Promise<ProyectoMarketpl
     plazoDias: p.plazo_dias,
     publicado: p.publicado?.toISOString() ?? null,
     usaIA: p.usa_ia,
-    imagenes: [],
+    imagenes: p.imagenes ?? [],
     tecnologias: p.proyectos_tecnologias.map((pt) => pt.tecnologias.nombre),
+    presupuestoMin: p.presupuesto_min != null ? Number(p.presupuesto_min) : null,
+    presupuestoMax: p.presupuesto_max != null ? Number(p.presupuesto_max) : null,
+    moneda: p.presupuesto_moneda ?? 'CRC',
+    negociable: p.negociable ?? true,
     empresario: {
       nombre: p.perfiles_empresario?.usuarios?.nombre ?? 'Empresa',
       nombreEmpresa: p.perfiles_empresario?.nombre_empresa ?? null,
       sector: p.perfiles_empresario?.sector ?? null,
+      fotoUrl: p.perfiles_empresario?.usuarios?.image_url ?? null,
     },
   }));
 }
@@ -65,6 +71,11 @@ export async function crearProyectoService(
     areaNegocio: string | null;
     plazoDias: number | null;
     usaIA: boolean;
+    modalidad?: string | null;
+    presupuestoMin?: number | null;
+    presupuestoMax?: number | null;
+    moneda?: string | null;
+    negociable?: boolean;
     tecnologias: string[];
     imagenes: string[];
   },
@@ -82,6 +93,11 @@ export async function actualizarProyectoService(
     areaNegocio?: string | null | undefined;
     plazoDias?: number | null | undefined;
     usaIA?: boolean | undefined;
+    modalidad?: string | null | undefined;
+    presupuestoMin?: number | null | undefined;
+    presupuestoMax?: number | null | undefined;
+    moneda?: string | null | undefined;
+    negociable?: boolean | undefined;
     tecnologias?: string[] | undefined;
     imagenes?: string[] | undefined;
   },
@@ -104,22 +120,29 @@ export async function publicarProyectoService(
 
   await publicarProyecto(idProyecto);
 
-  // Genera y guarda el embedding DESPUÉS de responder al cliente (no bloquea).
+  // Tareas post-publicación, DESPUÉS de responder al cliente (no bloquean).
   after(async () => {
+    const datos = await obtenerDatosParaEmbedding(idProyecto).catch(() => null);
+    if (!datos) return;
+    const tecnologias = datos.proyectos_tecnologias.map((pt) => pt.tecnologias.nombre);
+
+    // 1) Embedding para la búsqueda semántica (tolerante).
     try {
-      const datos = await obtenerDatosParaEmbedding(idProyecto);
-      if (!datos) return;
       const texto = textoParaEmbedding({
         titulo: datos.titulo,
         descripcion: datos.descripcion,
         areaNegocio: datos.area_negocio ?? null,
-        tecnologias: datos.proyectos_tecnologias.map((pt) => pt.tecnologias.nombre),
+        tecnologias,
       });
       const embedding = await generarEmbedding(texto);
       if (embedding) await guardarEmbedding(idProyecto, embedding);
     } catch (err) {
       console.error('[publicar] Error generando embedding:', err);
     }
+
+    // 2) Sugerencias: avisa a estudiantes cuyas preferencias coinciden
+    //    (ya es tolerante internamente; no rompe si algo falla).
+    await notificarProyectoConMatch(datos.titulo, datos.area_negocio, tecnologias);
   });
 
   return 'ok';
@@ -374,9 +397,24 @@ export interface ProyectoDetalleDTO {
   plazoDias: number | null;
   /** Si el proyecto requiere uso de IA. */
   usaIA: boolean;
+  /** Modalidad de trabajo: 'remoto' | 'presencial' | 'hibrido', o null si no se definió. */
+  modalidad: string | null;
+  /** Presupuesto del proyecto (o null si no se definió). */
+  presupuestoMin: number | null;
+  presupuestoMax: number | null;
+  moneda: string;
+  negociable: boolean;
   /** Fecha en que el proyecto fue publicado (ISO), o null si es borrador. */
   publicado: string | null;
-  empresario: { nombre: string; sector: string };
+  empresario: {
+    /** id_usuario del empresario, para enlazar a su perfil público /empresa/[id]. */
+    id: string;
+    /** Nombre a mostrar: el de la empresa (con fallback al del dueño). */
+    nombre: string;
+    sector: string;
+    /** Foto de perfil del dueño (usuarios.image_url) o null. */
+    fotoUrl: string | null;
+  };
   estado: EstadoProyecto;
   vencido: boolean;
 }
@@ -427,10 +465,20 @@ export async function obtenerDetalleProyecto(id: string): Promise<ProyectoDetall
     fechaLimite: p.cierre ? p.cierre.toISOString() : null,
     plazoDias: p.plazo_dias ?? null,
     usaIA: p.usa_ia ?? false,
+    modalidad: p.modalidad ?? null,
+    presupuestoMin: p.presupuesto_min != null ? Number(p.presupuesto_min) : null,
+    presupuestoMax: p.presupuesto_max != null ? Number(p.presupuesto_max) : null,
+    moneda: p.presupuesto_moneda ?? 'CRC',
+    negociable: p.negociable ?? true,
     publicado: p.publicado ? p.publicado.toISOString() : null,
     empresario: {
-      nombre: p.perfiles_empresario?.usuarios?.nombre ?? 'Empresa',
+      id: p.perfiles_empresario?.id_usuario ?? '',
+      nombre:
+        p.perfiles_empresario?.nombre_empresa?.trim() ||
+        p.perfiles_empresario?.usuarios?.nombre ||
+        'Empresa',
       sector: p.perfiles_empresario?.sector ?? '—',
+      fotoUrl: p.perfiles_empresario?.usuarios?.image_url ?? null,
     },
     estado,
     vencido,
@@ -442,6 +490,8 @@ export interface ProyectoSimilarDTO {
   titulo: string;
   area: string;
   empresa: string;
+  /** id_usuario del empresario, para enlazar a /empresa/[id]. */
+  empresaId: string;
   tecnologias: string[];
   diasRestantes: number;
   vencido: boolean;
@@ -464,7 +514,11 @@ export async function obtenerDatosSidebar(
         id: p.id,
         titulo: p.titulo,
         area: p.area_negocio ?? 'General',
-        empresa: p.perfiles_empresario?.usuarios?.nombre ?? 'Empresa',
+        empresa:
+          p.perfiles_empresario?.nombre_empresa?.trim() ||
+          p.perfiles_empresario?.usuarios?.nombre ||
+          'Empresa',
+        empresaId: p.perfiles_empresario?.id_usuario ?? '',
         tecnologias: p.proyectos_tecnologias.map((t) => t.tecnologias.nombre),
         diasRestantes,
         vencido,

@@ -18,6 +18,8 @@ export interface ProyectoPerfilEmpresario {
   titulo: string;
   area: string;
   estado: string;
+  /** Primera imagen del proyecto (portada), o null si no tiene. */
+  imagen: string | null;
 }
 
 export interface ResenaEmpresario {
@@ -89,6 +91,7 @@ export async function obtenerPerfilEmpresarioDTO(
       titulo: p.titulo,
       area: p.area_negocio?.trim() || 'General',
       estado: p.estado,
+      imagen: p.imagenes?.[0] ?? null,
     })),
     resenas: perfil.evaluaciones_empresa.map((ev) => ({
       de: ev.perfiles_estudiante?.usuarios?.nombre ?? 'Estudiante',

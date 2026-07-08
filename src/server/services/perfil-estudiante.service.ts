@@ -1,6 +1,7 @@
 import 'server-only';
 import { Prisma } from '@prisma/client';
 import * as repo from '@/server/repositories/perfil-estudiante.repository';
+import { buscarTecnologias, validarTecnologia } from '@/lib/ia-tecnologias';
 
 export interface HabilidadCatalogo {
   id: string;
@@ -169,4 +170,66 @@ export async function guardarPerfilEditable(
     }
     throw e;
   }
+}
+
+// ── Buscador de tecnologías (autocompletado + IA) ───────────────────────────
+
+// Sugiere tecnologías reales relacionadas con `query`, combinando el catálogo
+// de la BD (match instantáneo) con sugerencias de la IA (restringidas al dominio
+// de programación/tecnología). Excluye las que el estudiante ya tenga o ya estén
+// en el catálogo con el mismo nombre. Devuelve solo NOMBRES (el alta ocurre aparte).
+export async function sugerirTecnologiasService(
+  query: string,
+): Promise<{ enCatalogo: HabilidadCatalogo[]; nuevas: string[] }> {
+  const q = query.trim();
+  if (q.length < 2) return { enCatalogo: [], nuevas: [] };
+
+  const catalogo = await repo.listarCatalogoHabilidades();
+  const qLower = q.toLowerCase();
+
+  const enCatalogo = catalogo
+    .filter((h) => h.nombre.toLowerCase().includes(qLower))
+    .slice(0, 8)
+    .map((h) => ({ id: h.id.toString(), nombre: h.nombre }));
+
+  const sugeridas = await buscarTecnologias(q);
+  const nombresExistentes = new Set(catalogo.map((h) => h.nombre.toLowerCase()));
+  const nuevas = sugeridas
+    .filter((n) => !nombresExistentes.has(n.toLowerCase()))
+    .slice(0, 8);
+
+  return { enCatalogo, nuevas };
+}
+
+export type ResultadoAgregarHabilidad =
+  | { ok: true; id: string; nombre: string }
+  | 'no_es_tecnologia'
+  | 'nombre_invalido';
+
+// Agrega una tecnología al catálogo global (para que el estudiante la seleccione).
+// Si ya existe (por nombre), reutiliza la fila. Si es nueva, valida con IA que
+// pertenezca al dominio de la programación antes de crearla (gate de dominio
+// server-side: nadie puede meter "Goku" ni términos ajenos a la tecnología).
+export async function agregarHabilidadAlCatalogo(
+  nombreEntrada: string,
+): Promise<ResultadoAgregarHabilidad> {
+  const nombre = nombreEntrada.trim();
+  if (nombre.length < 1 || nombre.length > 80) return 'nombre_invalido';
+
+  const existente = await repo.buscarHabilidadPorNombre(nombre);
+  if (existente) {
+    return { ok: true, id: existente.id.toString(), nombre: existente.nombre };
+  }
+
+  const canonico = await validarTecnologia(nombre);
+  if (!canonico) return 'no_es_tecnologia';
+
+  // Reintenta la búsqueda con el nombre canónico (evita duplicar "reactjs"/"React").
+  const yaExiste = await repo.buscarHabilidadPorNombre(canonico);
+  if (yaExiste) {
+    return { ok: true, id: yaExiste.id.toString(), nombre: yaExiste.nombre };
+  }
+
+  const creada = await repo.crearHabilidadCatalogo(canonico);
+  return { ok: true, id: creada.id.toString(), nombre: creada.nombre };
 }

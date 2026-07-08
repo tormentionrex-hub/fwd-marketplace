@@ -10,6 +10,7 @@ import {
   Users,
   FolderKanban,
   Tag,
+  Newspaper,
   ShieldCheck,
   LineChart,
   Settings,
@@ -66,6 +67,7 @@ const SECCIONES: NavSection[] = [
     items: [
       { href: "/admin/proyectos", label: "Proyectos", icon: FolderKanban },
       { href: "/admin/ofertas", label: "Ofertas", icon: Tag },
+      { href: "/admin/noticias", label: "Noticias", icon: Newspaper },
     ],
   },
   {

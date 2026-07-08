@@ -62,8 +62,8 @@ function shade(hex: string, amt: number): string {
   );
 }
 
-/** Iniciales (hasta 2) en mayúscula. */
-export function iniciales(nombre: string): string {
+/** Iniciales (hasta 2) en mayúscula. Uso interno (retrato SVG). */
+function iniciales(nombre: string): string {
   const parts = nombre.trim().split(/\s+/).filter(Boolean);
   return (
     parts

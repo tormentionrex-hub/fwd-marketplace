@@ -46,3 +46,12 @@ export function crearNotificacion(datos: {
     select: { id: true },
   });
 }
+
+// Crea varias notificaciones (mismo tipo y mensaje) en un solo insert.
+// Se usa para avisar en lote a los estudiantes con match al publicar un proyecto.
+export function crearNotificacionesEnLote(idsUsuarios: string[], tipo: string, mensaje: string) {
+  if (idsUsuarios.length === 0) return Promise.resolve({ count: 0 });
+  return db.notificaciones.createMany({
+    data: idsUsuarios.map((id) => ({ id_usuario: id, tipo, mensaje })),
+  });
+}

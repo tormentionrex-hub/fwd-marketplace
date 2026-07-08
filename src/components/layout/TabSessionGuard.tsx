@@ -7,21 +7,25 @@ interface TabSessionGuardProps {
   hasSession: boolean;
 }
 
-// Rutas accesibles sin sesión activa
-const PUBLIC_PATHS = [
-  "/login",
-  "/register",
-  "/recuperar",
-  "/terminos",
-  "/privacidad",
-  "/solicitar-acceso",
-  "/registro/estudiante",
-  "/marketplace",
-  "/noticias",
+// Prefijos de rutas que REQUIEREN sesión. Todo lo demás es público por defecto.
+// Antes esto era una lista BLANCA de rutas públicas: cualquier página nueva que
+// no estuviera en la lista (p.ej. /empresa, /ranking, /perfil) redirigía por
+// error al login. Se invirtió a lista de PROTEGIDAS para que eso no vuelva a
+// pasar. La protección real vive en el servidor (cada layout/página protegida
+// hace su propio redirect); esto es solo una red de apoyo para el cierre de
+// sesión multi-pestaña. El pathname de next-intl viene SIN prefijo de locale.
+const PROTECTED_PREFIXES = [
+  "/dashboard",
+  "/empresario",
+  "/admin",
+  "/staff",
+  "/mensajes",
 ];
 
-function esRutaPublica(pathname: string): boolean {
-  return pathname === "/" || PUBLIC_PATHS.some((p) => pathname.includes(p));
+function esRutaProtegida(pathname: string): boolean {
+  return PROTECTED_PREFIXES.some(
+    (p) => pathname === p || pathname.startsWith(`${p}/`),
+  );
 }
 
 function leerCookie(name: string): string | null {
@@ -88,8 +92,9 @@ export function TabSessionGuard({ hasSession }: TabSessionGuardProps) {
       sessionStorage.removeItem("fwd_active");
     }
 
-    // Si la ruta requiere sesión, redirigir al login
-    if (!esRutaPublica(pathname) && !pathname.startsWith("/api")) {
+    // Solo redirigir si la ruta es de un área protegida (dashboard, empresario,
+    // admin, staff, mensajes). Las páginas públicas nunca se tocan.
+    if (esRutaProtegida(pathname)) {
       router.push("/login");
     }
   }, [pathname, router, hasSession]);

@@ -28,10 +28,21 @@ export interface MensajeDTO {
   creado: string;
 }
 
+export interface ProyectoChatDTO {
+  id: string;
+  titulo: string;
+  area: string | null;
+  imagen: string | null;
+  // true si el usuario actual es el dueño del proyecto (el empresario que lo publicó).
+  esMio: boolean;
+}
+
 export interface ConversacionDetalleDTO {
   id: string;
   otro: { id: string; nombre: string; fotoUrl: string | null };
   mensajes: MensajeDTO[];
+  // Proyecto por el que se inició la conversación (o null si es un chat directo).
+  proyecto: ProyectoChatDTO | null;
 }
 
 function textoPreview(m?: { contenido: string | null; document_url: string | null }): string {
@@ -116,6 +127,19 @@ export async function obtenerConversacion(
   }
   const mensajes = await listarMensajes(idChat);
 
+  // Proyecto asociado al chat (si se inició desde un proyecto del marketplace).
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const proy = (chat as any).proyectos;
+  const proyecto: ProyectoChatDTO | null = proy
+    ? {
+        id: proy.id,
+        titulo: proy.titulo,
+        area: proy.area_negocio ?? null,
+        imagen: Array.isArray(proy.imagenes) && proy.imagenes.length > 0 ? proy.imagenes[0] : null,
+        esMio: proy.id_empresario === idUsuario,
+      }
+    : null;
+
   return {
     id: chat.id,
     otro: {
@@ -123,6 +147,7 @@ export async function obtenerConversacion(
       nombre: otroPerfil?.usuarios?.nombre ?? 'Usuario',
       fotoUrl: otroPerfil?.usuarios?.image_url ?? null,
     },
+    proyecto,
     mensajes: mensajes.map((m) => ({
       id: m.id,
       mio: m.id_remitente === idUsuario,

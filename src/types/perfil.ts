@@ -68,6 +68,18 @@ export interface Logro {
   color: string;
 }
 
+/** Insignia ganada en los quizzes de Logros FWD (visible en el perfil). */
+export interface InsigniaPerfil {
+  id: string;
+  titulo: string;
+  temaNombre: string;
+  categoriaNombre: string;
+  /** Color de marca (hex) de la categoría. */
+  color: string;
+  fase: number;
+  dificultad: string;
+}
+
 export interface PerfilPublico {
   /** Id real del usuario estudiante; null en el perfil de ejemplo (demo). */
   id?: string | null;
@@ -99,4 +111,8 @@ export interface PerfilPublico {
   timeline: ItemTimeline[];
   certificaciones: Certificacion[];
   logros: Logro[];
+  /** Insignias destacadas ganadas en los quizzes (fase más alta por tema). */
+  insignias: InsigniaPerfil[];
+  /** Total de insignias (fases completadas) en todos los temas. */
+  totalInsignias: number;
 }

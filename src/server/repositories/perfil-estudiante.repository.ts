@@ -26,6 +26,23 @@ export function listarCatalogoHabilidades() {
   });
 }
 
+// Busca una habilidad del catálogo por nombre exacto (case-insensitive).
+// Sirve para no duplicar filas al agregar una tecnología nueva.
+export function buscarHabilidadPorNombre(nombre: string) {
+  return db.habilidades.findFirst({
+    where: { nombre: { equals: nombre, mode: 'insensitive' } },
+    select: { id: true, nombre: true },
+  });
+}
+
+// Crea una habilidad nueva en el catálogo global. `categoria` opcional.
+export function crearHabilidadCatalogo(nombre: string, categoria: string | null = 'Tecnología') {
+  return db.habilidades.create({
+    data: { nombre, categoria },
+    select: { id: true, nombre: true },
+  });
+}
+
 export function listarHabilidadesEstudiante(idUsuario: string) {
   return db.estudiantes_habilidades.findMany({
     where: { id_usuario: idUsuario },
@@ -39,6 +56,14 @@ export function listarNombresHabilidadesEstudiante(idUsuario: string) {
   return db.estudiantes_habilidades.findMany({
     where: { id_usuario: idUsuario },
     select: { habilidades: { select: { nombre: true } } },
+  });
+}
+
+// Todos los estudiantes con su JSON de preferencias (crudo), para hacer matching
+// en lote cuando se publica un proyecto (sugerencias). Solo trae lo mínimo.
+export function listarEstudiantesConPreferencias() {
+  return db.perfiles_estudiante.findMany({
+    select: { id_usuario: true, preferencias: true },
   });
 }
 

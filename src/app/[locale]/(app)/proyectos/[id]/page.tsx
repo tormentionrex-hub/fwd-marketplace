@@ -48,6 +48,9 @@ export default async function ProyectoDetallePage({ params }: ProyectoDetallePag
   const proyecto = await obtenerDetalleProyecto(id);
   if (!proyecto) notFound();
 
+  const empresaHref = proyecto.empresario.id
+    ? `/${locale}/empresa/${proyecto.empresario.id}`
+    : null;
   const cancelado = proyecto.estado === "cancelado";
   // Cerrado "por estado" (no por mero vencimiento del plazo, que se muestra aparte).
   const cerrado = proyecto.estado === "cerrado" && !proyecto.vencido;
@@ -123,12 +126,31 @@ export default async function ProyectoDetallePage({ params }: ProyectoDetallePag
           </h1>
 
           <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-text-muted">
-            <span className="inline-flex items-center gap-1.5">
-              <span className="grid h-7 w-7 place-items-center rounded-full bg-gradient-fwd-soft text-xs font-semibold text-white">
-                {proyecto.empresario.nombre.charAt(0)}
+            {empresaHref ? (
+              <Link href={empresaHref} className="inline-flex items-center gap-1.5 hover:underline" title={`Ver perfil de ${proyecto.empresario.nombre}`}>
+                <span className="grid h-7 w-7 place-items-center overflow-hidden rounded-full bg-gradient-fwd-soft text-xs font-semibold text-white">
+                  {proyecto.empresario.fotoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={proyecto.empresario.fotoUrl} alt={proyecto.empresario.nombre} className="h-full w-full object-cover" />
+                  ) : (
+                    proyecto.empresario.nombre.charAt(0)
+                  )}
+                </span>
+                <span className="font-medium text-text">{proyecto.empresario.nombre}</span>
+              </Link>
+            ) : (
+              <span className="inline-flex items-center gap-1.5">
+                <span className="grid h-7 w-7 place-items-center overflow-hidden rounded-full bg-gradient-fwd-soft text-xs font-semibold text-white">
+                  {proyecto.empresario.fotoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={proyecto.empresario.fotoUrl} alt={proyecto.empresario.nombre} className="h-full w-full object-cover" />
+                  ) : (
+                    proyecto.empresario.nombre.charAt(0)
+                  )}
+                </span>
+                <span className="font-medium text-text">{proyecto.empresario.nombre}</span>
               </span>
-              <span className="font-medium text-text">{proyecto.empresario.nombre}</span>
-            </span>
+            )}
             <span className="hidden h-1 w-1 rounded-full bg-border sm:block" />
             <span className="inline-flex items-center gap-1.5">
               <IconBuilding width={15} height={15} />

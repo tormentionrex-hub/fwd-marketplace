@@ -1,7 +1,6 @@
 import MarketplaceExplorer from "@/components/features/marketplace/MarketplaceExplorer";
 import Footer from "@/components/Footer";
-import HomeButton from "@/components/HomeButton";
-import SettingsPanel from "@/components/SettingsPanel";
+import MarketplaceDetailNav from "@/components/features/marketplace/MarketplaceDetailNav";
 import { listarProyectosParaMarketplace } from "@/server/services/proyecto.service";
 
 // Cachea la página 60 s y revalida en background — evita el round-trip a Supabase en cada visita.
@@ -17,10 +16,7 @@ export default async function MarketplacePage({
 
   return (
     <div className="flex flex-col">
-      <HomeButton />
-      <div className="fixed right-40 top-5 z-50">
-        <SettingsPanel />
-      </div>
+      <MarketplaceDetailNav locale={locale} activo="marketplace" fondo="oscuro" />
       <MarketplaceExplorer proyectos={proyectos} locale={locale} />
       <Footer />
     </div>

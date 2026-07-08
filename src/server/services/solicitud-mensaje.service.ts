@@ -9,6 +9,7 @@ import {
   actualizarEstadoSolicitud,
 } from '@/server/repositories/solicitud-mensaje.repository';
 import { crearNotificacion } from '@/server/repositories/notificacion.repository';
+import { crearNotificacionEstudiante } from '@/server/services/notificacion.service';
 import { buscarUsuarioPorId } from '@/server/repositories/usuario.repository';
 import { buscarChatEntre, crearChat } from '@/server/repositories/chat.repository';
 
@@ -59,8 +60,8 @@ export async function enviarSolicitud(datos: {
   if (datos.iniciador === 'empresario') {
     const empresario = await buscarUsuarioPorId(datos.idEmpresario);
     const nombreEmpresario = empresario?.nombre ?? 'Un empresario';
-    await crearNotificacion({
-      idUsuario: datos.idEstudiante,
+    // Aviso AL ESTUDIANTE: respeta su preferencia de "mensajes".
+    await crearNotificacionEstudiante(datos.idEstudiante, 'mensajes', {
       tipo: 'solicitud_mensaje',
       mensaje: `${nombreEmpresario} desea contactarte para hablar sobre una oportunidad laboral o proyecto.`,
     });
@@ -151,26 +152,27 @@ export async function responderSolicitud(
     if (!existente) {
       await crearChat(solicitud.id_proyecto, solicitud.id_estudiante, solicitud.id_empresario);
     }
-    
-    const mensajeNoti = solicitud.iniciador === 'empresario'
-      ? `${nombreEstudiante} ha aceptado tu solicitud de contacto.`
-      : `La empresa ha aceptado tu solicitud de contacto.`;
-      
-    await crearNotificacion({
-      idUsuario: idNotificar,
-      tipo: 'solicitud_aceptada',
+  }
+
+  const tipoNoti = accion === 'aceptar' ? 'solicitud_aceptada' : 'solicitud_rechazada';
+  const mensajeNoti =
+    accion === 'aceptar'
+      ? solicitud.iniciador === 'empresario'
+        ? `${nombreEstudiante} ha aceptado tu solicitud de contacto.`
+        : `La empresa ha aceptado tu solicitud de contacto.`
+      : solicitud.iniciador === 'empresario'
+        ? `${nombreEstudiante} no aceptó tu solicitud de contacto por ahora.`
+        : `La empresa no aceptó tu solicitud de contacto por ahora.`;
+
+  // Si el aviso va al ESTUDIANTE (que inició la solicitud), respeta su
+  // preferencia de "solicitudes"; si va al empresario, se envía sin gatear.
+  if (solicitud.iniciador === 'estudiante') {
+    await crearNotificacionEstudiante(idNotificar, 'solicitudes', {
+      tipo: tipoNoti,
       mensaje: mensajeNoti,
     });
   } else {
-    const mensajeNoti = solicitud.iniciador === 'empresario'
-      ? `${nombreEstudiante} no aceptó tu solicitud de contacto por ahora.`
-      : `La empresa no aceptó tu solicitud de contacto por ahora.`;
-      
-    await crearNotificacion({
-      idUsuario: idNotificar,
-      tipo: 'solicitud_rechazada',
-      mensaje: mensajeNoti,
-    });
+    await crearNotificacion({ idUsuario: idNotificar, tipo: tipoNoti, mensaje: mensajeNoti });
   }
 
   return { ok: true, estado: nuevoEstado };

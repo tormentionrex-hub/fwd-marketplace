@@ -1,4 +1,6 @@
 import 'server-only';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { GoogleGenAI } from '@google/genai';
 import type { AnalisisCv } from '@/types/cv-analisis';
 import { conFallback } from '@/lib/ia-fallback';
@@ -176,6 +178,53 @@ FORMATO DE RESPUESTAS:
 - Tono: profesional, directo y constructivo. Sin rodeos, sin condescendencia
 - Responde siempre en espanol. Sin emojis.`;
 
+// El prompt "entrenable" del Asistente de CV vive en un .md editable (igual que
+// el recomendador). Le prohíbe markdown/asteriscos y le pide prosa natural. Si
+// el archivo no se puede leer, cae al PROMPT_CHAT inline de arriba.
+let _skillChatCache: string | null = null;
+function cargarSkillChatCv(): string {
+  // En producción se cachea; en desarrollo se relee para "reentrenar" al
+  // instante editando el .md, sin reiniciar el server.
+  const enProd = process.env.NODE_ENV === 'production';
+  if (enProd && _skillChatCache !== null) return _skillChatCache;
+  let skill: string;
+  try {
+    const ruta = join(process.cwd(), 'src', 'server', 'ia', 'cv-chat.skill.md');
+    const contenido = readFileSync(ruta, 'utf8').trim();
+    skill = contenido.length > 0 ? contenido : PROMPT_CHAT;
+  } catch {
+    skill = PROMPT_CHAT;
+  }
+  _skillChatCache = skill;
+  return skill;
+}
+
+// Red de seguridad: aunque el prompt lo prohíbe, algunos modelos meten markdown.
+// Convierte la respuesta a texto plano natural, quitando asteriscos, viñetas,
+// almohadillas de título, acentos graves y guiones bajos de énfasis. Es
+// conservador: no toca "C#"/"F#" (los `#` de header requieren estar al inicio de
+// línea con espacio) ni los guiones de rangos ("2023 - 2024").
+export function limpiarFormatoChat(texto: string): string {
+  return texto
+    // Enlaces markdown [texto](url) -> texto (url)
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1 ($2)')
+    // Viñetas al inicio de línea (*, -, +, •) -> quita el marcador y su indentación
+    .replace(/^[ \t]*[-+*•]\s+/gm, '')
+    // Títulos markdown (#, ##, ...) al inicio de línea
+    .replace(/^[ \t]{0,3}#{1,6}[ \t]+/gm, '')
+    // Negrita/cursiva restante con ** __ y * (conserva el contenido)
+    .replace(/\*\*/g, '')
+    .replace(/__/g, '')
+    .replace(/\*/g, '')
+    // Acentos graves (código inline y bloques)
+    .replace(/`+/g, '')
+    // Indentación sobrante al inicio de cada línea (queda tras remover viñetas)
+    .replace(/^[ \t]+/gm, '')
+    // Colapsa 3+ saltos de línea a 2
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
 // ── Helpers de parseo ─────────────────────────────────────────────────────────
 
 function extraerJSON(texto: string): unknown {
@@ -299,12 +348,13 @@ async function _chatConCv(
   const response = await ai.models.generateContent({
     model: MODELO,
     contents,
-    config: { systemInstruction: PROMPT_CHAT, temperature: 0.7 },
+    config: { systemInstruction: cargarSkillChatCv(), temperature: 0.6 },
   });
 
   const texto = response.text ?? '';
   if (!texto) throw new Error('Respuesta vacia de Gemini');
-  return texto.trim();
+  // Red de seguridad: garantiza texto plano natural sin markdown ni asteriscos.
+  return limpiarFormatoChat(texto);
 }
 
 async function _optimizarPerfilParaPuesto(

@@ -13,12 +13,3 @@ export const logPageView = (url: string) => {
   }
 };
 
-export const logEvent = (action: string, params?: Record<string, unknown>) => {
-  if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
-    const customWindow = window as unknown as GTagWindow;
-    if (typeof customWindow.gtag === 'function') {
-      customWindow.gtag('event', action, params);
-    }
-  }
-};
-

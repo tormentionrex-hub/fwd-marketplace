@@ -76,9 +76,15 @@ export interface ProyectoMarketplace {
   usaIA: boolean;
   imagenes: string[];
   tecnologias: string[];
+  presupuestoMin: number | null;
+  presupuestoMax: number | null;
+  moneda: string;
+  negociable: boolean;
   empresario: {
     nombre: string;
     nombreEmpresa: string | null;
     sector: string | null;
+    /** Foto de perfil del dueño (usuarios.image_url) o null. */
+    fotoUrl: string | null;
   };
 }

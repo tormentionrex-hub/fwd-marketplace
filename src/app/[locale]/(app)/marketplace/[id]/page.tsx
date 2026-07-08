@@ -1,6 +1,10 @@
 import Link from "next/link";
-import { IconArrowLeft, IconBriefcase, IconClock, IconCpu, IconCalendar, IconBolt, IconSparkles, IconRocket, IconShieldCheck, IconUsers, IconArrowRight } from "@/components/ui/icons";
+import Image from "next/image";
+import { IconArrowLeft, IconBriefcase, IconClock, IconCpu, IconCalendar, IconRocket, IconShieldCheck, IconUsers, IconArrowRight } from "@/components/ui/icons";
+import { Coins, DollarSign } from "lucide-react";
 import { obtenerDetalleProyecto, obtenerDatosSidebar } from "@/server/services/proyecto.service";
+import { MODALIDAD_LABEL, type Modalidad } from "@/lib/empleabilidad";
+import { formatearPresupuesto } from "@/lib/presupuesto";
 import ParticleBackground from "@/components/ParticleBackground";
 import CarruselImagenes from "@/components/features/marketplace/CarruselImagenes";
 import MarketplaceDetailNav from "@/components/features/marketplace/MarketplaceDetailNav";
@@ -57,6 +61,26 @@ const HABILIDADES_POR_TECH: Record<string, string[]> = {
   "LangChain":      ["Cadenas de prompts", "Agentes con IA", "Memoria conversacional"],
   "TensorFlow":     ["Redes neuronales", "Entrenamiento de modelos", "ML en produccion"],
   "Prisma":         ["ORM type-safe", "Migraciones de base de datos", "Consultas relacionales"],
+  "Vue.js":         ["Componentes reactivos", "Composition API", "Manejo de estado con Pinia"],
+  "Express.js":     ["Enrutamiento de servidor", "Autenticacion con JWT", "Validacion de datos"],
+  "TailwindCSS":    ["Diseno responsivo", "Utilidades CSS modernas", "Sistemas de diseno"],
+  "Bootstrap":      ["Diseno responsivo", "Componentes UI", "Sistema de grillas"],
+  "Socket.io":      ["Comunicacion en tiempo real", "WebSockets", "Eventos bidireccionales"],
+  "GraphQL":        ["Consultas flexibles", "Esquemas y resolvers", "Optimizacion de datos"],
+  "React Native":   ["Apps moviles multiplataforma", "Componentes nativos", "Navegacion movil"],
+  "Flutter":        ["UI multiplataforma", "Widgets y manejo de estado", "Apps nativas con Dart"],
+  "Dart":           ["Lenguaje de Flutter", "Programacion asincrona", "Tipado moderno"],
+  "Swift":          ["Desarrollo iOS nativo", "SwiftUI", "Gestion de memoria"],
+  "Kotlin":         ["Desarrollo Android nativo", "Coroutines", "Jetpack Compose"],
+  "Stripe API":     ["Integracion de pagos", "Checkout seguro", "Webhooks de facturacion"],
+  "JWT":            ["Autenticacion con tokens", "Sesiones sin estado", "Seguridad de APIs"],
+  "Chart.js":       ["Visualizacion de datos", "Graficos interactivos", "Dashboards de metricas"],
+  "Electron":       ["Apps de escritorio", "Procesos main/renderer", "Empaquetado multiplataforma"],
+  "Figma":          ["Diseno de interfaces", "Prototipado", "Sistemas de diseno"],
+  "FramerMotion":   ["Animaciones en React", "Transiciones fluidas", "Gestos e interacciones"],
+  "Video.js":       ["Reproduccion de video", "Streaming", "Controles personalizados"],
+  "WhatsApp Business API": ["Mensajeria automatizada", "Notificaciones", "Integracion de chatbots"],
+  "xlsx":           ["Generacion de reportes Excel", "Procesamiento de datos", "Exportacion de informacion"],
 };
 
 const EDITORIAL_POR_AREA: Record<string, { titulo: string; descripcion: string }> = {
@@ -109,7 +133,9 @@ function inferirHabilidades(tecnologias: string[]): string[] {
   const vistas = new Set<string>();
   const resultado: string[] = [];
   for (const tech of tecnologias) {
-    const habilidades = HABILIDADES_POR_TECH[tech] ?? [];
+    // Fallback: si la tecnologia no esta en el mapa, igual aporta una habilidad
+    // generica para que "Lo que desarrollaras" nunca quede vacio.
+    const habilidades = HABILIDADES_POR_TECH[tech] ?? [`Experiencia practica con ${tech}`];
     for (const h of habilidades) {
       if (!vistas.has(h) && resultado.length < 6) {
         vistas.add(h);
@@ -151,11 +177,24 @@ export default async function MarketplaceItemPage({
 
   const color = areaColor(proyecto.area);
   const empresa = proyecto.empresario.nombre;
+  const fotoEmpresa = proyecto.empresario.fotoUrl;
+  // Enlace al perfil público de la empresa (o null si por algún motivo no hay id).
+  const empresaHref = proyecto.empresario.id
+    ? `/${locale}/empresa/${proyecto.empresario.id}`
+    : null;
   const estaAbierto = proyecto.estado === "abierto";
+  const modalidadLabel = proyecto.modalidad
+    ? (MODALIDAD_LABEL[proyecto.modalidad as Modalidad] ?? proyecto.modalidad)
+    : null;
   const tipoProblemaTitulo = `${TIPO_PROBLEMA[proyecto.area] ?? proyecto.area}${proyecto.usaIA ? " con IA" : ""}`;
   const habilidades = inferirHabilidades(proyecto.tecnologias);
   const editorial = obtenerEditorial(proyecto.area);
   const { postulaciones, similares } = await obtenerDatosSidebar(proyecto.id, proyecto.area);
+
+  // Presupuesto: texto formateado + ícono de dinero segun moneda (dolar / colon).
+  const presupuestoTexto = formatearPresupuesto(proyecto.presupuestoMin, proyecto.presupuestoMax, proyecto.moneda);
+  const MonedaIcon = proyecto.moneda === "USD" ? DollarSign : Coins;
+  const monedaColor = proyecto.moneda === "USD" ? "#16a34a" : "#F59E0B";
 
   const itemsAlcance = [
     {
@@ -173,10 +212,10 @@ export default async function MarketplaceItemPage({
       color: "#662D91",
     },
     {
-      icon: proyecto.usaIA ? <IconSparkles width={20} height={20} /> : <IconBolt width={20} height={20} />,
+      icon: <IconBriefcase width={20} height={20} />,
       label: "Modalidad",
-      value: proyecto.usaIA ? "Incluye IA" : "Desarrollo clasico",
-      color: proyecto.usaIA ? "#EC008C" : "#F7901E",
+      value: modalidadLabel ?? "Por definir",
+      color: "#20BEC6",
     },
   ] as const;
 
@@ -228,20 +267,47 @@ export default async function MarketplaceItemPage({
             className="flex items-start gap-4 pb-5"
             style={{ borderBottom: "1px solid var(--border)" }}
           >
-            {/* Avatar redondo (foto de perfil) */}
-            <span
-              className="grid h-14 w-14 place-items-center rounded-full font-black text-white text-2xl shrink-0 shadow-sm"
-              style={{ background: `linear-gradient(135deg, ${color}, ${color}bb)` }}
-            >
-              {empresa.charAt(0).toUpperCase()}
-            </span>
+            {/* Avatar redondo (foto de perfil) — enlaza al perfil de la empresa */}
+            {empresaHref ? (
+              <Link
+                href={empresaHref}
+                title={`Ver perfil de ${empresa}`}
+                className="grid h-14 w-14 place-items-center overflow-hidden rounded-full font-black text-white text-2xl shrink-0 shadow-sm transition-transform hover:scale-105"
+                style={fotoEmpresa ? undefined : { background: `linear-gradient(135deg, ${color}, ${color}bb)` }}
+              >
+                {fotoEmpresa ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={fotoEmpresa} alt={empresa} className="h-full w-full object-cover" />
+                ) : (
+                  empresa.charAt(0).toUpperCase()
+                )}
+              </Link>
+            ) : (
+              <span
+                className="grid h-14 w-14 place-items-center overflow-hidden rounded-full font-black text-white text-2xl shrink-0 shadow-sm"
+                style={fotoEmpresa ? undefined : { background: `linear-gradient(135deg, ${color}, ${color}bb)` }}
+              >
+                {fotoEmpresa ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={fotoEmpresa} alt={empresa} className="h-full w-full object-cover" />
+                ) : (
+                  empresa.charAt(0).toUpperCase()
+                )}
+              </span>
+            )}
 
             {/* Bloque de texto */}
             <div className="flex flex-col gap-1.5 min-w-0 flex-1">
 
               {/* Línea 1: nombre + badges */}
               <div className="flex flex-wrap items-center gap-2">
-                <span className="font-bold text-text text-base">{empresa}</span>
+                {empresaHref ? (
+                  <Link href={empresaHref} className="font-bold text-text text-base hover:text-[color:var(--fwd-azul,#008FD4)] hover:underline">
+                    {empresa}
+                  </Link>
+                ) : (
+                  <span className="font-bold text-text text-base">{empresa}</span>
+                )}
                 <span
                   className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wide"
                   style={{ background: "rgba(16,185,129,0.12)", color: "#10b981", border: "1px solid rgba(16,185,129,0.25)" }}
@@ -512,9 +578,13 @@ export default async function MarketplaceItemPage({
                     }}
                   >
                     <span className="pointer-events-none absolute inset-0 translate-x-[-100%] skew-x-[-20deg] bg-white/20 transition-transform duration-700 group-hover:translate-x-[100%]" />
-                    <svg className="relative z-10 w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                    </svg>
+                    <Image
+                      src="/imagenes/fordy/fordy-postula.png"
+                      alt=""
+                      width={44}
+                      height={44}
+                      className="relative z-10 h-11 w-11 shrink-0 object-contain drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)]"
+                    />
                     <span className="relative z-10">Postularme a este proyecto</span>
                   </a>
                 ) : (
@@ -533,14 +603,41 @@ export default async function MarketplaceItemPage({
               className="rounded-2xl p-4 flex items-center gap-3"
               style={{ border: "1px solid var(--border)", background: "var(--surface)" }}
             >
-              <span
-                className="grid h-12 w-12 place-items-center rounded-xl font-black text-white text-lg shrink-0"
-                style={{ background: `linear-gradient(135deg, ${color}, ${color}bb)` }}
-              >
-                {empresa.charAt(0).toUpperCase()}
-              </span>
+              {empresaHref ? (
+                <Link
+                  href={empresaHref}
+                  title={`Ver perfil de ${empresa}`}
+                  className="grid h-12 w-12 place-items-center overflow-hidden rounded-xl font-black text-white text-lg shrink-0 transition-transform hover:scale-105"
+                  style={fotoEmpresa ? undefined : { background: `linear-gradient(135deg, ${color}, ${color}bb)` }}
+                >
+                  {fotoEmpresa ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={fotoEmpresa} alt={empresa} className="h-full w-full object-cover" />
+                  ) : (
+                    empresa.charAt(0).toUpperCase()
+                  )}
+                </Link>
+              ) : (
+                <span
+                  className="grid h-12 w-12 place-items-center overflow-hidden rounded-xl font-black text-white text-lg shrink-0"
+                  style={fotoEmpresa ? undefined : { background: `linear-gradient(135deg, ${color}, ${color}bb)` }}
+                >
+                  {fotoEmpresa ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={fotoEmpresa} alt={empresa} className="h-full w-full object-cover" />
+                  ) : (
+                    empresa.charAt(0).toUpperCase()
+                  )}
+                </span>
+              )}
               <div className="min-w-0 flex-1">
-                <p className="font-heading font-black text-text truncate">{empresa}</p>
+                {empresaHref ? (
+                  <Link href={empresaHref} className="font-heading font-black text-text truncate block hover:underline">
+                    {empresa}
+                  </Link>
+                ) : (
+                  <p className="font-heading font-black text-text truncate">{empresa}</p>
+                )}
                 <p className="text-xs text-text-muted">{proyecto.empresario.sector}</p>
               </div>
               <span
@@ -629,6 +726,48 @@ export default async function MarketplaceItemPage({
               </div>
             )}
 
+            {/* Presupuesto (lo que se paga) */}
+            {presupuestoTexto && (
+              <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid var(--border)" }}>
+                <div
+                  className="px-5 py-3"
+                  style={{ background: "linear-gradient(135deg, rgba(22,163,74,0.12), rgba(0,143,212,0.05))" }}
+                >
+                  <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: "#16a34a" }}>
+                    Presupuesto
+                  </p>
+                </div>
+                <div className="px-5 py-4 bg-surface">
+                  <div className="flex items-center gap-3">
+                    <span
+                      className="grid h-11 w-11 shrink-0 place-items-center rounded-xl"
+                      style={{ background: `${monedaColor}1a` }}
+                    >
+                      <MonedaIcon width={24} height={24} style={{ color: monedaColor }} />
+                    </span>
+                    <div>
+                      <p className="font-heading font-black text-xl text-text leading-none">{presupuestoTexto}</p>
+                      <p className="text-xs text-text-muted mt-1">
+                        {proyecto.moneda === "USD" ? "Dolares (USD)" : "Colones (CRC)"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-3">
+                    <span
+                      className="inline-block rounded-full px-3 py-1 text-xs font-bold"
+                      style={
+                        proyecto.negociable
+                          ? { background: "rgba(22,163,74,0.12)", color: "#16a34a" }
+                          : { background: "rgba(220,38,38,0.12)", color: "#dc2626" }
+                      }
+                    >
+                      {proyecto.negociable ? "Negociable" : "No negociable"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Detalles del proyecto */}
             <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid var(--border)" }}>
               <div
@@ -644,15 +783,6 @@ export default async function MarketplaceItemPage({
                   <span className="text-text-muted">Area</span>
                   <span className="font-semibold text-text">{proyecto.area}</span>
                 </div>
-                <div
-                  className="flex items-center justify-between text-sm"
-                  style={{ borderTop: "1px solid var(--border)", paddingTop: 10 }}
-                >
-                  <span className="text-text-muted">Sector</span>
-                  <span className="font-semibold text-text truncate ml-2 text-right">
-                    {proyecto.empresario.sector}
-                  </span>
-                </div>
                 {proyecto.plazoDias && (
                   <div
                     className="flex items-center justify-between text-sm"
@@ -662,25 +792,15 @@ export default async function MarketplaceItemPage({
                     <span className="font-semibold text-text">{proyecto.plazoDias} dias</span>
                   </div>
                 )}
-                <div
-                  className="flex items-center justify-between text-sm"
-                  style={{ borderTop: "1px solid var(--border)", paddingTop: 10 }}
-                >
-                  <span className="text-text-muted">Modalidad</span>
-                  <span
-                    className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold"
-                    style={
-                      proyecto.usaIA
-                        ? { background: "rgba(236,0,140,0.12)", color: "#EC008C", border: "1px solid rgba(236,0,140,0.25)" }
-                        : { background: "rgba(247,144,30,0.12)", color: "#F7901E", border: "1px solid rgba(247,144,30,0.25)" }
-                    }
+                {modalidadLabel && (
+                  <div
+                    className="flex items-center justify-between text-sm"
+                    style={{ borderTop: "1px solid var(--border)", paddingTop: 10 }}
                   >
-                    {proyecto.usaIA
-                      ? <><IconSparkles width={11} height={11} /> Incluye IA</>
-                      : <><IconBolt width={11} height={11} /> Clasico</>
-                    }
-                  </span>
-                </div>
+                    <span className="text-text-muted">Modalidad</span>
+                    <span className="font-semibold text-text">{modalidadLabel}</span>
+                  </div>
+                )}
                 {proyecto.tecnologias.length > 0 && (
                   <div
                     className="flex items-center justify-between text-sm"
@@ -773,7 +893,7 @@ export default async function MarketplaceItemPage({
       </div>
 
       {/* Burbuja de chat con el dueño del proyecto */}
-      <ChatBurbuja nombre={empresa} color={color} idProyecto={proyecto.id} locale={locale} />
+      <ChatBurbuja nombre={empresa} fotoUrl={fotoEmpresa} color={color} idProyecto={proyecto.id} locale={locale} />
     </div>
   );
 }

@@ -1,8 +1,11 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { IconArrowRight, IconBriefcase, IconClock, IconCpu } from "@/components/ui/icons";
+import { Coins, DollarSign } from "lucide-react";
+import { formatearPresupuesto } from "@/lib/presupuesto";
 import type { ProyectoMarketplace } from "@/types/marketplace";
 
 const COLOR_POR_AREA: Record<string, string> = {
@@ -52,6 +55,26 @@ export default function ProyectoCard({ proyecto, locale }: ProyectoCardProps) {
   const color = colorProyecto(proyecto.id, proyecto.areaNegocio);
   const plazo = diasRestantesTexto(proyecto.publicado, proyecto.plazoDias);
   const empresa = proyecto.empresario.nombreEmpresa ?? proyecto.empresario.nombre;
+  const fotoEmpresa = proyecto.empresario.fotoUrl;
+
+  // Presupuesto: texto formateado + ícono de dinero según moneda (dólar / colón).
+  const presupuestoTexto = formatearPresupuesto(proyecto.presupuestoMin, proyecto.presupuestoMax, proyecto.moneda);
+  const MonedaIcon = proyecto.moneda === "USD" ? DollarSign : Coins;
+  const monedaColor = proyecto.moneda === "USD" ? "#16a34a" : "#F59E0B";
+
+  // Portada: fotos del proyecto en carrusel automático (cada 5s, en bucle, sin
+  // flechas). Sin fotos, se muestra el fondo de marca con el triángulo.
+  const imagenes = proyecto.imagenes ?? [];
+  const tieneImagenes = imagenes.length > 0;
+  const [idxImagen, setIdxImagen] = useState(0);
+
+  useEffect(() => {
+    if (imagenes.length <= 1) return;
+    const t = setInterval(() => {
+      setIdxImagen((i) => (i + 1) % imagenes.length);
+    }, 5000);
+    return () => clearInterval(t);
+  }, [imagenes.length]);
 
   return (
     <motion.article
@@ -78,18 +101,55 @@ export default function ProyectoCard({ proyecto, locale }: ProyectoCardProps) {
       {/* Cover */}
       <div
         className="relative flex h-36 items-center justify-center overflow-hidden"
-        style={{ background: `linear-gradient(135deg, ${color} 0%, ${color}bb 100%)` }}
+        style={
+          tieneImagenes
+            ? { background: "var(--surface-2)" }
+            : { background: `linear-gradient(135deg, ${color} 0%, ${color}bb 100%)` }
+        }
       >
-        <span className="pointer-events-none absolute inset-0 z-10 translate-x-[-100%] skew-x-[-20deg] bg-white/20 transition-transform duration-700 group-hover:translate-x-[100%]" />
+        {tieneImagenes ? (
+          <>
+            {/* Carrusel automático de fotos del proyecto (crossfade cada 5s) */}
+            {imagenes.map((src, i) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                key={i}
+                src={src}
+                alt={proyecto.titulo}
+                className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700"
+                style={{ opacity: i === idxImagen ? 1 : 0 }}
+              />
+            ))}
+            {/* Puntitos indicadores (solo si hay varias, sin flechas) */}
+            {imagenes.length > 1 && (
+              <div className="absolute bottom-2 left-1/2 z-20 flex -translate-x-1/2 gap-1.5">
+                {imagenes.map((_, i) => (
+                  <span
+                    key={i}
+                    className="h-1.5 rounded-full transition-all duration-300"
+                    style={{
+                      width: i === idxImagen ? 14 : 6,
+                      background: i === idxImagen ? "#fff" : "rgba(255,255,255,0.6)",
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            <span className="pointer-events-none absolute inset-0 z-10 translate-x-[-100%] skew-x-[-20deg] bg-white/20 transition-transform duration-700 group-hover:translate-x-[100%]" />
+            <svg viewBox="0 0 66 76" className="h-16 w-16 transition-transform duration-500 group-hover:scale-110"
+              fill="#ffffff" opacity={0.2} aria-hidden="true">
+              <path d="M0 0 L66 38 L0 76 Z" />
+            </svg>
+            <svg viewBox="0 0 66 76" className="absolute -right-2 top-4 h-12 w-12"
+              fill="#ffffff" opacity={0.12} aria-hidden="true">
+              <path d="M0 0 L66 38 L0 76 Z" />
+            </svg>
+          </>
+        )}
         <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-black/20 to-transparent" />
-        <svg viewBox="0 0 66 76" className="h-16 w-16 transition-transform duration-500 group-hover:scale-110"
-          fill="#ffffff" opacity={0.2} aria-hidden="true">
-          <path d="M0 0 L66 38 L0 76 Z" />
-        </svg>
-        <svg viewBox="0 0 66 76" className="absolute -right-2 top-4 h-12 w-12"
-          fill="#ffffff" opacity={0.12} aria-hidden="true">
-          <path d="M0 0 L66 38 L0 76 Z" />
-        </svg>
 
         {proyecto.areaNegocio && (
           <span className="absolute left-4 top-4 rounded-full bg-surface/90 backdrop-blur-sm px-3 py-1 text-xs font-bold text-text shadow-sm">
@@ -130,13 +190,42 @@ export default function ProyectoCard({ proyecto, locale }: ProyectoCardProps) {
           </div>
         )}
 
+        {/* Presupuesto + negociable */}
+        {presupuestoTexto && (
+          <div className="mt-3 flex items-center justify-between gap-2 rounded-xl border border-border bg-surface-2 px-3 py-2">
+            <span className="inline-flex items-center gap-1.5">
+              <MonedaIcon width={17} height={17} style={{ color: monedaColor }} />
+              <span className="font-heading font-black text-[15px] text-text">{presupuestoTexto}</span>
+            </span>
+            <span
+              className="shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-bold"
+              style={
+                proyecto.negociable
+                  ? { background: "rgba(22,163,74,0.12)", color: "#16a34a" }
+                  : { background: "rgba(220,38,38,0.12)", color: "#dc2626" }
+              }
+            >
+              {proyecto.negociable ? "Negociable" : "No negociable"}
+            </span>
+          </div>
+        )}
+
         <div className="mt-4 flex items-center gap-2 text-xs text-text-muted">
-          <span
-            className="grid h-7 w-7 flex-shrink-0 place-items-center rounded-full text-[11px] font-black text-white shadow-sm"
-            style={{ background: color }}
-          >
-            {empresa.charAt(0).toUpperCase()}
-          </span>
+          {fotoEmpresa ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={fotoEmpresa}
+              alt={empresa}
+              className="h-7 w-7 flex-shrink-0 rounded-full object-cover shadow-sm"
+            />
+          ) : (
+            <span
+              className="grid h-7 w-7 flex-shrink-0 place-items-center rounded-full text-[11px] font-black text-white shadow-sm"
+              style={{ background: color }}
+            >
+              {empresa.charAt(0).toUpperCase()}
+            </span>
+          )}
           <span className="font-semibold text-text truncate">{empresa}</span>
           {proyecto.empresario.sector && (
             <span className="ml-auto shrink-0 text-[11px] text-text-muted/70 truncate max-w-[100px]">

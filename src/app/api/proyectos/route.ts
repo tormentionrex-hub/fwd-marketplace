@@ -16,7 +16,10 @@ export async function POST(request: Request) {
   const parseo = await parsearBody(request, crearProyectoSchema);
   if (!parseo.ok) return parseo.respuesta;
 
-  const { titulo, descripcion, areaNegocio, plazoDias, usaIA, tecnologias, imagenes } = parseo.data;
+  const {
+    titulo, descripcion, areaNegocio, plazoDias, modalidad, usaIA,
+    presupuestoMin, presupuestoMax, moneda, negociable, tecnologias, imagenes,
+  } = parseo.data;
 
   try {
     const { id } = await crearProyectoService(user.id, {
@@ -24,7 +27,12 @@ export async function POST(request: Request) {
       descripcion,
       areaNegocio: areaNegocio ?? null,
       plazoDias: plazoDias ?? null,
+      modalidad: modalidad ?? null,
       usaIA: usaIA ?? false,
+      presupuestoMin: presupuestoMin ?? null,
+      presupuestoMax: presupuestoMax ?? null,
+      moneda: moneda ?? 'CRC',
+      negociable: negociable ?? true,
       tecnologias: tecnologias ?? [],
       imagenes: imagenes ?? [],
     });
