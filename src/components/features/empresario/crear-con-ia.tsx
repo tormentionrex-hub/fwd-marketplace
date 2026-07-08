@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from '@/i18n/navigation';
-import { IconSpark, IconAlert, IconEdit } from '@/components/ui/fwd-icons';
+import { IconAlert, IconEdit } from '@/components/ui/fwd-icons';
 
 type Pregunta = {
   texto: string;
@@ -173,6 +173,14 @@ export default function CrearConIA({ nombre: _nombre }: { nombre: string }) {
         @keyframes chatdot {
           0%, 80%, 100% { opacity: 0.25; transform: translateY(0); }
           40% { opacity: 1; transform: translateY(-4px); }
+        }
+        @keyframes fordyPiensa {
+          0%, 100% { transform: translateY(0) rotate(-2.5deg); }
+          50%      { transform: translateY(-12px) rotate(2.5deg); }
+        }
+        @keyframes fordyGlow {
+          0%, 100% { filter: drop-shadow(0 10px 18px rgba(102,45,145,0.20)); }
+          50%      { filter: drop-shadow(0 16px 26px rgba(0,143,212,0.30)); }
         }
 
         .crear-ia-container {
@@ -619,20 +627,18 @@ export default function CrearConIA({ nombre: _nombre }: { nombre: string }) {
                 zIndex: 10,
               }}
             >
-              <div
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/imagenes/fordy/fordy-cv.png"
+                alt="Fordy analizando tu proyecto"
                 style={{
-                  width: 60,
-                  height: 60,
-                  borderRadius: 18,
-                  background: 'var(--morado)',
-                  display: 'grid',
-                  placeItems: 'center',
-                  animation: 'spin 2s linear infinite',
-                  boxShadow: '0 8px 28px rgba(102,45,145,0.4)',
+                  width: 180,
+                  height: 180,
+                  objectFit: 'contain',
+                  animation:
+                    'fordyPiensa 2.6s ease-in-out infinite, fordyGlow 2.6s ease-in-out infinite',
                 }}
-              >
-                <IconSpark size={30} color="var(--amarillo)" />
-              </div>
+              />
               <div style={{ textAlign: 'center', maxWidth: 300 }}>
                 <p
                   style={{
