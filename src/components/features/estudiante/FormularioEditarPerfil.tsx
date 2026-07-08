@@ -1,0 +1,965 @@
+"use client";
+
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Pencil, Trash2 } from "lucide-react";
+import Badge from "@/components/ui/Badge";
+import Card from "@/components/ui/Card";
+import CvManager from "./CvManager";
+import CvIaManager from "./CvIaManager";
+import CvChatManager from "./CvChatManager";
+import { IconCheck, IconPlus, IconUpload, IconX, IconEye, IconEyeOff, IconSearch } from "@/components/ui/icons";
+import type { NivelHabilidad } from "@/types/sefora";
+import type {
+  HabilidadCatalogo,
+  HabilidadSeleccionada,
+  PerfilEditable,
+  ProyectoCompletado,
+} from "@/server/services/perfil-estudiante.service";
+
+interface FormularioEditarPerfilProps {
+  locale: string;
+}
+
+type Seccion = "datos" | "habilidades" | "portafolio" | "curriculum" | "cv-ia";
+
+interface BorradorProyecto {
+  titulo: string;
+  descripcion: string;
+  tecnologias: string;
+  fecha: string;
+  repoUrl: string;
+  demoUrl: string;
+  esPublico: boolean;
+}
+
+const NIVELES: NivelHabilidad[] = ["básico", "intermedio", "avanzado"];
+const MAX_FOTO_MB = 5;
+const TIPOS_FOTO = ["image/jpeg", "image/png", "image/webp"];
+
+const inputClass =
+  "h-11 w-full rounded-xl border border-border bg-surface px-3.5 text-sm text-text outline-none transition-colors placeholder:text-text-muted/60 focus:border-fwd-azul focus:ring-4 focus:ring-fwd-azul/10";
+const textareaClass =
+  "w-full rounded-xl border border-border bg-surface px-3.5 py-2.5 text-sm text-text outline-none transition-colors placeholder:text-text-muted/60 focus:border-fwd-azul focus:ring-4 focus:ring-fwd-azul/10";
+
+const borradorInicial: BorradorProyecto = {
+  titulo: "",
+  descripcion: "",
+  tecnologias: "",
+  fecha: "",
+  repoUrl: "",
+  demoUrl: "",
+  esPublico: true,
+};
+
+function urlValida(valor: string): boolean {
+  if (!valor) return true;
+  try {
+    const url = new URL(valor);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+function slug(nombre: string): string {
+  return nombre.trim().toLowerCase().replace(/\s+/g, "-") || "perfil";
+}
+
+const secciones: { id: Seccion; label: string }[] = [
+  { id: "datos", label: "Datos personales" },
+  { id: "habilidades", label: "Habilidades" },
+  { id: "portafolio", label: "Portafolio" },
+  { id: "curriculum", label: "Currículum" },
+  { id: "cv-ia", label: "CV IA" },
+];
+
+type GitEstado = "idle" | "checking" | "ok" | "fail";
+type Guardado = "idle" | "saving" | "saved" | "error";
+
+export default function FormularioEditarPerfil({ locale }: FormularioEditarPerfilProps) {
+  const router = useRouter();
+  const [seccion, setSeccion] = useState<Seccion>("datos");
+  const [carga, setCarga] = useState<"loading" | "ready" | "error">("loading");
+
+  // Datos personales
+  const [nombre, setNombre] = useState("");
+  const [correo, setCorreo] = useState("");
+  const [resumen, setResumen] = useState("");
+  const [fotoUrl, setFotoUrl] = useState("");
+  const [subiendoFoto, setSubiendoFoto] = useState(false);
+  const [errorFoto, setErrorFoto] = useState("");
+
+  // Habilidades
+  const [catalogo, setCatalogo] = useState<HabilidadCatalogo[]>([]);
+  const [habilidades, setHabilidades] = useState<HabilidadSeleccionada[]>([]);
+  // Buscador de tecnologías (autocompletado local + sugerencias IA)
+  const [busquedaHab, setBusquedaHab] = useState("");
+  const [sugerenciasIA, setSugerenciasIA] = useState<string[]>([]);
+  const [buscandoIA, setBuscandoIA] = useState(false);
+  const [agregandoHab, setAgregandoHab] = useState(false);
+  const [errorHab, setErrorHab] = useState("");
+  const debounceHabRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Portafolio
+  const [completados, setCompletados] = useState<ProyectoCompletado[]>([]);
+  const [proyectos, setProyectos] = useState<(BorradorProyecto & { id: string })[]>([]);
+  const [borrador, setBorrador] = useState<BorradorProyecto>(borradorInicial);
+  const [idProyectoEdicion, setIdProyectoEdicion] = useState<string | null>(null);
+
+  // Guardar / validación Git
+  const [guardado, setGuardado] = useState<Guardado>("idle");
+  const [errorGuardar, setErrorGuardar] = useState("");
+  const [gitEstado, setGitEstado] = useState<GitEstado>("idle");
+
+  // ── Carga inicial ──────────────────────────────────────────────
+  useEffect(() => {
+    let cancelado = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/estudiante/perfil", { cache: "no-store" });
+        if (!res.ok) throw new Error();
+        const data: PerfilEditable = await res.json();
+        if (cancelado) return;
+        setNombre(data.nombre);
+        setCorreo(data.correo);
+        setResumen(data.resumen);
+        setFotoUrl(data.fotoUrl);
+        setCatalogo(data.catalogo);
+        setHabilidades(data.habilidades);
+        setCompletados(data.completados);
+        setProyectos(data.portafolio);
+        setCarga("ready");
+      } catch {
+        if (!cancelado) setCarga("error");
+      }
+    })();
+    return () => {
+      cancelado = true;
+    };
+  }, []);
+
+  // ── Foto ───────────────────────────────────────────────────────
+  async function procesarFoto(archivo: File | undefined) {
+    setErrorFoto("");
+    if (!archivo) return;
+    if (!TIPOS_FOTO.includes(archivo.type)) {
+      setErrorFoto("La foto debe ser JPG, PNG o WEBP.");
+      return;
+    }
+    if (archivo.size > MAX_FOTO_MB * 1024 * 1024) {
+      setErrorFoto(`La foto no puede superar ${MAX_FOTO_MB} MB.`);
+      return;
+    }
+    setSubiendoFoto(true);
+    try {
+      const fd = new FormData();
+      fd.append("archivo", archivo);
+      fd.append("tipo", "prototipo");
+      const res = await fetch("/api/upload/archivo", { method: "POST", body: fd });
+      const data: { url?: string; error?: string } = await res.json();
+      if (!res.ok || !data.url) {
+        setErrorFoto(data.error ?? "No se pudo subir la foto.");
+        return;
+      }
+      setFotoUrl(data.url);
+    } catch {
+      setErrorFoto("No se pudo subir la foto. Intentá de nuevo.");
+    } finally {
+      setSubiendoFoto(false);
+    }
+  }
+
+  // ── Habilidades ────────────────────────────────────────────────
+  const nombreHabilidad = useCallback(
+    (id: string) => catalogo.find((c) => c.id === id)?.nombre ?? id,
+    [catalogo],
+  );
+
+  function toggleHabilidad(id: string) {
+    setHabilidades((prev) =>
+      prev.some((h) => h.id === id)
+        ? prev.filter((h) => h.id !== id)
+        : [...prev, { id, nivel: "básico" }],
+    );
+  }
+
+  function cambiarNivel(id: string, nivel: NivelHabilidad) {
+    setHabilidades((prev) => prev.map((h) => (h.id === id ? { ...h, nivel } : h)));
+  }
+
+  // Resultados del catálogo que coinciden con la búsqueda y aún no están seleccionados.
+  const q = busquedaHab.trim().toLowerCase();
+  const resultadosCatalogo =
+    q.length >= 1
+      ? catalogo
+          .filter(
+            (h) =>
+              h.nombre.toLowerCase().includes(q) &&
+              !habilidades.some((s) => s.id === h.id),
+          )
+          .slice(0, 8)
+      : [];
+
+  // Sugerencias de IA que no estén ya en el catálogo (por nombre).
+  const nombresCatalogo = new Set(catalogo.map((c) => c.nombre.toLowerCase()));
+  const sugerenciasNuevas = sugerenciasIA.filter((n) => !nombresCatalogo.has(n.toLowerCase()));
+
+  // Busca sugerencias de tecnologías vía IA (debounce). El filtro del catálogo es
+  // instantáneo; la IA complementa con tecnologías fuera del catálogo local.
+  useEffect(() => {
+    if (debounceHabRef.current) clearTimeout(debounceHabRef.current);
+    const termino = busquedaHab.trim();
+    if (termino.length < 2) {
+      setSugerenciasIA([]);
+      setBuscandoIA(false);
+      return;
+    }
+    setBuscandoIA(true);
+    debounceHabRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch("/api/estudiante/habilidades/buscar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ q: termino }),
+        });
+        if (res.ok) {
+          const data: { nuevas?: string[] } = await res.json();
+          setSugerenciasIA(Array.isArray(data.nuevas) ? data.nuevas : []);
+        } else {
+          setSugerenciasIA([]);
+        }
+      } catch {
+        setSugerenciasIA([]);
+      } finally {
+        setBuscandoIA(false);
+      }
+    }, 500);
+    return () => {
+      if (debounceHabRef.current) clearTimeout(debounceHabRef.current);
+    };
+  }, [busquedaHab]);
+
+  // Selecciona una habilidad del catálogo (ya tiene id) y limpia el buscador.
+  function seleccionarDelCatalogo(id: string) {
+    setHabilidades((prev) => (prev.some((h) => h.id === id) ? prev : [...prev, { id, nivel: "básico" }]));
+    setBusquedaHab("");
+    setSugerenciasIA([]);
+    setErrorHab("");
+  }
+
+  // Agrega una tecnología nueva: valida/da de alta en el catálogo global (server
+  // valida con IA que sea del dominio de programación) y la selecciona.
+  async function agregarTecnologiaNueva(nombre: string) {
+    const limpio = nombre.trim();
+    if (!limpio || agregandoHab) return;
+    setAgregandoHab(true);
+    setErrorHab("");
+    try {
+      const res = await fetch("/api/estudiante/habilidades", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nombre: limpio }),
+      });
+      const data: { id?: string; nombre?: string; error?: string } = await res.json().catch(() => ({}));
+      if (!res.ok || !data.id || !data.nombre) {
+        setErrorHab(data.error ?? "No se pudo agregar la tecnología.");
+        return;
+      }
+      const nueva: HabilidadCatalogo = { id: data.id, nombre: data.nombre };
+      setCatalogo((prev) =>
+        prev.some((c) => c.id === nueva.id)
+          ? prev
+          : [...prev, nueva].sort((a, b) => a.nombre.localeCompare(b.nombre)),
+      );
+      setHabilidades((prev) => (prev.some((h) => h.id === nueva.id) ? prev : [...prev, { id: nueva.id, nivel: "básico" }]));
+      setBusquedaHab("");
+      setSugerenciasIA([]);
+    } catch {
+      setErrorHab("Error de red. Intentá de nuevo.");
+    } finally {
+      setAgregandoHab(false);
+    }
+  }
+
+  // ── Portafolio (local; persistencia pendiente de tabla en BD) ──
+  const repoOk = urlValida(borrador.repoUrl);
+  const demoOk = urlValida(borrador.demoUrl);
+  const puedeAgregar = borrador.titulo.trim().length > 0 && repoOk && demoOk;
+
+  async function verificarGit() {
+    if (!borrador.repoUrl || !repoOk) {
+      setGitEstado("idle");
+      return;
+    }
+    setGitEstado("checking");
+    try {
+      const res = await fetch(`/api/utils/url-accesible?url=${encodeURIComponent(borrador.repoUrl)}`);
+      const data: { valida: boolean; accesible: boolean } = await res.json();
+      setGitEstado(data.accesible ? "ok" : "fail");
+    } catch {
+      setGitEstado("fail");
+    }
+  }
+
+  function startEditing(proyecto: BorradorProyecto & { id: string }) {
+    setIdProyectoEdicion(proyecto.id);
+    setBorrador({
+      titulo: proyecto.titulo,
+      descripcion: proyecto.descripcion,
+      tecnologias: proyecto.tecnologias,
+      fecha: proyecto.fecha,
+      repoUrl: proyecto.repoUrl,
+      demoUrl: proyecto.demoUrl,
+      esPublico: proyecto.esPublico,
+    });
+    setGitEstado("idle");
+  }
+
+  function cancelEditing() {
+    setIdProyectoEdicion(null);
+    setBorrador(borradorInicial);
+    setGitEstado("idle");
+  }
+
+  function alternarVisibilidadProyecto(id: string) {
+    setProyectos((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, esPublico: !p.esPublico } : p))
+    );
+  }
+
+  function agregarOEditarProyecto() {
+    if (!puedeAgregar) return;
+    if (idProyectoEdicion) {
+      setProyectos((prev) =>
+        prev.map((p) => (p.id === idProyectoEdicion ? { ...p, ...borrador } : p))
+      );
+      setIdProyectoEdicion(null);
+    } else {
+      setProyectos((prev) => [...prev, { ...borrador, id: `manual-${Date.now()}` }]);
+    }
+    setBorrador(borradorInicial);
+    setGitEstado("idle");
+  }
+
+  function eliminarProyecto(id: string) {
+    if (idProyectoEdicion === id) {
+      setIdProyectoEdicion(null);
+      setBorrador(borradorInicial);
+    }
+    setProyectos((prev) => prev.filter((p) => p.id !== id));
+  }
+
+  // ── Guardar ────────────────────────────────────────────────────
+  async function guardar() {
+    setErrorGuardar("");
+    setGuardado("saving");
+    try {
+      const res = await fetch("/api/estudiante/perfil", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nombre,
+          correo,
+          fotoUrl,
+          resumen,
+          habilidades,
+          portafolio: proyectos.map((p) => ({
+            titulo: p.titulo,
+            descripcion: p.descripcion,
+            tecnologias: p.tecnologias,
+            fecha: p.fecha,
+            repoUrl: p.repoUrl,
+            demoUrl: p.demoUrl,
+            esPublico: p.esPublico,
+          })),
+        }),
+      });
+      if (!res.ok) {
+        const data: { error?: string } = await res.json().catch(() => ({}));
+        setErrorGuardar(data.error ?? "No se pudieron guardar los cambios.");
+        setGuardado("error");
+        return;
+      }
+      setGuardado("saved");
+      // Actualizar el Navbar sin recargar la página
+      try {
+        const perfilNavbar = { nombre, image_url: fotoUrl || null };
+        localStorage.setItem("fwd_perfil", JSON.stringify(perfilNavbar));
+        window.dispatchEvent(new CustomEvent("fwd:perfil:update", { detail: perfilNavbar }));
+      } catch { /* sin storage */ }
+      router.refresh();
+    } catch {
+      setErrorGuardar("Error de red. Intentá de nuevo.");
+      setGuardado("error");
+    }
+  }
+
+  if (carga === "loading") {
+    return (
+      <div className="flex flex-col gap-4">
+        <div className="h-8 w-64 animate-pulse rounded bg-surface-2" />
+        <Card className="flex flex-col gap-4 p-6">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="h-11 animate-pulse rounded-xl bg-surface-2" />
+          ))}
+        </Card>
+      </div>
+    );
+  }
+
+  if (carga === "error") {
+    return (
+      <Card className="flex flex-col items-center gap-3 p-10 text-center">
+        <h1 className="font-display text-lg font-bold text-text">No pudimos cargar tu perfil</h1>
+        <p className="text-sm text-text-muted">Recargá la página o intentá más tarde.</p>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-2xl font-bold tracking-tight text-text">Editar perfil y portafolio</h1>
+          <p className="text-sm text-text-muted">Los cambios se reflejan en tu perfil público.</p>
+        </div>
+        <Link
+          href={`/${locale}/perfil/${slug(nombre)}`}
+          className="text-sm font-medium text-fwd-azul transition-colors hover:text-fwd-azul/80"
+        >
+          Ver perfil público →
+        </Link>
+      </div>
+
+      <div className="flex gap-1 overflow-x-auto rounded-xl border border-slate-200 bg-white p-1.5 shadow-sm dark:border-white/10 dark:bg-white/[0.03]">
+        {secciones.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            onClick={() => { setSeccion(item.id); window.scrollTo(0, 0); }}
+            className={`shrink-0 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+              seccion === item.id
+                ? "bg-fwd-azul text-white shadow-sm"
+                : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/[0.06]"
+            }`}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+
+      {seccion === "datos" && (
+        <Card className="flex flex-col gap-5 p-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6 rounded-xl border border-slate-200 p-5 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.01]">
+            <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-slate-200 dark:border-white/10 bg-surface">
+              {fotoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={fotoUrl} alt="Foto de perfil" className="h-full w-full object-cover" />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-fwd-azul/10 text-xl font-bold text-fwd-azul">
+                  {nombre ? nombre.slice(0, 2).toUpperCase() : "?"}
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <span className="text-sm font-semibold text-text">Foto de perfil</span>
+              <div className="flex flex-wrap gap-2">
+                <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-fwd-azul/10 px-4 py-2.5 text-sm font-semibold text-fwd-azul transition-colors hover:bg-fwd-azul/20">
+                  <IconUpload width={16} height={16} />
+                  {subiendoFoto ? "Subiendo…" : fotoUrl ? "Cambiar foto" : "Subir foto"}
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    disabled={subiendoFoto}
+                    onChange={(e) => procesarFoto(e.target.files?.[0])}
+                    className="hidden"
+                  />
+                </label>
+                {fotoUrl && (
+                  <button
+                    type="button"
+                    onClick={() => setFotoUrl("")}
+                    className="inline-flex items-center gap-2 rounded-xl border border-red-200 bg-red-50/50 px-4 py-2.5 text-sm font-semibold text-red-600 transition-colors hover:bg-red-50 dark:border-red-500/20 dark:bg-red-500/5 dark:text-red-400 dark:hover:bg-red-500/10"
+                  >
+                    Quitar foto
+                  </button>
+                )}
+              </div>
+              <span className="text-xs text-text-muted">
+                JPG, PNG o WEBP · máx {MAX_FOTO_MB} MB
+              </span>
+            </div>
+          </div>
+          {errorFoto && <p className="text-sm text-red-600 dark:text-red-400">{errorFoto}</p>}
+
+          <label className="flex flex-col gap-1.5 text-sm font-medium text-text">
+            Nombre completo
+            <input type="text" value={nombre} onChange={(e) => setNombre(e.target.value)} className={inputClass} />
+          </label>
+
+          <label className="flex flex-col gap-1.5 text-sm font-medium text-text">
+            Correo electrónico
+            <input type="email" value={correo} onChange={(e) => setCorreo(e.target.value)} className={inputClass} />
+          </label>
+
+          <label className="flex flex-col gap-1.5 text-sm font-medium text-text">
+            Resumen profesional
+            <textarea rows={4} value={resumen} onChange={(e) => setResumen(e.target.value)} className={textareaClass} />
+          </label>
+        </Card>
+      )}
+
+      {seccion === "habilidades" && (
+        <Card className="flex flex-col gap-6 p-6">
+          {/* Buscador de tecnologías con autocompletado + sugerencias de IA */}
+          <div className="flex flex-col gap-3">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-text-muted">
+              Buscar tecnología
+            </h2>
+            <div className="relative">
+              <IconSearch
+                width={18}
+                height={18}
+                className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted"
+              />
+              <input
+                type="text"
+                value={busquedaHab}
+                onChange={(e) => {
+                  setBusquedaHab(e.target.value);
+                  setErrorHab("");
+                }}
+                placeholder="Buscá un lenguaje, framework o tecnología (ej: Java, React, Docker)..."
+                className={`${inputClass} pl-11`}
+                autoComplete="off"
+              />
+
+              {/* Dropdown de resultados */}
+              {busquedaHab.trim().length >= 1 && (
+                <div className="absolute z-20 mt-2 max-h-72 w-full overflow-y-auto overscroll-contain rounded-xl border border-border bg-surface p-1.5 shadow-lg">
+                  {/* Coincidencias del catálogo (instantáneas) */}
+                  {resultadosCatalogo.map((h) => (
+                    <button
+                      key={h.id}
+                      type="button"
+                      onClick={() => seleccionarDelCatalogo(h.id)}
+                      className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-text transition-colors hover:bg-fwd-azul/10"
+                    >
+                      <IconPlus width={14} height={14} className="text-fwd-azul" />
+                      <span className="font-medium">{h.nombre}</span>
+                    </button>
+                  ))}
+
+                  {/* Sugerencias de IA (tecnologías fuera del catálogo) */}
+                  {sugerenciasNuevas.map((nombre) => (
+                    <button
+                      key={`ia-${nombre}`}
+                      type="button"
+                      disabled={agregandoHab}
+                      onClick={() => agregarTecnologiaNueva(nombre)}
+                      className="flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm text-text transition-colors hover:bg-fwd-azul/10 disabled:opacity-50"
+                    >
+                      <span className="flex items-center gap-2">
+                        <IconPlus width={14} height={14} className="text-fwd-morado" />
+                        <span className="font-medium">{nombre}</span>
+                      </span>
+                      <Badge variant="brand" className="shrink-0">Sugerida por IA</Badge>
+                    </button>
+                  ))}
+
+                  {/* Estado: buscando con IA */}
+                  {buscandoIA && (
+                    <div className="flex items-center gap-2 px-3 py-2 text-sm text-text-muted">
+                      <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                      </svg>
+                      Buscando tecnologías...
+                    </div>
+                  )}
+
+                  {/* Nada encontrado: ofrecer agregar el término tal cual (el server valida con IA) */}
+                  {!buscandoIA &&
+                    resultadosCatalogo.length === 0 &&
+                    sugerenciasNuevas.length === 0 &&
+                    busquedaHab.trim().length >= 2 && (
+                      <button
+                        type="button"
+                        disabled={agregandoHab}
+                        onClick={() => agregarTecnologiaNueva(busquedaHab)}
+                        className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-text transition-colors hover:bg-fwd-azul/10 disabled:opacity-50"
+                      >
+                        <IconPlus width={14} height={14} className="text-fwd-azul" />
+                        Agregar <span className="font-semibold">&ldquo;{busquedaHab.trim()}&rdquo;</span>
+                      </button>
+                    )}
+                </div>
+              )}
+            </div>
+            {agregandoHab && <p className="text-sm text-text-muted">Agregando tecnología...</p>}
+            {errorHab && <p className="text-sm text-red-600 dark:text-red-400">{errorHab}</p>}
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-text-muted">Catálogo</h2>
+            {catalogo.length === 0 ? (
+              <p className="text-sm text-text-muted">
+                El catálogo de habilidades está vacío. Pedile al administrador que lo cargue.
+              </p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {catalogo.map((h) => {
+                  const seleccionada = habilidades.some((s) => s.id === h.id);
+                  return (
+                    <button
+                      key={h.id}
+                      type="button"
+                      onClick={() => toggleHabilidad(h.id)}
+                      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
+                        seleccionada
+                          ? "border-fwd-azul bg-fwd-azul/10 text-fwd-azul"
+                          : "border-slate-200 text-slate-600 hover:border-fwd-azul/40 dark:border-white/15 dark:text-slate-300"
+                      }`}
+                    >
+                      {seleccionada ? <IconCheck width={14} height={14} /> : <IconPlus width={14} height={14} />}
+                      {h.nombre}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-text-muted">Tus habilidades</h2>
+            {habilidades.length === 0 ? (
+              <p className="text-sm text-text-muted">Seleccioná habilidades del catálogo.</p>
+            ) : (
+              <ul className="flex flex-col gap-2">
+                {habilidades.map((h) => (
+                  <li
+                    key={h.id}
+                    className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 px-3.5 py-2.5 dark:border-white/10"
+                  >
+                    <span className="text-sm font-medium text-text">{nombreHabilidad(h.id)}</span>
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={h.nivel}
+                        onChange={(e) => cambiarNivel(h.id, e.target.value as NivelHabilidad)}
+                        className="h-9 rounded-lg border border-slate-200 bg-white px-2 text-sm capitalize text-slate-700 outline-none focus:border-fwd-azul dark:border-white/15 dark:bg-white/[0.03] dark:text-slate-200"
+                      >
+                        {NIVELES.map((nivel) => (
+                          <option key={nivel} value={nivel}>
+                            {nivel}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => toggleHabilidad(h.id)}
+                        aria-label={`Quitar ${nombreHabilidad(h.id)}`}
+                        className="text-text-muted transition-colors hover:text-red-600"
+                      >
+                        <IconX width={18} height={18} />
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </Card>
+      )}
+
+      {seccion === "portafolio" && (
+        <Card className="flex flex-col gap-6 p-6">
+          <div className="flex flex-col gap-2">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-text-muted">
+              Proyectos completados (automáticos)
+            </h2>
+            {completados.length === 0 ? (
+              <p className="text-sm text-text-muted">
+                Tus proyectos completados aparecerán aquí con su calificación cuando un empresario te evalúe.
+              </p>
+            ) : (
+              completados.map((p) => (
+                <div
+                  key={p.id}
+                  className="flex items-center justify-between gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/5 px-4 py-3"
+                >
+                  <span className="text-sm font-medium text-text">{p.titulo}</span>
+                  <Badge variant="success">★ {p.calificacion}</Badge>
+                </div>
+              ))
+            )}
+          </div>
+
+          <div className="flex flex-col gap-5">
+            {/* Proyectos activos / visibles */}
+            <div className="flex flex-col gap-3">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-text-muted">
+                Proyectos activos (Públicos / Visibles)
+              </h2>
+              {proyectos.filter((p) => p.esPublico).length === 0 ? (
+                <p className="text-sm text-text-muted italic bg-slate-50 dark:bg-white/[0.01] p-3 rounded-xl border border-slate-100 dark:border-white/5">
+                  No tenés proyectos públicos activos.
+                </p>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {proyectos.filter((p) => p.esPublico).map((p) => (
+                    <div
+                      key={p.id}
+                      className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 px-4 py-3 dark:border-white/10 bg-white dark:bg-white/[0.02] shadow-sm hover:border-slate-300 dark:hover:border-white/20 transition-all"
+                    >
+                      <div className="flex flex-col gap-1">
+                        <span className="text-sm font-medium text-text">{p.titulo}</span>
+                        {p.tecnologias && <span className="text-xs text-text-muted">{p.tecnologias}</span>}
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => alternarVisibilidadProyecto(p.id)}
+                          title="Ocultar proyecto"
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
+                        >
+                          <IconEye width={18} height={18} className="text-emerald-500" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => startEditing(p)}
+                          title="Editar"
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-fwd-azul hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
+                        >
+                          <Pencil size={16} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => eliminarProyecto(p.id)}
+                          title="Eliminar"
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Proyectos ocultos / no visibles */}
+            <div className="flex flex-col gap-3">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-text-muted">
+                Proyectos ocultos (No visibles / Privados)
+              </h2>
+              {proyectos.filter((p) => !p.esPublico).length === 0 ? (
+                <p className="text-sm text-text-muted italic bg-slate-50 dark:bg-white/[0.01] p-3 rounded-xl border border-slate-100 dark:border-white/5">
+                  No tenés proyectos privados u ocultos.
+                </p>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {proyectos.filter((p) => !p.esPublico).map((p) => (
+                    <div
+                      key={p.id}
+                      className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 px-4 py-3 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.01] opacity-75 hover:opacity-100 transition-opacity"
+                    >
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-text">{p.titulo}</span>
+                          <span className="text-[10px] font-medium bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300 px-1.5 py-0.5 rounded">Oculto</span>
+                        </div>
+                        {p.tecnologias && <span className="text-xs text-text-muted">{p.tecnologias}</span>}
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => alternarVisibilidadProyecto(p.id)}
+                          title="Hacer público"
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
+                        >
+                          <IconEyeOff width={18} height={18} className="text-slate-400" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => startEditing(p)}
+                          title="Editar"
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-fwd-azul hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
+                        >
+                          <Pencil size={16} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => eliminarProyecto(p.id)}
+                          title="Eliminar"
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-3 rounded-xl border border-dashed border-slate-300 p-4 dark:border-white/15">
+              {idProyectoEdicion && (
+                <div className="flex items-center justify-between bg-fwd-azul/5 px-3 py-2 rounded-lg border border-fwd-azul/20">
+                  <span className="text-xs font-semibold text-fwd-azul">Editando proyecto: &ldquo;{borrador.titulo}&rdquo;</span>
+                  <button
+                    type="button"
+                    onClick={cancelEditing}
+                    className="text-xs font-semibold text-red-600 hover:text-red-500"
+                  >
+                    Cancelar edición
+                  </button>
+                </div>
+              )}
+              <input
+                type="text"
+                placeholder="Título del proyecto"
+                value={borrador.titulo}
+                onChange={(e) => setBorrador((p) => ({ ...p, titulo: e.target.value }))}
+                className={inputClass}
+              />
+              <textarea
+                rows={2}
+                placeholder="Descripción"
+                value={borrador.descripcion}
+                onChange={(e) => setBorrador((p) => ({ ...p, descripcion: e.target.value }))}
+                className={textareaClass}
+              />
+              <div className="grid gap-3 sm:grid-cols-2">
+                <input
+                  type="text"
+                  placeholder="Tecnologías (separadas por coma)"
+                  value={borrador.tecnologias}
+                  onChange={(e) => setBorrador((p) => ({ ...p, tecnologias: e.target.value }))}
+                  className={inputClass}
+                />
+                <input
+                  type="date"
+                  value={borrador.fecha}
+                  onChange={(e) => setBorrador((p) => ({ ...p, fecha: e.target.value }))}
+                  className={inputClass}
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <input
+                  type="url"
+                  placeholder="Enlace al repositorio Git"
+                  value={borrador.repoUrl}
+                  onChange={(e) => {
+                    setBorrador((p) => ({ ...p, repoUrl: e.target.value }));
+                    setGitEstado("idle");
+                  }}
+                  onBlur={verificarGit}
+                  className={`${inputClass} ${repoOk ? "" : "border-red-400 focus:border-red-400 focus:ring-red-400/20"}`}
+                />
+                {!repoOk ? (
+                  <span className="text-xs text-red-600 dark:text-red-400">Ingresá una URL válida (http o https).</span>
+                ) : gitEstado === "checking" ? (
+                  <span className="text-xs text-text-muted">Verificando que el repo sea accesible…</span>
+                ) : gitEstado === "ok" ? (
+                  <span className="text-xs text-emerald-600 dark:text-emerald-400">✓ El repositorio responde.</span>
+                ) : gitEstado === "fail" ? (
+                  <span className="text-xs text-red-600 dark:text-red-400">✗ El repositorio no responde o no existe.</span>
+                ) : null}
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <input
+                  type="url"
+                  placeholder="Enlace a demo en vivo (opcional)"
+                  value={borrador.demoUrl}
+                  onChange={(e) => setBorrador((p) => ({ ...p, demoUrl: e.target.value }))}
+                  className={`${inputClass} ${demoOk ? "" : "border-red-400 focus:border-red-400 focus:ring-red-400/20"}`}
+                />
+                {!demoOk && (
+                  <span className="text-xs text-red-600 dark:text-red-400">Ingresá una URL válida (http o https).</span>
+                )}
+              </div>
+
+              <label className="flex items-center gap-2 text-sm font-medium text-text cursor-pointer select-none py-1">
+                <input
+                  type="checkbox"
+                  checked={borrador.esPublico}
+                  onChange={(e) => setBorrador((p) => ({ ...p, esPublico: e.target.checked }))}
+                  className="h-4 w-4 rounded border-slate-300 text-fwd-azul focus:ring-fwd-azul"
+                />
+                <span>Proyecto visible públicamente</span>
+              </label>
+
+              <button
+                type="button"
+                onClick={agregarOEditarProyecto}
+                disabled={!puedeAgregar}
+                className="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl border border-fwd-azul px-5 text-sm font-semibold text-fwd-azul transition-colors hover:bg-fwd-azul/5 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {idProyectoEdicion ? (
+                  <>
+                    <IconCheck width={16} height={16} />
+                    Guardar cambios de proyecto
+                  </>
+                ) : (
+                  <>
+                    <IconPlus width={16} height={16} />
+                    Agregar proyecto
+                  </>
+                )}
+              </button>
+              <p className="text-xs text-text-muted">
+                Los proyectos se guardan al presionar &ldquo;Guardar cambios&rdquo;.
+              </p>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {seccion === "curriculum" && <CvManager />}
+
+      {seccion === "cv-ia" && (
+        <div className="flex flex-col gap-6">
+          <CvIaManager
+            nombre={nombre}
+            correo={correo}
+            resumen={resumen}
+            habilidades={habilidades.map((h) => ({
+              nombre: catalogo.find((c) => c.id === h.id)?.nombre ?? h.id,
+              nivel: h.nivel,
+            }))}
+            portafolio={proyectos}
+            completados={completados}
+          />
+          <CvChatManager nombre={nombre} correo={correo} />
+        </div>
+      )}
+
+      {seccion !== "curriculum" && seccion !== "cv-ia" && (
+      <div className="flex flex-wrap items-center gap-4">
+        <button
+          type="button"
+          onClick={guardar}
+          disabled={guardado === "saving" || subiendoFoto}
+          className="inline-flex h-11 items-center justify-center rounded-xl bg-fwd-azul px-6 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-fwd-azul/90 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {guardado === "saving" ? "Guardando…" : "Guardar cambios"}
+        </button>
+        {guardado === "saved" && (
+          <span className="inline-flex items-center gap-1.5 text-sm font-medium text-emerald-600 dark:text-emerald-400">
+            <IconCheck width={16} height={16} />
+            Cambios guardados
+          </span>
+        )}
+        {guardado === "error" && (
+          <span className="text-sm font-medium text-red-600 dark:text-red-400">{errorGuardar}</span>
+        )}
+      </div>
+      )}
+    </div>
+  );
+}

@@ -1,0 +1,179 @@
+import 'server-only';
+import { db } from '@/lib/db';
+
+// Lista las ofertas más recientes para el panel admin: proyecto, estudiante y
+// estado. Solo lectura.
+export function listarOfertasAdmin() {
+  return db.ofertas.findMany({
+    take: 50,
+    orderBy: { enviado: 'desc' },
+    select: {
+      id: true,
+      estado: true,
+      enviado: true,
+      propuesta: true,
+      prototipo_url: true,
+      documentacion_url: true,
+      proyectos: { select: { id: true, titulo: true } },
+      perfiles_estudiante: {
+        select: {
+          usuarios: { select: { nombre: true, correo: true } },
+        },
+      },
+    },
+  });
+}
+
+// Trae los campos del proyecto necesarios para la página de oferta.
+export function buscarProyectoParaOferta(id: string) {
+  return db.proyectos.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      titulo: true,
+      descripcion: true,
+      estado: true,
+      plazo_dias: true,
+      cierre: true,
+      publicado: true,
+    },
+  });
+}
+
+// Verifica si el estudiante ya ofertó a este proyecto.
+// Usa el índice único (id_proyecto, id_estudiante) del schema.
+export function buscarOfertaExistente(idProyecto: string, idEstudiante: string) {
+  // Prisma genera el nombre del compound unique como campo1_campo2
+  return db.ofertas.findUnique({
+    where: {
+      id_proyecto_id_estudiante: {
+        id_proyecto: idProyecto,
+        id_estudiante: idEstudiante,
+      },
+    },
+  });
+}
+
+// Crea una nueva oferta con estado 'pendiente'.
+export function crearOferta(datos: {
+  idProyecto: string;
+  idEstudiante: string;
+  propuesta: string;
+  prototipoUrl?: string | null;
+  documentacionUrl?: string | null;
+}) {
+  return db.ofertas.create({
+    data: {
+      id_proyecto: datos.idProyecto,
+      id_estudiante: datos.idEstudiante,
+      propuesta: datos.propuesta,
+      prototipo_url: datos.prototipoUrl ?? null,
+      documentacion_url: datos.documentacionUrl ?? null,
+      estado: 'pendiente',
+    },
+  });
+}
+
+// Lista las ofertas de UN estudiante con su proyecto, empresario y tecnologías.
+// Ownership: filtra estrictamente por id_estudiante — cada quien ve solo lo suyo.
+export function listarOfertasDeEstudiante(idEstudiante: string) {
+  return db.ofertas.findMany({
+    where: { id_estudiante: idEstudiante },
+    orderBy: { enviado: 'desc' },
+    select: {
+      id: true,
+      propuesta: true,
+      estado: true,
+      enviado: true,
+      proyectos: {
+        select: {
+          id: true,
+          titulo: true,
+          area_negocio: true,
+          estado: true,
+          cierre: true,
+          perfiles_empresario: {
+            select: { sector: true, usuarios: { select: { nombre: true } } },
+          },
+          proyectos_tecnologias: {
+            select: { tecnologias: { select: { nombre: true } } },
+          },
+        },
+      },
+    },
+  });
+}
+
+// Busca el proyecto "activo" del estudiante: su oferta adjudicada/aceptada más
+// reciente, con los datos del proyecto y del empresario. Ownership por id_estudiante.
+export function buscarProyectoActivoDeEstudiante(idEstudiante: string) {
+  return db.ofertas.findFirst({
+    where: {
+      id_estudiante: idEstudiante,
+      estado: { in: ['adjudicada', 'aceptada', 'aceptado'] },
+    },
+    orderBy: { enviado: 'desc' },
+    select: {
+      id: true,
+      estado: true,
+      proyectos: {
+        select: {
+          id: true,
+          titulo: true,
+          estado: true,
+          publicado: true,
+          cierre: true,
+          perfiles_empresario: {
+            select: {
+              id_usuario: true,
+              sector: true,
+              usuarios: { select: { nombre: true } },
+            },
+          },
+        },
+      },
+    },
+  });
+}
+
+// ── Gestión admin de ofertas ────────────────────────────────────────────────
+
+// Busca una oferta por id (existencia/validación en el panel admin).
+export function buscarOfertaPorId(id: string) {
+  return db.ofertas.findUnique({
+    where: { id },
+    select: { id: true, estado: true },
+  });
+}
+
+// El admin actualiza el estado de una oferta.
+export function actualizarEstadoOfertaAdmin(id: string, estado: string) {
+  return db.ofertas.update({
+    where: { id },
+    data: { estado },
+    select: { id: true, estado: true },
+  });
+}
+
+// El admin elimina una oferta (sin la restricción de pertenencia del estudiante).
+export function eliminarOfertaAdmin(id: string) {
+  return db.ofertas.delete({ where: { id }, select: { id: true } });
+}
+
+// Retira (elimina) una oferta. Verifica pertenencia y estado antes de borrar.
+export async function retirarOferta(
+  idOferta: string,
+  idEstudiante: string
+): Promise<'ok' | 'no_encontrada' | 'no_autorizado' | 'adjudicada'> {
+  const oferta = await db.ofertas.findUnique({
+    where: { id: idOferta },
+    select: { id: true, id_estudiante: true, estado: true },
+  });
+
+  if (!oferta) return 'no_encontrada';
+  if (oferta.id_estudiante !== idEstudiante) return 'no_autorizado';
+  if (oferta.estado === 'adjudicada') return 'adjudicada';
+
+  await db.ofertas.delete({ where: { id: idOferta } });
+  return 'ok';
+}

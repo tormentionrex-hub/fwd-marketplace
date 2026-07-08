@@ -1,0 +1,82 @@
+{
+  "Common": { "appName": "FWD Marketplace" },
+  "Nav": {
+    "inicio": "Inicio",
+    "proyectos": "Proyectos",
+    "noticias": "Noticia",
+    "iniciarSesion": "Iniciar sesión",
+    "registrarse": "Registrarse",
+    "miPanel": "Mi panel",
+    "cerrarSesion": "Cerrar sesión"
+  },
+  "Hero": {
+    "badge": "Plataforma de innovación · FWD Costa Rica",
+    "title1": "Conectamos empresarios con",
+    "titleHighlight": "talento tecnológico",
+    "title2": "de FWD Costa Rica",
+    "desc": "Publicá tu proyecto, recibí prototipos de estudiantes verificados y elegí la mejor solución. Sin riesgo, con resultados reales.",
+    "ctaPublicar": "Publicar un proyecto",
+    "ctaExplorar": "Explorar proyectos"
+  },
+  "HowItWorks": {
+    "title": "¿Cómo funciona?",
+    "subtitle": "Un proceso simple para conectar ideas con talento.",
+    "empresario": "Empresario",
+    "estudiante": "Estudiante",
+    "paso1Emp": "Describís tu idea al agente IA",
+    "paso2Emp": "El agente genera los requerimientos",
+    "paso3Emp": "Publicás el proyecto",
+    "paso4Emp": "Recibís prototipos y elegís el mejor",
+    "paso1Est": "Explorás proyectos disponibles",
+    "paso2Est": "Enviás tu propuesta y prototipo",
+    "paso3Est": "Si te eligen, desarrollás la solución",
+    "paso4Est": "Ganás reputación y experiencia real",
+    "ctaEmpresa": "Empezar como Empresa",
+    "ctaEstudiante": "Empezar como Estudiante"
+  },
+  "Projects": {
+    "badge": "En curso",
+    "title": "Proyectos disponibles",
+    "verTodos": "Ver todos →",
+    "restantes": "d restantes"
+  },
+  "Features": {
+    "rapidoTitle": "Rápido",
+    "rapidoDesc": "De la idea al prototipo en días, no meses.",
+    "seguroTitle": "Seguro",
+    "seguroDesc": "Contratos inteligentes y revisión de IA.",
+    "colaborativoTitle": "Colaborativo",
+    "colaborativoDesc": "Talento joven guiado por expertos locales."
+  },
+  "Students": {
+    "badge": "Comunidad FWD",
+    "w1": "Estudiantes",
+    "w2": "que",
+    "w3": "ya",
+    "w4": "están",
+    "w5": "haciendo",
+    "w6": "historia",
+    "subtitle": "Conocé a los talentos que transforman ideas en soluciones reales.",
+    "anterior": "Anterior",
+    "siguiente": "Siguiente"
+  },
+  "Settings": {
+    "titulo": "Ajustes",
+    "accesibilidad": "Accesibilidad",
+    "idioma": "Idioma",
+    "apariencia": "Apariencia e Inclusión",
+    "modoOscuro": "Modo Oscuro",
+    "modoOscuroDesc": "Cambia el tema visual",
+    "a11y": "Accesibilidad",
+    "a11yDesc": "Ajustes de inclusión",
+    "legal": "Legal y Soporte",
+    "terminos": "Términos y Condiciones",
+    "terminosDesc": "Políticas de uso",
+    "tamano": "Tamaño de texto",
+    "tamanoDesc": "Ajusta el tamaño de la letra",
+    "reducir": "Reducir movimiento",
+    "reducirDesc": "Desactiva animaciones",
+    "contraste": "Alto contraste",
+    "contrasteDesc": "Mejora la visibilidad"
+  }
+}

@@ -1,26 +1,615 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
+/* Dark mode por clase (toggle), no por preferencia del SO. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ---- Tokens de superficie dependientes del tema ---- */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Hace que los controles NATIVOS (select y sus opciones, inputs, date pickers,
+     scrollbars) se rendericen con el esquema correcto. Sin esto, en modo oscuro
+     los <select> abren con fondo blanco y texto casi invisible. */
+  color-scheme: light;
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #f8fafc; /* slate-50 */
+  --border: #e2e8f0; /* slate-200 */
+  --text: #0f172a; /* slate-900 */
+  --text-muted: #64748b; /* slate-500 */
+  --ring: #008fd4;
+  --background: var(--bg);
+  --foreground: var(--text);
+  --input: oklch(0.922 0 0);
 }
 
+.dark {
+  color-scheme: dark; /* controles nativos oscuros en modo oscuro (ver nota arriba) */
+  --bg: #0b1120; /* slate-950-ish, identidad FWD oscura */
+  --surface: #0f172a; /* slate-900 */
+  --surface-2: #1e293b; /* slate-800 */
+  --border: #1e293b; /* slate-800 */
+  --text: #f1f5f9; /* slate-100 */
+  --text-muted: #94a3b8; /* slate-400 */
+  --ring: #20bec6;
+}
+
+/* Desplegables nativos (<select>) en modo oscuro. Además de color-scheme, se
+   fuerza el fondo/color de las OPCIONES: en Chrome (Windows) el popup de
+   <option> se renderiza BLANCO cuando el <select> tiene fondo translúcido claro
+   (p. ej. dark:bg-white/5), dejando el texto blanco invisible. Chrome sí respeta
+   background-color/color en <option>, así que esto lo corrige para TODOS los
+   <select> del proyecto de una sola vez. */
+.dark select option,
+.dark select optgroup {
+  background-color: #1e293b; /* slate-800 (--surface-2) */
+  color: #f1f5f9;            /* slate-100 (--text) */
+}
+
+/* ====================================================
+   Scrollbar del sidebar del estudiante
+   - Delgado y temático (morado FWD), acorde al dashboard.
+   - SIEMPRE visible cuando hay overflow (no depende del hover);
+     si el contenido cabe, con overflow:auto no se muestra ninguno.
+   - overscroll-behavior: contain → al hacer scroll con el cursor sobre
+     el sidebar, se mueve el sidebar y NO arrastra el scroll de la página.
+   ==================================================== */
+.sidebar-scroll {
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: color-mix(in srgb, #662d91 45%, transparent) transparent;
+  overscroll-behavior: contain;
+}
+.sidebar-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px; /* para el overflow-x del modo móvil */
+}
+.sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, #662d91 40%, transparent);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+.sidebar-scroll::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, #662d91 65%, transparent);
+  background-clip: padding-box;
+}
+.dark .sidebar-scroll {
+  scrollbar-color: color-mix(in srgb, #a855f7 45%, transparent) transparent; /* purple-400 */
+}
+.dark .sidebar-scroll::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, #a855f7 38%, transparent);
+  background-clip: padding-box;
+}
+.dark .sidebar-scroll::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, #a855f7 62%, transparent);
+  background-clip: padding-box;
+}
+
+/* ====================================================
+   Panel de Administración — Sistema de colores adaptativo
+   (mismo patrón que .fwd-app del dashboard empresario)
+   ==================================================== */
+.admin-panel {
+  --adm-bg:          #F4F6FB;
+  --adm-sidebar:     #FFFFFF;
+  --adm-sidebar-bd:  #E4E9F1;
+  --adm-nav-txt:     #4C5E7C;
+  --adm-nav-txt-act: #0C1B33;
+  --adm-nav-hover:   rgba(0, 143, 212, 0.06);
+  --adm-nav-active:  rgba(236, 0, 140, 0.08);
+  --adm-ink:         #0C1B33;
+  --adm-ink-muted:   #6B7B96;
+  --adm-ink-faint:   #94A2B8;
+  --adm-line:        #E4E9F1;
+  --adm-card:        #FFFFFF;
+  --adm-card-sub:    #F4F6FB;
+  --adm-modal:       #FFFFFF;
+  --adm-modal-bd:    #E4E9F1;
+  --adm-table-head:  #F4F6FB;
+  --adm-input-bg:    #FFFFFF;
+}
+
+html.dark .admin-panel {
+  --adm-bg:          #0b1120;
+  --adm-sidebar:     #0e1628;
+  --adm-sidebar-bd:  rgba(255, 255, 255, 0.10);
+  --adm-nav-txt:     rgba(255, 255, 255, 0.55);
+  --adm-nav-txt-act: #FFFFFF;
+  --adm-nav-hover:   rgba(255, 255, 255, 0.05);
+  --adm-nav-active:  rgba(236, 0, 140, 0.15);
+  --adm-ink:         #FFFFFF;
+  --adm-ink-muted:   rgba(255, 255, 255, 0.50);
+  --adm-ink-faint:   rgba(255, 255, 255, 0.35);
+  --adm-line:        rgba(255, 255, 255, 0.10);
+  --adm-card:        rgba(255, 255, 255, 0.04);
+  --adm-card-sub:    rgba(255, 255, 255, 0.03);
+  --adm-modal:       #111827;
+  --adm-modal-bd:    rgba(255, 255, 255, 0.10);
+  --adm-table-head:  rgba(255, 255, 255, 0.05);
+  --adm-input-bg:    rgba(255, 255, 255, 0.05);
+}
+
+/* ── Overrides automáticos del área de contenido en modo claro ── */
+
+/* Texto blanco → tinta oscura */
+html:not(.dark) .admin-main [class*="text-white"] {
+  color: var(--adm-ink) !important;
+}
+/* Excepciones: fondos de color (FWD brand, verdes, degradados inline) */
+html:not(.dark) .admin-main [class*="bg-fwd-"][class*="text-white"],
+html:not(.dark) .admin-main [class*="bg-fwd-"] [class*="text-white"],
+html:not(.dark) .admin-main [class*="bg-\[#10b981\]"][class*="text-white"],
+html:not(.dark) .admin-main [class*="bg-\[#10b981\]"] [class*="text-white"],
+html:not(.dark) .admin-main [style*="linear-gradient"][class*="text-white"],
+html:not(.dark) .admin-main [style*="linear-gradient"] [class*="text-white"] {
+  color: #ffffff !important;
+}
+
+/* Fondos semi-transparentes oscuros → fondos claros */
+html:not(.dark) .admin-main :is(
+  [class~="bg-white/[0.02]"],
+  [class~="bg-white/[0.03]"],
+  [class~="bg-white/[0.04]"],
+  [class~="bg-white/5"],
+  [class~="bg-white/10"]
+) {
+  background-color: var(--adm-card) !important;
+}
+
+/* Header de tabla → fondo gris muy sutil */
+html:not(.dark) .admin-main thead {
+  background-color: var(--adm-table-head) !important;
+}
+
+/* Bordes translúcidos oscuros → claros */
+html:not(.dark) .admin-main [class*="border-white/"] {
+  border-color: var(--adm-line) !important;
+}
+
+/* Divisores de tabla */
+html:not(.dark) .admin-main [class*="divide-white/"] > * + * {
+  border-color: var(--adm-line) !important;
+}
+
+/* Modal oscuro → claro */
+html:not(.dark) .admin-main [class*="bg-\[#111827\]"] {
+  background-color: var(--adm-modal) !important;
+  border-color: var(--adm-modal-bd) !important;
+}
+
+/* Inputs dentro del contenido admin */
+html:not(.dark) .admin-main input {
+  background-color: var(--adm-input-bg) !important;
+  border-color: var(--adm-line) !important;
+  color: var(--adm-ink) !important;
+}
+html:not(.dark) .admin-main input::placeholder {
+  color: var(--adm-ink-faint) !important;
+}
+
+/*
+  Sistema de diseño FWD · Costa Rica
+  Paleta oficial (Libro de Marca, pág. 8) + navy de soporte.
+  Tipografías: Figtree (display) / Outfit (texto).
+*/
+@theme {
+  /* Paleta de marca */
+  --color-fwd-blue: #008fd4;
+  --color-fwd-purple: #662d91;
+  --color-fwd-teal: #20bec6;
+  --color-fwd-turquoise: #20bec6;
+  --color-fwd-yellow: #ffcb05;
+  --color-fwd-orange: #f7901e;
+  --color-fwd-magenta: #ec008c;
+  --color-fwd-staff: #6acbcf;
+
+  /* Neutrales de soporte */
+  --color-fwd-navy: #0b1437;
+  --color-fwd-navy-700: #16205a;
+  --color-fwd-navy-light: #1a2744;
+  --color-fwd-ink: #1a1633;
+  --color-fwd-mist: #f3f5fb;
+}
+
+/* Las fuentes se inyectan en runtime vía next/font (variables CSS) */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --font-sans: var(--font-outfit), sans-serif;
   --font-mono: var(--font-geist-mono);
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* Tipografías de marca (Figtree titulares / Outfit texto) */
+  --font-heading: var(--font-figtree), sans-serif;
+  --font-body: var(--font-outfit), sans-serif;
+
+  /* Superficies semánticas */
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+
+  /* Tipografía */
+  --font-inter: var(--font-inter);
+  --font-space-grotesk: var(--font-space-grotesk);
+  --font-display: var(--font-space-grotesk);
+  --color-fwd-azul: #008fd4;
+  --color-fwd-morado: #662d91;
+  --color-fwd-turquesa: #20bec6;
+  --color-fwd-amarillo: #ffcb05;
+  --color-fwd-naranja: #f7901e;
+  --color-fwd-magenta: #ec008c;
+  --color-fwd-staff: #6acbcf;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Titulares: Figtree con tracking ceñido al estilo del manual */
+.font-display {
+  font-family: var(--font-figtree), sans-serif;
+  letter-spacing: -0.02em;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+
+/* Logo giratorio del Navbar (rediseño homepage) */
+@keyframes fwd-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.fwd-spin {
+  animation: fwd-spin 18s linear infinite;
+}
+
+/* ---- Utilidades de marca (degradados, glass, borde) ---- */
+.text-gradient-fwd {
+  background-image: linear-gradient(100deg, #008fd4, #662d91 55%, #ec008c);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.bg-gradient-fwd {
+  background-image: linear-gradient(100deg, #008fd4, #662d91 55%, #ec008c);
+}
+
+.bg-gradient-fwd-soft {
+  background-image: linear-gradient(135deg, #008fd4, #20bec6);
+}
+
+/* Glassmorphism sutil, theme-aware */
+.glass {
+  background-color: color-mix(in srgb, var(--surface) 72%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+}
+
+/* Borde con degradado (tarjetas premium) */
+.gradient-border {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid transparent;
+  background-clip: padding-box;
+}
+.gradient-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, #008fd4, #662d91, #ec008c);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* ---- Animaciones de fondo (auroras del hero) ---- */
+@keyframes fwd-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+}
+
+@keyframes fwd-drift {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(16px);
+  }
+}
+
+@keyframes fwd-aurora {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translate(24px, -18px) scale(1.12);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.7;
+  }
+}
+
+.animate-aurora {
+  animation: fwd-aurora 14s ease-in-out infinite;
+}
+
+/* Burbujas y estrellitas del fondo del dashboard de estudiante */
+.animate-float {
+  animation: fwd-float 7s ease-in-out infinite;
+}
+.animate-drift {
+  animation: fwd-drift 9s ease-in-out infinite;
+}
+@keyframes fwd-twinkle {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+.animate-twinkle {
+  animation: fwd-twinkle 4s ease-in-out infinite;
+}
+
+/* Respeto a quienes prefieren menos movimiento */
+@media (prefers-reduced-motion: reduce) {
+  .animate-aurora,
+  .animate-float,
+  .animate-drift,
+  .animate-twinkle,
+  .fwd-spin,
+  .footer-wave,
+  .footer-wave-2 {
+    animation: none !important;
+  }
+}
+
+/* ── Custom cursor ───────────────────────────────── */
+@media (pointer: fine) {
+  * { cursor: none !important; }
+}
+
+.cursor-dot {
+  position: fixed;
+  top: 0; left: 0;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #20BEC6;
+  pointer-events: none;
+  z-index: 99999;
+  transition: width 0.2s, height 0.2s, background 0.2s;
+  box-shadow: 0 0 10px #20BEC6, 0 0 20px #20BEC688;
+}
+
+.cursor-ring {
+  position: fixed;
+  top: 0; left: 0;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: 2px solid #20BEC699;
+  pointer-events: none;
+  z-index: 99998;
+  transition: width 0.25s, height 0.25s, border-color 0.25s;
+}
+
+.cursor-dot.cursor-hover {
+  width: 12px; height: 12px;
+  background: #FFCB05;
+  box-shadow: 0 0 14px #FFCB05, 0 0 30px #FFCB0566;
+}
+
+.cursor-ring.cursor-hover {
+  width: 52px; height: 52px;
+  border-color: #FFCB0588;
+}
+
+/* ── GSAP initial states ─────────────────────────── */
+[data-hero="badge"],
+[data-hero="title"],
+[data-hero="desc"],
+[data-hero="cta"] > * {
+  will-change: transform, opacity;
+}
+
+[data-reveal] {
+  will-change: transform, opacity;
+}
+
+/* Shine sweep en TiltCard */
+.shine-sweep {
+  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.18) 50%, transparent 60%);
+  background-size: 200% 100%;
+  background-position: 200% center;
+  transition: background-position 0s;
+}
+div:hover > .shine-sweep {
+  background-position: -200% center;
+  transition: background-position 0.6s ease;
+}
+
+@keyframes floatTri {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50%       { transform: translateY(-14px) rotate(8deg); }
+}
+
+/* ── Estilos de impresión para Términos y Condiciones ── */
+@media print {
+  /* Forzar colores */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    cursor: default !important;
+  }
+
+  /* Ocultar UI de navegación */
+  header, nav, footer,
+  .footer-wave-wrap, .cursor-dot, .cursor-ring,
+  button, aside {
+    display: none !important;
+  }
+
+  /* Mostrar encabezado de impresión */
+  .print-only { display: block !important; }
+
+  /* Ocultar hero y CTA */
+  section { display: none !important; }
+
+  /* Mostrar solo contenido */
+  section.print-content {
+    display: block !important;
+    background: white !important;
+    padding: 0 16px !important;
+  }
+
+  /* Quitar flex del layout de contenido */
+  section.print-content > div { padding: 0 !important; }
+  section.print-content > div > div { display: block !important; gap: 0 !important; }
+
+  /* Cards */
+  .bg-white {
+    box-shadow: none !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 8px !important;
+    margin-bottom: 12px !important;
+    padding: 16px 20px !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Barras laterales de color */
+  span[style*="background-color"] {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Franja de colores en encabezado de impresión */
+  .print-stripe {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body {
+    background: white !important;
+    font-size: 11px;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* margin: 0 elimina la URL y encabezados del navegador */
+  @page {
+    size: A4;
+    margin: 0;
+  }
+}
+
+@keyframes gradientShift {
+  0%   { background-position: 0% center; }
+  100% { background-position: 100% center; }
+}
+
+@keyframes footerWave {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.footer-wave {
+  animation: footerWave 9s linear infinite;
+}
+
+.footer-wave-2 {
+  animation: footerWave 6s linear infinite reverse;
+  opacity: 0.4;
+}
+
+.footer-wave-wrap:hover .footer-wave {
+  animation-duration: 2s;
+}
+
+.footer-wave-wrap:hover .footer-wave-2 {
+  animation-duration: 1.2s;
+}
+
+/* ---- Utilidades de marca (degradados, glass) ---- */
+.text-gradient-fwd {
+  background-image: linear-gradient(100deg, #008fd4, #662d91 55%, #ec008c);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.bg-gradient-fwd {
+  background-image: linear-gradient(100deg, #008fd4, #662d91 55%, #ec008c);
+}
+
+.bg-gradient-fwd-soft {
+  background-image: linear-gradient(135deg, #008fd4, #20bec6);
+}
+
+.glass {
+  background-color: color-mix(in srgb, var(--surface) 72%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+}
+
+@keyframes fwd-aurora {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translate(24px, -18px) scale(1.12);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.7;
+  }
+}
+
+.animate-aurora {
+  animation: fwd-aurora 14s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-aurora,
+  .fwd-spin {
+    animation: none !important;
+  }
 }
